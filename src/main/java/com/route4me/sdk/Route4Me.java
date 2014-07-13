@@ -10,6 +10,7 @@ import com.route4me.sdk.model.SetGPS;
 import static com.route4me.sdk.model.enums.APIEndPoints.API_HOST;
 import static com.route4me.sdk.model.enums.APIEndPoints.MAIN_HOST;
 import static com.route4me.sdk.model.enums.APIEndPoints.SHOW_ROUTE_HOST;
+import static com.route4me.sdk.model.enums.APIEndPoints.SET_GPS_HOST;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -93,6 +94,10 @@ public class Route4Me {
         return API_HOST + "?";
     }
 
+    public String setGPSURL() {
+        return SET_GPS_HOST + "?";
+    }
+
     public String routeURL() {
         return SHOW_ROUTE_HOST + "?";
     }
@@ -140,6 +145,24 @@ public class Route4Me {
             Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
         }
         return response;
+    }
+
+    public Response setGPSPosition() {
+        Response response = null;
+        String params;
+        try {
+            params = transformParams(getSetGPS().getParams());
+            response = makeURLConnectionRequest(RequestMethod.GET,
+                    setGPSURL(), params);
+        } catch (APIConnectionException | InvalidRequestException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return response;
+        
     }
 
     protected enum RequestMethod {
