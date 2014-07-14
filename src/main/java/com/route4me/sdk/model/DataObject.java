@@ -14,6 +14,7 @@ import java.util.List;
 public class DataObject {
 
     private List<Address> addresses;
+    private List<TrackingHistory> tracking_history;
     private Parameters parameters;
     private String optimization_problem_id; 
     private Number state;
@@ -102,6 +103,20 @@ public class DataObject {
      */
     public void setLinks(Links links) {
         this.links = links;
+    }
+
+    /**
+     * @return the tracking_history
+     */
+    public List<TrackingHistory> getTracking_history() {
+        return tracking_history;
+    }
+
+    /**
+     * @param tracking_history the tracking_history to set
+     */
+    public void setTracking_history(List<TrackingHistory> tracking_history) {
+        this.tracking_history = tracking_history;
     }
     
 }

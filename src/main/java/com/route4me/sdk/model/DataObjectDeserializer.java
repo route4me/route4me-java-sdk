@@ -30,6 +30,8 @@ class DataObjectDeserializer implements JsonDeserializer<DataObject> {
         objectClass.put("parameters", Parameters.class);
         objectClass.put("links", Links.class);
         objectClass.put("addresses", Address.class);
+        objectClass.put("tracking_history", TrackingHistory.class);
+
     }
 
     public DataObjectDeserializer() {

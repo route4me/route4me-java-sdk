@@ -1,12 +1,8 @@
 package com.route4me.sdk.examples;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.model.Base;
-import com.route4me.sdk.model.DataObject;
 import com.route4me.sdk.model.Response;
-import com.route4me.sdk.model.Route;
 import com.route4me.sdk.model.SetGPS;
-import com.route4me.sdk.model.enums.Constants;
 import java.util.HashMap;
 import java.util.Map;
 import com.route4me.sdk.model.enums.Constants.*;
