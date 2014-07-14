@@ -1,13 +1,8 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.route4me.sdk.model.enums;
 
 /**
  *
- * @author khepri
+ * @author juan
  */
 public class APIEndPoints {
 

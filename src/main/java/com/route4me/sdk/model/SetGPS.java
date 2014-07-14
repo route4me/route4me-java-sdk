@@ -1,7 +1,5 @@
 package com.route4me.sdk.model;
 
-import com.route4me.sdk.Route4Me;
-
 /**
  *
  * @author juan
