@@ -6,7 +6,7 @@ package com.route4me.sdk.model;
  */
 public class Parameters {
 
-    private String is_upload;
+    private String is_upload;   
     private Boolean rt;
     private Boolean share_route;
     private String route_name;
@@ -24,6 +24,7 @@ public class Parameters {
     private String vehicle_id;
     private String driver_id;
     private Number route_max_duration;
+    private Number remote_ip;
     private String route_email;
     private String route_type;
     private Boolean store_route;
@@ -425,6 +426,20 @@ public class Parameters {
      */
     public void setShare_route(Boolean share_route) {
         this.share_route = share_route;
+    }
+
+    /**
+     * @return the remote_ip
+     */
+    public Number getRemote_ip() {
+        return remote_ip;
+    }
+
+    /**
+     * @param remote_ip the remote_ip to set
+     */
+    public void setRemote_ip(Number remote_ip) {
+        this.remote_ip = remote_ip;
     }
 
 }

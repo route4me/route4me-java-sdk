@@ -21,6 +21,7 @@ public class ReOptimization {
         Map<String, String> params = new HashMap<>();
         params.put("optimization_problem_id", "5ACDD6065C45A34768EA97FEBB14D637");
         params.put("reoptimize", "1");
+        params.put("remote_ip", "192168001001");
         Route route = route4me.getRoute();
         route.setParams(params);
         Response response = route4me.reOptimization();
