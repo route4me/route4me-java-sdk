@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -151,6 +152,25 @@ public class Route4Me {
         return response;
     }
 
+    public Response getOptimizationsIDFromAPI() {
+        Response response = null;
+        Map<String, String> params = new HashMap<>();
+        params.put("api_key", apiKey);
+        String strParams;
+        try {
+            strParams = transformParams(params);
+            response = makeURLConnectionRequest(RequestMethod.GET,
+                    buildBaseURL(), strParams);
+        } catch (APIConnectionException | InvalidRequestException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return response;
+    }
+
     public Response setGPSPosition() {
         Response response = null;
         String params;
@@ -267,7 +287,7 @@ public class Route4Me {
                 responseBody = getResponseBody(entity.getContent());
             }
             headers = response.getAllHeaders();
-            String responseMessage = EntityUtils.toString(entity);
+            String responseMessage = "";
             return new Response(statusCode, responseBody, responseMessage, headers);
 
         } catch (IOException e) {

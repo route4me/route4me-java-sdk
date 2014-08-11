@@ -1,36 +1,26 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+
 package com.route4me.sdk.model;
 
 import java.util.List;
 
 /**
  *
- * @author Juan
+ * @author juan
  */
-public class DataObject {
-
-    private List<Address> addresses;
-    private List<TrackingHistory> tracking_history;
+public class Optimizations {
     private Parameters parameters;
     private String optimization_problem_id; 
     private Number state;
     private Boolean sent_to_background;
     private Links links;
     private List<Routes> routes;
-    private List<Optimizations> optimizations;
-    
-    /**
-     * @return the addresses
-     */
-    public List<Address> getAddresses() {
-        return addresses;
-    }
+    private List<Address> addresses;
 
-    /**
-     * @param addresses the addresses to set
-     */
-    public void setAddresses(List<Address> addresses) {
-        this.addresses = addresses;
-    }
 
     /**
      * @return the parameters
@@ -70,8 +60,8 @@ public class DataObject {
     /**
      * @param state the state to set
      */
-    public void setState(int state) {
-        this.setState((Number) state);
+    public void setState(Number state) {
+        this.state = state;
     }
 
     /**
@@ -102,40 +92,19 @@ public class DataObject {
         this.links = links;
     }
 
+
     /**
-     * @return the tracking_history
+     * @return the addresses
      */
-    public List<TrackingHistory> getTracking_history() {
-        return tracking_history;
+    public List<Address> getAddresses() {
+        return addresses;
     }
 
     /**
-     * @param tracking_history the tracking_history to set
+     * @param addresses the addresses to set
      */
-    public void setTracking_history(List<TrackingHistory> tracking_history) {
-        this.tracking_history = tracking_history;
-    }
-
-
-    /**
-     * @return the optimizations
-     */
-    public List<Optimizations> getOptimizations() {
-        return optimizations;
-    }
-
-    /**
-     * @param optimizations the optimizations to set
-     */
-    public void setOptimizations(List<Optimizations> optimizations) {
-        this.optimizations = optimizations;
-    }
-
-    /**
-     * @param state the state to set
-     */
-    public void setState(Number state) {
-        this.state = state;
+    public void setAddresses(List<Address> addresses) {
+        this.addresses = addresses;
     }
 
     /**
