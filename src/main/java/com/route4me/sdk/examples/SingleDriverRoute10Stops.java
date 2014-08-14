@@ -20,7 +20,7 @@ import java.util.Map;
 public class SingleDriverRoute10Stops {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = "22222222222222222222222222222222";
         Route4Me route4me = new Route4Me(apiKey);
         Optimization optimization = route4me.getOptimization();
         Map<String, String> params = new HashMap<>();
@@ -37,7 +37,7 @@ public class SingleDriverRoute10Stops {
         parameters.setOptimize(Optimize.DISTANCE.toString());
         parameters.setDistance_unit(DistanceUnit.MI.toString());
         parameters.setDevice_type(DeviceType.WEB.toString());
-
+/*
         addresses.add(new Address(
                 "151 Arbor Way Milledgeville GA 31061", Boolean.TRUE,
                 33.132675170898,
@@ -98,7 +98,12 @@ public class SingleDriverRoute10Stops {
                 -83.208511352539,
                 0
         ));
-
+*/
+        addresses.add(new Address("Jalan Jendral Sudirman Kav. 22-23, Jakarta", Boolean.TRUE, "TeamB", -6.210927, 106.822009, 0));
+        addresses.add(new Address("Jl. Pratama Tanjung Benoa, Jakarta", "316", -6.2087634, 106.845599, 0));
+        addresses.add(new Address("Jalan Setia Budi 2 No. 15, Jakarta", "317", -6.207199,  106.824524, 0));
+        addresses.add(new Address("Jl. Setiabudi Selatan Kav 7-8, Jakarta Selatan", "340", -6.226431, 106.833555, 0));
+        
         route4me.getOptimization().setData(data);
         Response response = route4me.runOptimization();
         DataObject responseObject = Base.GSONDeserializer.fromJson(response.getResponseBody(), DataObject.class);
