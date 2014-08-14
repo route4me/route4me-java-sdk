@@ -74,12 +74,12 @@ class DataObjectDeserializer implements JsonDeserializer<DataObject> {
         }
     }
 
-    private List<Object> deserializeJSONArray(Object object, JsonArray arr) {
+    private List<Object> deserializeJSONArray(String key, JsonArray arr) throws IllegalArgumentException, SecurityException, InstantiationException, IllegalAccessException, InvocationTargetException, NoSuchMethodException {
         List<Object> elems = new ArrayList<>();
         Iterator<JsonElement> elemIter = arr.iterator();
         while (elemIter.hasNext()) {
             JsonElement elem = elemIter.next();
-            elems.add(deserializeJSON(object, (JsonObject) elem));
+            elems.add(deserializeJSON(newInstance(objectClass.get(key)), (JsonObject) elem));
 
         }
         return elems;
@@ -116,7 +116,7 @@ class DataObjectDeserializer implements JsonDeserializer<DataObject> {
             } else if (element.isJsonArray()) {
                 try {
                     if (objectClass.get(key) != null) {
-                        setFieldValue(object, key, deserializeJSONArray(newInstance(objectClass.get(key)),element.getAsJsonArray()));
+                        setFieldValue(object, key, deserializeJSONArray(key,element.getAsJsonArray()));
                     }
                 } catch (IllegalArgumentException | SecurityException | InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException ex) {
                     Logger.getLogger(DataObjectDeserializer.class.getName()).log(Level.SEVERE, null, ex);

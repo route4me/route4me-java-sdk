@@ -35,6 +35,7 @@ public class Parameters {
     private String device_id;
     private String device_type;
     private Boolean has_trailer;
+    private Number parts;
 
     /**
      * @return the is_upload
@@ -54,7 +55,7 @@ public class Parameters {
      * @return the rt
      */
     public Boolean isRt() {
-        return rt;
+        return getRt();
     }
 
     /**
@@ -124,7 +125,7 @@ public class Parameters {
      * @return the disable_optimization
      */
     public Boolean isDisable_optimization() {
-        return disable_optimization;
+        return getDisable_optimization();
     }
 
     /**
@@ -152,7 +153,7 @@ public class Parameters {
      * @return the lock_last
      */
     public Boolean isLock_last() {
-        return lock_last;
+        return getLock_last();
     }
 
     /**
@@ -306,7 +307,7 @@ public class Parameters {
      * @return the store_route
      */
     public Boolean isStore_route() {
-        return store_route;
+        return getStore_route();
     }
 
     /**
@@ -404,7 +405,7 @@ public class Parameters {
      * @return the has_trailer
      */
     public Boolean isHas_trailer() {
-        return has_trailer;
+        return getHas_trailer();
     }
 
     /**
@@ -440,6 +441,55 @@ public class Parameters {
      */
     public void setRemote_ip(Number remote_ip) {
         this.remote_ip = remote_ip;
+    }
+
+    /**
+     * @return the rt
+     */
+    public Boolean getRt() {
+        return rt;
+    }
+
+    /**
+     * @return the disable_optimization
+     */
+    public Boolean getDisable_optimization() {
+        return disable_optimization;
+    }
+
+    /**
+     * @return the lock_last
+     */
+    public Boolean getLock_last() {
+        return lock_last;
+    }
+
+    /**
+     * @return the store_route
+     */
+    public Boolean getStore_route() {
+        return store_route;
+    }
+
+    /**
+     * @return the has_trailer
+     */
+    public Boolean getHas_trailer() {
+        return has_trailer;
+    }
+
+    /**
+     * @return the parts
+     */
+    public Number getParts() {
+        return parts;
+    }
+
+    /**
+     * @param parts the parts to set
+     */
+    public void setParts(Number parts) {
+        this.parts = parts;
     }
 
 }
