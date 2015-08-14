@@ -19,7 +19,7 @@ public class GetRoute {
         String apiKey = "11111111111111111111111111111111";
         Route4Me route4me = new Route4Me(apiKey);
         Map<String, String> params = new HashMap<>();
-        params.put("optimization_problem_id", "5ACDD6065C45A34768EA97FEBB14D637");
+        params.put("optimization_problem_id", "624A65A3B122F779107C5908633EAEAD");
         Route route = route4me.getRoute();
         route.setParams(params);
         Response response = route4me.getRouteFromAPI();

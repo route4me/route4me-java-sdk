@@ -41,7 +41,7 @@ public class SingleDepotMultipleDriver {
         parameters.setStore_route(Boolean.FALSE);
         parameters.setShare_route(Boolean.FALSE);
         parameters.setRoute_time(0);
-        parameters.setParts(3);
+        parameters.setParts(4);
         parameters.setRoute_max_duration(86400);
         parameters.setVehicle_capacity("100");
         parameters.setVehicle_max_distance_mi("10000");
@@ -51,39 +51,17 @@ public class SingleDepotMultipleDriver {
         parameters.setDevice_type(DeviceType.WEB.toString());
         parameters.setTravel_mode(TravelMode.DRIVING.toString());
         parameters.setMetric(Metric.ROUTE4ME_METRIC_GEODESIC.getValue());
-        addresses.add(new Address("3634 W Market St, Fairlawn, OH 44333", Boolean.TRUE,
-                41.135762259364, -81.629313826561, 300, 28800, 29465));
-        addresses.add(new Address("1218 Ruth Ave, Cuyahoga Falls, OH 44221",
-                41.143505096435, -81.46549987793, 300, 29465, 30529));
-        addresses.add(new Address("512 Florida Pl, Barberton, OH 44203",
-                41.003671512008, -81.598461046815, 300, 30529, 33779));
-        addresses.add(new Address("512 Florida Pl, Barberton, OH 44203",
-                41.003671512008, -81.598461046815, 300, 33779, 33944));
-        addresses.add(new Address("3495 Purdue St, Cuyahoga Falls, OH 44221",
-                41.162971496582, -81.479049682617, 300, 33944, 34801));
-        addresses.add(new Address("1659 Hibbard Dr, Stow, OH 44224",
-                41.194505989552, -81.443351581693, 300, 34801, 36366));
-        addresses.add(new Address("2705 N River Rd, Stow, OH 44224",
-                41.145240783691, -81.410247802734, 300, 36366, 39173));
-        addresses.add(new Address("10159 Bissell Dr, Twinsburg, OH 44087",
-                41.340042114258, -81.421226501465, 300));
-        addresses.add(new Address("367 Cathy Dr, Munroe Falls, OH 44262",
-                41.148578643799, -81.429229736328, 300));
-        addresses.add(new Address("367 Cathy Dr, Munroe Falls, OH 44262",
-                41.148578643799, -81.429229736328, 300));
-        addresses.add(new Address("512 Florida Pl, Barberton, OH 44203",
-                41.003671512008, -81.598461046815, 300));
-        addresses.add(new Address("559 W Aurora Rd, Northfield, OH 44067",
-                41.315116882324, -81.558746337891, 300));
-        addresses.add(new Address("3933 Klein Ave, Stow, OH 44224",
-                41.169467926025, -81.429420471191, 300));
-        addresses.add(new Address("2148 8th St, Cuyahoga Falls, OH 44221",
-                41.136692047119, -81.493492126465, 300));
-        addresses.add(new Address("3731 Osage St, Stow, OH 44224",
-                41.161357879639, -81.42293548584, 300));
-        addresses.add(new Address("3731 Osage St, Stow, OH 44224",
-                41.161357879639, -81.42293548584, 300, 52180, 54379));
-        route4me.getOptimization().setData(data);
+         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214",Boolean.TRUE, 38.141598, -85.793846, 300, 29400, 30000));
+        addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215",38.202496,-85.786514,300,30000,30600));
+        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215",38.178844,-85.774864,300,30600,31200));
+        addresses.add(new Address("730 CECIL AVENUE, Louisville, KY, 40211",38.248684,-85.821121,300,31200,31800));
+        addresses.add(new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211",38.251923,-85.800034,300,31800,32400));
+        addresses.add(new Address("4629 HILLSIDE DRIVE, Louisville, KY, 40216",38.176067,-85.824638,300,32400,33000));
+        addresses.add(new Address("4738 BELLEVUE AVE, Louisville, KY, 40215",38.179806,-85.775558,300,33000,33600));
+        addresses.add(new Address("318 SO. 39TH STREET, Louisville, KY, 40212",38.259335,-85.815094,300,33600,34200));
+        addresses.add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215",38.179253,-85.785118,300,34200,34800));
+        addresses.add(new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214",38.162472,-85.792854,300,34800,35400));
+       route4me.getOptimization().setData(data);
         Response response = route4me.runOptimization();
         DataObject responseObject = Base.GSONDeserializer.fromJson(response.getResponseBody(), DataObject.class);
         String jsonResponse = Base.GSONSerializer.toJson(responseObject);

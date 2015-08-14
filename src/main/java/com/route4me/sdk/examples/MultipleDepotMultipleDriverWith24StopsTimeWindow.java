@@ -35,7 +35,7 @@ public class MultipleDepotMultipleDriverWith24StopsTimeWindow {
         parameters.setShare_route(Boolean.FALSE);
         parameters.setRoute_time(0);
         parameters.setRoute_max_duration(86400);
-        parameters.setVehicle_capacity("1");
+        parameters.setVehicle_capacity("9999");
         parameters.setVehicle_max_distance_mi("10000");
         parameters.setRoute_name("Multiple Depot, Multiple Driver with 24 Stops, Time Window");
         parameters.setOptimize(Optimize.DISTANCE.toString());
@@ -43,207 +43,57 @@ public class MultipleDepotMultipleDriverWith24StopsTimeWindow {
         parameters.setDevice_type(DeviceType.WEB.toString());
         parameters.setTravel_mode(TravelMode.DRIVING.toString());
         parameters.setMetric(Metric.ROUTE4ME_METRIC_GEODESIC.getValue());
-        addresses.add(new Address(
-                "3634 W Market St, Fairlawn, OH 44333", Boolean.TRUE,
-                41.135762259364,
-                -81.629313826561,
-                300,
-                28800,
-                29465
-        ));
-        addresses.add(new Address(
-                "1218 Ruth Ave, Cuyahoga Falls, OH 44221",
-                41.143505096435,
-                -81.46549987793,
-                300,
-                29465,
-                30529
-        ));
-        addresses.add(new Address(
-                "512 Florida Pl, Barberton, OH 44203",
-                41.003671512008,
-                -81.598461046815,
-                300,
-                30529,
-                33779
-        ));
-        addresses.add(new Address(
-                "512 Florida Pl, Barberton, OH 44203",
-                41.003671512008,
-                -81.598461046815,
-                300,
-                33779,
-                33944
-        ));
-        addresses.add(new Address(
-                "3495 Purdue St, Cuyahoga Falls, OH 44221",
-                41.162971496582,
-                -81.479049682617,
-                300,
-                33944,
-                34801
-        ));
-        addresses.add(new Address(
-                "1659 Hibbard Dr, Stow, OH 44224",
-                41.194505989552,
-                -81.443351581693,
-                300,
-                34801,
-                36366
-        ));
-        addresses.add(new Address(
-                "2705 N River Rd, Stow, OH 44224",
-                41.145240783691,
-                -81.410247802734,
-                300,
-                36366,
-                39173
-        ));
-        addresses.add(new Address(
-                "10159 Bissell Dr, Twinsburg, OH 44087",
-                41.340042114258,
-                -81.421226501465,
-                300,
-                39173,
-                41617
-        ));
-        addresses.add(new Address(
-                "367 Cathy Dr, Munroe Falls, OH 44262",
-                41.148578643799,
-                -81.429229736328,
-                300,
-                41617,
-                43660
-        ));
-        addresses.add(new Address(
-                "367 Cathy Dr, Munroe Falls, OH 44262",
-                41.148579,
-                -81.42923,
-                300,
-                43660,
-                46392
-        ));
-        addresses.add(new Address(
-                "512 Florida Pl, Barberton, OH 44203",
-                41.003671512008,
-                -81.598461046815,
-                300,
-                46392,
-                48389
-        ));
-        addresses.add(new Address(
-                "559 W Aurora Rd, Northfield, OH 44067",
-                41.315116882324,
-                -81.558746337891,
-                300,
-                48389,
-                48449
-        ));
-        addresses.add(new Address(
-                "3933 Klein Ave, Stow, OH 44224",
-                41.169467926025,
-                -81.429420471191,
-                300,
-                48449,
-                50152
-        ));
-        addresses.add(new Address(
-                "2148 8th St, Cuyahoga Falls, OH 44221",
-                41.136692047119,
-                -81.493492126465,
-                300,
-                50152,
-                51982
-        ));
-        addresses.add(new Address(
-                "3731 Osage St, Stow, OH 44224",
-                41.161357879639,
-                -81.42293548584,
-                300,
-                51982,
-                52180
-        ));
-        addresses.add(new Address(
-                "3731 Osage St, Stow, OH 44224",
-                41.161357879639,
-                -81.42293548584,
-                300,
-                52180,
-                54379
-        ));
-        addresses.add(new Address(
-                "3862 Klein Ave, Stow, OH 44224",
-                41.167895123363,
-                -81.429973393679,
-                300,
-                54379,
-                54879
-        ));
-        addresses.add(new Address(
-                "138 Northwood Ln, Tallmadge, OH 44278",
-                41.085464134812,
-                -81.447411775589,
-                300,
-                54879,
-                56913
-        ));
-        addresses.add(new Address(
-                "3401 Saratoga Blvd, Stow, OH 44224",
-                41.148849487305,
-                -81.407363891602,
-                300,
-                56913,
-                57052
-        ));
-        addresses.add(new Address(
-                "5169 Brockton Dr, Stow, OH 44224",
-                41.195003509521,
-                -81.392700195312,
-                300,
-                57052,
-                59004
-        ));
-        addresses.add(new Address(
-                "5169 Brockton Dr, Stow, OH 44224",
-                41.195003509521,
-                -81.392700195312,
-                300,
-                59004,
-                60227
-        ));
-        addresses.add(new Address(
-                "458 Aintree Dr, Munroe Falls, OH 44262",
-                41.1266746521,
-                -81.445808410645,
-                300,
-                60227,
-                60375
-        ));
-        addresses.add(new Address(
-                "512 Florida Pl, Barberton, OH 44203",
-                41.003671512008,
-                -81.598461046815,
-                300,
-                60375,
-                63891
-        ));
-        addresses.add(new Address(
-                "2299 Tyre Dr, Hudson, OH 44236",
-                41.250511169434,
-                -81.420433044434,
-                300,
-                63891,
-                65277
-        ));
-        addresses.add(new Address(
-                "2148 8th St, Cuyahoga Falls, OH 44221",
-                41.136692047119,
-                -81.493492126465,
-                300,
-                65277,
-                68545
-        ));
-
+        parameters.setParts(20);
+        addresses.add(new Address("455 S 4th St, Louisville, KY 40202",Boolean.TRUE, 38.251698, -85.757308, 300, 28800, 29400));
+        addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214",Boolean.TRUE, 38.141598, -85.793846, 300, 29400, 30000));
+        addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215",38.202496,-85.786514,300,30000,30600));
+        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215",38.178844,-85.774864,300,30600,31200));
+        addresses.add(new Address("730 CECIL AVENUE, Louisville, KY, 40211",38.248684,-85.821121,300,31200,31800));
+        addresses.add(new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211",38.251923,-85.800034,300,31800,32400));
+        addresses.add(new Address("4629 HILLSIDE DRIVE, Louisville, KY, 40216",38.176067,-85.824638,300,32400,33000));
+        addresses.add(new Address("4738 BELLEVUE AVE, Louisville, KY, 40215",38.179806,-85.775558,300,33000,33600));
+        addresses.add(new Address("318 SO. 39TH STREET, Louisville, KY, 40212",38.259335,-85.815094,300,33600,34200));
+        addresses.add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215",38.179253,-85.785118,300,34200,34800));
+        addresses.add(new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214",38.162472,-85.792854,300,34800,35400));
+        addresses.add(new Address("1661 W HILL ST, Louisville, KY, 40210",38.229584,-85.783966,300,35400,36000));
+        addresses.add(new Address("3222 KINGSWOOD WAY, Louisville, KY, 40216",38.210606,-85.822594,300,36000,36600));
+        addresses.add(new Address("1922 PALATKA RD, Louisville, KY, 40214",38.153767,-85.796783,300,36600,37200));
+        addresses.add(new Address("1314 SOUTH 26TH STREET, Louisville, KY, 40210",38.235847,-85.796852,300,37200,37800));
+        addresses.add(new Address("2135 MCCLOSKEY AVENUE, Louisville, KY, 40210",38.218662,-85.789032,300,37800,38400));
+        addresses.add(new Address("1409 PHYLLIS AVE, Louisville, KY, 40215",38.206154,-85.781387,300,38400,39000));
+        addresses.add(new Address("4504 SUNFLOWER AVE, Louisville, KY, 40216",38.187511,-85.839149,300,39000,39600));
+        addresses.add(new Address("2512 GREENWOOD AVE, Louisville, KY, 40210",38.241405,-85.795059,300,39600,40200));
+        addresses.add(new Address("5500 WILKE FARM AVE, Louisville, KY, 40216",38.166065,-85.863319,300,40200,40800));
+        addresses.add(new Address("3640 LENTZ AVE, Louisville, KY, 40215",38.193283,-85.786201,300,40800,41400));
+        addresses.add(new Address("1020 BLUEGRASS AVE, Louisville, KY, 40215",38.17952,-85.780037,300,41400,42000));
+        addresses.add(new Address("123 NORTH 40TH ST, Louisville, KY, 40212",38.26498,-85.814156,300,42000,42600));
+        addresses.add(new Address("7315 ST ANDREWS WOODS CIRCLE UNIT 104, Louisville, KY, 40214",38.151072,-85.802867,300,42600,43200));
+        addresses.add(new Address("3210 POPLAR VIEW DR, Louisville, KY, 40216",38.182594,-85.849937,300,43200,43800));
+        addresses.add(new Address("4519 LOUANE WAY, Louisville, KY, 40216",38.1754,-85.811447,300,43800,44400));
+        addresses.add(new Address("6812 MANSLICK RD, Louisville, KY, 40214",38.161839,-85.798279,300,44400,45000));
+        addresses.add(new Address("1524 HUNTOON AVENUE, Louisville, KY, 40215",38.172031,-85.788353,300,45000,45600));
+        addresses.add(new Address("1307 LARCHMONT AVE, Louisville, KY, 40215",38.209663,-85.779816,300,45600,46200));
+        addresses.add(new Address("434 N 26TH STREET #2, Louisville, KY, 40212",38.26844,-85.791962,300,46200,46800));
+        addresses.add(new Address("678 WESTLAWN ST, Louisville, KY, 40211",38.250397,-85.80629,300,46800,47400));
+        addresses.add(new Address("2308 W BROADWAY, Louisville, KY, 40211",38.248882,-85.790421,300,47400,48000));
+        addresses.add(new Address("2332 WOODLAND AVE, Louisville, KY, 40210",38.233579,-85.794257,300,48000,48600));
+        addresses.add(new Address("1706 WEST ST. CATHERINE, Louisville, KY, 40210",38.239697,-85.783928,300,48600,49200));
+        addresses.add(new Address("1699 WATHEN LN, Louisville, KY, 40216",38.216465,-85.792397,300,49200,49800));
+        addresses.add(new Address("2416 SUNSHINE WAY, Louisville, KY, 40216",38.186245,-85.831787,300,49800,50400));
+        addresses.add(new Address("6925 MANSLICK RD, Louisville, KY, 40214",38.158466,-85.798355,300,50400,51000));
+        addresses.add(new Address("2707 7TH ST, Louisville, KY, 40215",38.212438,-85.785082,300,51000,51600));
+        addresses.add(new Address("2014 KENDALL LN, Louisville, KY, 40216",38.179394,-85.826668,300,51600,52200));
+        addresses.add(new Address("612 N 39TH ST, Louisville, KY, 40212",38.273354,-85.812012,300,52200,52800));
+        addresses.add(new Address("2215 ROWAN ST, Louisville, KY, 40212",38.261703,-85.786781,300,52800,53400));
+        addresses.add(new Address("1826 W. KENTUCKY ST, Louisville, KY, 40210",38.241611,-85.78653,300,53400,54000));
+        addresses.add(new Address("1810 GREGG AVE, Louisville, KY, 40210",38.224716,-85.796211,300,54000,54600));
+        addresses.add(new Address("4103 BURRRELL DRIVE, Louisville, KY, 40216",38.191753,-85.825836,300,54600,55200));
+        addresses.add(new Address("359 SOUTHWESTERN PKWY, Louisville, KY, 40212",38.259903,-85.823463,300,55200,55800));
+        addresses.add(new Address("2407 W CHESTNUT ST, Louisville, KY, 40211",38.252781,-85.792109,300,55800,56400));
+        addresses.add(new Address("225 S 22ND ST, Louisville, KY, 40212",38.257616,-85.786658,300,56400,57000));
+        addresses.add(new Address("1404 MCCOY AVE, Louisville, KY, 40215",38.202122,-85.786072,300,57000,57600));
+        addresses.add(new Address("117 FOUNT LANDING CT, Louisville, KY, 40212",38.270061,-85.799438,300,57600,58200));
+        addresses.add(new Address("5504 SHOREWOOD DRIVE, Louisville, KY, 40214",38.145851,-85.7798,300,58200,58800));
         route4me.getOptimization().setData(data);
         Response response = route4me.runOptimization();
         DataObject responseObject = Base.GSONDeserializer.fromJson(response.getResponseBody(), DataObject.class);

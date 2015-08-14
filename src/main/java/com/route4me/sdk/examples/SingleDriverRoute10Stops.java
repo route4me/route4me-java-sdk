@@ -20,7 +20,7 @@ import java.util.Map;
 public class SingleDriverRoute10Stops {
 
     public static void main(String[] args) {
-        String apiKey = "22222222222222222222222222222222";
+        String apiKey = "11111111111111111111111111111111";
         Route4Me route4me = new Route4Me(apiKey);
         Optimization optimization = route4me.getOptimization();
         Map<String, String> params = new HashMap<>();
@@ -37,73 +37,17 @@ public class SingleDriverRoute10Stops {
         parameters.setOptimize(Optimize.DISTANCE.toString());
         parameters.setDistance_unit(DistanceUnit.MI.toString());
         parameters.setDevice_type(DeviceType.WEB.toString());
-/*
-        addresses.add(new Address(
-                "151 Arbor Way Milledgeville GA 31061", Boolean.TRUE,
-                33.132675170898,
-                -83.244743347168,
-                0
-        ));
-        addresses.add(new Address(
-                "230 Arbor Way Milledgeville GA 31061",
-                33.129695892334,
-                -83.24577331543,
-                0
-        ));
-        addresses.add(new Address(
-                "148 Bass Rd NE Milledgeville GA 31061",
-                33.143497,
-                -83.224487,
-                0
-        ));
-        addresses.add(new Address(
-                "117 Bill Johnson Rd NE Milledgeville GA 31061",
-                33.141784667969,
-                -83.237518310547,
-                0
-        ));
-        addresses.add(new Address(
-                "119 Bill Johnson Rd NE Milledgeville GA 31061",
-                33.141086578369,
-                -83.238258361816,
-                0
-        ));
-        addresses.add(new Address(
-                "131 Bill Johnson Rd NE Milledgeville GA 31061",
-                33.142036437988,
-                -83.238845825195,
-                0
-        ));
-        addresses.add(new Address(
-                "138 Bill Johnson Rd NE Milledgeville GA 31061",
-                33.14307,
-                -83.239334,
-                0
-        ));
-        addresses.add(new Address(
-                "139 Bill Johnson Rd NE Milledgeville GA 31061",
-                33.142734527588,
-                -83.237442016602,
-                0
-        ));
-        addresses.add(new Address(
-                "145 Bill Johnson Rd NE Milledgeville GA 31061",
-                33.143871307373,
-                -83.237342834473,
-                0
-        ));
-        addresses.add(new Address(
-                "221 Blake Cir Milledgeville GA 31061",
-                33.081462860107,
-                -83.208511352539,
-                0
-        ));
-*/
-        addresses.add(new Address("Jalan Jendral Sudirman Kav. 22-23, Jakarta", Boolean.TRUE, "TeamB", -6.210927, 106.822009, 0));
-        addresses.add(new Address("Jl. Pratama Tanjung Benoa, Jakarta", "316", -6.2087634, 106.845599, 0));
-        addresses.add(new Address("Jalan Setia Budi 2 No. 15, Jakarta", "317", -6.207199,  106.824524, 0));
-        addresses.add(new Address("Jl. Setiabudi Selatan Kav 7-8, Jakarta Selatan", "340", -6.226431, 106.833555, 0));
-        
+        addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214",Boolean.TRUE, 38.141598, -85.793846, 300, 29400, 30000));
+        addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215",38.202496,-85.786514,300,30000,30600));
+        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215",38.178844,-85.774864,300,30600,31200));
+        addresses.add(new Address("730 CECIL AVENUE, Louisville, KY, 40211",38.248684,-85.821121,300,31200,31800));
+        addresses.add(new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211",38.251923,-85.800034,300,31800,32400));
+        addresses.add(new Address("4629 HILLSIDE DRIVE, Louisville, KY, 40216",38.176067,-85.824638,300,32400,33000));
+        addresses.add(new Address("4738 BELLEVUE AVE, Louisville, KY, 40215",38.179806,-85.775558,300,33000,33600));
+        addresses.add(new Address("318 SO. 39TH STREET, Louisville, KY, 40212",38.259335,-85.815094,300,33600,34200));
+        addresses.add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215",38.179253,-85.785118,300,34200,34800));
+        addresses.add(new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214",38.162472,-85.792854,300,34800,35400));
+        addresses.add(new Address("1661 W HILL ST, Louisville, KY, 40210",38.229584,-85.783966,300,35400,36000));        
         route4me.getOptimization().setData(data);
         Response response = route4me.runOptimization();
         DataObject responseObject = Base.GSONDeserializer.fromJson(response.getResponseBody(), DataObject.class);
