@@ -36,6 +36,17 @@ public class Parameters {
     private String device_type;
     private Boolean has_trailer;
     private Number parts;
+    private Number trailer_weight_t;
+    private Number limited_weight_t;
+    private Number weight_per_axle_t;
+    private Number truck_height_meters;
+    private Number truck_width_meters;
+    private Number truck_length_meters;
+    private Number min_tour_size;
+    private String dm;
+    private String dirm;
+    
+    
 
     /**
      * @return the is_upload
@@ -490,6 +501,132 @@ public class Parameters {
      */
     public void setParts(Number parts) {
         this.parts = parts;
+    }
+
+    /**
+     * @return the trailer_weight_t
+     */
+    public Number getTrailer_weight_t() {
+        return trailer_weight_t;
+    }
+
+    /**
+     * @param trailer_weight_t the trailer_weight_t to set
+     */
+    public void setTrailer_weight_t(Number trailer_weight_t) {
+        this.trailer_weight_t = trailer_weight_t;
+    }
+
+    /**
+     * @return the limited_weight_t
+     */
+    public Number getLimited_weight_t() {
+        return limited_weight_t;
+    }
+
+    /**
+     * @param limited_weight_t the limited_weight_t to set
+     */
+    public void setLimited_weight_t(Number limited_weight_t) {
+        this.limited_weight_t = limited_weight_t;
+    }
+
+    /**
+     * @return the weight_per_axle_t
+     */
+    public Number getWeight_per_axle_t() {
+        return weight_per_axle_t;
+    }
+
+    /**
+     * @param weight_per_axle_t the weight_per_axle_t to set
+     */
+    public void setWeight_per_axle_t(Number weight_per_axle_t) {
+        this.weight_per_axle_t = weight_per_axle_t;
+    }
+
+    /**
+     * @return the truck_height_meters
+     */
+    public Number getTruck_height_meters() {
+        return truck_height_meters;
+    }
+
+    /**
+     * @param truck_height_meters the truck_height_meters to set
+     */
+    public void setTruck_height_meters(Number truck_height_meters) {
+        this.truck_height_meters = truck_height_meters;
+    }
+
+    /**
+     * @return the truck_width_meters
+     */
+    public Number getTruck_width_meters() {
+        return truck_width_meters;
+    }
+
+    /**
+     * @param truck_width_meters the truck_width_meters to set
+     */
+    public void setTruck_width_meters(Number truck_width_meters) {
+        this.truck_width_meters = truck_width_meters;
+    }
+
+    /**
+     * @return the truck_length_meters
+     */
+    public Number getTruck_length_meters() {
+        return truck_length_meters;
+    }
+
+    /**
+     * @param truck_length_meters the truck_length_meters to set
+     */
+    public void setTruck_length_meters(Number truck_length_meters) {
+        this.truck_length_meters = truck_length_meters;
+    }
+
+    /**
+     * @return the min_tour_size
+     */
+    public Number getMin_tour_size() {
+        return min_tour_size;
+    }
+
+    /**
+     * @param min_tour_size the min_tour_size to set
+     */
+    public void setMin_tour_size(Number min_tour_size) {
+        this.min_tour_size = min_tour_size;
+    }
+
+    /**
+     * @return the dm
+     */
+    public String getDm() {
+        return dm;
+    }
+
+    /**
+     * @param dm the dm to set
+     */
+    public void setDm(String dm) {
+        this.dm = dm;
+    }
+
+    /**
+     * @return the dirm
+     */
+    public String getDirm() {
+        return dirm;
+    }
+
+    /**
+     * @param dirm the dirm to set
+     */
+    public void setDirm(String dirm) {
+        this.dirm = dirm;
     }
 
 }

@@ -42,6 +42,64 @@ public class Constants {
 
     }
 
+    public enum TypeofMatrix {
+
+        R4M_PROPRIETARY_ROUTING("1"),
+        R4M_TRAFFIC_ENGINE("3"),
+        TRUCKING("6");
+
+        private String value;
+
+        private TypeofMatrix(String value) {
+            this.value = value;
+        }
+
+        /**
+         * @return the value
+         */
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+    }
+
+    
+    public enum DirectionsMethod {
+
+        R4M_PROPRIETARY_INTERNAL_NAVIGATION_SYSTEM("1"),
+        TRUCKING("3");
+
+        private String value;
+
+        private DirectionsMethod(String value) {
+            this.value = value;
+        }
+
+        /**
+         * @return the value
+         */
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(String value) {
+            this.value = value;
+        }
+
+    }
+    
+    
+    
     public enum TravelMode {
 
         DRIVING("Driving"),
