@@ -9,6 +9,8 @@ public class Routes {
         private String route_id;
         private String optimization_problem_id; 
         private String member_id;
+        private String member_email;
+        private List<Direction> directions;
         
         
         
@@ -78,6 +80,34 @@ public class Routes {
      */
     public void setMember_id(String member_id) {
         this.member_id = member_id;
+    }
+
+    /**
+     * @return the member_email
+     */
+    public String getMember_email() {
+        return member_email;
+    }
+
+    /**
+     * @param member_email the member_email to set
+     */
+    public void setMember_email(String member_email) {
+        this.member_email = member_email;
+    }
+
+    /**
+     * @return the directions
+     */
+    public List<Direction> getDirections() {
+        return directions;
+    }
+
+    /**
+     * @param directions the directions to set
+     */
+    public void setDirections(List<Direction> directions) {
+        this.directions = directions;
     }
 
 }

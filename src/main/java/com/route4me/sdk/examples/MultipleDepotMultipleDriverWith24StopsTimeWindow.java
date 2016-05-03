@@ -2,12 +2,13 @@ package com.route4me.sdk.examples;
 
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.model.Address;
-import com.route4me.sdk.model.Base;
 import com.route4me.sdk.model.DataObject;
-import com.route4me.sdk.model.Optimization;
+import com.route4me.sdk.managers.OptimizationManager;
 import com.route4me.sdk.model.Parameters;
 import com.route4me.sdk.model.Response;
 import com.route4me.sdk.model.enums.Constants.*;
+import com.route4me.sdk.serdes.DataObjectDeserializer;
+import com.route4me.sdk.serdes.DataObjectSerializer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,9 +23,9 @@ public class MultipleDepotMultipleDriverWith24StopsTimeWindow {
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
         Route4Me route4me = new Route4Me(apiKey);
-        Optimization optimization = route4me.getOptimization();
+        OptimizationManager optimizationManager = route4me.getOptimizationManager();
         Map<String, String> params = new HashMap<>();
-        optimization.setParams(params);
+        optimizationManager.setParams(params);
         DataObject data = new DataObject();
         Parameters parameters = new Parameters();
         List<Address> addresses = new ArrayList<>();
@@ -94,10 +95,10 @@ public class MultipleDepotMultipleDriverWith24StopsTimeWindow {
         addresses.add(new Address("1404 MCCOY AVE, Louisville, KY, 40215",38.202122,-85.786072,300,57000,57600));
         addresses.add(new Address("117 FOUNT LANDING CT, Louisville, KY, 40212",38.270061,-85.799438,300,57600,58200));
         addresses.add(new Address("5504 SHOREWOOD DRIVE, Louisville, KY, 40214",38.145851,-85.7798,300,58200,58800));
-        route4me.getOptimization().setData(data);
-        Response response = route4me.runOptimization();
-        DataObject responseObject = Base.GSONDeserializer.fromJson(response.getResponseBody(), DataObject.class);
-        String jsonResponse = Base.GSONSerializer.toJson(responseObject);
+        optimizationManager.setData(data);
+        Response response = optimizationManager.runOptimization();
+        DataObject responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
+        String jsonResponse = DataObjectSerializer.GSON_SERIALIZER.toJson(responseObject);
         System.out.println(jsonResponse);
         System.out.println("Response Code:" + response.getResponseCode());
         System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());

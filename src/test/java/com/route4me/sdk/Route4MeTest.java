@@ -30,7 +30,7 @@ public class Route4MeTest {
     
     @Test
     public void testAPIKeySet(){
-        assertEquals(apiKey, route4me.getOptimization().getParams().get("api_key"));
+        assertEquals(apiKey, route4me.getOptimizationManager().getParams().get("api_key"));
     }
     
 }

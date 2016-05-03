@@ -18,6 +18,7 @@ public class DataObject {
     private List<Routes> routes;
     private List<Optimizations> optimizations;
     
+    
     /**
      * @return the addresses
      */

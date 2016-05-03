@@ -18,7 +18,9 @@ public class Constants {
         CVRP_TW_MD("4"),
         TSP_TW("5"),
         TSP_TW_CR("6"),
-        BBCVRP("7");
+        BBCVRP("7"), 
+        ALG_LEGACY_DISTRIBUTED("101"),
+        ALG_NONE("100");
 
         private String value;
 
@@ -313,4 +315,134 @@ public class Constants {
             return this.value;
         }
     }
+
+    public enum UTurn {
+
+        UTURN_DEPART_SHORTEST(1),
+        UTURN_DEPART_TO_RIGHT(2);
+        
+        private int value;
+        private static final Map<Integer, UTurn> lookup
+                = new HashMap<>();
+
+        static {
+            for (UTurn s : EnumSet.allOf(UTurn.class)) {
+                lookup.put(s.getValue(), s);
+            }
+        }
+
+        private UTurn(int value) {
+            this.value = value;
+        }
+
+        /**
+         * @return the value
+         */
+        public int getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(int value) {
+            this.value = value;
+        }
+
+        public static UTurn get(int code) {
+            return lookup.get(code);
+        }
+
+    }
+
+
+    public enum LeftTurn {
+
+        LEFTTURN_ALLOW(1),
+        LEFTTURN_FORBID(2),
+        LEFTTURN_MULTIAPPROACH(3);
+
+        private int value;
+        private static final Map<Integer, LeftTurn> lookup
+                = new HashMap<>();
+
+        static {
+            for (LeftTurn s : EnumSet.allOf(LeftTurn.class)) {
+                lookup.put(s.getValue(), s);
+            }
+        }
+
+        private LeftTurn(int value) {
+            this.value = value;
+        }
+
+        /**
+         * @return the value
+         */
+        public int getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(int value) {
+            this.value = value;
+        }
+
+        public static LeftTurn get(int code) {
+            return lookup.get(code);
+        }
+
+    }
+
+    
+    public enum TruckHazardousGoods {
+
+        NONE(""),
+        EXPLOSIVE("explosive"),
+        GAS("gas"),
+        FLAMMABLE("flammable"),
+        COMBUSTIBLE("combustible"),
+        ORGANIC("organic"),
+        POISON("poison"),
+        RADIOACTIVE("radioActive"),
+        CORROSIVE("corrosive"),
+        POISONOUSINHALATION("poisonousInhalation"),
+        HARMFULTOWATER("harmfulToWater"),
+        OTHER("other"),
+        ALLHAZARDOUSGOODS("allHazardousGoods");
+
+        private String value;
+
+        private TruckHazardousGoods(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+    }    
+    
+    
+    public enum TerritoryType {
+
+        CIRCLE("circle"),
+        POLY("poly"),
+        RECT("rect");
+
+        private String value;
+
+        private TerritoryType(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+    }        
+   
+
 }

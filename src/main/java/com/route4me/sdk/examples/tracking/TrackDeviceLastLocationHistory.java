@@ -1,14 +1,15 @@
-package com.route4me.sdk.examples;
+package com.route4me.sdk.examples.tracking;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.model.Base;
 import com.route4me.sdk.model.DataObject;
 import com.route4me.sdk.model.Response;
-import com.route4me.sdk.model.Route;
-import com.route4me.sdk.model.SetGPS;
+import com.route4me.sdk.managers.RouteManager;
+import com.route4me.sdk.managers.TrackingManager;
 import com.route4me.sdk.model.TrackingHistory;
 import com.route4me.sdk.model.enums.Constants.DeviceType;
 import com.route4me.sdk.model.enums.Constants.Format;
+import com.route4me.sdk.serdes.DataObjectDeserializer;
+import com.route4me.sdk.serdes.DataObjectSerializer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -21,7 +22,7 @@ public class TrackDeviceLastLocationHistory {
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
         Route4Me route4me = new Route4Me(apiKey);
-        Route route = route4me.getRoute();
+        RouteManager route = route4me.getRouteManager();
         Map<String, String> params = new HashMap<>();
         params.put("format", Format.CSV.toString());
         params.put("route_id", "742A9E5051AA84B9E6365C92369B030C");
@@ -33,17 +34,17 @@ public class TrackDeviceLastLocationHistory {
         params.put("member_id", "1");
         params.put("device_guid", "TEST_GPS");
         params.put("device_timestamp", "2014-06-14 17:43:35");
-        SetGPS gps = route4me.getSetGPS();
-        gps.setParams(params);
-        Response response = route4me.setGPSPosition();
+        TrackingManager trackingManager = route4me.getTrackingManager();
+        trackingManager.setParams(params);
+        Response response = trackingManager.setGPSPosition();
         System.out.println(response.getResponseBody());
         params.clear();
         params.put("route_id", "742A9E5051AA84B9E6365C92369B030C");
         params.put("device_tracking_history", "1");
         route.setParams(params);
-        response = route4me.getLastLocation();
-        DataObject responseObject = Base.GSONDeserializer.fromJson(response.getResponseBody(), DataObject.class);
-        String jsonResponse = Base.GSONSerializer.toJson(responseObject);
+        response = trackingManager.getLastLocation();
+        DataObject responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
+        String jsonResponse = DataObjectSerializer.GSON_SERIALIZER.toJson(responseObject);
         System.out.println(jsonResponse);
         System.out.println("Response Code:" + response.getResponseCode());
         System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());

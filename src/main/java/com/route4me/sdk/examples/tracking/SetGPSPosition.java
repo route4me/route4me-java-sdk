@@ -1,8 +1,8 @@
-package com.route4me.sdk.examples;
+package com.route4me.sdk.examples.tracking;
 
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.model.Response;
-import com.route4me.sdk.model.SetGPS;
+import com.route4me.sdk.managers.TrackingManager;
 import java.util.HashMap;
 import java.util.Map;
 import com.route4me.sdk.model.enums.Constants.*;
@@ -27,9 +27,9 @@ public class SetGPSPosition {
         params.put("member_id", "1");
         params.put("device_guid", "TEST_GPS");
         params.put("device_timestamp", "2014-06-14 17:43:35");
-        SetGPS gps = route4me.getSetGPS();
-        gps.setParams(params);
-        Response response = route4me.setGPSPosition();
+        TrackingManager trackingManager = route4me.getTrackingManager();
+        trackingManager.setParams(params);
+        Response response = trackingManager.setGPSPosition();
         System.out.println(response.getResponseBody());
 
     }

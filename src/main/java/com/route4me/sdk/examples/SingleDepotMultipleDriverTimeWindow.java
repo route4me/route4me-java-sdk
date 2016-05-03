@@ -8,6 +8,7 @@ import com.route4me.sdk.model.Parameters;
 import com.route4me.sdk.model.Response;
 import com.route4me.sdk.model.enums.Constants.*;
 import com.route4me.sdk.serdes.DataObjectDeserializer;
+import com.route4me.sdk.serdes.DataObjectSerializer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -17,7 +18,7 @@ import java.util.Map;
  *
  * @author juan
  */
-public class MultipleDepotMultipleDriver {
+public class SingleDepotMultipleDriverTimeWindow {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
@@ -34,18 +35,19 @@ public class MultipleDepotMultipleDriver {
         parameters.setStore_route(Boolean.FALSE);
         parameters.setShare_route(Boolean.FALSE);
         parameters.setRoute_time(0);
-        parameters.setParts(20);
+        parameters.setRt(Boolean.TRUE);
         parameters.setRoute_max_duration(86400);
-        parameters.setVehicle_capacity("9999");
-        parameters.setVehicle_max_distance_mi("10000");
-        parameters.setRoute_name("Multiple Depot, Multiple Driver");
-        parameters.setOptimize(Optimize.DISTANCE.toString());
+        parameters.setVehicle_capacity("99");
+        parameters.setVehicle_max_distance_mi("99999");
+        parameters.setRoute_name("Multiple Depot, Multiple Driver, Time Window");
+        parameters.setOptimize(Optimize.TIME.toString());
         parameters.setDistance_unit(DistanceUnit.MI.toString());
         parameters.setDevice_type(DeviceType.WEB.toString());
         parameters.setTravel_mode(TravelMode.DRIVING.toString());
         parameters.setMetric(Metric.ROUTE4ME_METRIC_GEODESIC.getValue());
+        parameters.setParts(20);
         addresses.add(new Address("455 S 4th St, Louisville, KY 40202",Boolean.TRUE, 38.251698, -85.757308, 300, 28800, 29400));
-        addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214",Boolean.TRUE, 38.141598, -85.793846, 300, 29400, 30000));
+        addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", 38.141598, -85.793846, 300, 29400, 30000));
         addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215",38.202496,-85.786514,300,30000,30600));
         addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215",38.178844,-85.774864,300,30600,31200));
         addresses.add(new Address("730 CECIL AVENUE, Louisville, KY, 40211",38.248684,-85.821121,300,31200,31800));
@@ -97,6 +99,8 @@ public class MultipleDepotMultipleDriver {
         optimizationManager.setData(data);
         Response response = optimizationManager.runOptimization();
         DataObject responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
+        String jsonResponse = DataObjectSerializer.GSON_SERIALIZER.toJson(responseObject);
+        System.out.println(jsonResponse);
         System.out.println("Response Code:" + response.getResponseCode());
         System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());
         System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));

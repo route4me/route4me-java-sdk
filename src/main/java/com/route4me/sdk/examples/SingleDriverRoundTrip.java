@@ -2,12 +2,12 @@ package com.route4me.sdk.examples;
 
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.model.Address;
-import com.route4me.sdk.model.Base;
 import com.route4me.sdk.model.DataObject;
-import com.route4me.sdk.model.Optimization;
+import com.route4me.sdk.managers.OptimizationManager;
 import com.route4me.sdk.model.Parameters;
 import com.route4me.sdk.model.Response;
 import com.route4me.sdk.model.enums.Constants.*;
+import com.route4me.sdk.serdes.DataObjectDeserializer;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -22,9 +22,9 @@ public class SingleDriverRoundTrip {
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
         Route4Me route4me = new Route4Me(apiKey);
-        Optimization optimization = route4me.getOptimization();
+        OptimizationManager optimizationManager = route4me.getOptimizationManager();
         Map<String, String> params = new HashMap<>();
-        optimization.setParams(params);
+        optimizationManager.setParams(params);
         DataObject data = new DataObject();
         Parameters parameters = new Parameters();
         List<Address> addresses = new ArrayList<>();
@@ -60,11 +60,9 @@ public class SingleDriverRoundTrip {
                 40.7718005, -73.9897716, 0));
         addresses.add(new Address("57 W 57th St New York, NY 10019", "Verizon Wireless",
                 40.7558695, -73.9862019, 0));
-        route4me.getOptimization().setData(data);
-        Response response = route4me.runOptimization();
-        DataObject responseObject = Base.GSONDeserializer.fromJson(response.getResponseBody(), DataObject.class);
-        String jsonResponse = Base.GSONSerializer.toJson(responseObject);
-        System.out.println(jsonResponse);
+        optimizationManager.setData(data);
+        Response response = optimizationManager.runOptimization();
+        DataObject responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
         System.out.println("Response Code:" + response.getResponseCode());
         System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());
         System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
