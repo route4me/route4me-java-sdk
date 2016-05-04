@@ -17,6 +17,8 @@ public class DataObject {
     private Links links;
     private List<Routes> routes;
     private List<Optimizations> optimizations;
+    private String driver_alias;
+
     
     
     /**
@@ -151,6 +153,20 @@ public class DataObject {
      */
     public void setRoutes(List<Routes> routes) {
         this.routes = routes;
+    }
+
+    /**
+     * @return the driver_alias
+     */
+    public String getDriver_alias() {
+        return driver_alias;
+    }
+
+    /**
+     * @param driver_alias the driver_alias to set
+     */
+    public void setDriver_alias(String driver_alias) {
+        this.driver_alias = driver_alias;
     }
     
 }

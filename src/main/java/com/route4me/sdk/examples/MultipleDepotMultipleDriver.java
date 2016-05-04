@@ -95,9 +95,7 @@ public class MultipleDepotMultipleDriver {
         addresses.add(new Address("117 FOUNT LANDING CT, Louisville, KY, 40212",38.270061,-85.799438,300,57600,58200));
         addresses.add(new Address("5504 SHOREWOOD DRIVE, Louisville, KY, 40214",38.145851,-85.7798,300,58200,58800));
         optimizationManager.setData(data);
-        Response response = optimizationManager.runOptimization();
-        DataObject responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
-        System.out.println("Response Code:" + response.getResponseCode());
+        DataObject responseObject = optimizationManager.runOptimization();
         System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());
         System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
         if (responseObject.getAddresses() != null) {

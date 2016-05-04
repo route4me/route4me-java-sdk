@@ -3,10 +3,7 @@ package com.route4me.sdk.examples.optimizations;
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.managers.OptimizationManager;
 import com.route4me.sdk.model.DataObject;
-import com.route4me.sdk.model.Response;
 import com.route4me.sdk.model.enums.Constants;
-import com.route4me.sdk.serdes.DataObjectDeserializer;
-import com.route4me.sdk.serdes.DataObjectSerializer;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -28,11 +25,7 @@ public class ReOptimization {
         params.put("remote_ip", "192168001001");
         optimizationManager = route4me.getOptimizationManager();
         optimizationManager.setParams(params);
-        Response response = optimizationManager.reOptimization();
-        responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
-        String jsonResponse = DataObjectSerializer.GSON_SERIALIZER.toJson(responseObject);
-        System.out.println(jsonResponse);
-        System.out.println("Response Code:" + response.getResponseCode());        
+        responseObject = optimizationManager.reOptimization();
         System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());
         System.out.println("State:" + Constants.OptimizationState.get(responseObject.getState().intValue()));
         

@@ -63,11 +63,7 @@ public class SingleDepotMultipleDriver {
         addresses.add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215",38.179253,-85.785118, 300));
         addresses.add(new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214",38.162472,-85.792854, 300));
         optimizationManager.setData(data);
-        Response response = optimizationManager.runOptimization();
-        DataObject responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
-        String jsonResponse = DataObjectSerializer.GSON_SERIALIZER.toJson(responseObject);
-        System.out.println(jsonResponse);
-        System.out.println("Response Code:" + response.getResponseCode());
+        DataObject responseObject = optimizationManager.runOptimization();
         System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());
         System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
         if (responseObject.getRoutes() != null) {

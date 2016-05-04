@@ -23,11 +23,11 @@ public class OptimizationManager extends Manager{
         super(apiKey);
     }
     
-    public Response reOptimization() {
+    public DataObject reOptimization() {
         return reOptimization(null);
     }
 
-    public Response reOptimization(DataObject data) {
+    public DataObject reOptimization(DataObject data) {
         Response response = null;
         setData(data);
         String params;
@@ -41,13 +41,14 @@ public class OptimizationManager extends Manager{
         } catch (IOException ex) {
             Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return response;
+        DataObject responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
+        return responseObject;
     }
 
     public DataObject getOptimizations(Integer limit, Integer offset) {
         Response response = null;
         Map<String, String> params = new HashMap<>();
-        params.put("api_key", Route4Me.apiKey);
+        params.put("api_key", Route4Me.getApiKey());
         params.put("limit", limit.toString());
         params.put("Offset", offset.toString());
         String strParams;
@@ -68,7 +69,7 @@ public class OptimizationManager extends Manager{
     public DataObject getOptimization(String optimizationProblemID) {
         Response response = null;
         Map<String, String> params = new HashMap<>();
-        params.put("api_key", Route4Me.apiKey);
+        params.put("api_key", Route4Me.getApiKey());
         params.put("optimization_problem_id", optimizationProblemID);
         String strParams;
         try {
@@ -85,7 +86,7 @@ public class OptimizationManager extends Manager{
         return responseObject;
     }
 
-    public Response runOptimization() {
+    public DataObject runOptimization() {
         Response response = null;
         String params;
         try {
@@ -98,7 +99,8 @@ public class OptimizationManager extends Manager{
         } catch (IOException ex) {
             Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
         }
-        return response;
+        DataObject responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
+        return responseObject;
     }
     
 

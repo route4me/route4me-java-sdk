@@ -11,6 +11,11 @@ public class Routes {
         private String member_id;
         private String member_email;
         private List<Direction> directions;
+        private String driver_alias;
+        private String vehicle_alias;
+        private Boolean deleted;
+        private List<String> routes_ids;
+        private List<String> tracking_history;
         
         
         
@@ -108,6 +113,76 @@ public class Routes {
      */
     public void setDirections(List<Direction> directions) {
         this.directions = directions;
+    }
+
+    /**
+     * @return the driver_alias
+     */
+    public String getDriver_alias() {
+        return driver_alias;
+    }
+
+    /**
+     * @param driver_alias the driver_alias to set
+     */
+    public void setDriver_alias(String driver_alias) {
+        this.driver_alias = driver_alias;
+    }
+
+    /**
+     * @return the vehicle_alias
+     */
+    public String getVehicle_alias() {
+        return vehicle_alias;
+    }
+
+    /**
+     * @param vehicle_alias the vehicle_alias to set
+     */
+    public void setVehicle_alias(String vehicle_alias) {
+        this.vehicle_alias = vehicle_alias;
+    }
+
+    /**
+     * @return the deleted
+     */
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    /**
+     * @param deleted the deleted to set
+     */
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    /**
+     * @return the routes_ids
+     */
+    public List<String> getRoutes_ids() {
+        return routes_ids;
+    }
+
+    /**
+     * @param routes_ids the routes_ids to set
+     */
+    public void setRoutes_ids(List<String> routes_ids) {
+        this.routes_ids = routes_ids;
+    }
+
+    /**
+     * @return the tracking_history
+     */
+    public List<String> getTracking_history() {
+        return tracking_history;
+    }
+
+    /**
+     * @param tracking_history the tracking_history to set
+     */
+    public void setTracking_history(List<String> tracking_history) {
+        this.tracking_history = tracking_history;
     }
 
 }

@@ -1,11 +1,13 @@
 package com.route4me.sdk;
 
+import com.route4me.sdk.managers.ActivityManager;
 import com.route4me.sdk.managers.AddressBookManager;
 import com.route4me.sdk.managers.AddressesManager;
 import com.route4me.sdk.managers.AvoidanceZoneManager;
 import com.route4me.sdk.managers.OptimizationManager;
 import com.route4me.sdk.managers.RouteManager;
 import com.route4me.sdk.managers.TrackingManager;
+import com.route4me.sdk.managers.UsersManager;
 
 /**
  *
@@ -15,7 +17,21 @@ public class Route4Me {
 
     public static final String CHARSET = "UTF-8";
 
-    public static volatile String apiKey;
+    private static volatile String apiKey;
+
+    /**
+     * @return the apiKey
+     */
+    public static String getApiKey() {
+        return apiKey;
+    }
+
+    /**
+     * @param aApiKey the apiKey to set
+     */
+    public static void setApiKey(String aApiKey) {
+        apiKey = aApiKey;
+    }
     
     private final AddressBookManager addressBookManager;
     private final AddressesManager addressesManager;
@@ -23,6 +39,8 @@ public class Route4Me {
     private final OptimizationManager optimizationManager;
     private final RouteManager routeManager;
     private final TrackingManager trackingManager;
+    private ActivityManager activityManager;
+    private UsersManager userManager;
     
     
     public Route4Me(String apiKey) {
@@ -33,6 +51,9 @@ public class Route4Me {
         this.addressesManager = new AddressesManager(apiKey);
         this.addressBookManager = new AddressBookManager(apiKey);
         this.avoidanceZoneManager = new AvoidanceZoneManager(apiKey);
+        this.activityManager = new ActivityManager(apiKey);
+        this.userManager = new UsersManager(apiKey);
+        
     }
 
     /**
@@ -75,5 +96,33 @@ public class Route4Me {
      */
     public AvoidanceZoneManager getAvoidanceZoneManager() {
         return avoidanceZoneManager;
+    }
+
+    /**
+     * @return the activityManager
+     */
+    public ActivityManager getActivityManager() {
+        return activityManager;
+    }
+
+    /**
+     * @param activityManager the activityManager to set
+     */
+    public void setActivityManager(ActivityManager activityManager) {
+        this.activityManager = activityManager;
+    }
+
+    /**
+     * @return the userManager
+     */
+    public UsersManager getUserManager() {
+        return userManager;
+    }
+
+    /**
+     * @param userManager the userManager to set
+     */
+    public void setUserManager(UsersManager userManager) {
+        this.userManager = userManager;
     }
 }

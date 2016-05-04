@@ -1,11 +1,14 @@
-package com.route4me.sdk.examples;
+package com.route4me.sdk.examples.routes;
 
+import com.route4me.sdk.examples.*;
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.model.Address;
 import com.route4me.sdk.model.DataObject;
 import com.route4me.sdk.managers.OptimizationManager;
+import com.route4me.sdk.managers.RouteManager;
 import com.route4me.sdk.model.Parameters;
 import com.route4me.sdk.model.Response;
+import com.route4me.sdk.model.Routes;
 import com.route4me.sdk.model.enums.Constants.*;
 import com.route4me.sdk.serdes.DataObjectDeserializer;
 import com.route4me.sdk.serdes.DataObjectSerializer;
@@ -18,7 +21,7 @@ import java.util.Map;
  *
  * @author juan
  */
-public class SingleDriverRoute10Stops {
+public class DeleteRoute {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
@@ -51,14 +54,11 @@ public class SingleDriverRoute10Stops {
         addresses.add(new Address("1661 W HILL ST, Louisville, KY, 40210",38.229584,-85.783966,300,35400,36000));        
         optimizationManager.setData(data);
         DataObject responseObject = optimizationManager.runOptimization();
-        System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());
-        System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
-        if (responseObject.getAddresses() != null) {
-            for (Address address : responseObject.getAddresses()) {
-                System.out.println("Address:" + address.getAddress());
-                System.out.println("Route ID:" + address.getRoute_id());
-            }
-        }
+        String routeID = responseObject.getRoutes().get(0).getRoute_id();
+        RouteManager routeManager = route4me.getRouteManager();
+        Routes response = routeManager.deleteRoute(routeID);
+        System.out.println("Route ID: " + response.getRoute_id());
+        System.out.println("Deleted: " + response.getDeleted());
     }
 
 }

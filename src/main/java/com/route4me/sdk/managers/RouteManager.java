@@ -70,7 +70,7 @@ public class RouteManager extends Manager {
         Response response = null;
         List<Routes> routes = new ArrayList<>();
         Map<String, String> params = new HashMap<>();
-        params.put("api_key", Route4Me.apiKey);
+        params.put("api_key", Route4Me.getApiKey());
         params.put("limit", limit.toString());
         params.put("Offset", offset.toString());
         String strParams;
@@ -115,10 +115,29 @@ public class RouteManager extends Manager {
         return responseObject;
     }
 
+    public Routes updateRoute(Routes parameters, String routeID) {
+        Response response = null;
+        String params;
+        getParams().put("route_id", routeID);
+        String data = getGson().toJson(parameters);
+        try {
+            params = Manager.transformParams(getParams());
+            response = Manager.makeURLConnectionRequest(RequestMethod.PUT, routeHostURL(), params, data);
+        } catch (APIConnectionException | InvalidRequestException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Routes responseObject = getGson().fromJson(response.getResponseBody(), Routes.class);
+        return responseObject;
+    }
+
     public Routes getRouteManifest(String routeID) {
         Response response = null;
         Map<String, String> params = new HashMap<>();
-        params.put("api_key", Route4Me.apiKey);
+        params.put("api_key", Route4Me.getApiKey());
         params.put("route_id", routeID);
         params.put("directions", "1");
         params.put("route_path_output", RoutePathOutput.POINTS.toString());
@@ -137,6 +156,69 @@ public class RouteManager extends Manager {
         Routes responseObject = getGson().fromJson(response.getResponseBody(), Routes.class);
         return responseObject;
     }
+
+        public Routes getRouteTracking(String routeID) {
+        Response response = null;
+        Map<String, String> params = new HashMap<>();
+        params.put("api_key", Route4Me.getApiKey());
+        params.put("route_id", routeID);
+        params.put("device_tracking_history", "true");
+        String strParams;
+        try {
+            strParams = Manager.transformParams(params);
+            response = Manager.makeURLConnectionRequest(RequestMethod.GET, routeHostURL(), strParams);
+        } catch (APIConnectionException | InvalidRequestException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Routes responseObject = getGson().fromJson(response.getResponseBody(), Routes.class);
+        return responseObject;
+    }
+   
+    public Routes deleteRoute(String routeID) {
+        Response response = null;
+        Map<String, String> params = new HashMap<>();
+        params.put("api_key", Route4Me.getApiKey());
+        params.put("route_id", routeID);
+        String strParams;
+        try {
+            strParams = Manager.transformParams(params);
+            response = Manager.makeURLConnectionRequest(RequestMethod.DELETE, routeHostURL(), strParams);
+        } catch (APIConnectionException | InvalidRequestException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Routes responseObject = getGson().fromJson(response.getResponseBody(), Routes.class);
+        return responseObject;
+    }
     
+    public Routes deleteRoutes(List<String> routeID) {
+        Response response = null;
+        Map<String, String> params = new HashMap<>();
+        params.put("api_key", Route4Me.getApiKey());
+        String routeIDs = String.join(",", routeID);
+        params.put("route_id", routeIDs);
+        System.out.println(routeIDs);
+        String strParams;
+        try {
+            strParams = Manager.transformParams(params);
+            response = Manager.makeURLConnectionRequest(RequestMethod.DELETE, routeHostURL(), strParams);
+        } catch (APIConnectionException | InvalidRequestException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (UnsupportedEncodingException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        Routes responseObject = getGson().fromJson(response.getResponseBody(), Routes.class);
+        return responseObject;
+    }
+
     
 }

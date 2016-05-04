@@ -61,9 +61,7 @@ public class SingleDriverRoundTrip {
         addresses.add(new Address("57 W 57th St New York, NY 10019", "Verizon Wireless",
                 40.7558695, -73.9862019, 0));
         optimizationManager.setData(data);
-        Response response = optimizationManager.runOptimization();
-        DataObject responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
-        System.out.println("Response Code:" + response.getResponseCode());
+        DataObject responseObject = optimizationManager.runOptimization();
         System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());
         System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
         if (responseObject.getAddresses() != null) {

@@ -3,9 +3,7 @@ package com.route4me.sdk.examples.routes;
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.managers.RouteManager;
 import com.route4me.sdk.model.Routes;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  *

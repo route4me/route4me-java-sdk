@@ -72,7 +72,7 @@ public class AddressBookManager extends Manager {
     public Contact getContact(Number addressID) {
         Response response = null;
         Map<String, String> params = new HashMap<>();
-        params.put("api_key", Route4Me.apiKey);
+        params.put("api_key", Route4Me.getApiKey());
         params.put("address_id", "'" + addressID.toString() + "'");
         String strParams;
         try {
@@ -92,7 +92,7 @@ public class AddressBookManager extends Manager {
     public Contact getContacts(Integer limit, Integer offset) {
         Response response = null;
         Map<String, String> params = new HashMap<>();
-        params.put("api_key", Route4Me.apiKey);
+        params.put("api_key", Route4Me.getApiKey());
         params.put("limit", limit.toString());
         params.put("Offset", offset.toString());
         String strParams;
@@ -136,7 +136,7 @@ public class AddressBookManager extends Manager {
 
         Response response = null;
         Map<String, String> params = new HashMap<>();
-        params.put("api_key", Route4Me.apiKey);
+        params.put("api_key", Route4Me.getApiKey());
         Gson gson;
         gson = new Gson();
         AddressesID addressIds = new AddressesID(addressIDs);
