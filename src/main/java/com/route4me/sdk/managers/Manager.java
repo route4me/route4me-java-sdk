@@ -1,5 +1,6 @@
 package com.route4me.sdk.managers;
 
+import com.route4me.sdk.http.HttpDeleteWithBody;
 import com.google.gson.Gson;
 import com.route4me.sdk.serdes.DataObjectSerializer;
 import com.route4me.sdk.Route4Me;
@@ -15,11 +16,14 @@ import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpDelete;
 import org.apache.http.client.methods.HttpGet;
@@ -36,9 +40,8 @@ import org.apache.http.impl.client.HttpClients;
 public abstract class Manager {
 
     private Response response;
-    
-    private Gson gson = new Gson();
 
+    private Gson gson = new Gson();
 
     public static String getResponseBody(InputStream inputStream) {
         BufferedReader br = new BufferedReader(new InputStreamReader(inputStream));
@@ -67,7 +70,7 @@ public abstract class Manager {
     }
 
     public static Response makeURLConnectionRequest(RequestMethod method, String url, String params) throws APIConnectionException, IOException {
-        return makeURLConnectionRequest(method, url, params, null);
+        return makeURLConnectionRequest(method, url, params, (String) null);
     }
 
     /**
@@ -93,10 +96,19 @@ public abstract class Manager {
 
     protected enum RequestMethod {
 
-        GET, POST, DELETE, PUT, DELETE_BODY;
+        GET, POST, POST_FORM, DELETE, PUT, DELETE_BODY;
     }
 
-    public static Response makeURLConnectionRequest(RequestMethod method, String url, String params, String data) throws APIConnectionException, IOException {
+    protected static Response makeURLConnectionRequest(RequestMethod method, String url, String params, String data) throws APIConnectionException, IOException {
+        return makeURLConnectionRequest(method, url, params, data, null);
+    }
+
+    protected static Response makeURLConnectionRequest(RequestMethod method, String url, String params, List<NameValuePair> data) throws APIConnectionException, IOException {
+        return makeURLConnectionRequest(method, url, params, null, data);
+    }
+
+
+    protected static Response makeURLConnectionRequest(RequestMethod method, String url, String params, String data, List<NameValuePair> listData) throws APIConnectionException, IOException {
         CloseableHttpResponse response = null;
         try {
             switch (method) {
@@ -108,6 +120,9 @@ public abstract class Manager {
                     break;
                 case POST:
                     response = createPostConnection(url, params, data);
+                    break;
+                case POST_FORM:
+                    response = createPostFormConnection(url, params, listData);
                     break;
                 case DELETE:
                     response = createDeleteConnection(url, params);
@@ -140,7 +155,7 @@ public abstract class Manager {
         }
     }
 
-    private static CloseableHttpResponse createPostConnection(String url, String params, String data) throws IOException {
+    protected static CloseableHttpResponse createPostConnection(String url, String params, String data) throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPost post = new HttpPost(formatURL(url, params));
         post.setEntity(new StringEntity(data));
@@ -149,7 +164,16 @@ public abstract class Manager {
         return response;
     }
 
-    private static CloseableHttpResponse createPutConnection(String url, String params, String data) throws IOException {
+    protected static CloseableHttpResponse createPostFormConnection(String url, String params, List <NameValuePair> data) throws IOException {
+        CloseableHttpClient httpClient = HttpClients.createDefault();
+        HttpPost post = new HttpPost(formatURL(url, params));
+        post.setEntity(new UrlEncodedFormEntity(data));
+        CloseableHttpResponse response = null;
+        response = httpClient.execute(post);
+        return response;
+    }
+
+    protected static CloseableHttpResponse createPutConnection(String url, String params, String data) throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpPut put = new HttpPut(formatURL(url, params));
         put.setEntity(new StringEntity(data));
@@ -158,7 +182,7 @@ public abstract class Manager {
         return response;
     }
 
-    private static String formatURL(String url, String query) {
+    protected static String formatURL(String url, String query) {
         if (query == null || query.isEmpty()) {
             return url;
         } else {
@@ -168,7 +192,7 @@ public abstract class Manager {
         }
     }
 
-    public static String transformParams(Map<String, String> params) throws UnsupportedEncodingException, InvalidRequestException {
+    protected static String transformParams(Map<String, String> params) throws UnsupportedEncodingException, InvalidRequestException {
         StringBuilder queryStringBuffer = new StringBuilder();
         for (Map.Entry<String, String> entry : params.entrySet()) {
             if (queryStringBuffer.length() > 0) {
@@ -179,7 +203,7 @@ public abstract class Manager {
         return queryStringBuffer.toString();
     }
 
-    private static CloseableHttpResponse createDeleteConnection(String url, String params) throws IOException {
+    protected static CloseableHttpResponse createDeleteConnection(String url, String params) throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpDelete delete = new HttpDelete(formatURL(url, params));
         CloseableHttpResponse response = null;
@@ -187,7 +211,7 @@ public abstract class Manager {
         return response;
     }
 
-    private static CloseableHttpResponse createDeleteConnection(String url, String params, String data) throws IOException {
+    protected static CloseableHttpResponse createDeleteConnection(String url, String params, String data) throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpDeleteWithBody delete = new HttpDeleteWithBody(formatURL(url, params));
         delete.setEntity(new StringEntity(data));
@@ -196,7 +220,7 @@ public abstract class Manager {
         return response;
     }
 
-    private static CloseableHttpResponse createGetConnection(String url, String params) throws IOException {
+    protected static CloseableHttpResponse createGetConnection(String url, String params) throws IOException {
         CloseableHttpClient httpClient = HttpClients.createDefault();
         HttpGet get = new HttpGet(formatURL(url, params));
         CloseableHttpResponse response = null;
@@ -251,63 +275,63 @@ public abstract class Manager {
         return null;
     }
 
-    public String usersHostURL() {
+    protected String usersHostURL() {
         return APIEndPoints.GET_USERS_HOST + "?";
     }
 
-    public String addressBookURL() {
+    protected String addressBookURL() {
         return APIEndPoints.ADDRESSBOOK + "?";
     }
 
-    public String routeHostURL() {
+    protected String routeHostURL() {
         return APIEndPoints.ROUTE_HOST + "?";
     }
 
-    public String duplicateRoutetURL() {
+    protected String duplicateRoutetURL() {
         return APIEndPoints.DUPLICATE_ROUTE + "?";
     }
 
-    public String singleGeocoderURL() {
+    protected String singleGeocoderURL() {
         return APIEndPoints.SINGLE_GEOCODER + "?";
     }
 
-    public String buildBaseURL() {
+    protected String buildBaseURL() {
         return APIEndPoints.API_HOST + "?";
     }
 
-    public String routeURL() {
+    protected String routeURL() {
         return APIEndPoints.SHOW_ROUTE_HOST + "?";
     }
 
-    public String exportURL() {
+    protected String exportURL() {
         return APIEndPoints.EXPORTER + "?";
     }
 
-    public String batchGeocoderURL() {
+    protected String batchGeocoderURL() {
         return APIEndPoints.BATCH_GEOCODER + "?";
     }
 
-    public String addressURL() {
+    protected String addressURL() {
         return APIEndPoints.ADDRESS_HOST + "?";
     }
 
-    public String addROuteNotesHostURL() {
+    protected String addRouteNotesHostURL() {
         return APIEndPoints.ADD_ROUTE_NOTES_HOST + "?";
     }
 
-    public String avoidanceURL() {
+    protected String avoidanceURL() {
         return APIEndPoints.AVOIDANCE + "?";
     }
 
-    public String moveRouteDestinationURL() {
+    protected String moveRouteDestinationURL() {
         return APIEndPoints.MOVE_ROUTE_DESTINATION + "?";
     }
 
-    public String getActivityHostURL() {
+    protected String getActivityHostURL() {
         return APIEndPoints.GET_ACTIVITIES_HOST + "?";
     }
 
-    public String setGPSURL() {
+    protected String setGPSURL() {
         return APIEndPoints.SET_GPS_HOST + "?";
     }
 

@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.route4me.sdk.managers;
+package com.route4me.sdk.http;
 
 import java.net.URI;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
