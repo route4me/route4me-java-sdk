@@ -6,7 +6,6 @@ import com.route4me.sdk.model.Address;
 import com.route4me.sdk.model.DataObject;
 import com.route4me.sdk.managers.OptimizationManager;
 import com.route4me.sdk.model.Parameters;
-import com.route4me.sdk.model.Response;
 import com.route4me.sdk.model.Routes;
 import com.route4me.sdk.model.enums.Constants.*;
 import java.util.ArrayList;

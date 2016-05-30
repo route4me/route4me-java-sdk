@@ -115,7 +115,6 @@ public class AddressesManager extends Manager {
             Logger.getLogger(Route4Me.class.getName()).log(Level.SEVERE, null, ex);
         }
         
-        System.out.println(response.getResponseBody());
         Routes responseObject = getGson().fromJson(response.getResponseBody(), Routes.class);
         return responseObject;
     }    
