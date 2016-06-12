@@ -1,15 +1,11 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package com.route4me.sdk.examples.avoidancezones;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.managers.AvoidanceZoneManager;
+import com.route4me.sdk.services.zones.AvoidanceZoneManager;
 import com.route4me.sdk.model.Response;
-import com.route4me.sdk.model.Territory;
-import com.route4me.sdk.model.TerritoryData;
+import com.route4me.sdk.services.zones.Territory;
+import com.route4me.sdk.services.zones.TerritoryData;
 import com.route4me.sdk.model.enums.Constants;
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +17,7 @@ import java.util.List;
 public class DeleteAvoidanceZone {
 
 
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";

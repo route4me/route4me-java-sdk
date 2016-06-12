@@ -1,10 +1,10 @@
 package com.route4me.sdk.examples;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.model.Address;
-import com.route4me.sdk.model.DataObject;
+import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.managers.OptimizationManager;
-import com.route4me.sdk.model.Parameters;
+import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.model.enums.Constants.*;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -28,13 +28,13 @@ public class SingleDriverRoute10Stops {
         List<Address> addresses = new ArrayList<>();
         data.setParameters(parameters);
         data.setAddresses(addresses);
-        parameters.setAlgorithm_type(AlgorithmType.TSP.getValue());
-        parameters.setStore_route(Boolean.FALSE);
-        parameters.setShare_route(Boolean.FALSE);
-        parameters.setRoute_name("Single Driver Route 10 Stops");
+        parameters.setAlgorithmType(AlgorithmType.TSP.getValue());
+        parameters.setStoreRoute(Boolean.FALSE);
+        parameters.setShareRoute(Boolean.FALSE);
+        parameters.setRouteName("Single Driver Route 10 Stops");
         parameters.setOptimize(Optimize.DISTANCE.toString());
-        parameters.setDistance_unit(DistanceUnit.MI.toString());
-        parameters.setDevice_type(DeviceType.WEB.toString());
+        parameters.setDistanceUnit(DistanceUnit.MI.toString());
+        parameters.setDeviceType(DeviceType.WEB.toString());
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214",Boolean.TRUE, 38.141598, -85.793846, 300, 29400, 30000));
         addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215",38.202496,-85.786514,300,30000,30600));
         addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215",38.178844,-85.774864,300,30600,31200));
@@ -48,12 +48,12 @@ public class SingleDriverRoute10Stops {
         addresses.add(new Address("1661 W HILL ST, Louisville, KY, 40210",38.229584,-85.783966,300,35400,36000));        
         optimizationManager.setData(data);
         DataObject responseObject = optimizationManager.runOptimization();
-        System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());
+        System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
         System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
         if (responseObject.getAddresses() != null) {
             for (Address address : responseObject.getAddresses()) {
                 System.out.println("Address:" + address.getAddress());
-                System.out.println("Route ID:" + address.getRoute_id());
+                System.out.println("Route ID:" + address.getRouteId());
             }
         }
     }

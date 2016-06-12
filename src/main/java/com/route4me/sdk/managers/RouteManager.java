@@ -1,12 +1,14 @@
 package com.route4me.sdk.managers;
 
+import com.route4me.sdk.RequestMethod;
+import com.route4me.sdk.Manager;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonParser;
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.exception.APIConnectionException;
 import com.route4me.sdk.exception.InvalidRequestException;
-import com.route4me.sdk.model.DataObject;
+import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.model.Response;
 import com.route4me.sdk.model.Routes;
 import com.route4me.sdk.model.enums.Constants.RoutePathOutput;

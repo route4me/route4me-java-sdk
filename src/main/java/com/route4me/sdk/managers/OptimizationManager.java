@@ -1,9 +1,11 @@
 package com.route4me.sdk.managers;
 
+import com.route4me.sdk.RequestMethod;
+import com.route4me.sdk.Manager;
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.exception.APIConnectionException;
 import com.route4me.sdk.exception.InvalidRequestException;
-import com.route4me.sdk.model.DataObject;
+import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.model.Response;
 import com.route4me.sdk.serdes.DataObjectDeserializer;
 import java.io.IOException;

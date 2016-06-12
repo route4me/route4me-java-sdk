@@ -2,7 +2,7 @@ package com.route4me.sdk.examples.optimizations;
 
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.managers.OptimizationManager;
-import com.route4me.sdk.model.DataObject;
+import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.model.enums.Constants;
 import java.util.HashMap;
 import java.util.Map;

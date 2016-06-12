@@ -2,7 +2,7 @@ package com.route4me.sdk.examples.optimizations;
 
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.managers.OptimizationManager;
-import com.route4me.sdk.model.DataObject;
+import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.model.Optimizations;
 import com.route4me.sdk.model.Response;
 import com.route4me.sdk.serdes.DataObjectDeserializer;

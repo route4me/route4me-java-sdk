@@ -1,13 +1,9 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package com.route4me.sdk.examples.avoidancezones;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.managers.AvoidanceZoneManager;
-import com.route4me.sdk.model.Territory;
+import com.route4me.sdk.services.zones.AvoidanceZoneManager;
+import com.route4me.sdk.services.zones.Territory;
 import java.util.List;
 
 /**

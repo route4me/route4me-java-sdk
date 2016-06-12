@@ -1,21 +1,21 @@
 package com.route4me.sdk;
 
-import com.route4me.sdk.managers.ActivityManager;
-import com.route4me.sdk.managers.AddressBookManager;
-import com.route4me.sdk.managers.AddressesManager;
-import com.route4me.sdk.managers.AvoidanceZoneManager;
-import com.route4me.sdk.managers.NotesManager;
+import com.route4me.sdk.services.activities.ActivityManager;
+import com.route4me.sdk.services.addressbook.AddressBookManager;
+import com.route4me.sdk.services.routing.AddressesManager;
+import com.route4me.sdk.services.zones.AvoidanceZoneManager;
+import com.route4me.sdk.services.notes.NotesManager;
 import com.route4me.sdk.managers.OptimizationManager;
 import com.route4me.sdk.managers.RouteManager;
 import com.route4me.sdk.managers.TrackingManager;
-import com.route4me.sdk.managers.UsersManager;
+import com.route4me.sdk.services.users.UsersManager;
 
 /**
  *
  * @author juan
  */
 public class Route4Me {
-
+    public static final String HOST = "https://www.route4me.com";
     public static final String CHARSET = "UTF-8";
 
     private static volatile String apiKey;

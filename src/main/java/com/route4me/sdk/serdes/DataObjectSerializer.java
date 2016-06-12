@@ -6,7 +6,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonSerializationContext;
 import com.google.gson.JsonSerializer;
-import com.route4me.sdk.model.DataObject;
+import com.route4me.sdk.services.routing.DataObject;
 import java.lang.reflect.Type;
 
 /**

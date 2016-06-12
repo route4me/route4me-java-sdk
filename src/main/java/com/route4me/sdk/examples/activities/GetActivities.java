@@ -1,22 +1,14 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.route4me.sdk.examples.activities;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.managers.ActivityManager;
+import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.managers.RouteManager;
-import com.route4me.sdk.model.Activities;
-import com.route4me.sdk.model.Activity;
+import com.route4me.sdk.services.activities.Activities;
+import com.route4me.sdk.services.activities.Activity;
 import com.route4me.sdk.model.Routes;
+
 import java.util.List;
 
-/**
- *
- * @author juan
- */
 public class GetActivities {
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
@@ -45,5 +37,5 @@ public class GetActivities {
             System.out.println("Member Last Name: " + activity.getMember().getMember_last_name());
             System.out.println("Member Email: " + activity.getMember().getMember_email());
         }
-    }    
+    }
 }

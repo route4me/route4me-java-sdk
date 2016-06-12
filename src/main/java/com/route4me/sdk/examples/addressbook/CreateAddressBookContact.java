@@ -1,8 +1,8 @@
 package com.route4me.sdk.examples.addressbook;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.managers.AddressBookManager;
-import com.route4me.sdk.model.Contact;
+import com.route4me.sdk.services.addressbook.AddressBookManager;
+import com.route4me.sdk.services.addressbook.Contact;
 
 /**
  *

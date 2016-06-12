@@ -1,10 +1,10 @@
 package com.route4me.sdk.examples;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.model.Address;
-import com.route4me.sdk.model.DataObject;
+import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.managers.OptimizationManager;
-import com.route4me.sdk.model.Parameters;
+import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.model.Response;
 import com.route4me.sdk.model.enums.Constants.*;
 import com.route4me.sdk.serdes.DataObjectDeserializer;
@@ -30,18 +30,18 @@ public class SingleDriverRoundTrip {
         List<Address> addresses = new ArrayList<>();
         data.setParameters(parameters);
         data.setAddresses(addresses);
-        parameters.setAlgorithm_type(AlgorithmType.TSP.getValue());
-        parameters.setStore_route(Boolean.FALSE);
-        parameters.setShare_route(Boolean.FALSE);
-        parameters.setRoute_time(0);
-        parameters.setRoute_max_duration(86400);
-        parameters.setVehicle_capacity("1");
-        parameters.setVehicle_max_distance_mi("10000");
-        parameters.setRoute_name("Single Driver Round Trip");
+        parameters.setAlgorithmType(AlgorithmType.TSP.getValue());
+        parameters.setStoreRoute(Boolean.FALSE);
+        parameters.setShareRoute(Boolean.FALSE);
+        parameters.setRouteTime(0);
+        parameters.setRouteMaxDuration(86400);
+        parameters.setVehicleCapacity("1");
+        parameters.setVehicleMaxDistanceMi("10000");
+        parameters.setRouteName("Single Driver Round Trip");
         parameters.setOptimize(Optimize.DISTANCE.toString());
-        parameters.setDistance_unit(DistanceUnit.MI.toString());
-        parameters.setDevice_type(DeviceType.WEB.toString());
-        parameters.setTravel_mode(TravelMode.DRIVING.toString());
+        parameters.setDistanceUnit(DistanceUnit.MI.toString());
+        parameters.setDeviceType(DeviceType.WEB.toString());
+        parameters.setTravelMode(TravelMode.DRIVING.toString());
         addresses.add(new Address("754 5th Ave New York, NY 10019", Boolean.TRUE,
                 "Bergdorf Goodman", 40.7636197, -73.9744388, 0));
         addresses.add(new Address("717 5th Ave New York, NY 10022", "Giorgio Armani",
@@ -62,12 +62,12 @@ public class SingleDriverRoundTrip {
                 40.7558695, -73.9862019, 0));
         optimizationManager.setData(data);
         DataObject responseObject = optimizationManager.runOptimization();
-        System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());
+        System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
         System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
         if (responseObject.getAddresses() != null) {
             for (Address address : responseObject.getAddresses()) {
                 System.out.println("Address:" + address.getAddress());
-                System.out.println("Route ID:" + address.getRoute_id());
+                System.out.println("Route ID:" + address.getRouteId());
             }
         }
     }

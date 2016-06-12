@@ -1,7 +1,7 @@
 package com.route4me.sdk.examples.routes;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.model.DataObject;
+import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.managers.RouteManager;
 import com.route4me.sdk.model.enums.Constants;
 import java.util.HashMap;

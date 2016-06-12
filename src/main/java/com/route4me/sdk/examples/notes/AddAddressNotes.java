@@ -1,16 +1,12 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package com.route4me.sdk.examples.notes;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.managers.NotesManager;
+import com.route4me.sdk.services.notes.NotesManager;
 import com.route4me.sdk.managers.RouteManager;
-import com.route4me.sdk.model.Address;
-import com.route4me.sdk.model.DataObject;
-import com.route4me.sdk.model.Notes;
+import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.services.routing.DataObject;
+import com.route4me.sdk.services.notes.Notes;
 import com.route4me.sdk.model.Routes;
 import com.route4me.sdk.model.enums.Constants;
 import java.util.List;

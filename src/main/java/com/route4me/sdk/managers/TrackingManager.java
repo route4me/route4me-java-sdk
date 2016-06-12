@@ -1,5 +1,7 @@
 package com.route4me.sdk.managers;
 
+import com.route4me.sdk.RequestMethod;
+import com.route4me.sdk.Manager;
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.exception.APIConnectionException;
 import com.route4me.sdk.exception.InvalidRequestException;

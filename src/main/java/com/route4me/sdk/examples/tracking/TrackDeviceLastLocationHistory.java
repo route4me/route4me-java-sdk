@@ -1,11 +1,11 @@
 package com.route4me.sdk.examples.tracking;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.model.DataObject;
+import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.model.Response;
 import com.route4me.sdk.managers.RouteManager;
 import com.route4me.sdk.managers.TrackingManager;
-import com.route4me.sdk.model.TrackingHistory;
+import com.route4me.sdk.services.tracking.TrackingHistory;
 import com.route4me.sdk.model.enums.Constants.DeviceType;
 import com.route4me.sdk.model.enums.Constants.Format;
 import com.route4me.sdk.serdes.DataObjectDeserializer;

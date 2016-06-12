@@ -2,8 +2,8 @@ package com.route4me.sdk.examples.routes;
 
 import com.route4me.sdk.Route4Me;
 import com.route4me.sdk.managers.RouteManager;
-import com.route4me.sdk.model.DataObject;
-import com.route4me.sdk.model.Parameters;
+import com.route4me.sdk.services.routing.DataObject;
+import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.model.Response;
 import com.route4me.sdk.model.Routes;
 import java.util.List;

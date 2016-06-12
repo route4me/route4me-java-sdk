@@ -1,10 +1,6 @@
 package com.route4me.sdk.model.enums;
 
-/**
- *
- * @author juan
- */
-public class APIEndPoints {
+public class APIEndpoints {
 
     public static final String DRIVER_VERSION = "route4me-java-driver-0.0.1";
     public static final String MAIN_HOST = "https://www.route4me.com";

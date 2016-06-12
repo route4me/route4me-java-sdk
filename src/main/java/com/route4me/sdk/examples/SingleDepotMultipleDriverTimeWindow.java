@@ -1,10 +1,10 @@
 package com.route4me.sdk.examples;
 
 import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.model.Address;
-import com.route4me.sdk.model.DataObject;
+import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.managers.OptimizationManager;
-import com.route4me.sdk.model.Parameters;
+import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.model.Response;
 import com.route4me.sdk.model.enums.Constants.*;
 import com.route4me.sdk.serdes.DataObjectDeserializer;
@@ -31,19 +31,19 @@ public class SingleDepotMultipleDriverTimeWindow {
         List<Address> addresses = new ArrayList<>();
         data.setParameters(parameters);
         data.setAddresses(addresses);
-        parameters.setAlgorithm_type(AlgorithmType.CVRP_TW_MD.getValue());
-        parameters.setStore_route(Boolean.FALSE);
-        parameters.setShare_route(Boolean.FALSE);
-        parameters.setRoute_time(0);
+        parameters.setAlgorithmType(AlgorithmType.CVRP_TW_MD.getValue());
+        parameters.setStoreRoute(Boolean.FALSE);
+        parameters.setShareRoute(Boolean.FALSE);
+        parameters.setRouteTime(0);
         parameters.setRt(Boolean.TRUE);
-        parameters.setRoute_max_duration(86400);
-        parameters.setVehicle_capacity("99");
-        parameters.setVehicle_max_distance_mi("99999");
-        parameters.setRoute_name("Multiple Depot, Multiple Driver, Time Window");
+        parameters.setRouteMaxDuration(86400);
+        parameters.setVehicleCapacity("99");
+        parameters.setVehicleMaxDistanceMi("99999");
+        parameters.setRouteName("Multiple Depot, Multiple Driver, Time Window");
         parameters.setOptimize(Optimize.TIME.toString());
-        parameters.setDistance_unit(DistanceUnit.MI.toString());
-        parameters.setDevice_type(DeviceType.WEB.toString());
-        parameters.setTravel_mode(TravelMode.DRIVING.toString());
+        parameters.setDistanceUnit(DistanceUnit.MI.toString());
+        parameters.setDeviceType(DeviceType.WEB.toString());
+        parameters.setTravelMode(TravelMode.DRIVING.toString());
         parameters.setMetric(Metric.ROUTE4ME_METRIC_GEODESIC.getValue());
         parameters.setParts(20);
         addresses.add(new Address("455 S 4th St, Louisville, KY 40202",Boolean.TRUE, 38.251698, -85.757308, 300, 28800, 29400));
@@ -98,12 +98,12 @@ public class SingleDepotMultipleDriverTimeWindow {
         addresses.add(new Address("5504 SHOREWOOD DRIVE, Louisville, KY, 40214",38.145851,-85.7798,300,58200,58800));
         optimizationManager.setData(data);
         DataObject responseObject = optimizationManager.runOptimization();
-        System.out.println("Optimization Problem ID:" + responseObject.getOptimization_problem_id());
+        System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
         System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
         if (responseObject.getAddresses() != null) {
             for (Address address : responseObject.getAddresses()) {
                 System.out.println("Address:" + address.getAddress());
-                System.out.println("Route ID:" + address.getRoute_id());
+                System.out.println("Route ID:" + address.getRouteId());
             }
         }
     }
