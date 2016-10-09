@@ -1,31 +1,37 @@
-
 package com.route4me.sdk.examples.notes;
 
-import com.route4me.sdk.Route4Me;
+import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.services.notes.Note;
 import com.route4me.sdk.services.notes.NotesManager;
-import com.route4me.sdk.managers.RouteManager;
 import com.route4me.sdk.services.routing.DataObject;
-import com.route4me.sdk.model.Response;
-import com.route4me.sdk.model.Routes;
+import com.route4me.sdk.services.routing.Route;
+import com.route4me.sdk.services.routing.RoutesRequest;
+import com.route4me.sdk.services.routing.RoutingManager;
+
 import java.util.List;
 
 /**
- *
  * @author juan
  */
 public class GetAddressNotes {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
-        Route4Me route4me = new Route4Me(apiKey);
-        RouteManager routeManager = route4me.getRouteManager();
-        List<Routes> routes = routeManager.getRoutes(10, 5);
-        Routes route = routes.get(0);
-        DataObject responseOnbject = routeManager.getRoute(route.getOptimization_problem_id());
-        NotesManager notesManager = route4me.getNotesManager();
-        String routeDestinationID = responseOnbject.getAddresses().get(0).getRoute_destination_id().toString();
-        Response response = notesManager.getAddressNotes(route.getRoute_id(), routeDestinationID);
-        System.out.println(response.getResponseBody());
+        RoutingManager routingManager = new RoutingManager(apiKey);
+        try {
+            List<Route> routes = routingManager.getRoutes(new RoutesRequest().setLimit(2));
+            for(Route route : routes) {
+                DataObject dataObject = routingManager.getRoute(new RoutesRequest().setId(route.getId()));
+                NotesManager notesManager = new NotesManager(apiKey);
+                List<Note> notes = notesManager.getAddressNotes(route.getId(), Long.toString(dataObject.getAddresses().get(0).getRouteDestinationId()));
+                for (Note note : notes) {
+                    System.out.println(note);
+                }
+            }
+        } catch (APIException e) {
+            //handle exception
+            e.printStackTrace();
+        }
     }
 
 }

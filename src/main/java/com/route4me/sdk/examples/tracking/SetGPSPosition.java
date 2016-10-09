@@ -1,36 +1,33 @@
 package com.route4me.sdk.examples.tracking;
 
-import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.model.Response;
-import com.route4me.sdk.managers.TrackingManager;
-import java.util.HashMap;
-import java.util.Map;
-import com.route4me.sdk.model.enums.Constants.*;
+import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.services.routing.Constants;
+import com.route4me.sdk.services.tracking.GPSPosition;
+import com.route4me.sdk.services.tracking.TrackingManager;
 
 /**
- *
  * @author juan
  */
 public class SetGPSPosition {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
-        Route4Me route4me = new Route4Me(apiKey);
-        Map<String, String> params = new HashMap<>();
-        params.put("format", Format.CSV.toString());
-        params.put("route_id", "742A9E5051AA84B9E6365C92369B030C");
-        params.put("lat", "33.14384");
-        params.put("lng", "-83.22466");
-        params.put("course", "1");
-        params.put("speed", "120");
-        params.put("device_type", DeviceType.IPHONE.toString());
-        params.put("member_id", "1");
-        params.put("device_guid", "TEST_GPS");
-        params.put("device_timestamp", "2014-06-14 17:43:35");
-        TrackingManager trackingManager = route4me.getTrackingManager();
-        trackingManager.setParams(params);
-        Response response = trackingManager.setGPSPosition();
-        System.out.println(response.getResponseBody());
+        TrackingManager manager = new TrackingManager(apiKey);
+        GPSPosition position = new GPSPosition().setLatitude(33.14384).setLongitude(-83.22466).setAltitude(10D);
+        position.setFormat(Constants.Format.CSV);
+        position.setRouteId("1402075EBA9A32939B2696DB1D7EE48E");
+        position.setCourse(1);
+        position.setSpeed(120F);
+        position.setDeviceType(Constants.DeviceType.IPAD)
+                .setDeviceGUID("TEST_GPS")
+                .setDeviceTimestamp("2014-06-14 17:43:35");
+        position.setMemberId("1");
+        try {
+            System.out.println(manager.setGPS(position));
+        } catch (APIException e) {
+            //handle exception
+            e.printStackTrace();
+        }
 
     }
 

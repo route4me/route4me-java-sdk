@@ -1,4 +1,3 @@
-
 package com.route4me.sdk.services.activities;
 
 import com.google.gson.annotations.SerializedName;
@@ -9,26 +8,26 @@ import lombok.Data;
 public class Activity {
 
     @SerializedName("activity_id")
-    private String activityId;
+    private String Id;
     @SerializedName("activity_type")
-    private String activityType;
+    private ActivityType type;
     @SerializedName("activity_timestamp")
-    private String activityTimestamp;
-    @SerializedName("activityMessage")
-    private String activityMessage;
-    @SerializedName("routeId")
+    private String timestamp;
+    @SerializedName("activity_message")
+    private String message;
+    @SerializedName("route_id")
     private String routeId;
-    @SerializedName("routeName")
+    @SerializedName("route_name")
     private String routeName;
-    @SerializedName("routeDestinationId")
+    @SerializedName("route_destination_od")
     private String routeDestinationId;
-    @SerializedName("noteId")
+    @SerializedName("note_id")
     private String noteId;
-    @SerializedName("noteType")
+    @SerializedName("note_type")
     private String noteType;
-    @SerializedName("noteContents")
+    @SerializedName("note_contents")
     private String noteContents;
-    @SerializedName("noteFile")
+    @SerializedName("note_file")
     private String noteFile;
     private User member;
 }

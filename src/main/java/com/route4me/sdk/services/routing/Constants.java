@@ -1,4 +1,4 @@
-package com.route4me.sdk.model.enums;
+package com.route4me.sdk.services.routing;
 
 import java.util.EnumSet;
 import java.util.HashMap;

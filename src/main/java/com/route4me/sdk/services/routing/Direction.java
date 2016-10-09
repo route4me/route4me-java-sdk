@@ -1,4 +1,4 @@
-package com.route4me.sdk.model;
+package com.route4me.sdk.services.routing;
 
 import lombok.Data;
 

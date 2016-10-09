@@ -1,29 +1,26 @@
 package com.route4me.sdk.examples.routes;
 
-import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.managers.RouteManager;
-import com.route4me.sdk.model.Routes;
+import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.services.activities.ActivityManager;
+import com.route4me.sdk.services.routing.Route;
+import com.route4me.sdk.services.routing.RoutesRequest;
+import com.route4me.sdk.services.routing.RoutingManager;
+
 import java.util.List;
 
-/**
- *
- * @author juan
- */
 public class GetRoutes {
-    
+
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
-        Route4Me route4me = new Route4Me(apiKey);
-        RouteManager routeManager = route4me.getRouteManager();
-        List<Routes> routes = routeManager.getRoutes(10, 5);
-        for (Routes route: routes){
-            System.out.println("Route ID" + route.getRoute_id());
-            System.out.println("Optimization Problem ID: " + route.getOptimization_problem_id());
-            System.out.println();
+        RoutingManager routeManager = new RoutingManager(apiKey);
+        try {
+            List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(10));
+            for (Route r : routes) {
+                System.out.println(r);
+            }
+        } catch (APIException e) {
+            //handle exceptions
+            e.printStackTrace();
         }
-
-        
-    }    
-    
-    
+    }
 }

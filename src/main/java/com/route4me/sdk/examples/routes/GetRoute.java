@@ -1,28 +1,30 @@
 package com.route4me.sdk.examples.routes;
 
-import com.route4me.sdk.Route4Me;
-import com.route4me.sdk.services.routing.DataObject;
-import com.route4me.sdk.managers.RouteManager;
-import com.route4me.sdk.model.enums.Constants;
-import java.util.HashMap;
-import java.util.Map;
+import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.services.routing.Route;
+import com.route4me.sdk.services.routing.RoutesRequest;
+import com.route4me.sdk.services.routing.RoutingManager;
+
+import java.util.List;
 
 /**
- *
  * @author juan
  */
 public class GetRoute {
-    
+
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
-        Route4Me route4me = new Route4Me(apiKey);
-        Map<String, String> params = new HashMap<>();
-        RouteManager routeManager = route4me.getRouteManager();
-        DataObject route = routeManager.getRoute("624A65A3B122F779107C5908633EAEAD");
-        System.out.println("Optimization Problem ID:" + route.getOptimization_problem_id());
-        System.out.println("State:" + Constants.OptimizationState.get(route.getState().intValue()));
-        
-    }    
-    
-    
+        RoutingManager routeManager = new RoutingManager(apiKey);
+        try {
+            List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(10));
+            //fetches complete data
+            Route r = routeManager.getRoute(new RoutesRequest().setId(routes.get(0).getId()));
+            System.out.println(r);
+        } catch (APIException e) {
+            //handle exceptions
+            e.printStackTrace();
+        }
+    }
+
+
 }

@@ -1,7 +1,7 @@
 
 package com.route4me.sdk.examples.avoidancezones;
 
-import com.route4me.sdk.Route4Me;
+import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.zones.AvoidanceZoneManager;
 import com.route4me.sdk.services.zones.Territory;
 import java.util.List;
@@ -12,19 +12,14 @@ import java.util.List;
  */
 public class GetAvoidanceZone {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws APIException {
         String apiKey = "11111111111111111111111111111111";
-        Route4Me route4me = new Route4Me(apiKey);
-        AvoidanceZoneManager avoidanceZoneManager = route4me.getAvoidanceZoneManager();
+        AvoidanceZoneManager avoidanceZoneManager = new AvoidanceZoneManager(apiKey);;
         List<Territory> territories = avoidanceZoneManager.getAvoidanceZones();
         String territoryID;
-        territoryID = territories.get(0).getTerritory_id();
-        Territory responseOject = avoidanceZoneManager.getAvoidanceZone(territoryID);
-        System.out.println("Territory ID: " + responseOject.getTerritory_id());
-        System.out.println("Territory Name: " + responseOject.getTerritory_name());
-        System.out.println("Territory Color: " + responseOject.getTerritory_color());
-        System.out.println("Territory Type: " + responseOject.getTerritory().getType());
-        System.out.println();        
+        territoryID = territories.get(0).getTerritoryId();
+        Territory responseObject = avoidanceZoneManager.getAvoidanceZone(territoryID);
+        System.out.println(responseObject);
     }
 
 }

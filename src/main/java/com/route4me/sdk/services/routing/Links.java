@@ -1,4 +1,4 @@
-package com.route4me.sdk.model;
+package com.route4me.sdk.services.routing;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;

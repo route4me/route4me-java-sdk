@@ -1,3 +1,7 @@
 nbproject/private/
 target/
 .idea
+.settings
+.project
+.classpath
+*.iml
