@@ -21,7 +21,7 @@ public class UsersManager extends Manager {
     public List<User> getUsers(int limit, int offset) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(USERS_EP);
         builder.setParameter("limit", Integer.toString(limit));
-        builder.setParameter("offest", Integer.toString(offset));
+        builder.setParameter("offset", Integer.toString(offset));
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<User>>() {
         }.getType());
     }
