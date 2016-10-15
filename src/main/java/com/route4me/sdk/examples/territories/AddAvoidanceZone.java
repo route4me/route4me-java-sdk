@@ -1,10 +1,10 @@
 
-package com.route4me.sdk.examples.avoidancezones;
+package com.route4me.sdk.examples.territories;
 
 import com.route4me.sdk.exception.APIException;
-import com.route4me.sdk.services.zones.AvoidanceZoneManager;
-import com.route4me.sdk.services.zones.Territory;
-import com.route4me.sdk.services.zones.TerritoryData;
+import com.route4me.sdk.services.territories.TerritoriesManager;
+import com.route4me.sdk.services.territories.Territory;
+import com.route4me.sdk.services.territories.TerritoryData;
 import com.route4me.sdk.services.routing.Constants;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +16,7 @@ import java.util.List;
 public class AddAvoidanceZone {
     public static void main(String[] args) throws APIException {
         String apiKey = "11111111111111111111111111111111";
-        AvoidanceZoneManager avoidanceZoneManager = new AvoidanceZoneManager(apiKey);
+        TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
         List<String> polyTerritoryDataList = new ArrayList<>();
         polyTerritoryDataList.add("56.127184156131065,56.93115234375");
         polyTerritoryDataList.add("58.41322259056806,59.501953125");
@@ -31,7 +31,7 @@ public class AddAvoidanceZone {
         polyTerritory.setTerritoryColor("ff0000");
         polyTerritory.setTerritory(polyTerritoryData);
         polyTerritoryData.setType(Constants.TerritoryType.POLY.toString());
-        Territory responseObject = avoidanceZoneManager.addAvoidanceZone(polyTerritory);
+        Territory responseObject = territoriesManager.addAvoidanceZone(polyTerritory);
 
         System.out.println("Polygon Territory");
         System.out.println(responseObject.toString());
@@ -47,7 +47,7 @@ public class AddAvoidanceZone {
         rectTerritory.setTerritoryColor("ff0000");
         rectTerritory.setTerritory(rectTerritoryData);
         rectTerritoryData.setType(Constants.TerritoryType.RECT.toString());
-        responseObject = avoidanceZoneManager.addAvoidanceZone(rectTerritory);
+        responseObject = territoriesManager.addAvoidanceZone(rectTerritory);
 
         System.out.println("Rect Territory");
         System.out.println(responseObject.toString());
@@ -64,7 +64,7 @@ public class AddAvoidanceZone {
         circleTerritory.setTerritoryColor("ff0000");
         circleTerritory.setTerritory(circleTerritoryData);
         circleTerritoryData.setType(Constants.TerritoryType.CIRCLE.toString());
-        responseObject = avoidanceZoneManager.addAvoidanceZone(circleTerritory);
+        responseObject = territoriesManager.addAvoidanceZone(circleTerritory);
 
         System.out.println("Circle Territory");
         System.out.println(responseObject.toString());

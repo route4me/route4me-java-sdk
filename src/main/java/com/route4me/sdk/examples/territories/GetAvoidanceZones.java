@@ -1,8 +1,8 @@
-package com.route4me.sdk.examples.avoidancezones;
+package com.route4me.sdk.examples.territories;
 
 import com.route4me.sdk.exception.APIException;
-import com.route4me.sdk.services.zones.AvoidanceZoneManager;
-import com.route4me.sdk.services.zones.Territory;
+import com.route4me.sdk.services.territories.TerritoriesManager;
+import com.route4me.sdk.services.territories.Territory;
 
 import java.util.List;
 
@@ -13,9 +13,9 @@ public class GetAvoidanceZones {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
-        AvoidanceZoneManager avoidanceZoneManager = new AvoidanceZoneManager(apiKey);
+        TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
         try {
-            List<Territory> territories = avoidanceZoneManager.getAvoidanceZones();
+            List<Territory> territories = territoriesManager.getAvoidanceZones();
             for (Territory territory : territories) {
                 System.out.println(territory);
             }

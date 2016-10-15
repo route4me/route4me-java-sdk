@@ -1,10 +1,10 @@
-package com.route4me.sdk.examples.avoidancezones;
+package com.route4me.sdk.examples.territories;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Constants;
-import com.route4me.sdk.services.zones.AvoidanceZoneManager;
-import com.route4me.sdk.services.zones.Territory;
-import com.route4me.sdk.services.zones.TerritoryData;
+import com.route4me.sdk.services.territories.TerritoriesManager;
+import com.route4me.sdk.services.territories.Territory;
+import com.route4me.sdk.services.territories.TerritoryData;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +17,7 @@ public class DeleteAvoidanceZone {
 
     public static void main(String[] args) throws APIException {
         String apiKey = "11111111111111111111111111111111";
-        AvoidanceZoneManager avoidanceZoneManager = new AvoidanceZoneManager(apiKey);
+        TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
         List<String> polyTerritoryDataList = new ArrayList<>();
         polyTerritoryDataList.add("56.127184156131065,56.93115234375");
         polyTerritoryDataList.add("58.41322259056806,59.501953125");
@@ -32,14 +32,14 @@ public class DeleteAvoidanceZone {
         polyTerritory.setTerritoryColor("ff0000");
         polyTerritory.setTerritory(polyTerritoryData);
         polyTerritoryData.setType(Constants.TerritoryType.POLY.toString());
-        Territory responseObject = avoidanceZoneManager.addAvoidanceZone(polyTerritory);
+        Territory responseObject = territoriesManager.addAvoidanceZone(polyTerritory);
 
         System.out.println("Polygon Territory");
         System.out.println(responseObject.toString());
         System.out.println();
 
         System.out.println("Deleting Territory");
-        boolean response = avoidanceZoneManager.deleteAvoidanceZone(responseObject.getTerritoryId());
+        boolean response = territoriesManager.deleteAvoidanceZone(responseObject.getTerritoryId());
         System.out.println(response);
     }
 
