@@ -1,6 +1,5 @@
 package com.route4me.sdk.services.routing;
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.Manager;
@@ -21,55 +20,28 @@ public class RoutingManager extends Manager {
     public static final String DUPLICATE_ROUTE_EP = "/actions/duplicate_route.php";
 
     public RoutingManager(String apiKey) {
-        super(apiKey, new Gson());
+        super(apiKey);
     }
 
     public DataObject runOptimization(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
-        if (parameters.getProblemId() != null) {
-            builder.setParameter("optimization_problem_id", parameters.getProblemId());
-        }
-        if (parameters.isReoptimize()) {
-            builder.setParameter("reoptimize", "true");
-        }
-        if (parameters.isShowDirections()) {
-            builder.setParameter("show_directions", "true");
-        }
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(parameters), DataObject.class);
+        return this.makeJSONRequest(RequestMethod.POST, builder, parameters, DataObject.class);
     }
 
     public DataObject getOptimization(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
-        if (parameters.getProblemId() != null) {
-            builder.setParameter("optimization_problem_id", parameters.getProblemId());
-        }
-        if (parameters.isReoptimize()) {
-            builder.setParameter("reoptimize", "1");
-        }
-        if (parameters.isShowDirections()) {
-            builder.setParameter("show_directions", "1");
-        }
-        return this.makeRequest(RequestMethod.GET, builder, "", DataObject.class);
+        return this.makeJSONRequest(RequestMethod.GET, builder, parameters, DataObject.class);
     }
 
     public DataObject updateOptimization(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
-        if (parameters.getProblemId() != null) {
-            builder.setParameter("optimization_problem_id", parameters.getProblemId());
-        }
-        if (parameters.isReoptimize()) {
-            builder.setParameter("reoptimize", "true");
-        }
-        if (parameters.isShowDirections()) {
-            builder.setParameter("show_directions", "true");
-        }
-        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(parameters), DataObject.class);
+        return this.makeJSONRequest(RequestMethod.PUT, builder, parameters, DataObject.class);
     }
 
     public List<DataObject> getOptimizations(int limit, int offset) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         builder.setParameter("limit", Integer.toString(limit));
-        builder.setParameter("offest", Integer.toString(offset));
+        builder.setParameter("offset", Integer.toString(offset));
         GetOptimizationsResponse resp = this.makeRequest(RequestMethod.GET, builder, "", GetOptimizationsResponse.class);
         return resp.getOptimizations();
     }
@@ -129,76 +101,17 @@ public class RoutingManager extends Manager {
 
     //routes
     public List<Route> getRoutes(RoutesRequest request) throws APIException {
-        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
-        if (request.getLimit() != null) {
-            builder.setParameter("limit", Integer.toString(request.getLimit()));
-        }
-        if (request.getOffset() != null) {
-            builder.setParameter("offset", Integer.toString(request.getOffset()));
-        }
-        if (request.getQuery() != null) {
-            builder.setParameter("query", request.getQuery());
-        }
-        if (request.isDeviceTrackingHistory()) {
-            builder.setParameter("device_tracking_history", "true");
-        }
-        if (request.isDirections()) {
-            builder.setParameter("directions", "true");
-        }
-        if (request.isOriginal()) {
-            builder.setParameter("original", "true");
-        }
-        if (request.isRecomputeDirections()) {
-            builder.setParameter("recompute_directions", "true");
-        }
-        if (request.isNotes()) {
-            builder.setParameter("notes", "true");
-        }
-        return this.makeRequest(RequestMethod.GET, builder, "", new TypeToken<ArrayList<Route>>() {
+        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ROUTE_EP), request, new TypeToken<ArrayList<Route>>() {
         }.getType());
     }
 
     public Route getRoute(RoutesRequest request) throws APIException {
-        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
-        if (request.getId() != null) {
-            builder.setParameter("route_id", request.getId());
-        }
-        if (request.getLimit() != null) {
-            builder.setParameter("limit", Integer.toString(request.getLimit()));
-        }
-        if (request.getOffset() != null) {
-            builder.setParameter("offset", Integer.toString(request.getOffset()));
-        }
-        if (request.getQuery() != null) {
-            builder.setParameter("query", request.getQuery());
-        }
-        if (request.isDeviceTrackingHistory()) {
-            builder.setParameter("device_tracking_history", "true");
-        }
-        if (request.isDirections()) {
-            builder.setParameter("directions", "true");
-        }
-        if (request.isOriginal()) {
-            builder.setParameter("original", "true");
-        }
-        if (request.isRecomputeDirections()) {
-            builder.setParameter("recompute_directions", "true");
-        }
-        if (request.isNotes()) {
-            builder.setParameter("notes", "true");
-        }
-        return this.makeRequest(RequestMethod.GET, builder, "", Route.class);
+        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ROUTE_EP), request, Route.class);
     }
 
     public Route updateRoute(Route route) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
-        if (route.getId() != null) {
-            builder.setParameter("route_id", route.getId());
-        }
-        if (route.getMemberId() != null) {
-            builder.setParameter("member_id", Long.toString(route.getMemberId()));
-        }
-        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(route), Route.class);
+        return this.makeJSONRequest(RequestMethod.PUT, builder, route, Route.class);
     }
 
     public List<Route> deleteRoutes(String... routeIds) throws APIException {
@@ -236,6 +149,7 @@ public class RoutingManager extends Manager {
 
     @Getter
     private static class GetOptimizationsResponse {
+        @SerializedName("optimizations")
         private List<DataObject> optimizations;
     }
 }

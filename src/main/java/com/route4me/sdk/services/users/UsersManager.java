@@ -15,7 +15,7 @@ public class UsersManager extends Manager {
     public static final String USERS_EP = "/api/member/view_users.php";
 
     public UsersManager(String apiKey) {
-        super(apiKey, new Gson());
+        super(apiKey);
     }
 
     public List<User> getUsers(int limit, int offset) throws APIException {

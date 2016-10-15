@@ -8,6 +8,8 @@ public class Links {
 
     @SerializedName("optimization_problem")
     private String optimizationProblem;
+    @SerializedName("route")
     private String route;
+    @SerializedName("view")
     private String view;
 }

@@ -10,17 +10,19 @@ import lombok.Data;
 public class Address {
 
     @SerializedName("route_destination_id")
-    private long routeDestinationId;
+    private Long routeDestinationId;
+    @SerializedName("alias")
     private String alias;
     @SerializedName("member_id")
-    private int memberId;
+    private Integer memberId;
+    @SerializedName("address")
     private String address;
     @SerializedName("is_depot")
-    private boolean isDepot;
+    private Boolean depot;
     @SerializedName("lat")
-    private double latitude;
+    private Double latitude;
     @SerializedName("lng")
-    private double longitude;
+    private Double longitude;
     @SerializedName("route_id")
     private String routeId;
     @SerializedName("original_route_id")
@@ -28,25 +30,28 @@ public class Address {
     @SerializedName("optimization_problem_id")
     private String optimizationProblemId;
     @SerializedName("sequence_no")
-    private long sequenceNo;
-    private boolean geocoded;
+    private Long sequenceNo;
+    @SerializedName("geocoded")
+    private Boolean geocoded;
     @SerializedName("preferred_geocoding")
-    private int preferredGeocoding;
+    private Integer preferredGeocoding;
     @SerializedName("failed_geocoding")
-    private boolean failedGeocoding;
+    private Boolean failedGeocoding;
     @SerializedName("contact_id")
-    private int contactId;
+    private Integer contactId;
     @SerializedName("is_visited")
-    private boolean isVisited;
+    private Boolean isVisited;
     @SerializedName("destination_note_count")
-    private int destinationNoteCount;
+    private Integer destinationNoteCount;
     @SerializedName("channel_name")
     private String channelName;
     @SerializedName("time_window_start")
-    private long timeWindowStart;
+    private Long timeWindowStart;
     @SerializedName("time_window_end")
-    private long timeWindowEnd;
-    private long time;
+    private Long timeWindowEnd;
+    @SerializedName("time")
+    private Long time;
+    @SerializedName("notes")
     private List<Note> notes;
     
     public Address() {
@@ -61,7 +66,7 @@ public class Address {
 
     public Address(String address, boolean isDepot, double lat, double lng, long time) {
         this(address, lat, lng, time);
-        this.isDepot = isDepot;
+        this.depot = isDepot;
     }
 
     public Address(String address, boolean isDepot, String alias, double lat, double lng, long time) {
@@ -71,7 +76,7 @@ public class Address {
 
     public Address(String address, boolean isDepot, double lat, double lng, long time, long timeWindowStart, long timeWindowEnd) {
         this.address = address;
-        this.isDepot = isDepot;
+        this.depot = isDepot;
         this.latitude = lat;
         this.longitude = lng;
         this.time = time;

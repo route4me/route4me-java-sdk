@@ -1,6 +1,8 @@
 package com.route4me.sdk.services.notes;
 
 import com.google.gson.annotations.SerializedName;
+import com.route4me.sdk.queryconverter.QueryParameter;
+import com.route4me.sdk.services.routing.Constants;
 import lombok.Data;
 
 @Data
@@ -18,14 +20,17 @@ public class Note {
     @SerializedName("upload_type")
     private String uploadType;
     @SerializedName("device_type")
-    private String deviceType;
+    private Constants.DeviceType deviceType;
+    @SerializedName("lat")
     private Number lat;
+    @SerializedName("lng")
     private Number lng;
     @SerializedName("upload_url")
-    private String uploadUrl;
+    private String uploadURL;
     @SerializedName("ts_added")
     private Number tsAdded;
-    private String contents;
+    @SerializedName("contents")
+    private String content;
     @SerializedName("activity_type")
     private String activityType;
 }

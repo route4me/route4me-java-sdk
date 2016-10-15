@@ -1,13 +1,16 @@
 package com.route4me.sdk.services.routing;
 
 import com.google.gson.annotations.SerializedName;
+import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
 @Data
 public class Route extends DataObject {
     @SerializedName("route_id")
+    @QueryParameter("route_id")
     private String id;
     @SerializedName("member_id")
+    @QueryParameter("member_id")
     private Long memberId;
     @SerializedName("member_email")
     private String memberEmail;

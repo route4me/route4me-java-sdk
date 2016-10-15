@@ -6,9 +6,11 @@ import lombok.Data;
 @Data
 public class Location {
 
+    @SerializedName("time")
     private Number time;
     @SerializedName("segment_distance")
     private Number segmentDistance;
+    @SerializedName("name")
     private String name;
     @SerializedName("start_location")
     private String startLocation;

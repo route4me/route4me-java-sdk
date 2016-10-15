@@ -16,7 +16,7 @@ public class AvoidanceZoneManager extends Manager {
     public static final String AVOIDANCE_EP = "/api.v4/avoidance.php";
 
     public AvoidanceZoneManager(String apiKey) {
-        super(apiKey, new Gson());
+        super(apiKey);
     }
 
     public Territory addAvoidanceZone(Territory territory) throws APIException {

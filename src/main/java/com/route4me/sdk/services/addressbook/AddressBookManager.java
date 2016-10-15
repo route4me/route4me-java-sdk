@@ -1,6 +1,5 @@
 package com.route4me.sdk.services.addressbook;
 
-import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
@@ -17,7 +16,7 @@ public class AddressBookManager extends Manager {
 
 
     public AddressBookManager(String apiKey) {
-        super(apiKey, new Gson());
+        super(apiKey);
     }
 
     public Contact createContact(Contact contact) throws APIException {
@@ -49,25 +48,7 @@ public class AddressBookManager extends Manager {
             }
             builder.setParameter("address_id", addresses.substring(0, addresses.length() - 1));
         }
-        if (request.getLimit() != null) {
-            builder.setParameter("limit", Integer.toString(request.getLimit()));
-        }
-        if (request.getOffset() != null) {
-            builder.setParameter("offset", Integer.toString(request.getOffset()));
-        }
-        if (request.getStart() != null) {
-            builder.setParameter("start", Integer.toString(request.getStart()));
-        }
-        if (request.getQuery() != null) {
-            builder.setParameter("query", request.getQuery());
-        }
-        if (request.getFields() != null) {
-            builder.setParameter("fields", request.getFields());
-        }
-        if (request.getDisplay() != null) {
-            builder.setParameter("display", request.getDisplay());
-        }
-        ContactsResponse cr = this.makeRequest(RequestMethod.GET, builder, "", ContactsResponse.class);
+        ContactsResponse cr = this.makeJSONRequest(RequestMethod.GET, builder, request, ContactsResponse.class);
         return cr.getResults();
     }
 
@@ -79,7 +60,9 @@ public class AddressBookManager extends Manager {
     @Getter
     static class ContactsResponse {
 
+        @SerializedName("results")
         private List<Contact> results;
+        @SerializedName("total")
         private int total;
     }
 

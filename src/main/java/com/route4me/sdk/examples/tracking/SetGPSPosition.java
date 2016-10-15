@@ -23,7 +23,7 @@ public class SetGPSPosition {
                 .setDeviceTimestamp("2014-06-14 17:43:35");
         position.setMemberId("1");
         try {
-            System.out.println(manager.setGPS(position));
+            manager.setGPS(position);
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();

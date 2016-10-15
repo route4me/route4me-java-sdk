@@ -22,9 +22,9 @@ public class DeleteAddress {
                     continue;
                 }
                 for (Address add : full.getAddresses()) {
-                    if (!add.isDepot()) {
+                    if (!add.getDepot()) {
                         addr = add;
-                        return;
+                        break;
                     }
                 }
                 if (addr == null) {

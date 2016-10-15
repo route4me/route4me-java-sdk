@@ -28,6 +28,4 @@ public class GenericExample {
         }
 
     }
-    //String jsonResponse = Manager.GSONSerializer.toJson(responseObject);
-
 }

@@ -6,12 +6,15 @@ import lombok.Data;
 @Data
 public class TrackingHistory {
     @SerializedName("s")
-    private Number s;
+    private String s;
     @SerializedName("lt")
-    private Number latitude;
+    private Double latitude;
     @SerializedName("lg")
-    private Number longitude;
+    private Double longitude;
+    @SerializedName("d")
     private String d;
-    private String ts;
-    private String ts_friendly;
+    @SerializedName("ts")
+    private String timestamp;
+    @SerializedName("ts_friendly")
+    private String friendlyTimestamp;
 }

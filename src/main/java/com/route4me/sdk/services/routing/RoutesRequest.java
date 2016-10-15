@@ -1,30 +1,30 @@
 package com.route4me.sdk.services.routing;
 
-import com.google.gson.annotations.SerializedName;
+import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
 @Data
 @Accessors(chain = true)
 public class RoutesRequest {
-    @SerializedName("route_id")
+    @QueryParameter("route_id")
     private String id;
-    @SerializedName("directions")
-    private boolean directions;
-    @SerializedName("device_tracking_history")
-    private boolean deviceTrackingHistory;
-    @SerializedName("limit")
+    @QueryParameter("directions")
+    private Boolean directions;
+    @QueryParameter("device_tracking_history")
+    private Boolean deviceTrackingHistory;
+    @QueryParameter("limit")
     private Integer limit;
-    @SerializedName("offset")
+    @QueryParameter("offset")
     private Integer offset;
-    @SerializedName("original")
-    private boolean original;
-    @SerializedName("notes")
-    private boolean notes;
-    @SerializedName("query")
+    @QueryParameter("original")
+    private Boolean original;
+    @QueryParameter("notes")
+    private Boolean notes;
+    @QueryParameter("query")
     private String query;
-    @SerializedName("reoptimize")
-    private boolean reoptimize;
-    @SerializedName("recompute_directions")
-    private boolean recomputeDirections;
+    @QueryParameter("reoptimize")
+    private Boolean reoptimize;
+    @QueryParameter("recompute_directions")
+    private Boolean recomputeDirections;
 }

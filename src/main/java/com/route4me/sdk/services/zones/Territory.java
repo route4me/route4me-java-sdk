@@ -10,6 +10,7 @@ public class Territory {
     private String territoryName;
     @SerializedName("territory_color")
     private String territoryColor;
+    @SerializedName("territory")
     private TerritoryData territory;
     @SerializedName("territory_id")
     private String territoryId;
