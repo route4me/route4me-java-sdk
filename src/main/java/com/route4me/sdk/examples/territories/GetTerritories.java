@@ -1,0 +1,28 @@
+package com.route4me.sdk.examples.territories;
+
+import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.services.territories.TerritoriesManager;
+import com.route4me.sdk.services.territories.Territory;
+
+import java.util.List;
+
+/**
+ * @author juan
+ */
+public class GetTerritories {
+
+    public static void main(String[] args) {
+        String apiKey = "11111111111111111111111111111111";
+        TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
+        try {
+            List<Territory> territories = territoriesManager.getTerritories();
+            for (Territory territory : territories) {
+                System.out.println(territory);
+            }
+        } catch (APIException e) {
+            //handle exception
+            e.printStackTrace();
+        }
+    }
+
+}

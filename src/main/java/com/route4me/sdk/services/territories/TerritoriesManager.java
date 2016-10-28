@@ -63,7 +63,7 @@ public class TerritoriesManager extends Manager {
         return this.makeJSONRequest(RequestMethod.DELETE, builder, territory, Territory.class);
     }
 
-    public List<Territory> getTerritory() throws APIException {
+    public List<Territory> getTerritories() throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TERRITORY_EP);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Territory>>() {
         }.getType());
