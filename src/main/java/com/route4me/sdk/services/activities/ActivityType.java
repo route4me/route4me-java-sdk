@@ -40,7 +40,7 @@ public enum ActivityType {
     @SerializedName("driver-arrived-early")
     DRIVER_ARRIVED_EARLY("driver-arrived-early"),
     @SerializedName("driver-arrived-on-time")
-    DRIVER_ARRIVEDON_TIME("driver-arrived-on-time"),
+    DRIVER_ARRIVED_ON_TIME("driver-arrived-on-time"),
     @SerializedName("driver-arrived-late")
     DRIVER_ARRIVED_LATE("driver-arrived-late"),
     @SerializedName("geofence-entered")
