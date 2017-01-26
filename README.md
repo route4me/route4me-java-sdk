@@ -1,4 +1,8 @@
-# Route4Me Java SDK [![Build Status](https://travis-ci.org/route4me/route4me-java-sdk.svg?branch=master)](https://travis-ci.org/route4me/route4me-java-sdk)
+# Route4Me Java SDK
+
+[![Build Status](https://travis-ci.org/route4me/route4me-java-sdk.svg?branch=master)](https://travis-ci.org/route4me/route4me-java-sdk)
+[![codebeat badge](https://codebeat.co/badges/088f1145-147e-438e-aa03-9fc5323ff235)](https://codebeat.co/projects/github-com-route4me-route4me-java-sdk)
+
 
 ### What does the Route4Me SDK permit me to do?
 This SDK makes it easier for you use the Route4Me API, which creates optimally sequenced driving routes for many drivers.
