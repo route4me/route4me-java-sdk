@@ -1,3 +1,4 @@
+// codebeat:disable[ABC]
 package com.route4me.sdk.examples;
 
 import com.route4me.sdk.exception.APIException;
@@ -103,3 +104,4 @@ public class SingleDepotMultipleDriverTimeWindow {
         }
     }
 }
+// codebeat:enable[ABC]

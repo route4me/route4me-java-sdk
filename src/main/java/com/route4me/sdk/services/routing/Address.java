@@ -1,4 +1,4 @@
-
+// codebeat:disable[TOO_MANY_FUNCTIONS]
 package com.route4me.sdk.services.routing;
 
 import com.google.gson.annotations.SerializedName;
@@ -101,3 +101,4 @@ public class Address {
         this.time = time;
     }
 }
+// codebeat:enable[TOO_MANY_FUNCTIONS]
