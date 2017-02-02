@@ -9,11 +9,7 @@ import com.route4me.sdk.services.territories.TerritoryData;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author juan
- */
 public class DeleteAvoidanceZone {
-
 
     public static void main(String[] args) throws APIException {
         String apiKey = "11111111111111111111111111111111";
