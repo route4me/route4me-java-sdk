@@ -1,3 +1,4 @@
+// codebeat:disable[SIMILARITY]
 package com.route4me.sdk.examples.orders;
 
 import com.route4me.sdk.exception.APIException;
@@ -20,3 +21,4 @@ public class GetOrdersByQuery {
         }
     }
 }
+// codebeat:enable[SIMILARITY]

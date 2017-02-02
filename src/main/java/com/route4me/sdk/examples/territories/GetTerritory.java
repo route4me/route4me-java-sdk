@@ -1,4 +1,4 @@
-
+// codebeat:disable[SIMILARITY]
 package com.route4me.sdk.examples.territories;
 
 import com.route4me.sdk.exception.APIException;
@@ -24,3 +24,4 @@ public class GetTerritory {
     }
 
 }
+// codebeat:enable[SIMILARITY]
