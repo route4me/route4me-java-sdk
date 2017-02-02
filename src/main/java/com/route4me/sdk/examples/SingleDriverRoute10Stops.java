@@ -1,3 +1,4 @@
+// codebeat:disable[SIMILARITY]
 package com.route4me.sdk.examples;
 
 import com.route4me.sdk.exception.APIException;
@@ -57,3 +58,4 @@ public class SingleDriverRoute10Stops {
     }
 
 }
+// codebeat:enable[SIMILARITY]
