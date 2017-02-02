@@ -1,3 +1,4 @@
+// codebeat:disable[SIMILARITY]
 package com.route4me.sdk.examples.activities;
 
 import com.route4me.sdk.exception.APIException;
@@ -18,3 +19,4 @@ public class GetDestinationInsertedToCertainRouteActivities {
         }
     }
 }
+// codebeat:enable[SIMILARITY]
