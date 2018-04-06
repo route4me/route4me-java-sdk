@@ -2,6 +2,7 @@ package com.route4me.sdk.examples.routes;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Route;
+import com.route4me.sdk.services.routing.RouteDeletedResponse;
 import com.route4me.sdk.services.routing.RoutesRequest;
 import com.route4me.sdk.services.routing.RoutingManager;
 
@@ -20,7 +21,7 @@ public class DeleteRoutes {
             if (routes.size() < 2) {
                 throw new RuntimeException("Not enough routes");
             }
-            List<Route> deleted = routeManager.deleteRoutes(routes.get(0).getId(), routes.get(1).getId());
+            RouteDeletedResponse deleted = routeManager.deleteRoutes(routes.get(0).getId(), routes.get(1).getId());
             System.out.println(deleted);
         } catch (APIException e) {
             //handle exceptions
