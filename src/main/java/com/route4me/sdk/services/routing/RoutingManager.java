@@ -46,24 +46,6 @@ public class RoutingManager extends Manager {
         return resp.getOptimizations();
     }
 
-    //    public DataObject addAddressesToOptimizaion(String optimizationProblemID, List<Address> addresses) {
-//        URIBuilder builder = Manager.defaultBuilder(APIEndpoints.)
-//        try {
-//            getParams().put("optimization_problem_id", optimizationProblemID);
-//            getParams().put("reoptimize", "1");
-//            DataObject dataObj = new DataObject();
-//            dataObj.setAddresses(addresses);
-//            String data = getGson().toJson(dataObj);
-//            String params = Manager.transformParams(this.getParams());
-//            Response response = Manager.makeURLConnectionRequest(RequestMethod.PUT, buildBaseURL(), params, data);
-//
-//            DataObject responseObject = DataObjectDeserializer.GSON_DESERIALIZER.fromJson(response.getResponseBody(), DataObject.class);
-//            return responseObject;
-//        } catch (UnsupportedEncodingException |InvalidRequestException ex) {
-//            throw new APIException(ex);
-//        }
-//    }
-    //Addresses
     public DataObject addAddressesToRoute(String routeId, List<Address> addresses) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         builder.setParameter("route_id", routeId);
@@ -99,7 +81,6 @@ public class RoutingManager extends Manager {
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(dataObj), Route.class);
     }
 
-    //routes
     public List<Route> getRoutes(RoutesRequest request) throws APIException {
         return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ROUTE_EP), request, new TypeToken<ArrayList<Route>>() {
         }.getType());
@@ -114,14 +95,16 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, route, Route.class);
     }
 
-    public List<Route> deleteRoutes(String... routeIds) throws APIException {
+    public RouteDeletedResponse deleteRoutes(String... routeIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         StringBuilder conc = new StringBuilder();
         for (String s : routeIds) {
             conc.append(s).append(',');
         }
-        return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(new DeleteRoutes(conc.toString())), new TypeToken<ArrayList<Route>>() {
-        }.getType());
+
+        builder.addParameter("route_id", conc.toString());
+
+        return this.makeRequest(RequestMethod.DELETE, builder, "", RouteDeletedResponse.class);
     }
 
     public DuplicateRouteResponse duplicateRoute(String routeID) throws APIException {

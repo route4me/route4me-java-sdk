@@ -2,6 +2,7 @@ package com.route4me.sdk.examples.routes;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Route;
+import com.route4me.sdk.services.routing.RouteDeletedResponse;
 import com.route4me.sdk.services.routing.RoutesRequest;
 import com.route4me.sdk.services.routing.RoutingManager;
 
@@ -17,7 +18,7 @@ public class DeleteRoute {
         RoutingManager routeManager = new RoutingManager(apiKey);
         try {
             List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(3).setOffset(10));
-            List<Route> deleted = routeManager.deleteRoutes(routes.get(0).getId());
+            RouteDeletedResponse deleted = routeManager.deleteRoutes(routes.get(0).getId());
             System.out.println(deleted);
         } catch (APIException e) {
             //handle exceptions
