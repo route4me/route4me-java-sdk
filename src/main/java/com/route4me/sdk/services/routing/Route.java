@@ -4,6 +4,8 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
+import java.util.List;
+
 @Data
 public class Route extends DataObject {
     @SerializedName("route_id")
@@ -32,4 +34,6 @@ public class Route extends DataObject {
     private Double gasPrice;
     @SerializedName("route_distance_sec")
     private Integer routeDurationSec;
+    @SerializedName("directions")
+    private List<Direction> routeDirections;
 }
