@@ -74,11 +74,11 @@ public class RoutingManager extends Manager {
         this.makeRequest(RequestMethod.DELETE, builder, "", null);
     }
 
-    public Route updateAddressAttribute(String routeId, Number routeDestinationId, Address dataObj) throws APIException {
-        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
+    public Address updateAddressAttribute(String routeId, Number routeDestinationId, Address dataObj) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(ADDRESS_EP);
         builder.setParameter("route_id", routeId);
         builder.setParameter("route_destination_id", routeDestinationId.toString());
-        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(dataObj), Route.class);
+        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(dataObj), Address.class);
     }
 
     public List<Route> getRoutes(RoutesRequest request) throws APIException {

@@ -17,7 +17,7 @@ public class DeleteRoute {
         String apiKey = "11111111111111111111111111111111";
         RoutingManager routeManager = new RoutingManager(apiKey);
         try {
-            List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(3).setOffset(10));
+            List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(3).setOffset(0));
             RouteDeletedResponse deleted = routeManager.deleteRoutes(routes.get(0).getId());
             System.out.println(deleted);
         } catch (APIException e) {
