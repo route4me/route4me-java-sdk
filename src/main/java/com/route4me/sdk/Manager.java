@@ -52,7 +52,7 @@ public abstract class Manager {
     protected static URIBuilder defaultBuilder(String endpoint) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
-        builder.setHost("www.route4me.com");
+        builder.setHost("api.route4me.com");
         builder.setPath(endpoint);
         return builder;
     }

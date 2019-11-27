@@ -17,7 +17,7 @@ public class DeleteRoutes {
         String apiKey = "11111111111111111111111111111111";
         RoutingManager routeManager = new RoutingManager(apiKey);
         try {
-            List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(3).setOffset(10));
+            List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(3).setOffset(0));
             if (routes.size() < 2) {
                 throw new RuntimeException("Not enough routes");
             }
