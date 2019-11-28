@@ -22,11 +22,14 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.List;
+import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
 
 public abstract class Manager {
 
     private final String apiKey;
     protected Gson gson;
+    private RequestConfig requestProxyConfig;
 
     public Manager(String apiKey) {
         this.apiKey = apiKey;
@@ -48,6 +51,16 @@ public abstract class Manager {
             }
         }).create();
     }
+    
+    public Manager(String apiKey, String proxyHost, int proxyPort, String proxySchema) {
+        this(apiKey);
+        HttpHost proxy = new HttpHost(proxyHost, proxyPort, proxySchema);
+        this.requestProxyConfig = RequestConfig.custom()
+                    .setProxy(proxy)
+                    .build();
+    }    
+    
+    
 
     protected static URIBuilder defaultBuilder(String endpoint) {
         URIBuilder builder = new URIBuilder();
@@ -136,6 +149,11 @@ public abstract class Manager {
             builder.addParameter("api_key", this.apiKey);
             //System.out.println(builder.getQueryParams());
             HttpRequestBase hrb = method.create(builder.build());
+            // Checking If a proxy was set. 
+            if (this.requestProxyConfig != null) {
+                hrb.setConfig(this.requestProxyConfig);
+            }
+
             //if there's any entity to be attached to the body and request supports it, do it.
             if (body != null && hrb instanceof HttpEntityEnclosingRequestBase) {
                 ((HttpEntityEnclosingRequestBase) hrb).setEntity(body);

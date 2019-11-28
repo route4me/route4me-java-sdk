@@ -4,6 +4,7 @@ package com.route4me.sdk.services.routing;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.services.notes.Note;
 import java.util.List;
+import java.util.Map;
 import lombok.Data;
 
 @Data
@@ -53,6 +54,8 @@ public class Address {
     private Long time;
     @SerializedName("notes")
     private List<Note> notes;
+    @SerializedName("custom_fields")
+    private Map<String, Object>  custom_fields;
     
     public Address() {
     }
@@ -99,6 +102,10 @@ public class Address {
         this.latitude = lat;
         this.longitude = lng;
         this.time = time;
+    }
+    
+    public void addCustomField(String key, Object value) {
+        this.custom_fields.put(key, value);
     }
 }
 // codebeat:enable[TOO_MANY_FUNCTIONS]
