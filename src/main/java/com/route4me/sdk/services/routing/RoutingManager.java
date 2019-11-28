@@ -22,6 +22,10 @@ public class RoutingManager extends Manager {
     public RoutingManager(String apiKey) {
         super(apiKey);
     }
+    
+    public RoutingManager(String apiKey, String proxyHost, int proxyPort, String proxySchema) {
+        super(apiKey, proxyHost, proxyPort, proxySchema);
+    }
 
     public DataObject runOptimization(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);

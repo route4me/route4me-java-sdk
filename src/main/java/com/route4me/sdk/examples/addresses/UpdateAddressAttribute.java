@@ -16,8 +16,9 @@ public class UpdateAddressAttribute {
         try {
             List<Route> routes = manager.getRoutes(new RoutesRequest().setLimit(10));
             Route route = manager.getRoute(new RoutesRequest().setId(routes.get(0).getId()));
-            Address addr = manager.getAddress(route.getId(), route.getAddresses().get(0).getRouteDestinationId());
-            addr.setAlias("DEPOT");
+            Address addr = manager.getAddress(route.getId(), route.getAddresses().get(1).getRouteDestinationId());
+            addr.setAlias("New Alias");
+            addr.addCustomField("NOTE 1", "Adding Custom Fields");
             Address address = manager.updateAddressAttribute(route.getId(), route.getAddresses().get(0).getRouteDestinationId(), addr);
             System.out.println(address);
         } catch (APIException e) {
