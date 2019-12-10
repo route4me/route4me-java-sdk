@@ -9,7 +9,7 @@ import lombok.Data;
 
 @Data
 public class Address {
-
+    
     @SerializedName("route_destination_id")
     private Long routeDestinationId;
     @SerializedName("alias")
@@ -56,6 +56,8 @@ public class Address {
     private List<Note> notes;
     @SerializedName("custom_fields")
     private Map<String, Object>  custom_fields;
+    @SerializedName("manifest")
+    private Map<String, Object>  manifest;
     
     public Address() {
     }
@@ -78,30 +80,21 @@ public class Address {
     }
 
     public Address(String address, boolean isDepot, double lat, double lng, long time, long timeWindowStart, long timeWindowEnd) {
-        this.address = address;
-        this.depot = isDepot;
-        this.latitude = lat;
-        this.longitude = lng;
-        this.time = time;
+        this(address, isDepot, lat, lng, time);
         this.timeWindowStart = timeWindowStart;
         this.timeWindowEnd = timeWindowEnd;
     }
 
     public Address(String address, double lat, double lng, long time, long timeWindowStart, long timeWindowEnd) {
-        this.address = address;
-        this.latitude = lat;
-        this.longitude = lng;
+        this(address, lat, lng, time);
         this.time = time;
         this.timeWindowStart = timeWindowStart;
         this.timeWindowEnd = timeWindowEnd;
     }
 
     public Address(String address, String alias, double lat, double lng, long time) {
+        this(address, lat, lng, time);
         this.alias = alias;
-        this.address = address;
-        this.latitude = lat;
-        this.longitude = lng;
-        this.time = time;
     }
     
     public void addCustomField(String key, Object value) {
