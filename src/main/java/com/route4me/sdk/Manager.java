@@ -24,16 +24,23 @@ import java.net.URISyntaxException;
 import java.util.List;
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.impl.client.CloseableHttpClient;
 
 public abstract class Manager {
 
     private final String apiKey;
     protected Gson gson;
     private RequestConfig requestProxyConfig;
+    private boolean disableRedirects;
 
     public Manager(String apiKey) {
         this.apiKey = apiKey;
         this.gson = new Gson();
+    }
+
+    public Manager(String apiKey, boolean disableRedirects) {
+        this(apiKey);
+        this.disableRedirects = disableRedirects;
     }
 
     public Manager(String apiKey, GsonBuilder builder) {
@@ -51,16 +58,19 @@ public abstract class Manager {
             }
         }).create();
     }
-    
+
     public Manager(String apiKey, String proxyHost, int proxyPort, String proxySchema) {
         this(apiKey);
         HttpHost proxy = new HttpHost(proxyHost, proxyPort, proxySchema);
         this.requestProxyConfig = RequestConfig.custom()
-                    .setProxy(proxy)
-                    .build();
-    }    
-    
-    
+                .setProxy(proxy)
+                .build();
+    }
+
+    public Manager(String apiKey, String proxyHost, int proxyPort, String proxySchema, boolean disableRedirects) {
+        this(apiKey, proxyHost, proxyPort, proxySchema);
+        this.disableRedirects = disableRedirects;
+    }
 
     protected static URIBuilder defaultBuilder(String endpoint) {
         URIBuilder builder = new URIBuilder();
@@ -79,19 +89,11 @@ public abstract class Manager {
     }
 
     protected <T> T makeRequest(RequestMethod method, URIBuilder builder, String body, Class<T> clazz) throws APIException {
-        try {
-            return this.makeRequest(method, builder, !body.isEmpty() ? new StringEntity(body) : (HttpEntity) null, clazz, null);
-        } catch (UnsupportedEncodingException ex) {
-            throw new APIException(ex);
-        }
+        return this.makeRequest(method, builder, !body.isEmpty() ? new StringEntity(body, "UTF-8") : (HttpEntity) null, clazz, null);
     }
 
     protected <T> T makeRequest(RequestMethod method, URIBuilder builder, String body, Type type) throws APIException {
-        try {
-            return this.makeRequest(method, builder, !body.isEmpty() ? new StringEntity(body) : (HttpEntity) null, type);
-        } catch (UnsupportedEncodingException ex) {
-            throw new APIException(ex);
-        }
+        return this.makeRequest(method, builder, !body.isEmpty() ? new StringEntity(body, "UTF-8") : (HttpEntity) null, type);
     }
 
     protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz) throws APIException {
@@ -115,11 +117,7 @@ public abstract class Manager {
                 throw new APIException("Could not convert " + requestParams.toString() + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
-                try {
-                    return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams)), clazz);
-                } catch (UnsupportedEncodingException e) {
-                    throw new APIException(e);
-                }
+                return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams), "UTF-8"), clazz);
             }
         }
         return this.makeRequest(method, builder, "", clazz);
@@ -134,11 +132,7 @@ public abstract class Manager {
                 throw new APIException("Could not convert " + requestParams.toString() + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
-                try {
-                    return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams)), null, type);
-                } catch (UnsupportedEncodingException e) {
-                    throw new APIException(e);
-                }
+                return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams), "UTF-8"), null, type);
             }
         }
         return this.makeRequest(method, builder, "", type);
@@ -160,18 +154,31 @@ public abstract class Manager {
             } else if (body != null) {
                 throw new RuntimeException("Method does not support body!");
             }
+            // Redirects Management
+            CloseableHttpClient client = HttpClients.createDefault();
+            if (this.disableRedirects) {
+                client = HttpClients.custom().disableRedirectHandling().build();
+            }
             //try with resources to close streams
-            try (CloseableHttpResponse resp = HttpClients.createDefault().execute(hrb);
-                 InputStream is = resp.getEntity().getContent()) {
+            try (CloseableHttpResponse resp = client.execute(hrb);
+                    InputStream is = resp.getEntity().getContent()) {
                 //response should always be present
                 if (is == null) {
                     throw new APIException("Response body is null.");
                 }
                 try (InputStreamReader isr = new InputStreamReader(is);
-                     BufferedReader br = new BufferedReader(isr)) {
-                    if (resp.getStatusLine().getStatusCode() < 200 || resp.getStatusLine().getStatusCode() >= 300) {
+                        BufferedReader br = new BufferedReader(isr)) {
+                    if (resp.getStatusLine().getStatusCode() < 200 || resp.getStatusLine().getStatusCode() > 303) {
                         try {
                             ErrorResponse er = this.gson.fromJson(br, ErrorResponse.class);
+
+                            StringBuilder respString = new StringBuilder();
+                            String line = "";
+                            while ((line = br.readLine()) != null) {
+                                respString.append(line);
+                            }
+                            System.out.println(respString.toString());
+
                             throw new APIException(String.format("Invalid status code %d, errors: %s", resp.getStatusLine().getStatusCode(), er.getErrors().toString()));
                         } catch (Exception e) {
                             throw new APIException(String.format("Invalid status code %d and no error present.", resp.getStatusLine().getStatusCode()));
