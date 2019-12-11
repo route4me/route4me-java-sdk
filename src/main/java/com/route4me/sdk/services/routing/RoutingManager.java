@@ -22,9 +22,17 @@ public class RoutingManager extends Manager {
     public RoutingManager(String apiKey) {
         super(apiKey);
     }
+
+    public RoutingManager(String apiKey, boolean disableRedirects) {
+        super(apiKey, disableRedirects);
+    }
     
     public RoutingManager(String apiKey, String proxyHost, int proxyPort, String proxySchema) {
         super(apiKey, proxyHost, proxyPort, proxySchema);
+    }
+
+    public RoutingManager(String apiKey, String proxyHost, int proxyPort, String proxySchema, boolean disableRedirects) {
+        super(apiKey, proxyHost, proxyPort, proxySchema, disableRedirects);
     }
 
     public DataObject runOptimization(OptimizationParameters parameters) throws APIException {
@@ -99,6 +107,28 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, route, Route.class);
     }
 
+    public Route assignDriver(String routeId, String memberID) throws APIException{
+        Parameters params = new Parameters();
+        params.setMemberId(memberID);
+
+        Route route = new Route();
+        route.setId(routeId);
+        route.setParameters(params);
+        return updateRoute(route);
+    }
+
+    public Route assignVehicle(String routeId, String vehicle_id) throws APIException{
+        Parameters params = new Parameters();
+        params.setVehicleId(vehicle_id);
+
+        Route route = new Route();
+        route.setId(routeId);
+        route.setParameters(params);
+        return updateRoute(route);
+    }
+    
+    
+    
     public RouteDeletedResponse deleteRoutes(String... routeIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         StringBuilder conc = new StringBuilder();
