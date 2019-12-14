@@ -112,7 +112,9 @@ public abstract class Manager {
         if (requestParams != null) {
             try {
                 List<NameValuePair> params = QueryConverter.convertObjectToParameters(requestParams);
-                builder.addParameters(params);
+                if (method == RequestMethod.GET){
+                    builder.addParameters(params);
+                }
             } catch (IllegalAccessException e) {
                 throw new APIException("Could not convert " + requestParams.toString() + " to query parameters.", e);
             }
@@ -127,7 +129,9 @@ public abstract class Manager {
         if (requestParams != null) {
             try {
                 List<NameValuePair> params = QueryConverter.convertObjectToParameters(requestParams);
-                builder.addParameters(params);
+                if (method == RequestMethod.GET){
+                    builder.addParameters(params);
+                }
             } catch (IllegalAccessException e) {
                 throw new APIException("Could not convert " + requestParams.toString() + " to query parameters.", e);
             }
@@ -143,11 +147,12 @@ public abstract class Manager {
             builder.addParameter("api_key", this.apiKey);
             //System.out.println(builder.getQueryParams());
             HttpRequestBase hrb = method.create(builder.build());
+            hrb.setHeader("Content-type", "application/json");
+
             // Checking If a proxy was set. 
             if (this.requestProxyConfig != null) {
                 hrb.setConfig(this.requestProxyConfig);
             }
-
             //if there's any entity to be attached to the body and request supports it, do it.
             if (body != null && hrb instanceof HttpEntityEnclosingRequestBase) {
                 ((HttpEntityEnclosingRequestBase) hrb).setEntity(body);
@@ -170,17 +175,14 @@ public abstract class Manager {
                         BufferedReader br = new BufferedReader(isr)) {
                     if (resp.getStatusLine().getStatusCode() < 200 || resp.getStatusLine().getStatusCode() > 303) {
                         try {
-                            ErrorResponse er = this.gson.fromJson(br, ErrorResponse.class);
-
                             StringBuilder respString = new StringBuilder();
                             String line = "";
                             while ((line = br.readLine()) != null) {
                                 respString.append(line);
                             }
-                            System.out.println(respString.toString());
-
-                            throw new APIException(String.format("Invalid status code %d, errors: %s", resp.getStatusLine().getStatusCode(), er.getErrors().toString()));
-                        } catch (Exception e) {
+                            throw new APIException(String.format("Invalid status code %d, errors: %s", resp.getStatusLine().getStatusCode(), respString.toString()));
+                        } catch (APIException | IOException e) {
+                            System.err.println(e);
                             throw new APIException(String.format("Invalid status code %d and no error present.", resp.getStatusLine().getStatusCode()));
                         }
                     }

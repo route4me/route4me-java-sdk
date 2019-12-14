@@ -1,7 +1,6 @@
 package com.route4me.sdk.services.users;
 
 import com.route4me.sdk.RequestMethod;
-import com.google.gson.Gson;
 import com.route4me.sdk.Manager;
 import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.exception.APIException;
