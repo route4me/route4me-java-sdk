@@ -25,4 +25,6 @@ public class DataObject {
     private Links links;
     @SerializedName("driver_alias")
     private String driverAlias;
+    @SerializedName("optimization_problem_ids")
+    private List<String> optimizationProblemIDs;
 }

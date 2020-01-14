@@ -11,7 +11,9 @@ import lombok.ToString;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class RoutingManager extends Manager {
     public static final String ROUTE_EP = "/api.v4/route.php";
@@ -50,12 +52,22 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, parameters, DataObject.class);
     }
 
+    
+    
     public List<DataObject> getOptimizations(int limit, int offset) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         builder.setParameter("limit", Integer.toString(limit));
         builder.setParameter("offset", Integer.toString(offset));
         GetOptimizationsResponse resp = this.makeRequest(RequestMethod.GET, builder, "", GetOptimizationsResponse.class);
         return resp.getOptimizations();
+    }
+    
+    public Map<String, Object> deleteOptimization(List<String> optimizationProblemIDs) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
+        DataObject dataObj = new DataObject();
+        dataObj.setOptimizationProblemIDs(optimizationProblemIDs);
+        return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(dataObj), new TypeToken<Map<String, Object>>() {
+        }.getType());
     }
 
     public DataObject addAddressesToRoute(String routeId, List<Address> addresses) throws APIException {
