@@ -20,13 +20,13 @@ public class DeleteOptimization {
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
         RoutingManager routeManager = new RoutingManager(apiKey);
+        ArrayList<String> optimizationProblemIDs = new ArrayList<String>();
+        optimizationProblemIDs.add("07C248AE57754B3EB91D1C934AD35B2D");
         try {
-            ArrayList<String> optimizationProblemIDs = new ArrayList<String>();
-            optimizationProblemIDs.add("07C248AE57754B3EB91D1C934AD35B2D");
             Map<String, Object> response = routeManager.deleteOptimization(optimizationProblemIDs);
             System.out.println(response);
         } catch (APIException ex) {
-            Logger.getLogger(com.route4me.sdk.examples.playground.DeleteOptimization.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DeleteOptimization.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
