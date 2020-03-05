@@ -2,6 +2,7 @@ package com.route4me.sdk.services.routing;
 
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
+import com.route4me.sdk.services.notes.Note;
 import lombok.Data;
 
 import java.util.List;
@@ -36,4 +37,6 @@ public class Route extends DataObject {
     private Integer routeDurationSec;
     @SerializedName("directions")
     private List<Direction> routeDirections;
+    @SerializedName("notes")
+    List<Note> notes;
 }

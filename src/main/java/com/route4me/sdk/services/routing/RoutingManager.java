@@ -64,7 +64,7 @@ public class RoutingManager extends Manager {
     
     public Map<String, Object> deleteOptimization(List<String> optimizationProblemIDs) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
-        DataObject dataObj = new DataObject();
+        OptimizationProblemIDs dataObj = new OptimizationProblemIDs();
         dataObj.setOptimizationProblemIDs(optimizationProblemIDs);
         return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(dataObj), new TypeToken<Map<String, Object>>() {
         }.getType());
@@ -116,6 +116,8 @@ public class RoutingManager extends Manager {
 
     public Route updateRoute(Route route) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
+        String routeId = route.getId();
+        builder.setParameter("route_id", routeId);
         return this.makeJSONRequest(RequestMethod.PUT, builder, route, Route.class);
     }
 

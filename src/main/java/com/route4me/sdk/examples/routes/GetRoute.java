@@ -19,7 +19,7 @@ public class GetRoute {
         try {
             List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(10));
             //fetches complete data
-            Route r = routeManager.getRoute(new RoutesRequest().setId(routes.get(0).getId()));
+            Route r = routeManager.getRoute(new RoutesRequest().setNotes(Boolean.TRUE).setId(routes.get(0).getId()));
             System.out.println(r);
             for (Address address : r.getAddresses()) {
                     System.out.println("Address: " + address.getAddress() + " Running Distance: " + address.getManifest().get("running_distance"));
