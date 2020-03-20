@@ -148,7 +148,6 @@ public abstract class Manager {
             //System.out.println(builder.getQueryParams());
             HttpRequestBase hrb = method.create(builder.build());
             hrb.setHeader("Content-type", "application/json");
-
             // Checking If a proxy was set. 
             if (this.requestProxyConfig != null) {
                 hrb.setConfig(this.requestProxyConfig);

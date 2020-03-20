@@ -9,6 +9,72 @@ import java.util.Map;
  * @author juan
  */
 public class Constants {
+    
+    public enum MemberType {
+        PRIMARY_ACCOUNT("PRIMARY_ACCOUNT"), 
+        SUB_ACCOUNT_ADMIN("SUB_ACCOUNT_ADMIN"), 
+        SUB_ACCOUNT_REGIONAL_MANAGER("SUB_ACCOUNT_REGIONAL_MANAGER"), 
+        SUB_ACCOUNT_DISPATCHER("SUB_ACCOUNT_DISPATCHER"), 
+        SUB_ACCOUNT_PLANNER("SUB_ACCOUNT_PLANNER"), 
+        SUB_ACCOUNT_DRIVER("SUB_ACCOUNT_DRIVER");
+        
+        private String value;
+
+        private MemberType(String value) {
+            this.value = value;
+        }        
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        
+        /**
+         * @return the value
+         */
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(String value) {
+            this.value = value;
+        }
+    
+    }
+    
+    public enum MemberPropertyValue{
+        TRUE("TRUE"),
+        FALSE("FALSE");
+        
+        private String value;
+
+        private MemberPropertyValue (String value) {
+            this.value = value;
+        }        
+        
+        @Override
+        public String toString() {
+            return this.value;
+        }
+        
+        /**
+         * @return the value
+         */
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(String value) {
+            this.value = value;
+        }
+    }
 
     public enum AlgorithmType {
 
