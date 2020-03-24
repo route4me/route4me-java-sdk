@@ -7,7 +7,6 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.queryconverter.QueryConverter;
-import com.route4me.sdk.responses.ErrorResponse;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -22,6 +21,8 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -108,6 +109,33 @@ public abstract class Manager {
         return this.makeRequest(method, builder, body, String.class, null);
     }
 
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body,  Object requestParams, Class<T> clazz) throws APIException {
+        if (requestParams != null) {
+            List<NameValuePair> params;
+            try {
+                params = QueryConverter.convertObjectToParameters(requestParams);
+                builder.addParameters(params);
+            } catch (IllegalAccessException ex) {
+                Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(body), "UTF-8"), clazz, null, "application/json");
+    }
+
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams, Type type) throws APIException {
+        if (requestParams != null) {
+            List<NameValuePair> params;
+            try {
+                params = QueryConverter.convertObjectToParameters(requestParams);
+                builder.addParameters(params);
+            } catch (IllegalAccessException ex) {
+                Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+        return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(body), "UTF-8"), null, type, "application/json");
+    }
+    
+    
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz) throws APIException {
         if (requestParams != null) {
             try {
@@ -119,10 +147,10 @@ public abstract class Manager {
                 throw new APIException("Could not convert " + requestParams.toString() + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
-                return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams), "UTF-8"), clazz);
+                return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams), "UTF-8"), clazz, null, "application/json");
             }
         }
-        return this.makeRequest(method, builder, "", clazz);
+        return this.makeRequest(method, builder, (HttpEntity) null, clazz, null, "application/json");
     }
 
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type) throws APIException {
@@ -136,18 +164,23 @@ public abstract class Manager {
                 throw new APIException("Could not convert " + requestParams.toString() + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
-                return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams), "UTF-8"), null, type);
+                return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams), "UTF-8"), null, type, "application/json");
             }
         }
-        return this.makeRequest(method, builder, "", type);
+        return this.makeRequest(method, builder, (HttpEntity) null, null, type, "application/json");
     }
 
-    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type) throws APIException {
+    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type) throws APIException{
+        return this.makeRequest(method, builder, body, clazz, type, null);
+    }
+    
+    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type, String requestContentType ) throws APIException {
         try {
             builder.addParameter("api_key", this.apiKey);
-            //System.out.println(builder.getQueryParams());
             HttpRequestBase hrb = method.create(builder.build());
-            hrb.setHeader("Content-type", "application/json");
+            if (requestContentType != null){
+                hrb.setHeader("Content-type", requestContentType);
+            }
             // Checking If a proxy was set. 
             if (this.requestProxyConfig != null) {
                 hrb.setConfig(this.requestProxyConfig);
@@ -208,4 +241,6 @@ public abstract class Manager {
             throw new IllegalArgumentException(ex);
         }
     }
+
+
 }
