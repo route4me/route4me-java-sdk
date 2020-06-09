@@ -32,7 +32,6 @@ public class MultipleDepotMultipleDriverTimeWindow {
         parameters.setDistanceUnit(DistanceUnit.MI.toString());
         parameters.setDeviceType(DeviceType.WEB.toString());
         parameters.setTravelMode(TravelMode.DRIVING.toString());
-        parameters.setMetric(Metric.ROUTE4ME_METRIC_GEODESIC.getValue());
         parameters.setParts(20);
         data.setParameters(parameters);
 

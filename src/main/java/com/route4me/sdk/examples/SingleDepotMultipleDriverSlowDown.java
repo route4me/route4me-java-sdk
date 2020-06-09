@@ -4,14 +4,13 @@ package com.route4me.sdk.examples;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Constants.*;
 import com.route4me.sdk.services.routing.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author juan
  */
-public class SingleDepotMultipleDriver {
+public class SingleDepotMultipleDriverSlowDown {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
@@ -25,15 +24,17 @@ public class SingleDepotMultipleDriver {
         parameters.setRouteTime(0);
         parameters.setParts(20);
         parameters.setRouteMaxDuration(86400);
-        parameters.setVehicleCapacity("100");
         parameters.setVehicleMaxDistanceMi("10000");
-        parameters.setRouteName("Single Depot, Multiple Driver");
-        parameters.setOptimize(Optimize.DISTANCE.toString());
-        parameters.setDistanceUnit(DistanceUnit.MI.toString());
-        parameters.setDeviceType(DeviceType.WEB.toString());
+        parameters.setRouteName("Single Depot, Multiple Driver, Slow Downs");
         parameters.setTravelMode(TravelMode.DRIVING.toString());
         optParameters.setParameters(parameters);
 
+        SlowDowns slowdowns = new SlowDowns();
+        slowdowns.setServiceTime(20);
+        slowdowns.setTravelTime(30);
+        parameters.setSlowdowns(slowdowns);
+
+        
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
         addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215", 38.202496, -85.786514, 300));
