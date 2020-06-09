@@ -1,6 +1,7 @@
 package com.route4me.sdk.services.routing;
 
 import com.google.gson.annotations.SerializedName;
+import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
 @Data
@@ -84,5 +85,11 @@ public class Parameters {
     private String dm;
     @SerializedName("dirm")
     private String dirm;
+    @QueryParameter("bundling")
+    @SerializedName("bundling")
+    private Bundling bundling;
+    @QueryParameter("slowdowns")
+    @SerializedName("slowdowns")
+    private SlowDowns slowdowns;
 
 }

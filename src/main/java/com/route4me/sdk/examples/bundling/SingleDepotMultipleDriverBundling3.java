@@ -1,17 +1,16 @@
 // codebeat:disable[SIMILARITY]
-package com.route4me.sdk.examples;
+package com.route4me.sdk.examples.bundling;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Constants.*;
 import com.route4me.sdk.services.routing.*;
-
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * @author juan
  */
-public class SingleDepotMultipleDriver {
+public class SingleDepotMultipleDriverBundling3 {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
@@ -22,21 +21,34 @@ public class SingleDepotMultipleDriver {
         parameters.setAlgorithmType(AlgorithmType.CVRP_TW_SD.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
         parameters.setShareRoute(Boolean.FALSE);
-        parameters.setRouteTime(0);
-        parameters.setParts(20);
-        parameters.setRouteMaxDuration(86400);
-        parameters.setVehicleCapacity("100");
-        parameters.setVehicleMaxDistanceMi("10000");
-        parameters.setRouteName("Single Depot, Multiple Driver");
-        parameters.setOptimize(Optimize.DISTANCE.toString());
-        parameters.setDistanceUnit(DistanceUnit.MI.toString());
-        parameters.setDeviceType(DeviceType.WEB.toString());
+        parameters.setRouteName("Single Depot, Multiple Driver, Bundling Use Custom Service Time for First and Additional Item");
         parameters.setTravelMode(TravelMode.DRIVING.toString());
+
+        Bundling bundling = new Bundling();
+
+        bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ADDRESS.getValue());
+        ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
+        serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
+        ArrayList<Integer> firstItemModeParams = new ArrayList<>();
+        firstItemModeParams.add(600);
+        serviceTimeRules.setFirstItemModeParams(firstItemModeParams);
+        serviceTimeRules.setAdditionalItemsMode(BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
+        ArrayList<Integer> additionalItemModeParams = new ArrayList<>();
+        additionalItemModeParams.add(800);
+        serviceTimeRules.setAdditionalItemsModeParams(additionalItemModeParams);
+        bundling.setServiceTimeRules(serviceTimeRules);
+        parameters.setBundling(bundling);
+
+        
         optParameters.setParameters(parameters);
 
+
+        
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
         addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215", 38.202496, -85.786514, 300));
+        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.178844, -85.774864, 300));
+        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.178844, -85.774864, 300));
         addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.178844, -85.774864, 300));
         addresses.add(new Address("730 CECIL AVENUE, Louisville, KY, 40211", 38.248684, -85.821121, 300));
         addresses.add(new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211", 38.251923, -85.800034, 300));

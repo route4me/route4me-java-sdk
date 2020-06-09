@@ -1,7 +1,6 @@
 package com.route4me.sdk.examples.routes;
 
 import com.route4me.sdk.exception.APIException;
-import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.services.routing.Route;
 import com.route4me.sdk.services.routing.RoutesRequest;
 import com.route4me.sdk.services.routing.RoutingManager;

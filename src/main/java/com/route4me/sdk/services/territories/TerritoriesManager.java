@@ -70,9 +70,26 @@ public class TerritoriesManager extends Manager {
     }
 
     public Territory getTerritory(String territoryId) throws APIException {
+        return this.getTerritory(territoryId, false, false);
+    }
+
+    public Territory getOrdersInTerritory(String territoryId) throws APIException {
+        return this.getTerritory(territoryId, false, true);
+    }
+
+    public Territory getAddressesInTerritory(String territoryId) throws APIException {
+        return this.getTerritory(territoryId, true, false);
+    }
+    
+    
+    public Territory getTerritory(String territoryId, Boolean addresses, Boolean orders) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TERRITORY_EP);
         builder.setParameter("territory_id", territoryId);
+        builder.setParameter("orders", orders.toString());
+        builder.setParameter("addresses", addresses.toString());
         return this.makeRequest(RequestMethod.GET, builder, "", Territory.class);
     }
+
+
 
 }

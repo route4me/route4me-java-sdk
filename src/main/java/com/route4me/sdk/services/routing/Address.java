@@ -58,10 +58,12 @@ public class Address {
     private Map<String, Object>  custom_fields;
     @SerializedName("manifest")
     private Map<String, Object>  manifest;
+    @SerializedName("order_id")
+    private Integer orderId;
     
     public Address() {
     }
-
+    
     public Address(String address, double lat, double lng, long time) {
         this.address = address;
         this.latitude = lat;
