@@ -509,6 +509,46 @@ public class Constants {
             return this.value;
         }
     }        
-   
+
+    
+    public enum RightTurn {
+
+        RIGHTTURN_ALLOW(1),
+        RIGHTTURN_FORBID(2),
+        RIGHTTURN_MULTIAPPROACH(3);
+
+        private int value;
+        private static final Map<Integer, RightTurn> lookup
+                = new HashMap<>();
+
+        static {
+            for (RightTurn s : EnumSet.allOf(RightTurn.class)) {
+                lookup.put(s.getValue(), s);
+            }
+        }
+
+        private RightTurn(int value) {
+            this.value = value;
+        }
+
+        /**
+         * @return the value
+         */
+        public int getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(int value) {
+            this.value = value;
+        }
+
+        public static RightTurn get(int code) {
+            return lookup.get(code);
+        }
+
+    }
 
 }
