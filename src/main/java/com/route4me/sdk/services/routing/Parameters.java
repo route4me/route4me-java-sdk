@@ -91,5 +91,14 @@ public class Parameters {
     @QueryParameter("slowdowns")
     @SerializedName("slowdowns")
     private SlowDowns slowdowns;
-
+    @QueryParameter("uturn")
+    @SerializedName("uturn")
+    private Integer uTurn;
+    @QueryParameter("leftturn")
+    @SerializedName("leftturn")
+    private Integer leftTurn;
+    @QueryParameter("rightturn")
+    @SerializedName("rightturn")
+    private Integer rightTurn;
+    
 }
