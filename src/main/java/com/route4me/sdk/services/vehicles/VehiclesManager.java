@@ -9,7 +9,6 @@ import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpEntity;

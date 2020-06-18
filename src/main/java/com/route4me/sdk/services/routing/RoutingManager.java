@@ -11,7 +11,6 @@ import lombok.ToString;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
