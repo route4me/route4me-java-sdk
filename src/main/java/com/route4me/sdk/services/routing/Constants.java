@@ -9,27 +9,26 @@ import java.util.Map;
  * @author juan
  */
 public class Constants {
-    
+
     public enum MemberType {
-        PRIMARY_ACCOUNT("PRIMARY_ACCOUNT"), 
-        SUB_ACCOUNT_ADMIN("SUB_ACCOUNT_ADMIN"), 
-        SUB_ACCOUNT_REGIONAL_MANAGER("SUB_ACCOUNT_REGIONAL_MANAGER"), 
-        SUB_ACCOUNT_DISPATCHER("SUB_ACCOUNT_DISPATCHER"), 
-        SUB_ACCOUNT_PLANNER("SUB_ACCOUNT_PLANNER"), 
+        PRIMARY_ACCOUNT("PRIMARY_ACCOUNT"),
+        SUB_ACCOUNT_ADMIN("SUB_ACCOUNT_ADMIN"),
+        SUB_ACCOUNT_REGIONAL_MANAGER("SUB_ACCOUNT_REGIONAL_MANAGER"),
+        SUB_ACCOUNT_DISPATCHER("SUB_ACCOUNT_DISPATCHER"),
+        SUB_ACCOUNT_PLANNER("SUB_ACCOUNT_PLANNER"),
         SUB_ACCOUNT_DRIVER("SUB_ACCOUNT_DRIVER");
-        
+
         private String value;
 
         private MemberType(String value) {
             this.value = value;
-        }        
+        }
 
         @Override
         public String toString() {
             return this.value;
         }
 
-        
         /**
          * @return the value
          */
@@ -43,24 +42,24 @@ public class Constants {
         public void setValue(String value) {
             this.value = value;
         }
-    
+
     }
-    
-    public enum MemberPropertyValue{
+
+    public enum MemberPropertyValue {
         TRUE("TRUE"),
         FALSE("FALSE");
-        
+
         private String value;
 
-        private MemberPropertyValue (String value) {
+        private MemberPropertyValue(String value) {
             this.value = value;
-        }        
-        
+        }
+
         @Override
         public String toString() {
             return this.value;
         }
-        
+
         /**
          * @return the value
          */
@@ -84,7 +83,7 @@ public class Constants {
         CVRP_TW_MD("4"),
         TSP_TW("5"),
         TSP_TW_CR("6"),
-        BBCVRP("7"), 
+        BBCVRP("7"),
         ALG_LEGACY_DISTRIBUTED("101"),
         ALG_NONE("100");
 
@@ -138,7 +137,6 @@ public class Constants {
 
     }
 
-    
     public enum DirectionsMethod {
 
         R4M_PROPRIETARY_INTERNAL_NAVIGATION_SYSTEM("1"),
@@ -165,9 +163,7 @@ public class Constants {
         }
 
     }
-    
-    
-    
+
     public enum TravelMode {
 
         DRIVING("Driving"),
@@ -386,7 +382,7 @@ public class Constants {
 
         UTURN_DEPART_SHORTEST(1),
         UTURN_DEPART_TO_RIGHT(2);
-        
+
         private int value;
         private static final Map<Integer, UTurn> lookup
                 = new HashMap<>();
@@ -420,7 +416,6 @@ public class Constants {
         }
 
     }
-
 
     public enum LeftTurn {
 
@@ -462,7 +457,6 @@ public class Constants {
 
     }
 
-    
     public enum TruckHazardousGoods {
 
         NONE(""),
@@ -489,9 +483,8 @@ public class Constants {
         public String toString() {
             return this.value;
         }
-    }    
-    
-    
+    }
+
     public enum TerritoryType {
 
         CIRCLE("circle"),
@@ -508,9 +501,8 @@ public class Constants {
         public String toString() {
             return this.value;
         }
-    }        
+    }
 
-    
     public enum RightTurn {
 
         RIGHTTURN_ALLOW(1),
@@ -547,6 +539,42 @@ public class Constants {
 
         public static RightTurn get(int code) {
             return lookup.get(code);
+        }
+
+    }
+
+    public enum AddressStopType {
+        DELIVERY("DELIVERY"),
+        PICKUP("PICKUP"),
+        BREAK("BREAK"),
+        MEETUP("MEETUP"),
+        SERVICE("SERVICE"),
+        VISIT("VISIT"),
+        DRIVEBY("DRIVEBY");
+
+        private String value;
+
+        private AddressStopType(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        /**
+         * @return the value
+         */
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(String value) {
+            this.value = value;
         }
 
     }
