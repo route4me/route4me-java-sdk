@@ -1,6 +1,7 @@
 package com.route4me.sdk.services.notes;
 
 import com.google.gson.annotations.SerializedName;
+import com.route4me.sdk.queryconverter.QueryParameter;
 import com.route4me.sdk.services.routing.Constants;
 import lombok.Data;
 

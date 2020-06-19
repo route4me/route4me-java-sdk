@@ -551,44 +551,4 @@ public class Constants {
 
     }
 
-    public enum AddressStopType {
-        DELIVERY("DELIVERY"), 
-        PICKUP("PICKUP"), 
-        BREAK("BREAK"), 
-        MEETUP("MEETUP"), 
-        SERVICE("SERVICE"), 
-        VISIT("VISIT"),
-        DRIVEBY("DRIVEBY");
-        
-        private String value;
-
-        private AddressStopType(String value) {
-            this.value = value;
-        }        
-
-        @Override
-        public String toString() {
-            return this.value;
-        }
-
-        
-        /**
-         * @return the value
-         */
-        public String getValue() {
-            return value;
-        }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(String value) {
-            this.value = value;
-        }
-    
-    }
-    
-    
-    
-    
 }
