@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * @author juan
  */
-public class SingleDepotMultipleDriverBundling2 {
+public class DoNotAddServiceTimeAdditionalItem {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
@@ -21,17 +21,14 @@ public class SingleDepotMultipleDriverBundling2 {
         parameters.setAlgorithmType(AlgorithmType.CVRP_TW_SD.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
         parameters.setShareRoute(Boolean.FALSE);
-        parameters.setRouteName("Single Depot, Multiple Driver, Bundling, Use Custom Service Time for First Item");
+        parameters.setRouteName("Single Depot, Multiple Driver, Bundling Do not Add Service Time for Additional Item");
         parameters.setTravelMode(TravelMode.DRIVING.toString());
 
         Bundling bundling = new Bundling();
 
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ADDRESS.getValue());
         ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
-        serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
-        ArrayList<Integer> firstItemModeParams = new ArrayList<>();
-        firstItemModeParams.add(600);
-        serviceTimeRules.setFirstItemModeParams(firstItemModeParams);
+        serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingAdditionalItemMode.DO_NOT_ADD_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
         bundling.setServiceTimeRules(serviceTimeRules);
         parameters.setBundling(bundling);
 

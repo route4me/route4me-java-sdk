@@ -7,14 +7,18 @@ package com.route4me.sdk.services.routing;
 
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
+import java.util.List;
 import lombok.Data;
 
 @Data
 public class Bundling {
     
     @SerializedName("mode")
-    @QueryParameter("modes")
+    @QueryParameter("mode")
     private Integer mode;
+    @SerializedName("mode_params")
+    @QueryParameter("mode_params")
+    private List<String> modeParams;
     @SerializedName("service_time_rules")
     @QueryParameter("service_time_rules")
     private ServiceTimeRules serviceTimeRules;
