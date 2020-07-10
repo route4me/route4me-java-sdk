@@ -25,7 +25,9 @@ public class UseCustomServiceTimeFirstItem {
         parameters.setTravelMode(TravelMode.DRIVING.toString());
 
         Bundling bundling = new Bundling();
-
+       
+        bundling.setMergeMode(BundlingEnum.BundledItemsMode.MERGE_INTO_SINGLE_DESTINATION.getValue());
+        
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ADDRESS.getValue());
         ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
         serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());

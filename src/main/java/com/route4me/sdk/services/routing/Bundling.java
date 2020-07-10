@@ -22,6 +22,9 @@ public class Bundling {
     @SerializedName("service_time_rules")
     @QueryParameter("service_time_rules")
     private ServiceTimeRules serviceTimeRules;
+    @SerializedName("merge_mode")
+    @QueryParameter("merge_mode")
+    private Integer mergeMode;
 
     
 }
