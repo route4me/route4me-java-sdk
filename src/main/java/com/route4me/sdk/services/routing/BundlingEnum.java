@@ -135,6 +135,46 @@ public class BundlingEnum {
 
     }
     
+    public enum BundledItemsMode {
+
+        KEEP_AS_SEPARATE_DESTINATIONS(1),
+        MERGE_INTO_SINGLE_DESTINATION(2);
+
+        private int value;
+        private static final Map<Integer, BundlingEnum.BundledItemsMode> lookup
+                = new HashMap<>();
+
+        static {
+            for (BundlingEnum.BundledItemsMode s : EnumSet.allOf(BundlingEnum.BundledItemsMode.class)) {
+                lookup.put(s.getValue(), s);
+            }
+        }
+
+        private BundledItemsMode(int value) {
+            this.value = value;
+        }
+
+        /**
+         * @return the value
+         */
+        public int getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(int value) {
+            this.value = value;
+        }
+
+        public static BundlingEnum.BundledItemsMode get(int code) {
+            return lookup.get(code);
+        }
+        
+    
+    }
+    
 
 
 }

@@ -25,6 +25,8 @@ public class DoNotAddServiceTimeAdditionalItem {
         parameters.setTravelMode(TravelMode.DRIVING.toString());
 
         Bundling bundling = new Bundling();
+       
+        bundling.setMergeMode(BundlingEnum.BundledItemsMode.MERGE_INTO_SINGLE_DESTINATION.getValue());
 
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ADDRESS.getValue());
         ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
