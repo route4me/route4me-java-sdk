@@ -7,7 +7,6 @@ package com.route4me.sdk.services.routing.breaks;
 
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
-import java.util.List;
 import lombok.Data;
 
 /**
