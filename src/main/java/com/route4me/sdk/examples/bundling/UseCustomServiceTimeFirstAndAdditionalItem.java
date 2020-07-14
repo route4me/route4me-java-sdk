@@ -30,7 +30,7 @@ public class UseCustomServiceTimeFirstAndAdditionalItem {
         
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ADDRESS.getValue());
         ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
-        serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
+        serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingFirstItemMode.USE_CUSTOM_SERVICE_TIME.getValue());
         ArrayList<Integer> firstItemModeParams = new ArrayList<>();
         firstItemModeParams.add(600);
         serviceTimeRules.setFirstItemModeParams(firstItemModeParams);
