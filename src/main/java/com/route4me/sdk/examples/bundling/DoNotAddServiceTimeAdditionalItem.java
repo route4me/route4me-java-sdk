@@ -25,20 +25,24 @@ public class DoNotAddServiceTimeAdditionalItem {
         parameters.setTravelMode(TravelMode.DRIVING.toString());
 
         Bundling bundling = new Bundling();
-       
+
         bundling.setMergeMode(BundlingEnum.BundledItemsMode.MERGE_INTO_SINGLE_DESTINATION.getValue());
 
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ADDRESS.getValue());
         ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
-        serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingAdditionalItemMode.DO_NOT_ADD_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
+
+        serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingFirstItemMode.KEEP_ORIGINAL_SERVICE_TIME.getValue());
+
+        serviceTimeRules.setAdditionalItemsMode(BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
+        ArrayList<Integer> additionalItemModeParams = new ArrayList<>();
+        additionalItemModeParams.add(0);
+        serviceTimeRules.setAdditionalItemsModeParams(additionalItemModeParams);
+
         bundling.setServiceTimeRules(serviceTimeRules);
         parameters.setBundling(bundling);
 
-        
         optParameters.setParameters(parameters);
 
-
-        
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
         addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215", 38.202496, -85.786514, 300));
