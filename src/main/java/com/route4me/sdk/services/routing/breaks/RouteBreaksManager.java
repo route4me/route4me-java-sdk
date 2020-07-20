@@ -50,8 +50,13 @@ public class RouteBreaksManager extends Manager {
     }
 
     public Object insertBreakAfterCertainServiceTime(Integer duration, Integer serviceTime, boolean replaceExisting, String ... routeIDs) throws APIException {
-        return this.insertBreak(duration, serviceTime, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_TOTAL_ELAPSED_TIME.getValue(), replaceExisting, routeIDs);
+        return this.insertBreak(duration, serviceTime, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_SERVICE_TIME.getValue(), replaceExisting, routeIDs);
     }
+
+    public Object insertBreakAfterCertainElapsed(Integer duration, Integer elapsedTime, boolean replaceExisting, String ... routeIDs) throws APIException {
+        return this.insertBreak(duration, elapsedTime, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_TOTAL_ELAPSED_TIME.getValue(), replaceExisting, routeIDs);
+    }
+
 
     
 }

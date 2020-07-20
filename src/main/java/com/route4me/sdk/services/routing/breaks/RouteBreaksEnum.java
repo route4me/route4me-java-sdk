@@ -5,7 +5,8 @@ public class RouteBreaksEnum {
     public enum RouteBreaksType {
         CERTAIN_NUMBER_OF_TOTAL_ELAPSED_TIME("certain_number_of_total_elapsed_time"),
         CERTAIN_NUMBER_OF_LOCATIONS("certain_number_of_locations"),
-        CERTAIN_NUMBER_OF_TRAVEL_TIME("certain_number_of_travel_time");
+        CERTAIN_NUMBER_OF_TRAVEL_TIME("certain_number_of_travel_time"),
+        CERTAIN_NUMBER_OF_SERVICE_TIME("certain_number_of_service_time");
 
         private String value;
 
