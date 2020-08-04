@@ -17,6 +17,8 @@ public class Route extends DataObject {
     private Long memberId;
     @SerializedName("member_email")
     private String memberEmail;
+    @SerializedName("is_unrouted")
+    private boolean isUnrouted;
     @SerializedName("vehicle_alias")
     private String vehicleAlias;
     @SerializedName("route_cost")
