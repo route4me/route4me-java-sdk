@@ -35,10 +35,48 @@ public class Route extends DataObject {
     private Double tripDistance;
     @SerializedName("gas_price")
     private Double gasPrice;
-    @SerializedName("route_distance_sec")
+    @SerializedName("route_duration_sec")
     private Integer routeDurationSec;
+    @SerializedName("planned_total_route_duration")
+    private Integer plannedTotalRouteDuration;
+    @SerializedName("udu_distance_unit")
+    private String uduDistanceUnit;
+    @SerializedName("udu_trip_distance")
+    private Double uduTripDistance;
+    @SerializedName("route_weight")
+    private Double routeWeight;
+    @SerializedName("route_cube")
+    private Double routeCube;
+    @SerializedName("route_pieces")
+    private Integer routePieces;
+    @SerializedName("total_wait_time")
+    private Integer totalWaitTime;
+    @SerializedName("udu_actual_travel_distance")
+    private Double uduActualTravelDistance;
+    @SerializedName("actual_travel_distance")
+    private Double actualTravelDistance;
+    @SerializedName("actual_footsteps")
+    private Integer actualFootsteps;
+    @SerializedName("working_time")
+    private Integer workingTime;
+    @SerializedName("driving_time")
+    private Integer drivingTime;
+    @SerializedName("idling_time")
+    private Integer idlingTime;
+    @SerializedName("paying_miles")
+    private Integer payingMiles;
+    @SerializedName("destination_count")
+    private Integer destinationCount;
+    @SerializedName("notes_count")
+    private Integer notesCount;
+    @SerializedName("actual_travel_time")
+    private Integer actualTravelTime;
+    @SerializedName("vehicle")
+    private String vehicle;
     @SerializedName("directions")
     private List<Direction> routeDirections;
     @SerializedName("notes")
     List<Note> notes;
+    @SerializedName("path")
+    private List<GeoCoordinates> path;
 }
