@@ -207,6 +207,7 @@ public class Constants {
         TOLLS("Tolls"),
         MINIMIZE_HIGHWAYS("minimizeHighways"),
         MINIMIZE_TOLLS("minimizeTolls"),
+        HIGHWAYS_TOLLS("highways,tolls"),
         NONE("");
 
         private String value;
