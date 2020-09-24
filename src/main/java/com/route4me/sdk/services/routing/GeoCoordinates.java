@@ -13,7 +13,7 @@ import lombok.Data;
  * @author juan
  */
 @Data
-class GeoCoordinates {
+public class GeoCoordinates {
 
     @SerializedName("lat")
     private Double latitude;
