@@ -61,12 +61,12 @@ public class TerritoriesManager extends Manager {
         return territoryPolygons;
     }
 
-    public List<Territory> allocateTerritories(GeoCoordinates coord, List<TerritoryPolygon> territoryPolygons) {
+    public List<Territory> allocateTerritories(TerritoryAllocated territoryAllocated, List<TerritoryPolygon> territoryPolygons) {
 
         List<Territory> foundTerritories = new ArrayList<>();
 
-        int x = (int) (coord.getLatitude() * FACTOR);
-        int y = (int) (coord.getLongitude() * FACTOR);
+        int x = (int) (territoryAllocated.getLatitude() * FACTOR);
+        int y = (int) (territoryAllocated.getLongitude() * FACTOR);
 
         Point point = new Point(x, y);
 
