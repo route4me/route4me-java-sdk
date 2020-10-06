@@ -19,9 +19,10 @@ public class NewVehicle {
         VehiclesManager manager = new VehiclesManager(apiKey);
         try {
             Vehicles vehicle = new Vehicles();
-            vehicle.setVehicleAlias("Tesla Car");
+            vehicle.setVehicleAlias("Camry");
             vehicle.setVehicleVin("JS3TD62V1Y4444444");
             vehicle.setVehicleModelYear(1995);
+            vehicle.setVehicleMake(Vehicles.VehicleMake.TOYOTA.getValue());
             vehicle.setFuelType("unleaded 93");
             vehicle = manager.newVehicle(vehicle);
             System.out.println(vehicle);

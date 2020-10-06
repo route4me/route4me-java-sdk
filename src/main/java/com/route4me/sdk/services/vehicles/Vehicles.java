@@ -13,6 +13,60 @@ import lombok.Data;
  */
 @Data
 public class Vehicles {
+    
+
+    public enum VehicleMake {
+ 
+        AMERICAN_COLEMAN("American Coleman"),
+        BMW("BMW"),
+        CHEVROLET("Chevrolet"),
+        FORD("Ford"),
+        FREIGHTLINER("Freightliner"),
+        GMC("GMC"),
+        HINO("Hino"),
+        HONDA("Honda"),
+        ISUZU("Isuzu"),
+        KENWORTH("Kenworth"),
+        MACK("Mack"),
+        MERCEDES_BENZ("Mercedes-Benz"),
+        MITSUBISHI("Mitsubishi"),
+        NAVISTAR("Navistar"),
+        NISSAN("Nissan"),
+        PETERBILT("Peterbilt"),
+        RENAULT("Renault"),
+        SCANIA("Scania"),
+        STERLING("Sterling"),
+        TOYOTA("Toyota"),
+        VOLVO("Volvo"),
+        WESTERN_STAR("Western Star" );
+        
+        private String value;
+
+        private VehicleMake(String value) {
+            this.value = value;
+        }
+
+        @Override
+        public String toString() {
+            return this.value;
+        }
+
+        /**
+         * @return the value
+         */
+        public String getValue() {
+            return value;
+        }
+
+        /**
+         * @param value the value to set
+         */
+        public void setValue(String value) {
+            this.value = value;
+        }        
+        
+        
+    }
 
     @SerializedName("vehicle_id")
     @QueryParameter("vehicle_id")
