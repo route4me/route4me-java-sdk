@@ -17,7 +17,7 @@ public class GetVehicle {
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
         VehiclesManager manager = new VehiclesManager(apiKey);
-        String vehicleID = "DBEB90BAF82453823C59328DB0A9F109";
+        String vehicleID = "8B3E269EE1409D469A639AC90CE0D741";
         try {
             Vehicles vehicle = manager.getVehicle(vehicleID);
             System.out.println(vehicle);

@@ -158,6 +158,12 @@ public class Address {
     private List<GeoCoordinates> pathtoNext;
     @SerializedName("wait_time_to_next_destination")
     private Long waitTimetoNextDestination;
+    @SerializedName("pickup")
+    private String pickUp;
+    @SerializedName("dropoff")
+    private String dropOff;
+    @SerializedName("joint")
+    private Integer joint;
 
     
     
