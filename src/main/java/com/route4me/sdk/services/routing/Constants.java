@@ -84,6 +84,7 @@ public class Constants {
         TSP_TW("5"),
         TSP_TW_CR("6"),
         BBCVRP("7"),
+        FLEETS_CVRP_TW("9"),
         ALG_LEGACY_DISTRIBUTED("101"),
         ALG_NONE("100");
 

@@ -2,6 +2,7 @@
 package com.route4me.sdk.services.routing;
 
 import com.google.gson.annotations.SerializedName;
+import com.route4me.sdk.queryconverter.QueryParameter;
 import com.route4me.sdk.services.notes.Note;
 import java.util.List;
 import java.util.Map;
@@ -165,6 +166,9 @@ public class Address {
     @SerializedName("joint")
     private Integer joint;
 
+    @SerializedName("tags")
+    @QueryParameter("tags")
+    private List<String> tags;    
     
     
     public Address() {
