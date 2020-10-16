@@ -2,7 +2,7 @@ package com.route4me.sdk.services.routing;
 
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
-import com.route4me.sdk.services.routing.fleets.Fleet;
+import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
 import java.util.List;
 import lombok.Data;
 
@@ -102,9 +102,9 @@ public class Parameters {
     @QueryParameter("rightturn")
     @SerializedName("rightturn")
     private Integer rightTurn;
-    @QueryParameter("fleets")
-    @SerializedName("fleets")
-    private List<Fleet> fleets;
+    @QueryParameter("advanced_constraints")
+    @SerializedName("advanced_constraints")
+    private List<AdvancedConstraints> advancedConstraints;
     @SerializedName("is_dynamic_start_time")
     private Boolean isDynamicStartTime;
 

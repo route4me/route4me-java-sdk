@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.route4me.sdk.examples.fleets;
+package com.route4me.sdk.examples.advancedconstraints;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
@@ -17,14 +17,14 @@ import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.services.routing.OptimizationParameters;
 import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.routing.RoutingManager;
-import com.route4me.sdk.services.routing.fleets.Fleet;
+import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
 
 
-public class FleetsExample {
+public class AdvancedConstraintsExample {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
@@ -32,7 +32,7 @@ public class FleetsExample {
         OptimizationParameters optParameters = new OptimizationParameters();
 
         Parameters parameters = new Parameters();
-        parameters.setAlgorithmType(AlgorithmType.FLEETS_CVRP_TW.getValue());
+        parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
         parameters.setShareRoute(Boolean.FALSE);
         parameters.setRouteTime(0);
@@ -51,29 +51,29 @@ public class FleetsExample {
         List<String> tags2 = Arrays.asList("TAG003");
 
         // Feets
-        // Fleet 1
-        Fleet fleet1 = new Fleet();
-        fleet1.setMaxCapacity(200);
-        fleet1.setMembersCount(10);
-        fleet1.setTags(tags1);
+        // AdvancedConstraintsExample 1
+        AdvancedConstraints advancedConstraint1 = new AdvancedConstraints();
+        advancedConstraint1.setMaxCapacity(200);
+        advancedConstraint1.setMembersCount(10);
+        advancedConstraint1.setTags(tags1);
         List<List<Integer>> timeWindowsFleet1 = new ArrayList<>();
         List<Integer> timeWindowFleet1 = Arrays.asList(25200, 75000);
         timeWindowsFleet1.add(timeWindowFleet1);
-        fleet1.setAvailableTimeWindows(timeWindowsFleet1);
-        // Fleet 2
-        Fleet fleet2 = new Fleet();
-        fleet2.setMaxCapacity(200);
-        fleet2.setMembersCount(10);
-        fleet2.setTags(tags2);
+        advancedConstraint1.setAvailableTimeWindows(timeWindowsFleet1);
+        // AdvancedConstraintsExample 2
+        AdvancedConstraints advancedConstraint2 = new AdvancedConstraints();
+        advancedConstraint2.setMaxCapacity(200);
+        advancedConstraint2.setMembersCount(10);
+        advancedConstraint2.setTags(tags2);
         List<List<Integer>> timeWindowsFleet2 = new ArrayList<>();
         List<Integer> timeWindowFleet2 = Arrays.asList(45200, 95000);
         timeWindowsFleet2.add(timeWindowFleet2);
-        fleet2.setAvailableTimeWindows(timeWindowsFleet2);
+        advancedConstraint2.setAvailableTimeWindows(timeWindowsFleet2);
 
 
-        List<Fleet> fleets = Arrays.asList(fleet1, fleet2);
+        List<AdvancedConstraints> advancedConstraints = Arrays.asList(advancedConstraint1, advancedConstraint2);
         
-        parameters.setFleets(fleets);
+        parameters.setAdvancedConstraints(advancedConstraints);
         
         optParameters.setParameters(parameters);
 
