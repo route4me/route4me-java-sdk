@@ -64,7 +64,7 @@ public class Route extends DataObject {
     @SerializedName("idling_time")
     private Integer idlingTime;
     @SerializedName("paying_miles")
-    private Integer payingMiles;
+    private Double payingMiles;
     @SerializedName("destination_count")
     private Integer destinationCount;
     @SerializedName("notes_count")

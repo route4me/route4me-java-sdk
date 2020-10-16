@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.route4me.sdk.services.routing.fleets;
+package com.route4me.sdk.services.routing.advancedconstraints;
 
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
@@ -11,7 +11,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class Fleet {
+public class AdvancedConstraints {
     
     @SerializedName("max_cargo_volume")
     @QueryParameter("max_cargo_volume")
