@@ -176,6 +176,12 @@ public abstract class Manager {
     
     private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type, String requestContentType ) throws APIException {
         try {
+            // Redirects Management
+            CloseableHttpClient client = HttpClients.createDefault();
+            if (this.disableRedirects) {
+                builder.addParameter("redirect", "0");
+                client = HttpClients.custom().disableRedirectHandling().build();
+            }
             builder.addParameter("api_key", this.apiKey);
             HttpRequestBase hrb = method.create(builder.build());
             if (requestContentType != null){
@@ -190,11 +196,6 @@ public abstract class Manager {
                 ((HttpEntityEnclosingRequestBase) hrb).setEntity(body);
             } else if (body != null) {
                 throw new RuntimeException("Method does not support body!");
-            }
-            // Redirects Management
-            CloseableHttpClient client = HttpClients.createDefault();
-            if (this.disableRedirects) {
-                client = HttpClients.custom().disableRedirectHandling().build();
             }
             //try with resources to close streams
             try (CloseableHttpResponse resp = client.execute(hrb);
