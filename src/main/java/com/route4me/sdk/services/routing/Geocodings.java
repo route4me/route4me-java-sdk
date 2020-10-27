@@ -25,7 +25,7 @@ class Geocodings {
     private String name;
     @SerializedName("bbox")
     @QueryParameter("bbox")
-    private List<Integer> bBox;
+    private List<Double> bBox;
     @SerializedName("lat")
     private Double latitude;
     @SerializedName("lng")
