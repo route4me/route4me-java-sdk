@@ -174,8 +174,12 @@ public class Address {
     public Address() {
     }
     
-    public Address(String address, double lat, double lng, long time) {
+    public Address(String address) {
         this.address = address;
+    }
+
+    public Address(String address, double lat, double lng, long time) {
+        this(address);
         this.latitude = lat;
         this.longitude = lng;
         this.time = time;
@@ -208,6 +212,7 @@ public class Address {
         this(address, lat, lng, time);
         this.alias = alias;
     }
+
     
     public void addCustomField(String key, Object value) {
         this.custom_fields.put(key, value);
