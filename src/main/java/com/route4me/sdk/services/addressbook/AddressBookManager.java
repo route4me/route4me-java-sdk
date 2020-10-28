@@ -1,24 +1,38 @@
 package com.route4me.sdk.services.addressbook;
 
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.DeleteResponse;
+import java.util.ArrayList;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.util.List;
+import org.apache.http.HttpEntity;
 
 public class AddressBookManager extends Manager {
-    public static final String ADDRESS_BOOK_EP = "/api.v4/address_book.php";
+    private static final String ADDRESS_BOOK_EP = "/api.v4/address_book.php";
+    private static final String ADDRESS_BOOK_DEPOTS = "/modules/api/v5.0/address-book/addresses/depots"; 
 
 
     public AddressBookManager(String apiKey) {
         super(apiKey);
     }
 
+    private URIBuilder getAPIV5URI(String endpoint){
+        URIBuilder builder = new URIBuilder();
+        builder.setScheme("https");
+        builder.setHost("wh.route4me.com");
+        builder.setPath(endpoint);
+        return builder;
+    }
+    
+    
+    
     public Contact createContact(Contact contact) throws APIException {
         return this.makeRequest(RequestMethod.POST,
                 Manager.defaultBuilder(ADDRESS_BOOK_EP),
@@ -55,6 +69,12 @@ public class AddressBookManager extends Manager {
     public boolean deleteContact(List<Number> addressIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
         return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(new AddressIds(addressIds)), DeleteResponse.class).isDeleted();
+    }
+    
+    public List<Contact> getDepotsFromAddressBook() throws APIException{
+         URIBuilder builder = this.getAPIV5URI(ADDRESS_BOOK_DEPOTS);
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Contact>>() {
+        }.getType());
     }
 
     @Getter
