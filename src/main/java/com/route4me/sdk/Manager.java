@@ -4,6 +4,7 @@ import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.queryconverter.QueryConverter;
@@ -109,7 +110,7 @@ public abstract class Manager {
         return this.makeRequest(method, builder, body, String.class, null);
     }
 
-    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body,  Object requestParams, Class<T> clazz) throws APIException {
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams, Class<T> clazz) throws APIException {
         if (requestParams != null) {
             List<NameValuePair> params;
             try {
@@ -134,13 +135,12 @@ public abstract class Manager {
         }
         return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(body), "UTF-8"), null, type, "application/json");
     }
-    
-    
+
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz) throws APIException {
         if (requestParams != null) {
             try {
                 List<NameValuePair> params = QueryConverter.convertObjectToParameters(requestParams);
-                if (method == RequestMethod.GET){
+                if (method == RequestMethod.GET) {
                     builder.addParameters(params);
                 }
             } catch (IllegalAccessException e) {
@@ -157,7 +157,7 @@ public abstract class Manager {
         if (requestParams != null) {
             try {
                 List<NameValuePair> params = QueryConverter.convertObjectToParameters(requestParams);
-                if (method == RequestMethod.GET){
+                if (method == RequestMethod.GET) {
                     builder.addParameters(params);
                 }
             } catch (IllegalAccessException e) {
@@ -170,11 +170,11 @@ public abstract class Manager {
         return this.makeRequest(method, builder, (HttpEntity) null, null, type, "application/json");
     }
 
-    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type) throws APIException{
+    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type) throws APIException {
         return this.makeRequest(method, builder, body, clazz, type, null);
     }
-    
-    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type, String requestContentType ) throws APIException {
+
+    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type, String requestContentType) throws APIException {
         try {
             // Redirects Management
             CloseableHttpClient client = HttpClients.createDefault();
@@ -184,7 +184,7 @@ public abstract class Manager {
             }
             builder.addParameter("api_key", this.apiKey);
             HttpRequestBase hrb = method.create(builder.build());
-            if (requestContentType != null){
+            if (requestContentType != null) {
                 hrb.setHeader("Content-type", requestContentType);
             }
             // Checking If a proxy was set. 
@@ -198,14 +198,12 @@ public abstract class Manager {
                 throw new RuntimeException("Method does not support body!");
             }
             //try with resources to close streams
-            try (CloseableHttpResponse resp = client.execute(hrb);
-                    InputStream is = resp.getEntity().getContent()) {
+            try ( CloseableHttpResponse resp = client.execute(hrb);  InputStream is = resp.getEntity().getContent()) {
                 //response should always be present
                 if (is == null) {
                     throw new APIException("Response body is null.");
                 }
-                try (InputStreamReader isr = new InputStreamReader(is);
-                        BufferedReader br = new BufferedReader(isr)) {
+                try ( InputStreamReader isr = new InputStreamReader(is);  BufferedReader br = new BufferedReader(isr)) {
                     if (resp.getStatusLine().getStatusCode() < 200 || resp.getStatusLine().getStatusCode() > 303) {
                         try {
                             StringBuilder respString = new StringBuilder();
@@ -223,7 +221,15 @@ public abstract class Manager {
                     if (clazz != null && clazz != String.class) {
                         return this.gson.fromJson(br, clazz);
                     } else if (type != null) {
-                        return this.gson.fromJson(br, type);
+                        try {
+                            return this.gson.fromJson(br, type);
+                        } catch (IllegalStateException ex) {
+                            System.err.println(br);
+                            Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+                        } catch (JsonSyntaxException ex) {
+                            System.err.println(br);
+                            Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+                        }
                     }
                     if (clazz == String.class) {
                         StringBuilder respString = new StringBuilder();
@@ -242,6 +248,5 @@ public abstract class Manager {
             throw new IllegalArgumentException(ex);
         }
     }
-
 
 }
