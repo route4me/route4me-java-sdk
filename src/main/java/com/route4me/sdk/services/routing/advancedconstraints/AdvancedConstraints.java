@@ -39,7 +39,7 @@ public class AdvancedConstraints {
             
     @SerializedName("route4me_members_id")
     @QueryParameter("route4me_members_id")
-    private List<Double> route4meMembersID;
+    private List<Integer> route4meMembersID;
     
     
 }

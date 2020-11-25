@@ -24,13 +24,18 @@ import java.util.Iterator;
 import java.util.List;
 
 
-public class AdvancedConstraintsExample {
+public class AdvancedConstraintsExample1 {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
         RoutingManager manager = new RoutingManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
 
+        //**********************************************************************
+        // TEST CASE: Tags and Different Time Windows Fleets
+        //**********************************************************************
+
+        
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
@@ -51,7 +56,7 @@ public class AdvancedConstraintsExample {
         List<String> tags2 = Arrays.asList("TAG003");
 
         // Feets
-        // AdvancedConstraintsExample 1
+        // AdvancedConstraintsExample1 1
         AdvancedConstraints advancedConstraint1 = new AdvancedConstraints();
         advancedConstraint1.setMaxCapacity(200);
         advancedConstraint1.setMembersCount(10);
@@ -60,7 +65,7 @@ public class AdvancedConstraintsExample {
         List<Integer> timeWindowFleet1 = Arrays.asList(25200, 75000);
         timeWindowsFleet1.add(timeWindowFleet1);
         advancedConstraint1.setAvailableTimeWindows(timeWindowsFleet1);
-        // AdvancedConstraintsExample 2
+        // AdvancedConstraintsExample1 2
         AdvancedConstraints advancedConstraint2 = new AdvancedConstraints();
         advancedConstraint2.setMaxCapacity(200);
         advancedConstraint2.setMembersCount(10);
