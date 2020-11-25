@@ -35,6 +35,11 @@
             <version>1.18.10</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+          <groupId>io.socket</groupId>
+          <artifactId>socket.io-client</artifactId>
+          <version>1.0.0</version>
+        </dependency>
     </dependencies>
     <build>
         <plugins>
