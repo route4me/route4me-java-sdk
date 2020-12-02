@@ -10,12 +10,8 @@ import com.route4me.sdk.queryconverter.QueryParameter;
 import java.util.List;
 import lombok.Data;
 
-/**
- *
- * @author juan
- */
 @Data
-class Geocodings {
+public class Geocodings {
 
     @SerializedName("key")
     @QueryParameter("key")

@@ -18,9 +18,8 @@ public class WebSocketsGeocoderExample {
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
         GeocodingManager geocodingManager = new GeocodingManager(apiKey);
-        
+
         List<Address> addresses = new ArrayList<>();
-        
 
         addresses.add(new Address("2271 SCANLAN ST., LONDON, N5W 6G9"));
         addresses.add(new Address("112 COMMISSIONERS RD., EMBRO, N4V 1V9"));
@@ -71,22 +70,21 @@ public class WebSocketsGeocoderExample {
         addresses.add(new Address("23 WOODSTOCK ST. S., TAVISTOCK, N3T 1M2"));
         addresses.add(new Address("595771 HWY #59, HUNTINGFORD, N4S 7W1"));
         addresses.add(new Address("2271 SCANLAN ST., LONDON, N5W 6G9"));
-        
+
+        long startTime = System.currentTimeMillis();
         GeocoderWebSockets job = geocodingManager.websocketsGeocoder(addresses);
-        
-        
-        while (!job.isCompleted()){
+        while (!job.isCompleted()) {
             try {
-                Thread.sleep(1000);
+                Thread.sleep(100);
             } catch (InterruptedException ex) {
                 Logger.getLogger(GeocoderWebSockets.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         addresses = job.getAddresses();
-        System.out.println(addresses);
-        
+        System.out.println("Addresses Geocoded: " + addresses.size());
+        System.out.println("Elapsed Time (seconds): " + (System.currentTimeMillis() - startTime) / 1000f);
+
+
     }
 
-
-    
 }

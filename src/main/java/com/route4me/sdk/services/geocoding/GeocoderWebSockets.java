@@ -6,24 +6,26 @@
 package com.route4me.sdk.services.geocoding;
 
 import com.google.gson.Gson;
-import com.google.gson.JsonObject;
 import com.route4me.sdk.services.routing.Address;
-import io.socket.client.Ack;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter.Listener;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class GeocoderWebSockets {
 
     private final static Logger LOG = Logger.getLogger(GeocoderWebSockets.class.getName());
 
-    public static Socket geocoderWebSocket;
+    public Socket geocoderWebSocket;
 
     private static final String GEOCODER_URL = "https://validator.route4me.com";
 
@@ -32,7 +34,15 @@ public class GeocoderWebSockets {
 
     private int addressesCount = 0;
     private int totalAddresses = 0;
+    private long nextDownloadStage = 0;
+    private String temporaryAddressesStorageID;
 
+    private final long bufferFailSafeMaxAddresses = 100;
+    private final long chunkSize = Math.round(Math.min(200, Math.max(100, this.totalAddresses / 100)));
+    private final long chunksLimit = Math.round(Math.ceil(bufferFailSafeMaxAddresses / chunkSize));
+    private final long maxAddressesToBeDownloaded = chunkSize * chunksLimit;
+    
+    
     public GeocoderWebSockets() {
         this.geocodedAddresses = null;
     }
@@ -41,6 +51,24 @@ public class GeocoderWebSockets {
         WebSocketsAddress webSocketAddress;
         webSocketAddress = gson.fromJson(data, WebSocketsAddress.class);
         return webSocketAddress.getAddress();
+    }
+
+    private void downloadAddresses(int start) {
+        this.nextDownloadStage = this.addressesCount + this.maxAddressesToBeDownloaded;
+        if (geocoderWebSocket != null && geocoderWebSocket.connected()) {
+            Map<String, Object> parameters = new HashMap<>();
+            parameters.put("temporary_addresses_storage_id", this.temporaryAddressesStorageID);
+            parameters.put("from_index", start);
+            parameters.put("chunks_limit", this.chunksLimit);
+            parameters.put("chunk_size", this.chunkSize);
+            try {
+                JSONObject obj = new JSONObject(gson.toJson(parameters));
+                geocoderWebSocket.emit("download", obj);
+            } catch (JSONException ex) {
+                Logger.getLogger(GeocoderWebSockets.class.getName()).log(Level.SEVERE, null, ex);
+            }
+
+        }
     }
 
     private void connectGeocoder() {
@@ -79,25 +107,32 @@ public class GeocoderWebSockets {
                         if (address != null) {
                             geocodedAddresses.add(address);
                             addressesCount++;
-                            LOG.log(Level.INFO, "Addresses Processed: {0} From {1}", new Object[]{addressesCount, totalAddresses});
                         }
                         if (getTotalAddresses() == getAddressesCount()) {
-                            LOG.info("Geocoding Process Finished");
                             closeGeoCodeSocketIO();
                         }
                     }
                 }).on("addresses_bulk", new Listener() {
                     @Override
                     public void call(Object... arg0) {
-                        JSONObject data = (JSONObject) arg0[0];
-                        LOG.info(data.toString());
+                        List<Address> addressesChunk = gson.fromJson(arg0[0].toString(), List.class);
+                        geocodedAddresses.addAll(addressesChunk);
+                        addressesCount += addressesChunk.size();
+			if (addressesCount == nextDownloadStage) {
+				downloadAddresses(addressesCount);
+			}
+                        if (addressesCount == totalAddresses){
+                            closeGeoCodeSocketIO();
+                        }
                     }
 
                 }).on("geocode_progress", new Listener() {
                     @Override
                     public void call(Object... arg0) {
-                        LOG.info(String.valueOf(arg0.length));
-                        LOG.info(arg0[0].toString());
+                        Map data = gson.fromJson(arg0[0].toString(), Map.class);
+                        if (Objects.equals(data.get("total"), data.get("done"))){
+                            downloadAddresses(0);
+                        }
                     }
                 }).on("error", new Listener() {
                     @Override
@@ -114,48 +149,41 @@ public class GeocoderWebSockets {
             LOG.info("Socket was already connected");
         }
     }
-    
-    private void closeGeoCodeSocketIO() {
+
+    public void closeGeoCodeSocketIO() {
         if (geocoderWebSocket != null && geocoderWebSocket.connected()) {
-            LOG.info("Closing geocode socket connection");
+            geocoderWebSocket.emit("disconnect", temporaryAddressesStorageID);
             geocoderWebSocket.disconnect();
             geocoderWebSocket.off("address");
         }
     }
 
-    public void startGeocoding(String jobID, int totalAddresses) {
+    public void startGeocodingAltenative(String temporaryAddressesStorageID, int totalAddresses) {
         this.totalAddresses = totalAddresses;
+        this.temporaryAddressesStorageID = temporaryAddressesStorageID;
         geocodedAddresses = new ArrayList<>();
         if (geocoderWebSocket == null || !geocoderWebSocket.connected()) {
             connectGeocoder();
         }
-        JsonObject message = new JsonObject();
-        message.addProperty("temporary_addresses_storage_id", jobID);
-        message.addProperty("force_restart", true);
-
-        geocoderWebSocket.emit("setopid", jobID);
-
+        geocoderWebSocket.emit("setopid", temporaryAddressesStorageID);
     }
 
-    public void startGeocoding2(String jobID, int totalAddresses) {
+    public void startGeocoding(String temporaryAddressesStorageID, int totalAddresses) {
         this.totalAddresses = totalAddresses;
+        this.temporaryAddressesStorageID = temporaryAddressesStorageID;
         geocodedAddresses = new ArrayList<>();
         if (geocoderWebSocket == null || !geocoderWebSocket.connected()) {
             connectGeocoder();
         }
-        JsonObject message = new JsonObject();
-        message.addProperty("temporary_addresses_storage_id", jobID);
-        message.addProperty("force_restart", true);
-        System.out.println(gson.toJson(message));
-
-        geocoderWebSocket.emit("geocode", gson.toJson(message), new Ack() {
-            @Override
-            public void call(Object... args) {
-                LOG.info(String.valueOf(args.length));
-                LOG.info(args[0].toString());
-
-            }
-        });
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("temporary_addresses_storage_id", this.temporaryAddressesStorageID);
+        parameters.put("force_restart", true);
+        try {
+            JSONObject obj = new JSONObject(gson.toJson(parameters));
+            geocoderWebSocket.emit("geocode", obj);
+        } catch (JSONException ex) {
+            Logger.getLogger(GeocoderWebSockets.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
     }
 
