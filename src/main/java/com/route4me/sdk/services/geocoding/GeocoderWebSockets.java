@@ -53,6 +53,12 @@ public class GeocoderWebSockets {
         return webSocketAddress.getAddress();
     }
 
+    private void addressesParser(WebSocketsAddress[] addressesChunk) {
+        for (WebSocketsAddress a: addressesChunk){
+            geocodedAddresses.add(a.getAddress());
+        }
+    }    
+    
     private void downloadAddresses(int start) {
         this.nextDownloadStage = this.addressesCount + this.maxAddressesToBeDownloaded;
         if (geocoderWebSocket != null && geocoderWebSocket.connected()) {
@@ -115,9 +121,9 @@ public class GeocoderWebSockets {
                 }).on("addresses_bulk", new Listener() {
                     @Override
                     public void call(Object... arg0) {
-                        List<Address> addressesChunk = gson.fromJson(arg0[0].toString(), List.class);
-                        geocodedAddresses.addAll(addressesChunk);
-                        addressesCount += addressesChunk.size();
+                        WebSocketsAddress[] addressesChunk = gson.fromJson(arg0[0].toString(), WebSocketsAddress[].class);
+                        addressesParser(addressesChunk);
+                        addressesCount += addressesChunk.length;
 			if (addressesCount == nextDownloadStage) {
 				downloadAddresses(addressesCount);
 			}
@@ -125,6 +131,8 @@ public class GeocoderWebSockets {
                             closeGeoCodeSocketIO();
                         }
                     }
+
+
 
                 }).on("geocode_progress", new Listener() {
                     @Override
