@@ -46,9 +46,9 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.POST, builder, parameters, DataObject[].class);
     }
 
-    public DataObject getOptimization(OptimizationParameters parameters) throws APIException {
+    public Optimization getOptimization(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
-        return this.makeJSONRequest(RequestMethod.GET, builder, parameters, DataObject.class);
+        return this.makeJSONRequest(RequestMethod.GET, builder, parameters, Optimization.class);
     }
 
     public DataObject updateOptimization(OptimizationParameters parameters) throws APIException {

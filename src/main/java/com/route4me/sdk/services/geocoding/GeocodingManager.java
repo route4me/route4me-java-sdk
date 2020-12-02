@@ -31,25 +31,38 @@ public class GeocodingManager extends Manager {
         super(apiKey);
     }
 
-    public DataObject jsonUploadGeocoder(List<Address> addresses) throws APIException {
+    public GeocoderResponse jsonUploadGeocoder(List<Address> addresses) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(JSON_GEOCODE);
         AddressesJSONBody body = new AddressesJSONBody(addresses);
         
-        return makeJSONRequest(RequestMethod.POST, builder, body, null, DataObject.class);
+        return makeJSONRequest(RequestMethod.POST, builder, body, null, GeocoderResponse.class);
     }
 
     public GeocoderWebSockets websocketsGeocoder(List<Address> addresses) {
         GeocoderWebSockets geocoder = new GeocoderWebSockets();
         try {
-            DataObject job = jsonUploadGeocoder(addresses);
-            geocoder.startGeocoding(job.getOptimizationProblemId(), addresses.size());
+            GeocoderResponse job = jsonUploadGeocoder(addresses);
+            String temporaryAddressesStorageID = job.getTemporaryAddressesStorageID();
+            geocoder.startGeocoding(temporaryAddressesStorageID, job.getAddressCount());
         } catch (APIException ex) {
             Logger.getLogger(GeocodingManager.class.getName()).log(Level.SEVERE, null, ex);
         }
         return geocoder;
+    }
 
+    public GeocoderWebSockets websocketsGeocoderAlternative(List<Address> addresses) {
+        GeocoderWebSockets geocoder = new GeocoderWebSockets();
+        try {
+            GeocoderResponse job = jsonUploadGeocoder(addresses);
+            String temporaryAddressesStorageID = job.getTemporaryAddressesStorageID();
+            geocoder.startGeocodingAltenative(temporaryAddressesStorageID, job.getAddressCount());
+        } catch (APIException ex) {
+            Logger.getLogger(GeocodingManager.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return geocoder;
     }
     
+
     
     @Getter
     @Setter
