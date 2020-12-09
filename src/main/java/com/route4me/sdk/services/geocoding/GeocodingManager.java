@@ -10,7 +10,6 @@ import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
-import com.route4me.sdk.services.routing.DataObject;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
