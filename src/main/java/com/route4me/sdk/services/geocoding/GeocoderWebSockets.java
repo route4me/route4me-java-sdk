@@ -37,8 +37,8 @@ public class GeocoderWebSockets {
     private long nextDownloadStage = 0;
     private String temporaryAddressesStorageID;
 
-    private final long bufferFailSafeMaxAddresses = 100;
-    private final long chunkSize = Math.round(Math.min(200, Math.max(100, this.totalAddresses / 100)));
+    private final long bufferFailSafeMaxAddresses = 500;
+    private final long chunkSize = Math.round(Math.min(500, Math.max(500, this.totalAddresses / 100)));
     private final long chunksLimit = Math.round(Math.ceil(bufferFailSafeMaxAddresses / chunkSize));
     private final long maxAddressesToBeDownloaded = chunkSize * chunksLimit;
     
@@ -80,11 +80,20 @@ public class GeocoderWebSockets {
     private void connectGeocoder() {
         if (geocoderWebSocket == null || !geocoderWebSocket.connected()) {
             try {
-                geocoderWebSocket = IO.socket(GEOCODER_URL);
+                IO.Options opts = new IO.Options();
+                opts.forceNew = true;
+                opts.reconnection = true;
+                opts.reconnectionDelay = 20;
+                opts.reconnectionDelayMax = 60;
+                opts.timeout = 600;
+                geocoderWebSocket = IO.socket(GEOCODER_URL, opts);
                 geocoderWebSocket.on(Socket.EVENT_CONNECT, new Listener() {
                     @Override
                     public void call(Object... os) {
                         LOG.info("Connected to the WebSocket Geocoder");
+                        if (os.length > 0) {
+                            LOG.fine(os[0].toString());
+                        }
                     }
 
                 }).on(Socket.EVENT_DISCONNECT, new Listener() {
@@ -92,6 +101,9 @@ public class GeocoderWebSockets {
                     @Override
                     public void call(Object... args) {
                         LOG.info("Now Disconnected from the WebSocket Geocoder");
+                        if (args.length > 0) {
+                            LOG.fine(args[0].toString());
+                        }
                     }
 
                 }).on("connect_error", new Listener() {
@@ -99,12 +111,17 @@ public class GeocoderWebSockets {
                     @Override
                     public void call(Object... arg0) {
                         LOG.warning("Geocode socket connection error");
-
+                        if (arg0.length > 0) {
+                            LOG.warning(arg0[0].toString());
+                        }
                     }
                 }).on("connect_timeout", new Listener() {
                     @Override
                     public void call(Object... arg0) {
-                        LOG.warning("Geocode socket connection error");
+                        LOG.warning("Geocode socket connection timeout error");
+                        if (arg0.length > 0) {
+                            LOG.warning(arg0[0].toString());
+                        }
                     }
                 }).on("address", new Listener() {
                     @Override
@@ -124,6 +141,7 @@ public class GeocoderWebSockets {
                         WebSocketsAddress[] addressesChunk = gson.fromJson(arg0[0].toString(), WebSocketsAddress[].class);
                         addressesParser(addressesChunk);
                         addressesCount += addressesChunk.length;
+                        LOG.log(Level.FINE, "Addresses Received: {0}", addressesChunk.length);
 			if (addressesCount == nextDownloadStage) {
 				downloadAddresses(addressesCount);
 			}
@@ -131,12 +149,10 @@ public class GeocoderWebSockets {
                             closeGeoCodeSocketIO();
                         }
                     }
-
-
-
                 }).on("geocode_progress", new Listener() {
                     @Override
                     public void call(Object... arg0) {
+                        LOG.fine(arg0[0].toString());
                         Map data = gson.fromJson(arg0[0].toString(), Map.class);
                         if (Objects.equals(data.get("total"), data.get("done"))){
                             downloadAddresses(0);
@@ -145,8 +161,8 @@ public class GeocoderWebSockets {
                 }).on("error", new Listener() {
                     @Override
                     public void call(Object... arg0) {
-                        LOG.info(String.valueOf(arg0.length));
-                        LOG.info(arg0[0].toString());
+                        LOG.warning(String.valueOf(arg0.length));
+                        LOG.warning(arg0[0].toString());
                     }
                 });
                 geocoderWebSocket.connect();
@@ -159,10 +175,12 @@ public class GeocoderWebSockets {
     }
 
     public void closeGeoCodeSocketIO() {
-        if (geocoderWebSocket != null && geocoderWebSocket.connected()) {
-            geocoderWebSocket.emit("disconnect", temporaryAddressesStorageID);
-            geocoderWebSocket.disconnect();
+        if (geocoderWebSocket != null) {
             geocoderWebSocket.off("address");
+            geocoderWebSocket.off("address_bulk");
+            geocoderWebSocket.emit("disconnect");
+            geocoderWebSocket.disconnect();
+            geocoderWebSocket.close();
         }
     }
 
@@ -185,7 +203,6 @@ public class GeocoderWebSockets {
         }
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("temporary_addresses_storage_id", this.temporaryAddressesStorageID);
-        parameters.put("force_restart", true);
         try {
             JSONObject obj = new JSONObject(gson.toJson(parameters));
             geocoderWebSocket.emit("geocode", obj);
