@@ -83,6 +83,8 @@ public class Parameters {
     private Number truckLengthMeters;
     @SerializedName("min_tour_size")
     private Number minTourSize;
+    @SerializedName("max_tour_size")
+    private Number maxTourSize;
     @SerializedName("dm")
     private String dm;
     @SerializedName("dirm")
