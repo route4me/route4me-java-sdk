@@ -38,8 +38,14 @@ public class Geocodings {
     @SerializedName("countryRegion")
     @QueryParameter("countryRegion")
     private String countryRegion;
+    @SerializedName("coordinates")
+    @QueryParameter("coordinates")
+    private GeoCoordinates coordinates;
     @SerializedName("curbside_coordinates")
     @QueryParameter("curbside_coordinates")
     private GeoCoordinates curbsideCoordinates;
+    @SerializedName("rooftop_coordinates")
+    @QueryParameter("rooftop_coordinates")
+    private GeoCoordinates rooftopCoordinates;
     
 }

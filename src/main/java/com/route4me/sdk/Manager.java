@@ -22,13 +22,15 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.http.HttpHost;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.logging.log4j.LogManager;
 
 public abstract class Manager {
+    
+    protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(Manager.class);
+
 
     private final String apiKey;
     protected Gson gson;
@@ -117,7 +119,7 @@ public abstract class Manager {
                 params = QueryConverter.convertObjectToParameters(requestParams);
                 builder.addParameters(params);
             } catch (IllegalAccessException ex) {
-                Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+                logger.error(ex);
             }
         }
         return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(body), "UTF-8"), clazz, null, "application/json");
@@ -130,7 +132,7 @@ public abstract class Manager {
                 params = QueryConverter.convertObjectToParameters(requestParams);
                 builder.addParameters(params);
             } catch (IllegalAccessException ex) {
-                Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+                logger.error(ex);
             }
         }
         return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(body), "UTF-8"), null, type, "application/json");
@@ -198,6 +200,7 @@ public abstract class Manager {
                 throw new RuntimeException("Method does not support body!");
             }
             //try with resources to close streams
+
             try ( CloseableHttpResponse resp = client.execute(hrb);  InputStream is = resp.getEntity().getContent()) {
                 //response should always be present
                 if (is == null) {
@@ -206,47 +209,55 @@ public abstract class Manager {
                 try ( InputStreamReader isr = new InputStreamReader(is);  BufferedReader br = new BufferedReader(isr)) {
                     if (resp.getStatusLine().getStatusCode() < 200 || resp.getStatusLine().getStatusCode() > 303) {
                         try {
-                            StringBuilder respString = new StringBuilder();
-                            String line = "";
-                            while ((line = br.readLine()) != null) {
-                                respString.append(line);
-                            }
+                            StringBuilder respString = responseContentParser(br);
                             throw new APIException(String.format("Invalid status code %d, errors: %s", resp.getStatusLine().getStatusCode(), respString.toString()));
                         } catch (APIException | IOException e) {
-                            System.err.println(e);
                             throw new APIException(String.format("Invalid status code %d and no error present.", resp.getStatusLine().getStatusCode()));
                         }
                     }
                     //deserialize json into an object
                     if (clazz != null && clazz != String.class) {
-                        return this.gson.fromJson(br, clazz);
-                    } else if (type != null) {
+                        StringBuilder respString = responseContentParser(br);
+
                         try {
-                            return this.gson.fromJson(br, type);
-                        } catch (IllegalStateException ex) {
-                            System.err.println(br);
-                            Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+                            return this.gson.fromJson(respString.toString(), clazz);
                         } catch (JsonSyntaxException ex) {
-                            System.err.println(br);
-                            Logger.getLogger(Manager.class.getName()).log(Level.SEVERE, null, ex);
+                            throw new APIException(String.format("Unexpected Server response: %s", respString.toString()));
+                        }
+                    } else if (type != null) {
+                        StringBuilder respString = responseContentParser(br);
+                        try {
+                            return this.gson.fromJson(respString.toString(), type);
+                        } catch (IllegalStateException ex) {
+                            logger.error(ex);
+                        } catch (JsonSyntaxException ex) {
+                            logger.error(String.format("Unexpected Server response: %s", respString.toString()));
                         }
                     }
                     if (clazz == String.class) {
-                        StringBuilder respString = new StringBuilder();
-                        String line = "";
-                        while ((line = br.readLine()) != null) {
-                            respString.append(line);
-                        }
+                        StringBuilder respString = responseContentParser(br);
                         return (T) respString.toString();
                     }
                     return null;
                 }
             } catch (IOException ex) {
                 throw new APIException(ex);
+            } catch (JsonSyntaxException ex) {
+                logger.error(ex);
+                return null;
             }
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException(ex);
         }
+    }
+
+    private StringBuilder responseContentParser(BufferedReader br) throws IOException {
+        StringBuilder respString = new StringBuilder();
+        String line = "";
+        while ((line = br.readLine()) != null) {
+            respString.append(line);
+        }
+        return respString;
     }
 
 }

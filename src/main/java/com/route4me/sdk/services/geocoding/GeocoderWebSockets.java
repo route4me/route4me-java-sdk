@@ -25,7 +25,7 @@ public class GeocoderWebSockets {
 
     private final static Logger LOG = Logger.getLogger(GeocoderWebSockets.class.getName());
 
-    public Socket geocoderWebSocket;
+    public static Socket geocoderWebSocket;
 
     private static final String GEOCODER_URL = "https://validator.route4me.com";
 
@@ -37,12 +37,11 @@ public class GeocoderWebSockets {
     private long nextDownloadStage = 0;
     private String temporaryAddressesStorageID;
 
-    private final long bufferFailSafeMaxAddresses = 500;
-    private final long chunkSize = Math.round(Math.min(500, Math.max(500, this.totalAddresses / 100)));
+    private final long bufferFailSafeMaxAddresses = 100;
+    private final long chunkSize = Math.round(Math.min(100, Math.max(100, this.totalAddresses / 100)));
     private final long chunksLimit = Math.round(Math.ceil(bufferFailSafeMaxAddresses / chunkSize));
     private final long maxAddressesToBeDownloaded = chunkSize * chunksLimit;
-    
-    
+
     public GeocoderWebSockets() {
         this.geocodedAddresses = null;
     }
@@ -54,12 +53,14 @@ public class GeocoderWebSockets {
     }
 
     private void addressesParser(WebSocketsAddress[] addressesChunk) {
-        for (WebSocketsAddress a: addressesChunk){
+        for (WebSocketsAddress a : addressesChunk) {
             geocodedAddresses.add(a.getAddress());
         }
-    }    
-    
+    }
+
     private void downloadAddresses(int start) {
+        LOG.fine("Downloading Geocoded Addresses");
+
         this.nextDownloadStage = this.addressesCount + this.maxAddressesToBeDownloaded;
         if (geocoderWebSocket != null && geocoderWebSocket.connected()) {
             Map<String, Object> parameters = new HashMap<>();
@@ -80,13 +81,7 @@ public class GeocoderWebSockets {
     private void connectGeocoder() {
         if (geocoderWebSocket == null || !geocoderWebSocket.connected()) {
             try {
-                IO.Options opts = new IO.Options();
-                opts.forceNew = true;
-                opts.reconnection = true;
-                opts.reconnectionDelay = 20;
-                opts.reconnectionDelayMax = 60;
-                opts.timeout = 600;
-                geocoderWebSocket = IO.socket(GEOCODER_URL, opts);
+                geocoderWebSocket = IO.socket(GEOCODER_URL);
                 geocoderWebSocket.on(Socket.EVENT_CONNECT, new Listener() {
                     @Override
                     public void call(Object... os) {
@@ -94,6 +89,7 @@ public class GeocoderWebSockets {
                         if (os.length > 0) {
                             LOG.fine(os[0].toString());
                         }
+                        emitTemporaryAddressesStorageID();
                     }
 
                 }).on(Socket.EVENT_DISCONNECT, new Listener() {
@@ -142,19 +138,19 @@ public class GeocoderWebSockets {
                         addressesParser(addressesChunk);
                         addressesCount += addressesChunk.length;
                         LOG.log(Level.FINE, "Addresses Received: {0}", addressesChunk.length);
-			if (addressesCount == nextDownloadStage) {
-				downloadAddresses(addressesCount);
-			}
-                        if (addressesCount == totalAddresses){
+                        if (addressesCount == nextDownloadStage) {
+                            downloadAddresses(addressesCount);
+                        }
+                        if (addressesCount == totalAddresses) {
                             closeGeoCodeSocketIO();
                         }
                     }
                 }).on("geocode_progress", new Listener() {
                     @Override
                     public void call(Object... arg0) {
-                        LOG.fine(arg0[0].toString());
-                        Map data = gson.fromJson(arg0[0].toString(), Map.class);
-                        if (Objects.equals(data.get("total"), data.get("done"))){
+//                        LOG.info(arg0[0].toString());
+                        GeocoderProgress progress = gson.fromJson(arg0[0].toString(), GeocoderProgress.class);
+                        if (Objects.equals(progress.getDone(), progress.getTotal())) {
                             downloadAddresses(0);
                         }
                     }
@@ -184,14 +180,16 @@ public class GeocoderWebSockets {
         }
     }
 
-    public void startGeocodingAltenative(String temporaryAddressesStorageID, int totalAddresses) {
-        this.totalAddresses = totalAddresses;
-        this.temporaryAddressesStorageID = temporaryAddressesStorageID;
-        geocodedAddresses = new ArrayList<>();
-        if (geocoderWebSocket == null || !geocoderWebSocket.connected()) {
-            connectGeocoder();
+    private void emitTemporaryAddressesStorageID() {
+        LOG.log(Level.INFO, "Emiting Temporary Addresses StorageID: {0}", this.temporaryAddressesStorageID);
+        Map<String, Object> parameters = new HashMap<>();
+        parameters.put("temporary_addresses_storage_id", this.temporaryAddressesStorageID);
+        try {
+            JSONObject obj = new JSONObject(gson.toJson(parameters));
+            geocoderWebSocket.emit("geocode", obj);
+        } catch (JSONException ex) {
+            Logger.getLogger(GeocoderWebSockets.class.getName()).log(Level.SEVERE, null, ex);
         }
-        geocoderWebSocket.emit("setopid", temporaryAddressesStorageID);
     }
 
     public void startGeocoding(String temporaryAddressesStorageID, int totalAddresses) {
@@ -200,14 +198,6 @@ public class GeocoderWebSockets {
         geocodedAddresses = new ArrayList<>();
         if (geocoderWebSocket == null || !geocoderWebSocket.connected()) {
             connectGeocoder();
-        }
-        Map<String, Object> parameters = new HashMap<>();
-        parameters.put("temporary_addresses_storage_id", this.temporaryAddressesStorageID);
-        try {
-            JSONObject obj = new JSONObject(gson.toJson(parameters));
-            geocoderWebSocket.emit("geocode", obj);
-        } catch (JSONException ex) {
-            Logger.getLogger(GeocoderWebSockets.class.getName()).log(Level.SEVERE, null, ex);
         }
 
     }
