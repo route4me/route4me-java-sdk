@@ -5,6 +5,7 @@
  */
 package com.route4me.sdk.services.geocoding;
 
+import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
@@ -32,7 +33,6 @@ import org.apache.http.client.utils.URIBuilder;
  * @author juan
  */
 public class GeocodingManager extends Manager {
-    
 
     public static final String GEOCODING_EP = "/api/geocoder.php";
     public static final String GEOCODING_ADDRESS = "/api/address.php";
@@ -61,8 +61,8 @@ public class GeocodingManager extends Manager {
         }
         return geocoder;
     }
-    
-    public List<Address> bulkGeocoder(List<String> addresses, GeocoderOptions options){
+
+    public List<Address> bulkGeocoder(List<String> addresses, GeocoderOptions options) {
         ExecutorService executor = Executors.newFixedThreadPool(options.getMaxThreads());
 
         List<Future<Address>> workers = new ArrayList<>();
@@ -86,13 +86,12 @@ public class GeocodingManager extends Manager {
             } catch (InterruptedException | ExecutionException ex) {
                 logger.error("Thread Execution Exception. " + ex);
             } catch (TimeoutException ex) {
-               logger.error("Thread Time out Error. " + ex);
+                logger.error("Thread Time out Error. " + ex);
             }
         }
 
-
         return geocodedAddresses;
-        
+
     }
 
     public Geocodings[] geocode(String address) throws APIException {
@@ -102,18 +101,23 @@ public class GeocodingManager extends Manager {
         builder.setParameter("detailed", "true");
         return this.makeJSONRequest(RequestMethod.GET, builder, "", Geocodings[].class);
     }
-    
+
     public <T> T forwardGeocode(URIBuilder builder, Class<T> clazz) {
-        
+
         int retries = 0;
         while (retries < MAX_RETRIES) {
             try {
                 return this.makeJSONRequest(RequestMethod.GET, builder, "", clazz);
-    
+
             } catch (APIException ex) {
-                if (ex.getMessage().contains("{\"status\":\"Sorry, no results were found for this address.\",\"results\":0}")){
-                    logger.warn(String.format("Address not found. "));
+                try {
+                    GeocoderAddressNotFound addressNotFound = this.gson.fromJson(ex.getMessage(), GeocoderAddressNotFound.class);
+                    logger.debug(addressNotFound.getStatus());
                     break;
+                } catch (IllegalStateException err) {
+                    logger.error(ex);
+                } catch (JsonSyntaxException err) {
+                    logger.error(String.format("Unexpected Server response %s", ex.getMessage()));
                 }
                 retries++;
                 logger.info("Retrying due to error: " + ex);
@@ -126,8 +130,7 @@ public class GeocodingManager extends Manager {
         }
         return null;
 
-    }    
-
+    }
 
     @Getter
     @Setter
