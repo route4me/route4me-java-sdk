@@ -37,7 +37,7 @@ public class GeocodingManager extends Manager {
     public static final String GEOCODING_EP = "/api/geocoder.php";
     public static final String GEOCODING_ADDRESS = "/api/address.php";
     private static final String JSON_GEOCODE = "/actions/upload/json-geocode.php";
-    private static final int MAX_RETRIES = 5;
+    private int maxRetries = 0;
 
     public GeocodingManager(String apiKey) {
         super(apiKey);
@@ -64,6 +64,8 @@ public class GeocodingManager extends Manager {
 
     public List<Address> bulkGeocoder(List<String> addresses, GeocoderOptions options) {
         ExecutorService executor = Executors.newFixedThreadPool(options.getMaxThreads());
+        
+        maxRetries = options.getMaxRetries();
 
         List<Future<Address>> workers = new ArrayList<>();
         List<Address> geocodedAddresses = new ArrayList<>();
@@ -81,7 +83,7 @@ public class GeocodingManager extends Manager {
         for (Future<Address> worker : workers) {
             Address geocodedAddress;
             try {
-                geocodedAddress = worker.get(500L, TimeUnit.MILLISECONDS);
+                geocodedAddress = worker.get(options.getMaxTimeout(), TimeUnit.MILLISECONDS);
                 geocodedAddresses.add(geocodedAddress);
             } catch (InterruptedException | ExecutionException ex) {
                 logger.error("Thread Execution Exception. " + ex);
@@ -105,7 +107,7 @@ public class GeocodingManager extends Manager {
     public <T> T forwardGeocode(URIBuilder builder, Class<T> clazz) {
 
         int retries = 0;
-        while (retries < MAX_RETRIES) {
+        while (retries < maxRetries) {
             try {
                 return this.makeJSONRequest(RequestMethod.GET, builder, "", clazz);
 

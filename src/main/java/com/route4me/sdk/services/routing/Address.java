@@ -10,7 +10,7 @@ import lombok.Data;
 
 @Data
 public class Address {
-    
+
     @SerializedName("route_destination_id")
     private Long routeDestinationId;
     @SerializedName("alias")
@@ -60,9 +60,9 @@ public class Address {
     @SerializedName("notes")
     private List<Note> notes;
     @SerializedName("custom_fields")
-    private Map<String, Object>  custom_fields;
+    private Map<String, Object> custom_fields;
     @SerializedName("manifest")
-    private Map<String, Object>  manifest;
+    private Map<String, Object> manifest;
     @SerializedName("order_id")
     private Integer orderId;
     @SerializedName("group")
@@ -168,20 +168,23 @@ public class Address {
 
     @SerializedName("tags")
     @QueryParameter("tags")
-    private List<String> tags;    
-    
-    
+    private List<String> tags;
+
     public Address() {
     }
-    
+
     public Address(String address) {
         this.address = address;
     }
 
-    public Address(String address, double lat, double lng, long time) {
+    public Address(String address, double lat, double lng) {
         this(address);
         this.latitude = lat;
         this.longitude = lng;
+    }
+
+    public Address(String address, double lat, double lng, long time) {
+        this(address, lat, lng);
         this.time = time;
     }
 
@@ -213,7 +216,6 @@ public class Address {
         this.alias = alias;
     }
 
-    
     public void addCustomField(String key, Object value) {
         this.custom_fields.put(key, value);
     }

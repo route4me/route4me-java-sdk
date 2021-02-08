@@ -222,7 +222,7 @@ public abstract class Manager {
                         try {
                             return this.gson.fromJson(respString.toString(), clazz);
                         } catch (JsonSyntaxException ex) {
-                            throw new APIException(String.format("Unexpected Server response: %s", respString.toString()));
+                            throw new APIException(respString.toString());
                         }
                     } else if (type != null) {
                         StringBuilder respString = responseContentParser(br);
@@ -230,8 +230,10 @@ public abstract class Manager {
                             return this.gson.fromJson(respString.toString(), type);
                         } catch (IllegalStateException ex) {
                             logger.error(ex);
+                            throw new APIException(String.format("Error parsing JSON response from server. Illegal state error: %s", respString.toString()));
                         } catch (JsonSyntaxException ex) {
-                            logger.error(String.format("Unexpected Server response: %s", respString.toString()));
+                            logger.error(String.format("Error parsing JSON response from server. Unexpected syntax: %s", respString.toString()));
+                            throw new APIException(String.format("Unexpected Server response: %s", respString.toString()));
                         }
                     }
                     if (clazz == String.class) {

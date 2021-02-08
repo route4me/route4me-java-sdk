@@ -47,5 +47,13 @@ public class Geocodings {
     @SerializedName("rooftop_coordinates")
     @QueryParameter("rooftop_coordinates")
     private GeoCoordinates rooftopCoordinates;
+
+    public Geocodings(Double latitude, Double longitude, String type, String confidence, String address) {
+        this.name = address;
+        this.latitude = latitude;
+        this.longitude = longitude;
+        this.type = type;
+        this.confidence = confidence;
+    }
     
 }
