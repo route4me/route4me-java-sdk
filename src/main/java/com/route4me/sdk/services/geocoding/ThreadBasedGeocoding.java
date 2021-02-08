@@ -12,12 +12,10 @@ import java.util.Arrays;
 import java.util.concurrent.Callable;
 import org.apache.http.client.utils.URIBuilder;
 
-
 public class ThreadBasedGeocoding implements Callable {
-    
+
     private static final String GEOCODING_ADDRESS = "/api/address.php";
 
-    
     private final String address;
     private final GeocodingManager manager;
     private final GeocoderOptions options;
@@ -28,7 +26,6 @@ public class ThreadBasedGeocoding implements Callable {
         this.options = options;
     }
 
-
     protected static URIBuilder defaultBuilder(String endpoint) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
@@ -36,8 +33,8 @@ public class ThreadBasedGeocoding implements Callable {
         builder.setPath(endpoint);
         return builder;
     }
-    
-    private URIBuilder getBuilder(){
+
+    private URIBuilder getBuilder() {
         URIBuilder builder = defaultBuilder(GEOCODING_ADDRESS);
         builder.setParameter("address", address);
         builder.setParameter("format", options.getResponseFormat().getValue());
@@ -45,9 +42,8 @@ public class ThreadBasedGeocoding implements Callable {
         return builder;
     }
 
-
     private <T> T geocoder(Class<T> clazz) {
-        return  manager.forwardGeocode(getBuilder(), clazz);
+        return manager.forwardGeocode(getBuilder(), clazz);
     }
 
     @Override
@@ -57,28 +53,38 @@ public class ThreadBasedGeocoding implements Callable {
 
     @Override
     public Address call() throws Exception {
-        Address geocodedAddress = new Address();
-        geocodedAddress.setAddress(address);
-
-        switch(options.getDetailed()) {
+        Address geocodedAddress = new Address(address, 0.0, 0.0);
+        Geocodings defaultGeocodings = new Geocodings(0.0, 0.0, "invalid", "0", address);
+        geocodedAddress.setGeocodings(Arrays.asList(defaultGeocodings));
+        switch (options.getDetailed()) {
             case DETAILED:
                 Geocodings[] geocodes = geocoder(Geocodings[].class);
-                if (geocodes != null && options.getDetailed().equals(GeocoderOptions.GeocoderDetails.DETAILED)){
+                if (geocodes != null && options.getDetailed().equals(GeocoderOptions.GeocoderDetails.DETAILED)) {
+                    geocodes = fixGeocodings(geocodes);
                     geocodedAddress.setGeocodings(Arrays.asList(geocodes));
                     geocodedAddress.setLatitude(geocodes[0].getCoordinates().getLatitude());
                     geocodedAddress.setLongitude(geocodes[0].getCoordinates().getLongitude());
+                }
                 break;
-        }
             case SIMPLE:
                 GeoCoordinates geocoordinate = geocoder(GeoCoordinates.class);
-                if (geocoordinate != null){
+                if (geocoordinate != null) {
                     geocodedAddress.setLatitude(geocoordinate.getLatitude());
                     geocodedAddress.setLongitude(geocoordinate.getLongitude());
                 }
                 break;
         }
-        
+
         return geocodedAddress;
+    }
+
+    private Geocodings[] fixGeocodings(Geocodings[] geocodes) {
+        // This is done to maintain the backward compatibility
+        for (Geocodings g: geocodes){
+            g.setLatitude(g.getCoordinates().getLatitude());
+            g.setLongitude(g.getCoordinates().getLongitude());
+        }
+        return geocodes;
     }
 
 }

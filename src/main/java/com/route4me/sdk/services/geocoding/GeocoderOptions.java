@@ -10,6 +10,8 @@ public class GeocoderOptions {
     private GeocoderResponseFormat responseFormat = GeocoderResponseFormat.JSON;
     private GeocoderDetails detailed = GeocoderDetails.DETAILED;
     private int maxThreads = Runtime.getRuntime().availableProcessors() + 1;
+    private int maxRetries = 0;
+    private long maxTimeout = 500l;
 
     public GeocoderOptions() {
 
@@ -18,6 +20,7 @@ public class GeocoderOptions {
     public GeocoderOptions(int maxThreads) {
         this.maxThreads = maxThreads;
     }
+
 
     public enum GeocoderDetails {
         SIMPLE("false"),
@@ -121,5 +124,35 @@ public class GeocoderOptions {
     public void setMaxThreads(int maxThreads) {
         this.maxThreads = maxThreads;
     }
+
+    /**
+     * @return the maxRetries
+     */
+    public int getMaxRetries() {
+        return maxRetries;
+    }
+
+    /**
+     * @param maxRetries the maxRetries to set
+     */
+    public void setMaxRetries(int maxRetries) {
+        this.maxRetries = maxRetries;
+    }
+
+    /**
+     * @param maxTimeout the maxTimeout to set
+     */
+    public void setMaxTimeout(long maxTimeout) {
+        this.maxTimeout = maxTimeout;
+    }
+
+    /**
+     * @return the maxTimeout
+     */
+    public long getMaxTimeout() {
+        return maxTimeout;
+    }
+
+
 
 }
