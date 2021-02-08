@@ -14,6 +14,7 @@ import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.GeoCoordinates;
 import com.route4me.sdk.services.routing.Geocodings;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -71,10 +72,16 @@ public class GeocodingManager extends Manager {
         List<Address> geocodedAddresses = new ArrayList<>();
 
         for (String address : addresses) {
-            if (address != null && !address.equals("")) {
+            if (address != null && address.length() >= 3 ) {
                 Callable callableWorker = new ThreadBasedGeocoding(this, address, options);
                 Future<Address> future = executor.submit(callableWorker);
                 workers.add(future);
+            } else {
+                Address invalidAddress = new Address(address, 0.0, 0.0);
+                Geocodings defaultGeocodings = new Geocodings(0.0, 0.0, "invalid", "0", address);
+                invalidAddress.setGeocodings(Arrays.asList(defaultGeocodings));
+                geocodedAddresses.add(invalidAddress);
+                logger.warn("Invalid Address: " + address);
             }
         }
         executor.shutdown();

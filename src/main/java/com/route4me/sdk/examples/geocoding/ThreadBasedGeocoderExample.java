@@ -67,7 +67,12 @@ public class ThreadBasedGeocoderExample {
                                 "23 WOODSTOCK ST. S., TAVISTOCK, N3T 1M2",
                                 "595771 HWY #59, HUNTINGFORD, N4S 7W1",
                                 "2271 SCANLAN ST., LONDON, N5W 6G9",
-                "THIS IS AN INVALID ADDRESS");
+                                ",",
+                                ".",
+                                "1",
+                                ",.#",
+                                "@.#",
+                                "THIS IS AN INVALID ADDRESS");
 
         GeocoderOptions options = new GeocoderOptions();
 
