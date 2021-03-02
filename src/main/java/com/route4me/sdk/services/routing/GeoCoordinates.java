@@ -20,4 +20,18 @@ public class GeoCoordinates {
     @SerializedName("lng")
     private Double longitude;
 
+    /**
+     * @return the latitude
+     */
+    public Double getLatitude() {
+        return latitude == null ? 0.0 : latitude;
+    }
+
+    /**
+     * @return the longitude
+     */
+    public Double getLongitude() {
+        return longitude == null ? 0.0 : longitude;
+    }
+
 }

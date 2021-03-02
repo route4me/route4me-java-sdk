@@ -211,7 +211,7 @@ public abstract class Manager {
                         try {
                             StringBuilder respString = responseContentParser(br);
                             throw new APIException(String.format("Invalid status code %d, errors: %s", resp.getStatusLine().getStatusCode(), respString.toString()));
-                        } catch (APIException | IOException e) {
+                        } catch (IOException e) {
                             throw new APIException(String.format("Invalid status code %d and no error present.", resp.getStatusLine().getStatusCode()));
                         }
                     }

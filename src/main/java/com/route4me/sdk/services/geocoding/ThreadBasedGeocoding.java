@@ -59,7 +59,7 @@ public class ThreadBasedGeocoding implements Callable {
         switch (options.getDetailed()) {
             case DETAILED:
                 Geocodings[] geocodes = geocoder(Geocodings[].class);
-                if (geocodes != null && options.getDetailed().equals(GeocoderOptions.GeocoderDetails.DETAILED)) {
+                if (geocodes != null) {
                     geocodes = fixGeocodings(geocodes);
                     geocodedAddress.setGeocodings(Arrays.asList(geocodes));
                     geocodedAddress.setLatitude(geocodes[0].getCoordinates().getLatitude());
@@ -80,7 +80,7 @@ public class ThreadBasedGeocoding implements Callable {
 
     private Geocodings[] fixGeocodings(Geocodings[] geocodes) {
         // This is done to maintain the backward compatibility
-        for (Geocodings g: geocodes){
+        for (Geocodings g : geocodes) {
             g.setLatitude(g.getCoordinates().getLatitude());
             g.setLongitude(g.getCoordinates().getLongitude());
         }
