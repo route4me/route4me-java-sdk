@@ -5,7 +5,6 @@ import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.DeleteResponse;
-import com.route4me.sdk.services.routing.GeoCoordinates;
 import java.awt.Point;
 import java.awt.Polygon;
 import org.apache.http.HttpEntity;
@@ -65,17 +64,18 @@ public class TerritoriesManager extends Manager {
 
         List<Territory> foundTerritories = new ArrayList<>();
 
-        int x = (int) (territoryAllocated.getLatitude() * FACTOR);
-        int y = (int) (territoryAllocated.getLongitude() * FACTOR);
+        if (territoryAllocated != null) {
+            int x = (int) (territoryAllocated.getLatitude() * FACTOR);
+            int y = (int) (territoryAllocated.getLongitude() * FACTOR);
 
-        Point point = new Point(x, y);
+            Point point = new Point(x, y);
 
-        for (TerritoryPolygon territoryPolygon : territoryPolygons) {
-            if (territoryPolygon.getPolygon().contains(point)) {
-                foundTerritories.add(territoryPolygon.getTerritory());
+            for (TerritoryPolygon territoryPolygon : territoryPolygons) {
+                if (territoryPolygon.getPolygon() != null && territoryPolygon.getPolygon().contains(point)) {
+                    foundTerritories.add(territoryPolygon.getTerritory());
+                }
             }
         }
-
         return foundTerritories;
 
     }

@@ -48,6 +48,9 @@ public class Geocodings {
     @QueryParameter("rooftop_coordinates")
     private GeoCoordinates rooftopCoordinates;
 
+    public Geocodings() {
+    }
+
     public Geocodings(Double latitude, Double longitude, String type, String confidence, String address) {
         this.name = address;
         this.latitude = latitude;
@@ -55,5 +58,40 @@ public class Geocodings {
         this.type = type;
         this.confidence = confidence;
     }
-    
+
+    /**
+     * @return the latitude
+     */
+    public Double getLatitude() {
+        return latitude == null ? 0.0 : latitude;
+    }
+
+    /**
+     * @return the longitude
+     */
+    public Double getLongitude() {
+        return longitude == null ? 0.0 : longitude;
+    }
+
+    /**
+     * @return the confidence
+     */
+    public String getConfidence() {
+        return confidence == null ? "0" : confidence;
+    }
+
+    /**
+     * @return the type
+     */
+    public String getType() {
+        return type == null ? "invalid" : type;
+    }
+
+    /**
+     * @return the coordinates
+     */
+    public GeoCoordinates getCoordinates() {
+        return coordinates == null ? new GeoCoordinates() : coordinates;
+    }
+
 }
