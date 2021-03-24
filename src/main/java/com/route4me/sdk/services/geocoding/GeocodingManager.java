@@ -11,7 +11,6 @@ import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
-import com.route4me.sdk.services.routing.GeoCoordinates;
 import com.route4me.sdk.services.routing.Geocodings;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -65,14 +64,14 @@ public class GeocodingManager extends Manager {
 
     public List<Address> bulkGeocoder(List<String> addresses, GeocoderOptions options) {
         ExecutorService executor = Executors.newFixedThreadPool(options.getMaxThreads());
-        
+
         maxRetries = options.getMaxRetries();
 
         List<Future<Address>> workers = new ArrayList<>();
         List<Address> geocodedAddresses = new ArrayList<>();
 
         for (String address : addresses) {
-            if (address != null && address.length() >= 3 ) {
+            if (address != null && address.length() >= 3) {
                 Callable callableWorker = new ThreadBasedGeocoding(this, address, options);
                 Future<Address> future = executor.submit(callableWorker);
                 workers.add(future);
