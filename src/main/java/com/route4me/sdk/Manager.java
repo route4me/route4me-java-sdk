@@ -8,29 +8,27 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.queryconverter.QueryConverter;
+import java.io.*;
+import java.lang.reflect.Type;
+import java.net.URISyntaxException;
+import java.util.List;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.HttpClients;
-
-import java.io.*;
-import java.lang.reflect.Type;
-import java.net.URISyntaxException;
-import java.util.List;
-import org.apache.http.HttpHost;
-import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 import org.apache.logging.log4j.LogManager;
 
 public abstract class Manager {
-    
-    protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(Manager.class);
 
+    protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(Manager.class);
 
     private final String apiKey;
     protected Gson gson;
@@ -184,7 +182,9 @@ public abstract class Manager {
                 builder.addParameter("redirect", "0");
                 client = HttpClients.custom().disableRedirectHandling().build();
             }
-            builder.addParameter("api_key", this.apiKey);
+            if (this.apiKey != null) {
+                builder.addParameter("api_key", this.apiKey);
+            }
             HttpRequestBase hrb = method.create(builder.build());
             if (requestContentType != null) {
                 hrb.setHeader("Content-type", requestContentType);
@@ -201,12 +201,12 @@ public abstract class Manager {
             }
             //try with resources to close streams
 
-            try ( CloseableHttpResponse resp = client.execute(hrb);  InputStream is = resp.getEntity().getContent()) {
+            try (CloseableHttpResponse resp = client.execute(hrb); InputStream is = resp.getEntity().getContent()) {
                 //response should always be present
                 if (is == null) {
                     throw new APIException("Response body is null.");
                 }
-                try ( InputStreamReader isr = new InputStreamReader(is);  BufferedReader br = new BufferedReader(isr)) {
+                try (InputStreamReader isr = new InputStreamReader(is); BufferedReader br = new BufferedReader(isr)) {
                     if (resp.getStatusLine().getStatusCode() < 200 || resp.getStatusLine().getStatusCode() > 303) {
                         try {
                             StringBuilder respString = responseContentParser(br);
@@ -218,11 +218,10 @@ public abstract class Manager {
                     //deserialize json into an object
                     if (clazz != null && clazz != String.class) {
                         StringBuilder respString = responseContentParser(br);
-
                         try {
                             return this.gson.fromJson(respString.toString(), clazz);
                         } catch (JsonSyntaxException ex) {
-                            throw new APIException(respString.toString());
+                            throw new APIException(ex.toString());
                         }
                     } else if (type != null) {
                         StringBuilder respString = responseContentParser(br);
