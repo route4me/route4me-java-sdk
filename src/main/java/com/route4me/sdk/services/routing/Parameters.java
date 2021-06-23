@@ -109,6 +109,10 @@ public class Parameters {
     private List<AdvancedConstraints> advancedConstraints;
     @SerializedName("is_dynamic_start_time")
     private Boolean isDynamicStartTime;
+    @SerializedName("depots")
+    private List<Object> depots;
+    
+    
 
 
     
