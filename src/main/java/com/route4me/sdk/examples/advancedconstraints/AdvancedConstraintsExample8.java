@@ -7,7 +7,6 @@ package com.route4me.sdk.examples.advancedconstraints;
 
 import com.opencsv.CSVReader;
 import com.opencsv.CSVReaderBuilder;
-import com.route4me.sdk.examples.playground.AllocateTerritoriesToronto;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.Constants.AlgorithmType;
@@ -51,9 +50,9 @@ public class AdvancedConstraintsExample8 {
             }
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(AllocateTerritoriesToronto.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AdvancedConstraintsExample8.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(AllocateTerritoriesToronto.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AdvancedConstraintsExample8.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return addresses;
@@ -114,9 +113,9 @@ public class AdvancedConstraintsExample8 {
             }
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(AllocateTerritoriesToronto.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AdvancedConstraintsExample8.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(AllocateTerritoriesToronto.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AdvancedConstraintsExample8.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     
@@ -152,9 +151,9 @@ public class AdvancedConstraintsExample8 {
             }
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(AllocateTerritoriesToronto.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AdvancedConstraintsExample8.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(AllocateTerritoriesToronto.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(AdvancedConstraintsExample8.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         
