@@ -7,6 +7,7 @@ package com.route4me.sdk.services.routing.advancedconstraints;
 
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
+import com.route4me.sdk.services.routing.Source;
 import java.util.List;
 import lombok.Data;
 
@@ -19,27 +20,32 @@ public class AdvancedConstraints {
 
     @SerializedName("max_capacity")
     @QueryParameter("max_capacity")
-    private Integer maxCapacity;
-    
+    private Integer maxCapacity;  
     
     @SerializedName("members_count")
     @QueryParameter("members_count")
     private Integer membersCount;
 
-
     @SerializedName("available_time_windows")
     @QueryParameter("available_time_windows")
     private List<List<Integer>> availableTimeWindows;
             
-            
     @SerializedName("tags")
     @QueryParameter("tags")
     private List<String> tags;
-    
             
     @SerializedName("route4me_members_id")
     @QueryParameter("route4me_members_id")
     private List<Integer> route4meMembersID;
+    
+    @SerializedName("depot_address")
+    @QueryParameter("depot_address")
+    private Source depotAddress;
+
+    @SerializedName("location_sequence_pattern")
+    @QueryParameter("location_sequence_pattern")
+    private List<Object> locationSequencePattern;
+
     
     
 }
