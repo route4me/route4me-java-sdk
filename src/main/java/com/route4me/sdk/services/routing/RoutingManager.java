@@ -5,6 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import java.io.UnsupportedEncodingException;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
@@ -13,12 +14,19 @@ import org.apache.http.client.utils.URIBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import static org.apache.http.Consts.UTF_8;
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.message.BasicNameValuePair;
 
 public class RoutingManager extends Manager {
     public static final String ROUTE_EP = "/api.v4/route.php";
     public static final String ADDRESS_EP = "/api.v4/address.php";
     public static final String OPTIMIZATION_EP = "/api.v4/optimization_problem.php";
     public static final String DUPLICATE_ROUTE_EP = "/actions/duplicate_route.php";
+    public static final String RENAME_ROUTE_EP = "/actions/route/rename_route.php";
 
     public RoutingManager(String apiKey) {
         super(apiKey);
@@ -164,6 +172,20 @@ public class RoutingManager extends Manager {
         builder.setParameter("route_id", routeID);
         builder.setParameter("to", "none");
         return this.makeRequest(RequestMethod.GET, builder, "", DuplicateRouteResponse.class);
+    }
+
+    public RouteRenamedStatus renameRoute(String routeName, String routeID) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(RENAME_ROUTE_EP);
+        builder.setParameter("format", "json");
+
+        List<NameValuePair> data = new  ArrayList<>();
+        data.add(new BasicNameValuePair("route_name", routeName));
+        data.add(new BasicNameValuePair("route_id", routeID));
+
+        UrlEncodedFormEntity body = null;
+        body = new UrlEncodedFormEntity(data, UTF_8);
+
+        return  this.makeRequest(RequestMethod.POST, builder, body, RouteRenamedStatus.class);
     }
 
     @Getter
