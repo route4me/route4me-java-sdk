@@ -42,7 +42,7 @@ public class AdvancedConstraintsExample11 {
         parameters.setStoreRoute(Boolean.FALSE);
         parameters.setShareRoute(Boolean.FALSE);
         parameters.setRouteTime(7 * 3600);
-        parameters.setRt(Boolean.TRUE);
+        parameters.setRt(Boolean.FALSE);
         parameters.setRouteName("Retail Location - Single Depot - Multiple Driver");
         parameters.setOptimize(Optimize.DISTANCE.toString());
         parameters.setDistanceUnit(DistanceUnit.MI.toString());
@@ -76,7 +76,7 @@ public class AdvancedConstraintsExample11 {
 
          //Retail Location: "4738 BELLEVUE AVE, Louisville, KY, 40215" 
 
-        Address retailLocationAddress = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", "RETAIL LOCATION",  38.179806, -85.775558, 300);
+        Address retailLocationAddress = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", "DEPOT END LOCATION",  38.179806, -85.775558, 300);
          
          List <Object> locationsSequence = Arrays.asList("", retailLocationAddress);
 
