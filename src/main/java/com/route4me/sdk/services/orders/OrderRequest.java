@@ -24,6 +24,9 @@ public class OrderRequest {
     private String query;
     @QueryParameter("fields")
     private String fields;
+    @QueryParameter("filter")
+    private OrderFilter filter;
+    
 
     public enum DisplayType {
         ALL("all"), ROUTED("routed"), UNROUTED("unrouted");
