@@ -2,9 +2,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
-    <groupId>com.route4me</groupId>
+    <groupId>io.github.route4me</groupId>
     <artifactId>route4me-java-sdk</artifactId>
-    <version>RELEASE-1.6.0</version>
+    <version>1.6.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -13,6 +13,42 @@
         <maven.compiler.target>1.8</maven.compiler.target>
     </properties>
     <name>route4me-java-sdk</name>
+    <licenses>
+      <license>
+        <name>MIT License</name>
+        <url>http://www.opensource.org/licenses/mit-license.php</url>
+      </license>
+    </licenses>
+    <url>https://github.com/route4me/route4me-java-sdk</url>
+    <description>>This SDK makes it easier for you use the Route4Me API, which creates optimally sequenced driving routes for many drivers.</description>
+    <distributionManagement>
+      <snapshotRepository>
+        <id>ossrh</id>
+        <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
+      </snapshotRepository>
+      <repository>
+        <id>ossrh</id>
+        <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
+      </repository>
+    </distributionManagement>
+    <developers>
+       <developer>
+         <name>Juan</name>
+         <email>juan@route4me.com</email>
+         <organization>Route4Me</organization>
+         <organizationUrl>https://www.route4me.com</organizationUrl>
+       </developer>
+     </developers>
+    <scm>
+      <connection>scm:git:git@github.com:route4me/route4me-java-sdk.git</connection>
+      <developerConnection>scm:git:ssh://github.com:route4me/route4me-java-sdk.git</developerConnection>
+      <url>https://github.com/route4me/route4me-java-sdk/tree/master</url>
+    </scm>
+    <organization>
+        <name>Route4Me</name>
+        <url>https://www.route4me.com</url>
+    </organization>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
@@ -61,6 +97,17 @@
     <build>
         <plugins>
             <plugin>
+              <groupId>org.sonatype.plugins</groupId>
+              <artifactId>nexus-staging-maven-plugin</artifactId>
+              <version>1.6.7</version>
+              <extensions>true</extensions>
+              <configuration>
+                 <serverId>ossrh</serverId>
+                 <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
+                 <autoReleaseAfterClose>true</autoReleaseAfterClose>
+              </configuration>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-source-plugin</artifactId>
                 <version>3.0.1</version>
@@ -68,7 +115,7 @@
                     <execution>
                         <id>attach-sources</id>
                         <goals>
-                            <goal>jar</goal>
+                            <goal>jar-no-fork</goal>
                         </goals>
                     </execution>
                 </executions>
@@ -82,7 +129,10 @@
                         <id>attach-javadocs</id>
                         <configuration>
                             <additionalparam>${javadoc.opts}</additionalparam>
-                        </configuration>                    
+                        </configuration>     
+                        <goals>
+                          <goal>jar</goal>
+                        </goals>                                       
                     </execution>
                 </executions>
             </plugin>
@@ -91,10 +141,25 @@
               <artifactId>maven-shade-plugin</artifactId>
               <version>3.2.0</version>
             </plugin> 
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-gpg-plugin</artifactId>
+              <version>1.5</version>
+              <executions>
+                <execution>
+                  <id>sign-artifacts</id>
+                  <phase>verify</phase>
+                  <goals>
+                    <goal>sign</goal>
+                  </goals>
+                  <configuration>
+                    <keyname>73877EBB60F02A5283255BCF8F4C1297EE1FB9A4</keyname>
+                    <passphraseServerId>73877EBB60F02A5283255BCF8F4C1297EE1FB9A4</passphraseServerId>
+                  </configuration>
+                </execution>
+              </executions>
+            </plugin>
         </plugins>
     </build>
-    <organization>
-        <name>Rote4Me</name>
-        <url>https://www.route4me.com</url>
-    </organization>
+
 </project>
