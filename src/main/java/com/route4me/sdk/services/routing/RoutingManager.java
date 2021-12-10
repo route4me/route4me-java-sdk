@@ -5,7 +5,7 @@ import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
-import java.io.UnsupportedEncodingException;
+import com.route4me.sdk.queryconverter.QueryConverter;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
@@ -14,8 +14,6 @@ import org.apache.http.client.utils.URIBuilder;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import static org.apache.http.Consts.UTF_8;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
@@ -64,6 +62,12 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, parameters, DataObject.class);
     }
 
+    public DataObject reOptimization(OptimizationParameters parameters) throws APIException, IllegalAccessException {
+        URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
+        List<NameValuePair> params = QueryConverter.convertObjectToParameters(parameters);
+        builder.addParameters(params);
+        return this.makeJSONRequest(RequestMethod.PUT, builder, "", DataObject.class);
+    }
     
     
     public List<DataObject> getOptimizations(int limit, int offset) throws APIException {
