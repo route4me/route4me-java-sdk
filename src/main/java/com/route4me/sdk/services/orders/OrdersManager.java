@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.Map;
 
 public class OrdersManager extends Manager {
+
     public static final String ORDERS_EP = "/api.v4/order.php";
 
     public OrdersManager(String apiKey) {
@@ -38,7 +39,7 @@ public class OrdersManager extends Manager {
     public List<Order> getOrdersByScheduledDate(List<String> scheduledForYYMMDD) throws APIException {
         OrderFilter filter = new OrderFilter();
         filter.setScheduled_for_YYMMDD(scheduledForYYMMDD);
-        return this.OrderByFilter(filter);        
+        return this.OrderByFilter(filter);
     }
 
     public List<Order> getOrdersByCustomField(String customFieldKey, String customFieldValue) throws APIException {
@@ -47,16 +48,29 @@ public class OrdersManager extends Manager {
         Map<String, Object> terms = new HashMap<>();
         terms.put("custom_data." + customFieldKey, customFieldValue);
         filter.setTerms(terms);
-        return this.OrderByFilter(filter);        
+        return this.OrderByFilter(filter);
     }
-    
+
+    public List<Order> getOrdersByStatus(List<Integer> orderStatus) throws APIException {
+        OrderFilter filter = new OrderFilter();
+        filter.setStatuses(orderStatus);
+        return this.OrderByFilter(filter);
+    }
+
+    public List<Order> getOrdersByTrackingNumber(List<String> trackingNumbers) throws APIException {
+        OrderFilter filter = new OrderFilter();
+
+        filter.setTrackingNumbers(trackingNumbers);
+        System.out.println(filter);
+        return this.OrderByFilter(filter);
+    }
+
     private List<Order> OrderByFilter(OrderFilter filter) throws APIException {
         OrderRequest request = new OrderRequest();
         request.setFilter(filter);
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
-        return this.makeJSONRequest(RequestMethod.POST, builder, request, GetOrdersResponse.class).getResults();        
+        return this.makeJSONRequest(RequestMethod.POST, builder, request, GetOrdersResponse.class).getResults();
     }
-        
 
     public Order updateOrder(Order order) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
@@ -68,10 +82,10 @@ public class OrdersManager extends Manager {
         return this.makeJSONRequest(RequestMethod.DELETE, builder, new DeleteOrdersRequest(orderIds), StatusResponse.class);
     }
 
-
     @Getter
     @Setter(AccessLevel.PRIVATE)
     private static class GetOrdersResponse {
+
         @SerializedName("results")
         private List<Order> results;
         @SerializedName("total")
@@ -81,6 +95,7 @@ public class OrdersManager extends Manager {
     @Data
     @RequiredArgsConstructor
     private static class DeleteOrdersRequest {
+
         @SerializedName("order_ids")
         private final long[] orderIds;
     }

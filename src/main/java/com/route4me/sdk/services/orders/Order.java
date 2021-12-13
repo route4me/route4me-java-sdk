@@ -80,4 +80,8 @@ public class Order {
     private Boolean started;
     @SerializedName("is_completed")
     private Boolean completed;
+    @SerializedName("last_status")
+    private Integer lastStatus;
+    @SerializedName("tracking_number")
+    private String trackingNumber;
 }
