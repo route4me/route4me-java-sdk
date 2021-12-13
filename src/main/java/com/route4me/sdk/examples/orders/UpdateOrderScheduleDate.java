@@ -5,14 +5,13 @@ import com.route4me.sdk.services.orders.Order;
 import com.route4me.sdk.services.orders.OrdersManager;
 
 
-public class UpdateOrder {
+public class UpdateOrderScheduleDate {
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
         OrdersManager manager = new OrdersManager(apiKey);
         try {
             Order order = manager.getOrder(1189380);
-            order.setColor("#333333");
-            order.setAddressAlias("Updated Order");
+            order.setDateScheduled("2021-12-13");
             Order updated = manager.updateOrder(order);
             System.out.println(updated);
         } catch (APIException e) {
