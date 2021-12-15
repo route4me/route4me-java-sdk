@@ -3,7 +3,7 @@ package com.route4me.sdk.examples.orders;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.orders.Order;
-import com.route4me.sdk.services.orders.OrderStatus.OrderStatusEnum;
+import com.route4me.sdk.services.orders.OrderStatus;
 import com.route4me.sdk.services.orders.OrdersManager;
 import java.util.ArrayList;
 
@@ -15,15 +15,15 @@ public class GetOrdersByStatus {
 
         OrdersManager manager = new OrdersManager(apiKey);
         List<Integer> orderStatus = new ArrayList<>();
-        orderStatus.add(OrderStatusEnum.DONE.getValue());
-        orderStatus.add(OrderStatusEnum.CANCELLED.getValue());
-        orderStatus.add(OrderStatusEnum.DAMAGED.getValue());
+        orderStatus.add(OrderStatus.DONE.getValue());
+        orderStatus.add(OrderStatus.CANCELLED.getValue());
+        orderStatus.add(OrderStatus.DAMAGED.getValue());
         
         try {
             List<Order> orders = manager.getOrdersByStatus(orderStatus);
             for (Order order : orders) {
                 System.out.println("OrderID: " + order.getId());
-                System.out.println("\tStatus: " + OrderStatusEnum.get(order.getLastStatus()));
+                System.out.println("\tStatus: " + OrderStatus.get(order.getLastStatus()));
                 System.out.println("\tCreated: " + order.getCreated());
                 System.out.println("\tScheduled: " + order.getDateScheduled());
                 System.out.println("\tAddress: " + order.getAddress1());

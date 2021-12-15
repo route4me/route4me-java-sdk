@@ -62,11 +62,18 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, parameters, DataObject.class);
     }
 
-    public DataObject reOptimization(OptimizationParameters parameters) throws APIException, IllegalAccessException {
+    public Optimization reOptimizationByOptimizationID(OptimizationParameters parameters) throws APIException, IllegalAccessException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         List<NameValuePair> params = QueryConverter.convertObjectToParameters(parameters);
         builder.addParameters(params);
-        return this.makeJSONRequest(RequestMethod.PUT, builder, "", DataObject.class);
+        return this.makeJSONRequest(RequestMethod.PUT, builder, "", Optimization.class);
+    }
+
+    public Optimization reOptimization(OptimizationParameters parameters, DataObject optimization) throws APIException, IllegalAccessException {
+        URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
+        List<NameValuePair> params = QueryConverter.convertObjectToParameters(parameters);
+        builder.addParameters(params);
+        return this.makeJSONRequest(RequestMethod.PUT, builder, optimization, Optimization.class);
     }
     
     
@@ -114,6 +121,13 @@ public class RoutingManager extends Manager {
         this.makeRequest(RequestMethod.DELETE, builder, "", null);
     }
 
+    public void deleteAddressFromOptimization(String optimizationProblemId, Number routeDestinationId) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(ADDRESS_EP);
+        builder.setParameter("optimization_problem_id", optimizationProblemId);
+        builder.setParameter("route_destination_id", routeDestinationId.toString());
+        this.makeRequest(RequestMethod.DELETE, builder, "", null);
+    }
+    
     public Address updateAddressAttribute(String routeId, Number routeDestinationId, Address dataObj) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_EP);
         builder.setParameter("route_id", routeId);

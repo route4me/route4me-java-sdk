@@ -32,59 +32,56 @@ import java.util.Map;
  *
  * @author Route4Me
  */
-public class OrderStatus {
+public enum OrderStatus {
 
-    public enum OrderStatusEnum {
+    NEW(0),
+    INBOUND_SCAN(1),
+    SORTED_BY_TERRITORY(2),
+    LOADED(3),
+    MISSING(4),
+    DAMAGED(5),
+    MANUALLY_LOADED(6),
+    ROUTED(7),
+    UNROUTED(8),
+    SORTED_BY_ROUTE(9),
+    ROUTE_STARTED(10),
+    FAILED(11),
+    SKIPPED(12),
+    DONE(13),
+    CANCELLED(14),
+    SCHEDULED(15);
 
-        NEW(0),
-        INBOUND_SCAN(1),
-        SORTED_BY_TERRITORY(2),
-        LOADED(3),
-        MISSING(4),
-        DAMAGED(5),
-        MANUALLY_LOADED(6),
-        ROUTED(7),
-        UNROUTED(8),
-        SORTED_BY_ROUTE(9),
-        ROUTE_STARTED(10),
-        FAILED(11),
-        SKIPPED(12),
-        DONE(13),
-        CANCELLED(14),
-        SCHEDULED(15);
+    private int value;
+    private static final Map<Integer, OrderStatus> lookup
+            = new HashMap<>();
 
-        private int value;
-        private static final Map<Integer, OrderStatusEnum> lookup
-                = new HashMap<>();
-
-        static {
-            for (Iterator<OrderStatusEnum> it = EnumSet.allOf(OrderStatusEnum.class).iterator(); it.hasNext();) {
-                OrderStatusEnum s = it.next();
-                lookup.put(s.getValue(), s);
-            }
+    static {
+        for (Iterator<OrderStatus> it = EnumSet.allOf(OrderStatus.class).iterator(); it.hasNext();) {
+            OrderStatus s = it.next();
+            lookup.put(s.getValue(), s);
         }
-
-        private OrderStatusEnum(int value) {
-            this.value = value;
-        }
-
-        /**
-         * @return the value
-         */
-        public int getValue() {
-            return value;
-        }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(int value) {
-            this.value = value;
-        }
-
-        public static OrderStatusEnum get(int code) {
-            return lookup.get(code);
-        }
-
     }
+
+    private OrderStatus(int value) {
+        this.value = value;
+    }
+
+    /**
+     * @return the value
+     */
+    public int getValue() {
+        return value;
+    }
+
+    /**
+     * @param value the value to set
+     */
+    public void setValue(int value) {
+        this.value = value;
+    }
+
+    public static OrderStatus get(int code) {
+        return lookup.get(code);
+    }
+
 }

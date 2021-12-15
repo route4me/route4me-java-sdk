@@ -23,7 +23,7 @@ public class ReOptimization {
             OptimizationParameters parameters = new OptimizationParameters();
             parameters.setProblemId(obj.getOptimizationProblemId());
             parameters.setReoptimize(true);
-            DataObject updated = manager.reOptimization(parameters);
+            DataObject updated = manager.reOptimizationByOptimizationID(parameters);
             System.out.println(updated);
         } catch (APIException e) {
             //handle exception
