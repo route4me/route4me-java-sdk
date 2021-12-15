@@ -3,7 +3,7 @@ package com.route4me.sdk.examples.orders;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.orders.Order;
-import com.route4me.sdk.services.orders.OrderStatus.OrderStatusEnum;
+import com.route4me.sdk.services.orders.OrderStatus;
 import com.route4me.sdk.services.orders.OrdersManager;
 import java.util.Arrays;
 
@@ -20,7 +20,7 @@ public class GetOrdersByTrackingNumber {
             List<Order> orders = manager.getOrdersByTrackingNumber(trackingNumbers);
             for (Order order : orders) {
                 System.out.println("OrderID: " + order.getId());
-                System.out.println("\tStatus: " + OrderStatusEnum.get(order.getLastStatus()));
+                System.out.println("\tStatus: " + OrderStatus.get(order.getLastStatus()));
                 System.out.println("\tTracking Number: " + order.getTrackingNumber());
                 System.out.println("\tCreated: " + order.getCreated());
                 System.out.println("\tScheduled: " + order.getDateScheduled());
