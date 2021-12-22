@@ -12,50 +12,29 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.http.HttpClientConnection;
 import org.apache.http.HttpEntity;
-import org.apache.http.HttpException;
 import org.apache.http.HttpHost;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.config.ConnectionConfig;
-import org.apache.http.entity.ContentLengthStrategy;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.ConnSupport;
-import org.apache.http.impl.DefaultBHttpClientConnection;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
-import org.apache.http.impl.io.ChunkedOutputStream;
-import org.apache.http.impl.io.ContentLengthOutputStream;
-import org.apache.http.impl.io.DefaultHttpRequestWriterFactory;
-import org.apache.http.impl.io.HttpTransportMetricsImpl;
-import org.apache.http.impl.io.IdentityOutputStream;
-import org.apache.http.impl.io.SessionOutputBufferImpl;
-import org.apache.http.io.HttpMessageWriter;
-import org.apache.http.io.SessionOutputBuffer;
-import org.apache.http.message.BasicHttpResponse;
-import org.apache.http.protocol.HttpContext;
-import org.apache.http.protocol.HttpRequestExecutor;
 import org.apache.logging.log4j.LogManager;
 
 public abstract class Manager {
 
     protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(Manager.class);
-
     private final String apiKey;
     protected Gson gson;
     private RequestConfig requestProxyConfig;
     private boolean disableRedirects;
+    private String callBackURL;
+    
 
     public Manager(String apiKey) {
         this.apiKey = apiKey;
@@ -65,6 +44,12 @@ public abstract class Manager {
     public Manager(String apiKey, boolean disableRedirects) {
         this(apiKey);
         this.disableRedirects = disableRedirects;
+    }
+
+    public Manager(String apiKey, boolean disableRedirects, String callBackURL) {
+        this(apiKey);
+        this.disableRedirects = disableRedirects;
+        this.callBackURL = callBackURL;
     }
 
     public Manager(String apiKey, GsonBuilder builder) {
@@ -204,6 +189,9 @@ public abstract class Manager {
                 builder.addParameter("redirect", "0");
                 client = HttpClients.custom().disableRedirectHandling().build();
             }
+            if (this.callBackURL != null) {
+                builder.addParameter("optimized_callback_url", this.callBackURL);
+            }
             if (this.apiKey != null) {
                 builder.addParameter("api_key", this.apiKey);
             }
@@ -222,7 +210,6 @@ public abstract class Manager {
                 throw new RuntimeException("Method does not support body!");
             }
             //try with resources to close streams
-
             try (CloseableHttpResponse resp = client.execute(hrb); InputStream is = resp.getEntity().getContent()) {
                 //response should always be present
                 if (is == null) {
@@ -281,6 +268,20 @@ public abstract class Manager {
             respString.append(line);
         }
         return respString;
+    }
+
+    /**
+     * @return the callBackURL
+     */
+    public String getCallBackURL() {
+        return callBackURL;
+    }
+
+    /**
+     * @param callBackURL the callBackURL to set
+     */
+    public void setCallBackURL(String callBackURL) {
+        this.callBackURL = callBackURL;
     }
     
 }

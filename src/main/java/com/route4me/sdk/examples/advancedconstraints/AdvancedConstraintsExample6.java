@@ -74,6 +74,7 @@ public class AdvancedConstraintsExample6 {
 
     //**********************************************************************
     // TEST CASE: Drivers Schedules with Territories
+    // 2000 Stops
     // 30 Schedules
     // 3 Territories
     //**********************************************************************

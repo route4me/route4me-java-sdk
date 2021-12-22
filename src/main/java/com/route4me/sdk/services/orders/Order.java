@@ -32,6 +32,16 @@ public class Order {
     private String email;
     @SerializedName("EXT_FIELD_phone")
     private String phone;
+    @SerializedName("EXT_FIELD_weight")
+    private Double weight;
+    @SerializedName("EXT_FIELD_cost")
+    private Double cost;
+    @SerializedName("EXT_FIELD_revenue")
+    private Double revenue;
+    @SerializedName("EXT_FIELD_cube")
+    private Double cube;
+    @SerializedName("EXT_FIELD_pieces")
+    private Integer pieces;
     @SerializedName("EXT_FIELD_custom_data")
     private Object CustomData;
     @SerializedName("address_city")

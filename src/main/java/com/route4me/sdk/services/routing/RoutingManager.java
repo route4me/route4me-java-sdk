@@ -33,6 +33,11 @@ public class RoutingManager extends Manager {
     public RoutingManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
     }
+
+    public RoutingManager(String apiKey, boolean disableRedirects, String callBackURL) {
+        super(apiKey, disableRedirects, callBackURL);
+    }
+
     
     public RoutingManager(String apiKey, String proxyHost, int proxyPort, String proxySchema) {
         super(apiKey, proxyHost, proxyPort, proxySchema);
