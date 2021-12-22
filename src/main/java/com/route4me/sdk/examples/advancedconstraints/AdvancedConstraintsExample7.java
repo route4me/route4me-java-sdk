@@ -74,8 +74,10 @@ public class AdvancedConstraintsExample7 {
 
     //**********************************************************************
     // TEST CASE: Drivers Schedules with Territories
+    // 2000 Stops
+    // 50 Drivers
     // 30 Schedules
-    // 3 Territories
+    // 5 Territories
     //**********************************************************************
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
