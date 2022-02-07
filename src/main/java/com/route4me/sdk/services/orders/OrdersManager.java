@@ -37,9 +37,13 @@ public class OrdersManager extends Manager {
     }
 
     public List<Order> getOrdersByScheduledDate(List<String> scheduledForYYMMDD) throws APIException {
+        return this.getOrdersByScheduledDate(scheduledForYYMMDD, 30, 0);
+    }
+
+    public List<Order> getOrdersByScheduledDate(List<String> scheduledForYYMMDD, Integer limit, Integer offset) throws APIException {
         OrderFilter filter = new OrderFilter();
         filter.setScheduled_for_YYMMDD(scheduledForYYMMDD);
-        return this.OrderByFilter(filter);
+        return this.OrderByFilter(filter, limit, offset);
     }
 
     public List<Order> getOrdersByCustomField(String customFieldKey, String customFieldValue) throws APIException {
@@ -58,18 +62,28 @@ public class OrdersManager extends Manager {
     }
 
     public List<Order> getOrdersByTrackingNumber(List<String> trackingNumbers) throws APIException {
-        OrderFilter filter = new OrderFilter();
-
-        filter.setTrackingNumbers(trackingNumbers);
-        System.out.println(filter);
-        return this.OrderByFilter(filter);
+        return this.getOrdersByTrackingNumber(trackingNumbers, 30, 0);
     }
 
-    private List<Order> OrderByFilter(OrderFilter filter) throws APIException {
+    public List<Order> getOrdersByTrackingNumber(List<String> trackingNumbers, Integer limit, Integer offset) throws APIException {
+        OrderFilter filter = new OrderFilter();
+        filter.setTrackingNumbers(trackingNumbers);
+        return this.OrderByFilter(filter, limit, offset);
+    }
+    
+    private List<Order> OrderByFilter(OrderFilter filter, Integer limit, Integer offset) throws APIException {
         OrderRequest request = new OrderRequest();
         request.setFilter(filter);
+        request.setLimit(limit);
+        request.setOffset(offset);
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
         return this.makeJSONRequest(RequestMethod.POST, builder, request, GetOrdersResponse.class).getResults();
+    }
+
+
+    
+    private List<Order> OrderByFilter(OrderFilter filter) throws APIException {
+        return this.OrderByFilter(filter, 30, 0);
     }
 
     public Order updateOrder(Order order) throws APIException {
