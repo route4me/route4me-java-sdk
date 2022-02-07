@@ -3,26 +3,30 @@ package com.route4me.sdk.examples.orders;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.orders.Order;
+import com.route4me.sdk.services.orders.OrderStatus;
 import com.route4me.sdk.services.orders.OrdersManager;
 import java.util.Arrays;
 
 import java.util.List;
 
-public class GetOrdersByScheduledAtYYMMDD {
-
+public class GetOrdersByTrackingNumberLimitOffset {
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
         OrdersManager manager = new OrdersManager(apiKey);
+
+        List<String> trackingNumbers = Arrays.asList("TRACKING01", "TRACKING02", "TRACKING03");
+        
         try {
-            List<String> scheduledDate = Arrays.asList("2021-09-10", "2021-09-10");
-            List<Order> orders = manager.getOrdersByScheduledDate(scheduledDate);
+            List<Order> orders = manager.getOrdersByTrackingNumber(trackingNumbers, 100, 0);
+            System.out.println("Found " + orders.size() + " Orders");
             for (Order order : orders) {
                 System.out.println("OrderID: " + order.getId());
+                System.out.println("\tStatus: " + OrderStatus.get(order.getLastStatus()));
+                System.out.println("\tTracking Number: " + order.getTrackingNumber());
                 System.out.println("\tCreated: " + order.getCreated());
                 System.out.println("\tScheduled: " + order.getDateScheduled());
                 System.out.println("\tAddress: " + order.getAddress1());
                 System.out.println("\tAlias: " + order.getAddressAlias());
-                System.out.println("\tCustom Data: " + order.getCustomData());
                 System.out.println("");
             }
         } catch (APIException e) {
