@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class AdvancedConstraintsExample7 {
+public class DriversScheduleswithTerritoriesV1 {
 
     public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2, List<String> zone3, Integer serviceTime) {
         List<Address> addresses = new ArrayList<>();
@@ -46,26 +46,13 @@ public class AdvancedConstraintsExample7 {
                 address.setAddress(nextRecord[0]);
                 address.setLatitude(Double.parseDouble(nextRecord[1]));
                 address.setLongitude(Double.parseDouble(nextRecord[2]));
-                int group = Integer.parseInt(nextRecord[3]);
-
-                switch (group) {
-                    case 0:
-                        address.setTags(zone1);
-                        break;
-                    case 1:
-                        address.setTags(zone2);
-                        break;
-                    case 2:
-                        address.setTags(zone3);
-                        break;
-                }
                 addresses.add(address);
             }
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(AdvancedConstraintsExample7.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(AdvancedConstraintsExample7.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return addresses;
@@ -76,8 +63,7 @@ public class AdvancedConstraintsExample7 {
     // TEST CASE: Drivers Schedules with Territories
     // 2000 Stops
     // 50 Drivers
-    // 30 Schedules
-    // 5 Territories
+    // 50 Schedules
     //**********************************************************************
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
@@ -91,20 +77,11 @@ public class AdvancedConstraintsExample7 {
         parameters.setShareRoute(Boolean.FALSE);
         parameters.setRt(Boolean.TRUE);
         parameters.setParts(50); // Drivers Schedules Available 
-        parameters.setRouteName("50 Drivers Schedules - 5 Zones");
+        parameters.setRouteName("50 Drivers Schedules");
         parameters.setOptimize(Optimize.DISTANCE.toString());
         parameters.setDistanceUnit(DistanceUnit.MI.toString());
         parameters.setDeviceType(DeviceType.WEB.toString());
         parameters.setTravelMode(TravelMode.DRIVING.toString());
-
-        // **********************
-        // Zones
-        // **********************
-        List<String> zone1 = Arrays.asList("ZONE 01");
-        List<String> zone2 = Arrays.asList("ZONE 02");
-        List<String> zone3 = Arrays.asList("ZONE 03");
-        List<String> zone4 = Arrays.asList("ZONE 04");
-        List<String> zone5 = Arrays.asList("ZONE 05");
 
         // **********************
         // Schedules
@@ -116,7 +93,6 @@ public class AdvancedConstraintsExample7 {
         Path currentPath = Paths.get(System.getProperty("user.dir"));
         Path filePath = Paths.get(currentPath.toString(),"src", "main", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "schedules.csv");
         
-        
         CSVReader csvReader;
         try {
             csvReader = new CSVReaderBuilder(new FileReader(filePath.toString())).withSkipLines(1).build();
@@ -125,24 +101,6 @@ public class AdvancedConstraintsExample7 {
                 
             schedule = new AdvancedConstraints();
             int group = Integer.parseInt(nextRecord[2]);
-            switch (group) {
-                    case 0:
-                        schedule.setTags(zone1);
-                        break;
-                    case 1:
-                        schedule.setTags(zone2);
-                        break;
-                    case 2:
-                        schedule.setTags(zone3);
-                        break;
-                    case 3:
-                        schedule.setTags(zone4);
-                        break;
-                    case 4:
-                        schedule.setTags(zone5);
-                        break;
-                }
-
             Integer timeStart = Integer.parseInt(nextRecord[0]);
             Integer timeEnd = Integer.parseInt(nextRecord[1]);
             
@@ -156,9 +114,9 @@ public class AdvancedConstraintsExample7 {
             }
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(AdvancedConstraintsExample7.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(AdvancedConstraintsExample7.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         }
         
     
@@ -176,10 +134,8 @@ public class AdvancedConstraintsExample7 {
         addresses.add(address);
 
         // Stops
-
         filePath = Paths.get(currentPath.toString(),"src", "main", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
-        
-        
+
         Integer serviceTime = 120;       
         
         try {
@@ -192,31 +148,13 @@ public class AdvancedConstraintsExample7 {
                 address.setLatitude(Double.parseDouble(nextRecord[1]));
                 address.setLongitude(Double.parseDouble(nextRecord[2]));
                 int group = Integer.parseInt(nextRecord[3]);
-
-                switch (group) {
-                    case 0:
-                        address.setTags(zone1);
-                        break;
-                    case 1:
-                        address.setTags(zone2);
-                        break;
-                    case 2:
-                        address.setTags(zone3);
-                        break;
-                    case 3:
-                        address.setTags(zone4);
-                        break;
-                    case 4:
-                        address.setTags(zone5);
-                        break;
-                }
                 addresses.add(address);
             }
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(AdvancedConstraintsExample7.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(AdvancedConstraintsExample7.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         }
         
         

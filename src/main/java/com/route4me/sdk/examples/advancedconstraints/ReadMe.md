@@ -4,71 +4,62 @@
 [![codebeat badge](https://codebeat.co/badges/088f1145-147e-438e-aa03-9fc5323ff235)](https://codebeat.co/projects/github-com-route4me-route4me-java-sdk)
 
 
-## Examples Description:
+## AdvancedConstraints Examples Description: 
 
-### AdvancedConstraints1
+### 1
 
 TEST CASE: Tags and Different Time Windows Fleets
 
-### AdvancedConstraints2
+### 2
 
 TEST CASE: Some addresses without Tags
 
-### AdvancedConstraints3
+### 3
 
 TEST CASE: Driver's Shift 
 
-### AdvancedConstraints4
+### 4
 
 TEST CASE: Driver's Skills
 
-### AdvancedConstraints5
+### 5
 
-TEST CASE: Drivers Schedules with Territories
+TEST CASE: Drivers Schedules with Territories V4
 
 - 10 Drivers
 - 3 Schedules
 - 3 Territories
 
-### AdvancedConstraints6
+### 6
 
-TEST CASE: Drivers Schedules with Territories
+TEST CASE: Drivers Schedules with Territories V3
 
 - 2000 stops
 - 30 Schedules
 - 3 Territories
 
-### AdvancedConstraints7
+### 7
 
- TEST CASE: Drivers Schedules with Territories
+ TEST CASE: Drivers Schedules with Territories V2
 
 - 2000 stops
+- 50 Drivers
 - 30 Schedules
 - 5 Territories
 
-### AdvancedConstraints8
+### 8
 
-TEST CASE: Drivers Schedules with Territories
+TEST CASE: Drivers Schedules with Territories V1
 
 - 2000 Stops
 - 50 Drivers
 - 50 Schedules
 
-### AdvancedConstraints9
-
-TEST CASE: Retail Location based of address position id
-
-- Depots Section
-
-### AdvancedConstraints10
-
-TEST CASE: Retail Location based of address position id
-
-### AdvancedConstraints11
+### 9
 
 TEST CASE: Retail Location - setting the address in the advanced constraints
 
-### AdvancedConstraints12
+### 10
 
 TEST CASE: Drivers Schedules with Territories and Retail Location
 
@@ -77,9 +68,13 @@ TEST CASE: Drivers Schedules with Territories and Retail Location
 - 3 Territories
 - Retail Location
 
-### AdvancedConstraints13
+### 11
 
 TEST CASE: Drivers Schedules with Address from Territories created in Route4Me
 
 - 3 Territories
 - 3 Schedules
+
+### 12
+
+TEST CASE: PersistentLocation

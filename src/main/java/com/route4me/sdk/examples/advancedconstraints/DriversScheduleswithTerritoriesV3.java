@@ -32,7 +32,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-public class AdvancedConstraintsExample12 {
+public class DriversScheduleswithTerritoriesV3 {
 
     public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2, List<String> zone3, Integer serviceTime) {
         List<Address> addresses = new ArrayList<>();
@@ -63,9 +63,9 @@ public class AdvancedConstraintsExample12 {
             }
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(AdvancedConstraintsExample12.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DriversScheduleswithTerritoriesV3.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(AdvancedConstraintsExample12.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DriversScheduleswithTerritoriesV3.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return addresses;
@@ -73,15 +73,14 @@ public class AdvancedConstraintsExample12 {
     }
 
     //**********************************************************************
-    // TEST CASE: Drivers Schedules with Territories and Retail Location
+    // TEST CASE: Drivers Schedules with Territories
     // 2000 Stops
     // 30 Schedules
     // 3 Territories
-    // Retail Location
     //**********************************************************************
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
-        RoutingManager manager = new RoutingManager(apiKey, Boolean.TRUE);
+        RoutingManager manager = new RoutingManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
 
         // General Route Parameters
@@ -111,12 +110,6 @@ public class AdvancedConstraintsExample12 {
         List<String> zone = new ArrayList<>();
         List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
 
-        Address retailLocationAddress = new Address("RETAIL LOCATION", "RETAIL LOCATION",  25.8741751,-80.1288583, 300);
-         
-        List <Object> locationsSequence = Arrays.asList("", retailLocationAddress);
-        
-        
-        
         for (int i = 0; i < 30; i++) {
             schedule = new AdvancedConstraints();
             switch (i % 3) {
@@ -137,8 +130,6 @@ public class AdvancedConstraintsExample12 {
             List<Integer> timeWindowSchedule = Arrays.asList((8 + 5) * 3600, (11 + 5) * 3600);
             timeWindowsSchedule.add(timeWindowSchedule);
             schedule.setAvailableTimeWindows(timeWindowsSchedule);
-            schedule.setLocationSequencePattern(locationsSequence);
-
             advancedConstraints.add(schedule);
         }
 
