@@ -28,7 +28,7 @@ import java.util.logging.Logger;
  *
  * @author juan
  */
-public class AdvancedConstraintsExample13 {
+public class OptimizationUsingTerritoriesAddresses {
 
  
 
@@ -151,7 +151,7 @@ public class AdvancedConstraintsExample13 {
                 e.printStackTrace();
             }
         } catch (APIException ex) {
-            Logger.getLogger(AdvancedConstraintsExample13.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(OptimizationUsingTerritoriesAddresses.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }

@@ -24,7 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 
 
-public class AdvancedConstraintsExample1 {
+public class SomeAddressesWithoutTags {
 
     public static void main(String[] args) {
         String apiKey = "11111111111111111111111111111111";
@@ -32,9 +32,9 @@ public class AdvancedConstraintsExample1 {
         OptimizationParameters optParameters = new OptimizationParameters();
 
         //**********************************************************************
-        // TEST CASE: Tags and Different Time Windows Fleets
+        // TEST CASE: Some addresses without Tags
         //**********************************************************************
-
+        
         
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
@@ -45,7 +45,7 @@ public class AdvancedConstraintsExample1 {
         parameters.setRouteMaxDuration(86400);
         parameters.setVehicleCapacity("100");
         parameters.setVehicleMaxDistanceMi("10000");
-        parameters.setRouteName("Fleet Example - Single Depot, Multiple Driver");
+        parameters.setRouteName("Fleet Example 2 - Single Depot, Multiple Driver");
         parameters.setOptimize(Optimize.DISTANCE.toString());
         parameters.setDistanceUnit(DistanceUnit.MI.toString());
         parameters.setDeviceType(DeviceType.WEB.toString());
@@ -56,7 +56,7 @@ public class AdvancedConstraintsExample1 {
         List<String> tags2 = Arrays.asList("TAG003");
 
         // Feets
-        // AdvancedConstraintsExample1 1
+        // AdvancedConstraintsExample 1
         AdvancedConstraints advancedConstraint1 = new AdvancedConstraints();
         advancedConstraint1.setMaxCapacity(200);
         advancedConstraint1.setMembersCount(10);
@@ -65,10 +65,10 @@ public class AdvancedConstraintsExample1 {
         List<Integer> timeWindowFleet1 = Arrays.asList(25200, 75000);
         timeWindowsFleet1.add(timeWindowFleet1);
         advancedConstraint1.setAvailableTimeWindows(timeWindowsFleet1);
-        // AdvancedConstraintsExample1 2
+        // AdvancedConstraintsExample 2
         AdvancedConstraints advancedConstraint2 = new AdvancedConstraints();
-        advancedConstraint2.setMaxCapacity(200);
-        advancedConstraint2.setMembersCount(10);
+        advancedConstraint2.setMaxCapacity(500);
+        advancedConstraint2.setMembersCount(6);
         advancedConstraint2.setTags(tags2);
         List<List<Integer>> timeWindowsFleet2 = new ArrayList<>();
         List<Integer> timeWindowFleet2 = Arrays.asList(45200, 95000);
@@ -101,17 +101,15 @@ public class AdvancedConstraintsExample1 {
         address = new Address("4629 HILLSIDE DRIVE, Louisville, KY, 40216", 38.176067, -85.824638, 300);
         address.setTags(tags1);
         addresses.add(address);
-        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
-        address.setTags(tags2);
-        addresses.add(address);
         address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
         address.setTags(tags1);
         addresses.add(address);
+        // Addresses Without Tags will be excluded from the route. 
         address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
-        address.setTags(tags1);
         addresses.add(address);
         address = new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214", 38.162472, -85.792854, 300);
-        address.setTags(tags2);
+        addresses.add(address);
+        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
         addresses.add(address);
 
         optParameters.setAddresses(addresses);
