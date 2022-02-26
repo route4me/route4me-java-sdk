@@ -4,6 +4,7 @@ package com.route4me.sdk.services.routing;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import com.route4me.sdk.services.notes.Note;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import lombok.Data;
@@ -217,6 +218,9 @@ public class Address {
     }
 
     public void addCustomField(String key, Object value) {
+        if (this.custom_fields == null) {
+            this.custom_fields = new HashMap<>();
+        }
         this.custom_fields.put(key, value);
     }
 }

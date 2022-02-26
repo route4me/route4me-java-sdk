@@ -3,6 +3,7 @@ package com.route4me.sdk.services.routing;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
+import com.route4me.sdk.services.routing.balance.Balance;
 import java.util.List;
 import lombok.Data;
 
@@ -69,6 +70,8 @@ public class Parameters {
     private Boolean hasTrailer;
     @SerializedName("parts")
     private Number parts;
+    @SerializedName("parts_min")
+    private Number partsMin;
     @SerializedName("trailer_weight_t")
     private Number trailerWeightT;
     @SerializedName("limited_weight_t")
@@ -111,9 +114,15 @@ public class Parameters {
     private Boolean isDynamicStartTime;
     @SerializedName("depots")
     private List<Object> depots;
-    
-    
+    @QueryParameter("use_mixed_pickup_delivery_demands")
+    @SerializedName("use_mixed_pickup_delivery_demands")
+    private boolean useMixedPickupDeliveryDemands;
+    @QueryParameter("balance")
+    @SerializedName("balance")
+    private Balance balance;
 
+    public void isUseMixedPickupDeliveryDemands(boolean useMixedPickupDeliveryDemands) {
+        this.useMixedPickupDeliveryDemands = useMixedPickupDeliveryDemands;
+    }
 
-    
 }
