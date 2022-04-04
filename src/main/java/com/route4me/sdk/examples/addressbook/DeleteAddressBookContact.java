@@ -10,7 +10,7 @@ import java.util.List;
 public class DeleteAddressBookContact {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         AddressBookManager addressBookManager = new AddressBookManager(apiKey);
         Contact contact = new Contact();
         contact.setFirstName("Juan");

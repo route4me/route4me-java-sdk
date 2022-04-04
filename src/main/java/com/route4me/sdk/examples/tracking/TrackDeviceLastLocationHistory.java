@@ -7,7 +7,7 @@ import com.route4me.sdk.services.tracking.TrackingManager;
 public class TrackDeviceLastLocationHistory {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         TrackingManager manager = new TrackingManager(apiKey);
         try {
             DataObject obj = manager.getLastLocation("1402075EBA9A32939B2696DB1D7EE48E");

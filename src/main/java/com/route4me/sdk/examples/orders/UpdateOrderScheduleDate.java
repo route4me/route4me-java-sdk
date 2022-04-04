@@ -7,7 +7,7 @@ import com.route4me.sdk.services.orders.OrdersManager;
 
 public class UpdateOrderScheduleDate {
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         OrdersManager manager = new OrdersManager(apiKey);
         try {
             Order order = manager.getOrder(1189380);

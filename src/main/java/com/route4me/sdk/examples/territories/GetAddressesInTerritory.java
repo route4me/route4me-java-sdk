@@ -15,7 +15,7 @@ public class GetAddressesInTerritory {
 
     public static void main(String[] args) {
         try {
-            String apiKey = "11111111111111111111111111111111";
+            String apiKey = System.getenv("R4M_API_KEY");
             TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
             List<Territory> territories = territoriesManager.getTerritories();
             String territoryID;

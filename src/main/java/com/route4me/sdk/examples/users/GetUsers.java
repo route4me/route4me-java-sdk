@@ -11,7 +11,7 @@ import java.util.List;
  */
 public class GetUsers {
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         UsersManager manager = new UsersManager(apiKey);
         try {
             List<User> users = manager.getUsers(10, 10);

@@ -126,9 +126,11 @@ public class DriversDifferentWorkingTimeWithTerritories {
             for (int j = 0; j < 2; j++) {
                 switch (j) {
                     case 0:
+                        memberCount = parameters.getParts().intValue();
                         timeWindowEnd = (11 + 5) * 3600; //Part Time
                         break;
                     case 1:
+                        memberCount = parameters.getParts().intValue();
                         timeWindowEnd = (15 + 5) * 3600; //Full Time
                         break;
                 }

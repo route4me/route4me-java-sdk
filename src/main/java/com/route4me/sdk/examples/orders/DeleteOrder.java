@@ -10,7 +10,7 @@ import java.util.List;
 
 public class DeleteOrder {
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         OrdersManager manager = new OrdersManager(apiKey);
         try {
             List<Order> orders = manager.getOrders(new OrderRequest().setQuery("Arthur Kill Rd & Clay Pit Rd"));

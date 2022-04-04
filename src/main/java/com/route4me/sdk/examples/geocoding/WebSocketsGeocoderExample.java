@@ -16,7 +16,7 @@ import java.util.logging.Logger;
 public class WebSocketsGeocoderExample {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         GeocodingManager geocodingManager = new GeocodingManager(apiKey);
 
         List<Address> addresses = new ArrayList<>();

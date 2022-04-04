@@ -18,7 +18,7 @@ import java.util.logging.Logger;
 public class TelematicsVendors {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         TelematicsManager manager = new TelematicsManager(apiKey);
         try {
             TelematicsVendor vendors[] = manager.getTelematicsVendor("a8a60c1fccb5db60bbb9ca6a6ff71aef");

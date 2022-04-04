@@ -16,7 +16,7 @@ import com.route4me.sdk.services.routing.RoutingManager;
 public class RenameRoute {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
         try {
             RouteRenamedStatus status = routeManager.renameRoute("Renamed Route", "064E14375541A4ECADCF9B3DDAB6958D");

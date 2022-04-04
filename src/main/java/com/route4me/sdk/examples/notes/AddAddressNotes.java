@@ -14,7 +14,7 @@ import java.util.List;
 public class AddAddressNotes {
 
     public static void main(String[] args) throws APIException {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
         List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(10));
         Route responseObject = routeManager.getRoute(new RoutesRequest().setId(routes.get(0).getId()));

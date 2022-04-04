@@ -13,7 +13,7 @@ import java.util.List;
 public class GenericExampleUsingProxy {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         String proxyHost = "YOUR_PROXY_HOST";
         int proxyPort = 8080;
         String proxySchema = "https";

@@ -31,7 +31,7 @@ public class DriversSkills {
     //**********************************************************************
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
         

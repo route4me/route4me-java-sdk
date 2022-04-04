@@ -11,7 +11,7 @@ import java.util.List;
 public class GetOrdersByScheduledForYYMMDDLimitOffset {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         OrdersManager manager = new OrdersManager(apiKey);
         try {
             List<String> scheduledDate = Arrays.asList("2021-09-10", "2021-09-10");

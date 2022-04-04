@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class AddTerritory {
     public static void main(String[] args) throws APIException {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
         List<String> polyTerritoryDataList = new ArrayList<>();
         polyTerritoryDataList.add("56.127184156131065,56.93115234375");

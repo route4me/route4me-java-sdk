@@ -23,7 +23,7 @@ import java.util.List;
 public class PredictOptimizationTimeExample1 {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         PredictOptimizationTimeManager manager = new PredictOptimizationTimeManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
 

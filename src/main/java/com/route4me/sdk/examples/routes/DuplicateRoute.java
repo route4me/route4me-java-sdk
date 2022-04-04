@@ -13,7 +13,7 @@ import java.util.List;
 public class DuplicateRoute {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
         try {
             List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(10));

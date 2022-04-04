@@ -9,7 +9,7 @@ import com.route4me.sdk.services.activities.ActivityType;
 
 public class GetAreaAddedActivities {
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         ActivityManager manager = new ActivityManager(apiKey);
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.AREA_ADDED));

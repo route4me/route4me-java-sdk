@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  */
 public class GetDepotsFromAddressBook {
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         AddressBookManager manager = new AddressBookManager(apiKey);
         try {
             List<Contact> depots = manager.getDepotsFromAddressBook();

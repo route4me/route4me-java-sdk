@@ -19,7 +19,7 @@ public class ThreadBasedGeocoderExample {
     private static final Logger logger = LogManager.getLogger(ThreadBasedGeocoderExample.class);
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
 
         GeocodingManager manager = new GeocodingManager(apiKey);
 
