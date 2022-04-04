@@ -12,7 +12,7 @@ import com.route4me.sdk.services.routing.RoutingManager;
 public class UpdateRouteNameDriver {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
         try {
             // Create Route Object and Set the RouteID of the existing Route

@@ -18,7 +18,7 @@ import java.util.logging.Logger;
  */
 public class DeleteOptimization {
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
         ArrayList<String> optimizationProblemIDs = new ArrayList<String>();
         optimizationProblemIDs.add("07C248AE57754B3EB91D1C934AD35B2D");

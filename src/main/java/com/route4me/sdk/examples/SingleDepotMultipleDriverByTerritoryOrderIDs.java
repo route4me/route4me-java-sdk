@@ -32,7 +32,7 @@ public class SingleDepotMultipleDriverByTerritoryOrderIDs {
 
     public static void main(String[] args) {
         try {
-            String apiKey = "11111111111111111111111111111111";
+            String apiKey = System.getenv("R4M_API_KEY");
             RoutingManager manager = new RoutingManager(apiKey, true);
             OptimizationParameters optParameters = new OptimizationParameters();
             

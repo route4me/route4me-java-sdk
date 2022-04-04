@@ -15,7 +15,7 @@ import com.route4me.sdk.services.vehicles.VehiclesManager;
  */
 public class NewVehicle {
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         VehiclesManager manager = new VehiclesManager(apiKey);
         try {
             Vehicles vehicle = new Vehicles();

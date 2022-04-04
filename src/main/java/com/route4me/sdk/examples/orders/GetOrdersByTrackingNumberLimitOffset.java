@@ -11,7 +11,7 @@ import java.util.List;
 
 public class GetOrdersByTrackingNumberLimitOffset {
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         OrdersManager manager = new OrdersManager(apiKey);
 
         List<String> trackingNumbers = Arrays.asList("TRACKING01", "TRACKING02", "TRACKING03");

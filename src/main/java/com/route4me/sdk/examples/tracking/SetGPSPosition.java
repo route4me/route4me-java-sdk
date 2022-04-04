@@ -11,7 +11,7 @@ import com.route4me.sdk.services.tracking.TrackingManager;
 public class SetGPSPosition {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         TrackingManager manager = new TrackingManager(apiKey);
         GPSPosition position = new GPSPosition().setLatitude(33.14384).setLongitude(-83.22466).setAltitude(10D);
         position.setFormat(Constants.Format.CSV);

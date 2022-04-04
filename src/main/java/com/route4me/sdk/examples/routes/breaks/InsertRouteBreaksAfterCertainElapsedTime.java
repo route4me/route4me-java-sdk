@@ -17,7 +17,7 @@ import java.util.logging.Logger;
 public class InsertRouteBreaksAfterCertainElapsedTime {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         RouteBreaksManager manager = new RouteBreaksManager(apiKey);
         try {
             Object response = manager.insertBreakAfterCertainElapsed(900, 3600, true, "E206A767D62BBE4A179A82BB12A1C8D1", "C7330B977303A221ED75501F782F5928");

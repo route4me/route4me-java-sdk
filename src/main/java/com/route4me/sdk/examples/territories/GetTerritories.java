@@ -12,7 +12,7 @@ import java.util.List;
 public class GetTerritories {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
         try {
             List<Territory> territories = territoriesManager.getTerritories();

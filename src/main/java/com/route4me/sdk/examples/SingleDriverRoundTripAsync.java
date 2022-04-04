@@ -11,7 +11,7 @@ import java.util.List;
 public class SingleDriverRoundTripAsync {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         boolean disableRedirects = true;
         RoutingManager manager = new RoutingManager(apiKey, disableRedirects);
         OptimizationParameters optParameters = new OptimizationParameters();

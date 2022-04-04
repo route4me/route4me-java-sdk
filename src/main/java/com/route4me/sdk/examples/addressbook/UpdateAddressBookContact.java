@@ -10,7 +10,7 @@ import java.util.List;
 public class UpdateAddressBookContact {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         AddressBookManager addressBookManager = new AddressBookManager(apiKey);
         try {
             List<Contact> contacts = addressBookManager.getContacts(new ContactsRequest().setLimit(10));

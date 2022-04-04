@@ -16,7 +16,7 @@ import java.util.List;
 public class GetAddressNotes {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routingManager = new RoutingManager(apiKey);
         try {
             List<Route> routes = routingManager.getRoutes(new RoutesRequest().setLimit(2));

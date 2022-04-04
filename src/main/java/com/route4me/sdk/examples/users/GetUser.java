@@ -17,7 +17,7 @@ import java.util.logging.Logger;
  */
 public class GetUser {
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         UsersManager manager = new UsersManager(apiKey);
             User user;
         try {

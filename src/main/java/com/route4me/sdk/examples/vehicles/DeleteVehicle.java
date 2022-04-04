@@ -16,7 +16,7 @@ import com.route4me.sdk.services.vehicles.VehiclesManager;
 public class DeleteVehicle {
 
     public static void main(String[] args) {
-        String apiKey = "11111111111111111111111111111111";
+        String apiKey = System.getenv("R4M_API_KEY");
         VehiclesManager manager = new VehiclesManager(apiKey);
         String vehicleID = "00F86E30FEC8DAF61A674760E926086F";
         try {
