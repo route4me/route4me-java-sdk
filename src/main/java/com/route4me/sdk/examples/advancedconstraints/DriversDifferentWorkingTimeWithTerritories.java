@@ -76,9 +76,10 @@ public class DriversDifferentWorkingTimeWithTerritories {
     // Partial Time 4h
     // 2000 Stops
     // 3 Territories
+    // 100 Drivers
     //**********************************************************************
     public static void main(String[] args) {
-        String apiKey = "EB6B3F9EC63324BEB0A1432697310BD4";
+        String apiKey = "11111111111111111111111111111111";
         RoutingManager manager = new RoutingManager(apiKey, Boolean.TRUE);
         OptimizationParameters optParameters = new OptimizationParameters();
 
@@ -88,7 +89,7 @@ public class DriversDifferentWorkingTimeWithTerritories {
         parameters.setStoreRoute(Boolean.FALSE);
         parameters.setShareRoute(Boolean.FALSE);
         parameters.setRt(Boolean.TRUE);
-        parameters.setParts(30);
+        parameters.setParts(100);  // Max Number of Drivers
         parameters.setRouteName("Drivers Different Working Time Example - Territories");
         parameters.setTravelMode(TravelMode.DRIVING.toString());
 
@@ -125,11 +126,9 @@ public class DriversDifferentWorkingTimeWithTerritories {
             for (int j = 0; j < 2; j++) {
                 switch (j) {
                     case 0:
-                        memberCount = 10;
                         timeWindowEnd = (11 + 5) * 3600; //Part Time
                         break;
                     case 1:
-                        memberCount = 20;
                         timeWindowEnd = (15 + 5) * 3600; //Full Time
                         break;
                 }
