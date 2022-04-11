@@ -27,4 +27,8 @@ public class RoutesRequest {
     private Boolean reoptimize;
     @QueryParameter("recompute_directions")
     private Boolean recomputeDirections;
+    @QueryParameter("start_date")
+    private String startDate;
+    @QueryParameter("end_date")
+    private String endDate;
 }
