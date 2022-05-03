@@ -25,4 +25,7 @@ public class DataObject {
     private Links links;
     @SerializedName("driver_alias")
     private String driverAlias;
+    @SerializedName("optimal_position")
+    private Boolean optimalPosition;
+
 }
