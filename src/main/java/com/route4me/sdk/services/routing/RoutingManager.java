@@ -99,10 +99,15 @@ public class RoutingManager extends Manager {
     }
 
     public DataObject addAddressesToRoute(String routeId, List<Address> addresses) throws APIException {
+        return this.addAddressesToRoute(routeId, addresses, false);
+    }
+
+    public DataObject addAddressesToRoute(String routeId, List<Address> addresses, Boolean optimalPosition) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         builder.setParameter("route_id", routeId);
         DataObject dataObj = new DataObject();
         dataObj.setAddresses(addresses);
+        dataObj.setOptimalPosition(optimalPosition);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(dataObj), DataObject.class);
     }
 
