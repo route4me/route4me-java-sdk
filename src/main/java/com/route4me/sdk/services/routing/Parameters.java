@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
 import com.route4me.sdk.services.routing.balance.Balance;
+import com.route4me.sdk.services.routing.override.addresses.OverrideAddresses;
 import java.util.List;
 import lombok.Data;
 
@@ -30,8 +31,15 @@ public class Parameters {
     private String optimize;
     @SerializedName("lock_last")
     private Boolean lockLast;
+    @QueryParameter("ignore_tw")   
+    @SerializedName("ignore_tw")
+    private Boolean ignoreTW;
     @SerializedName("vehicle_capacity")
-    private String vehicleCapacity;
+    private Integer vehicleCapacity;
+    @SerializedName("vehicle_max_cargo_weight")
+    private Double vehicleMaxCargoWeight;
+    @SerializedName("vehicle_max_cargo_volume")
+    private Double vehicleMaxCargoVolume;
     @SerializedName("vehicle_max_distance_mi")
     private String vehicleMaxDistanceMi;
     @SerializedName("distance_unit")
@@ -110,6 +118,9 @@ public class Parameters {
     @QueryParameter("advanced_constraints")
     @SerializedName("advanced_constraints")
     private List<AdvancedConstraints> advancedConstraints;
+    @QueryParameter("override_addresses")
+    @SerializedName("override_addresses")
+    private OverrideAddresses overrideAddresses;
     @SerializedName("is_dynamic_start_time")
     private Boolean isDynamicStartTime;
     @SerializedName("depots")
@@ -120,9 +131,46 @@ public class Parameters {
     @QueryParameter("balance")
     @SerializedName("balance")
     private Balance balance;
-
+    @QueryParameter("target_duration")
+    @SerializedName("target_duration")
+    private Double targetDuration;
+    @QueryParameter("target_distance")
+    @SerializedName("target_distance")
+    private Double targetDistance;
+    @QueryParameter("target_wait_by_tail_size")
+    @SerializedName("target_wait_by_tail_size")
+    private Double targetWaitByTailSize;
+    @QueryParameter("dev_lat")
+    @SerializedName("dev_lat")
+    private Double devLat;
+    @QueryParameter("dev_lng")
+    @SerializedName("dev_lng")
+    private Double devLng;
+    @QueryParameter("avoidance_zones")
+    @SerializedName("avoidance_zones")
+    private List<String> avoidanceZones;
+    @QueryParameter("subtour_max_revenue")
+    @SerializedName("subtour_max_revenue")
+    private Integer subtourMaxRevenue;
+    
+    
     public void isUseMixedPickupDeliveryDemands(boolean useMixedPickupDeliveryDemands) {
         this.useMixedPickupDeliveryDemands = useMixedPickupDeliveryDemands;
     }
+
+    /**
+     * @param vehicleCapacity the vehicleCapacity to set
+     */
+    public void setVehicleCapacity(Integer vehicleCapacity) {
+        this.vehicleCapacity = vehicleCapacity;
+    }
+
+    /**
+     * @param vehicleCapacity the vehicleCapacity to set
+     */
+    public void setVehicleCapacity(String vehicleCapacity) {
+        this.vehicleCapacity = Integer.parseInt(vehicleCapacity);
+    }
+    
 
 }

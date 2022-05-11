@@ -8,6 +8,8 @@ import lombok.Data;
 public class Order {
     @SerializedName("created_timestamp")
     private Long created;
+    @SerializedName("updated_timestamp")
+    private Long updatedTimestamp;
     @SerializedName("order_id")
     private Long id;
     @SerializedName("order_status_id")
@@ -48,6 +50,10 @@ public class Order {
     private String city;
     @SerializedName("address_state_id")
     private String stateID;
+    @SerializedName("address_country_id")
+    private String addressCountryID;
+    @SerializedName("address_zip")
+    private String addressZip;
     @SerializedName("cached_lat")
     private Double cachedLatitude;
     @SerializedName("cached_lng")
@@ -62,7 +68,6 @@ public class Order {
     private Long lastVisited;
     @SerializedName("last_routed_timestamp")
     private Long lastRouted;
-
     @SerializedName("local_time_window_start")
     private Long localTimeWindowStart;
     @SerializedName("local_time_window_end")
@@ -79,7 +84,6 @@ public class Order {
     private String color;
     @SerializedName("order_icon")
     private String orderIcon;
-
     @SerializedName("is_validated")
     private Boolean validated;
     @SerializedName("is_pending")
@@ -94,4 +98,19 @@ public class Order {
     private Integer lastStatus;
     @SerializedName("tracking_number")
     private String trackingNumber;
+    @SerializedName("visited_count")
+    private Integer visitedCount;
+    @SerializedName("address_stop_type")
+    private String addressStopType;
+    @SerializedName("sorted_on_date")
+    private String sortedOnDate;
+    @SerializedName("root_member_id")
+    private Integer rootMemberID;
+    @SerializedName("organization_id")
+    private Integer organizationID;
+    @SerializedName("done_day_id")
+    private Integer doneDayID;
+    @SerializedName("custom_user_fields")
+    private OrderCustomUserFields customUserFields;
+    
 }

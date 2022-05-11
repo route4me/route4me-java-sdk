@@ -48,6 +48,7 @@ public class DynamicInsertStopOptimalAfterLastVisited {
         RoutingManager routeManager = new RoutingManager(apiKey);
 
         Address address = new Address("Ascension St. Vincent Hospital - Indianapolis", 39.921478, -86.175649);
+
         try {
             List<MatchedRoute> matchedRoutes = dynamicManager.lookForNewDestination("2022-04-27", address.getLatitude(), address.getLongitude(), InsertMode.OPTIMAL_AFTER_LAST_VISITED, RecommendedBy.DISTANCE, 5);
             for (MatchedRoute matchedRoute : matchedRoutes) {
