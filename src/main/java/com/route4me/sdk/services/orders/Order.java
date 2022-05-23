@@ -2,6 +2,7 @@ package com.route4me.sdk.services.orders;
 
 
 import com.google.gson.annotations.SerializedName;
+import java.util.List;
 import lombok.Data;
 
 @Data
@@ -111,6 +112,6 @@ public class Order {
     @SerializedName("done_day_id")
     private Integer doneDayID;
     @SerializedName("custom_user_fields")
-    private OrderCustomUserFields customUserFields;
+    private List<OrderCustomUserFields> customUserFields;
     
 }
