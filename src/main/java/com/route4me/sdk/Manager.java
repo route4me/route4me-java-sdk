@@ -209,6 +209,7 @@ public abstract class Manager {
             } else if (body != null) {
                 throw new RuntimeException("Method does not support body!");
             }
+
             //try with resources to close streams
             try (CloseableHttpResponse resp = client.execute(hrb); InputStream is = resp.getEntity().getContent()) {
                 //response should always be present
