@@ -85,7 +85,7 @@ public class RouteData {
     private String routeDuration;
     @QueryParameter("route_progress")
     @SerializedName("route_progress")
-    private Integer routeProgress;
+    private Double routeProgress;
     @QueryParameter("route_status")
     @SerializedName("route_status")
     private String routeStatus;
