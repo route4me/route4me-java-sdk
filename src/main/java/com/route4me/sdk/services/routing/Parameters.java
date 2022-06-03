@@ -152,6 +152,12 @@ public class Parameters {
     @QueryParameter("subtour_max_revenue")
     @SerializedName("subtour_max_revenue")
     private Integer subtourMaxRevenue;
+
+    @QueryParameter("group_max_routes")
+    @SerializedName("group_max_routes")
+    private List<List<Object>> groupMaxRoutes;
+    
+    
     
     
     public void isUseMixedPickupDeliveryDemands(boolean useMixedPickupDeliveryDemands) {

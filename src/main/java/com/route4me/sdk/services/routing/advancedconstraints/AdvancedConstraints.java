@@ -16,7 +16,7 @@ public class AdvancedConstraints {
     
     @SerializedName("max_cargo_volume")
     @QueryParameter("max_cargo_volume")
-    private float maxCargoVolume;
+    private Double maxCargoVolume;
 
     @SerializedName("max_capacity")
     @QueryParameter("max_capacity")
@@ -46,6 +46,9 @@ public class AdvancedConstraints {
     @QueryParameter("location_sequence_pattern")
     private List<Object> locationSequencePattern;
 
+    @SerializedName("group")
+    @QueryParameter("group")
+    private String group;
     
     
 }
