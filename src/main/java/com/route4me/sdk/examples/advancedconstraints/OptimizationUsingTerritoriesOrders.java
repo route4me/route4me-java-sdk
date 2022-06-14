@@ -28,7 +28,7 @@ import java.util.logging.Logger;
  *
  * @author juan
  */
-public class OptimizationUsingTerritoriesAddresses {
+public class OptimizationUsingTerritoriesOrders {
 
  
 
@@ -39,7 +39,7 @@ public class OptimizationUsingTerritoriesAddresses {
             OptimizationParameters optParameters = new OptimizationParameters();
 
             //**********************************************************************
-            // TEST CASE: Optimization using Territories addresses
+            // TEST CASE: Optimization using Territories Orders
             // 3 Territories
             //**********************************************************************
             
@@ -51,7 +51,7 @@ public class OptimizationUsingTerritoriesAddresses {
             parameters.setStoreRoute(Boolean.FALSE);
             parameters.setShareRoute(Boolean.FALSE);
             parameters.setRouteTime((8 + 5) * 3600);
-            parameters.setRouteName("Single Depot, Multiple Driver - 3 Territories Address IDs");
+            parameters.setRouteName("Single Depot, Multiple Driver - 3 Territories Order IDs");
             parameters.setDeviceType(DeviceType.WEB.toString());
             parameters.setTravelMode(TravelMode.DRIVING.toString());
             optParameters.setParameters(parameters);
@@ -74,27 +74,27 @@ public class OptimizationUsingTerritoriesAddresses {
 
             Address address;
             
-            Territory territory = territoriesManager.getAddressesInTerritory(zone1.get(0));
-            for (Integer contactId:  territory.getAddresses()){
+            Territory territory = territoriesManager.getOrdersInTerritory(zone1.get(0));
+            for (Integer orderId:  territory.getOrders()){
                 address = new Address();
-                address.setContactId(contactId);
+                address.setOrderId(orderId);
                 address.setTags(zone1);
                 addresses.add(address);
             }
 
-            territory = territoriesManager.getAddressesInTerritory(zone2.get(0));
-            for (Integer contactId:  territory.getAddresses()){
+            territory = territoriesManager.getOrdersInTerritory(zone2.get(0));
+            for (Integer orderId:  territory.getOrders()){
                 address = new Address();
-                address.setContactId(contactId);
+                address.setOrderId(orderId);
                 address.setTags(zone2);
                 addresses.add(address);
             }
 
-            territory = territoriesManager.getAddressesInTerritory(zone3.get(0));
-            for (Integer contactId:  territory.getAddresses()){
+            territory = territoriesManager.getOrdersInTerritory(zone3.get(0));
+            for (Integer orderId:  territory.getOrders()){
                 address = new Address();
                 address.setTags(zone3);
-                address.setContactId(contactId);
+                address.setOrderId(orderId);
                 addresses.add(address);
             }
 
@@ -151,7 +151,7 @@ public class OptimizationUsingTerritoriesAddresses {
                 e.printStackTrace();
             }
         } catch (APIException ex) {
-            Logger.getLogger(OptimizationUsingTerritoriesAddresses.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(OptimizationUsingTerritoriesOrders.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 }
