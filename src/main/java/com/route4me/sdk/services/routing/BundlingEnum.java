@@ -19,7 +19,8 @@ public class BundlingEnum {
         BUNDLING_BY_ADDRESS(1),
         BUNDLING_BY_COORDINATES(2),
         BUNDLING_BY_ANY_STATIC_ADDRESS_FIELD(3),
-        BUNDLING_BY_ANY_CUSTOM_DATA(4);
+        BUNDLING_BY_ANY_CUSTOM_DATA(4),
+        BUNDLING_BY_MULTIPLE_FIELDS(5);
 
         private int value;
         private static final Map<Integer, BundlingEnum.BundlingMode> lookup
