@@ -7,7 +7,7 @@ package com.route4me.sdk.services.routing.advancedconstraints;
 
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
-import com.route4me.sdk.services.routing.Source;
+import com.route4me.sdk.services.routing.Address;
 import java.util.List;
 import lombok.Data;
 
@@ -40,7 +40,7 @@ public class AdvancedConstraints {
     
     @SerializedName("depot_address")
     @QueryParameter("depot_address")
-    private Source depotAddress;
+    private Address depotAddress;
 
     @SerializedName("location_sequence_pattern")
     @QueryParameter("location_sequence_pattern")
