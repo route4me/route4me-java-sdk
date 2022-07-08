@@ -58,7 +58,7 @@ public class BundlingUsingCustomField {
 
         Bundling bundling = new Bundling();
 
-        bundling.setMergeMode(BundlingEnum.BundledItemsMode.MERGE_INTO_SINGLE_DESTINATION.getValue());
+        bundling.setMergeMode(BundlingEnum.BundledItemsMode.KEEP_AS_SEPARATE_DESTINATIONS.getValue());
 
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ANY_CUSTOM_DATA.getValue());
         List<String> modeParams = new ArrayList<>();

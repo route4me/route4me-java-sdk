@@ -44,7 +44,7 @@ public class BundlingUsingAddressStaticField {
 
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ANY_STATIC_ADDRESS_FIELD.getValue());
         
-        bundling.setMergeMode(BundlingEnum.BundledItemsMode.MERGE_INTO_SINGLE_DESTINATION.getValue());
+        bundling.setMergeMode(BundlingEnum.BundledItemsMode.KEEP_AS_SEPARATE_DESTINATIONS.getValue());
 
         
         List<String> modeParams = new ArrayList<>();
