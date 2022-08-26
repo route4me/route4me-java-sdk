@@ -9,6 +9,7 @@ import java.util.List;
 
 @Data
 public class Route extends DataObject {
+
     @SerializedName("route_id")
     @QueryParameter("route_id")
     private String id;
@@ -79,4 +80,7 @@ public class Route extends DataObject {
     List<Note> notes;
     @SerializedName("path")
     private List<GeoCoordinates> path;
+    @SerializedName("unique_destination_count")
+    private Integer uniqueDestinationCount;
+
 }
