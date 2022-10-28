@@ -25,6 +25,9 @@ public class Bundling {
     @SerializedName("merge_mode")
     @QueryParameter("merge_mode")
     private Integer mergeMode = 1;
+    @SerializedName("time_window_rules")
+    @QueryParameter("time_window_rules")
+    private TimeWindowRules timeWindowRules;
 
     
 }
