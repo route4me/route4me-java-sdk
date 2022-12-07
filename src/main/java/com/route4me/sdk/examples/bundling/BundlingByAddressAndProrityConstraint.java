@@ -136,7 +136,7 @@ public class BundlingByAddressAndProrityConstraint {
         bundling.setMergeMode(BundlingEnum.BundledItemsMode.KEEP_AS_SEPARATE_DESTINATIONS.getValue());
 
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ADDRESS.getValue());
-        List<String> modeParams = Arrays.asList("custom_fields.BUNDLING_KEY", "custom_fields.LOCATION_ID");
+        List<String> modeParams = Arrays.asList("BUNDLING_KEY", "LOCATION_ID");
         bundling.setModeParams(modeParams);
         ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
         serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingFirstItemMode.USE_CUSTOM_SERVICE_TIME.getValue());
