@@ -24,6 +24,7 @@ import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.logging.log4j.LogManager;
 
 public abstract class Manager {
@@ -34,7 +35,6 @@ public abstract class Manager {
     private RequestConfig requestProxyConfig;
     private boolean disableRedirects;
     private String callBackURL;
-    
 
     public Manager(String apiKey) {
         this.apiKey = apiKey;
@@ -182,9 +182,12 @@ public abstract class Manager {
     }
 
     private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type, String requestContentType) throws APIException {
+        PoolingHttpClientConnectionManager poolingConnManager = new PoolingHttpClientConnectionManager();
+        poolingConnManager.setMaxTotal(10);
+        poolingConnManager.setDefaultMaxPerRoute(10);
+        CloseableHttpClient client = HttpClients.custom().setConnectionManager(poolingConnManager).build();
         try {
             // Redirects Management
-            CloseableHttpClient client = HttpClients.createDefault();
             if (this.disableRedirects) {
                 builder.addParameter("redirect", "0");
                 client = HttpClients.custom().disableRedirectHandling().build();
@@ -259,6 +262,13 @@ public abstract class Manager {
             }
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException(ex);
+        } finally {
+            try {
+                client.close();
+            } catch (IOException ex) {
+                logger.error(ex);
+                return null;
+            }
         }
     }
 
@@ -284,5 +294,5 @@ public abstract class Manager {
     public void setCallBackURL(String callBackURL) {
         this.callBackURL = callBackURL;
     }
-    
+
 }
