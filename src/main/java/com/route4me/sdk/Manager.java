@@ -199,6 +199,9 @@ public abstract class Manager {
                 builder.addParameter("api_key", this.apiKey);
             }
             HttpRequestBase hrb = method.create(builder.build());
+            // Adding User-Agent
+            hrb.setHeader("User-Agent", "Route4Me Java SDK");
+
             if (requestContentType != null) {
                 hrb.setHeader("Content-type", requestContentType);
             }
