@@ -25,6 +25,7 @@ package com.route4me.sdk.services.routing.dynamic.insert;
 
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
+import java.util.List;
 import lombok.Data;
 
 /**
@@ -58,5 +59,8 @@ public class DynamicInsert {
     @SerializedName("max_increase_percent_allowed")
     @QueryParameter("max_increase_percent_allowed")
     private Integer maxIncreasePercentAllowed;
+    @SerializedName("route_ids")
+    @QueryParameter("route_ids")
+    private List<String> routeIDs;
 
 }
