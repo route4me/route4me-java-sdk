@@ -43,7 +43,7 @@ public class PickupDropoffJoint {
 
         address = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.178844, -85.774864, 300);
         address.setPickUp("PD0004");
-        address.setJoint(1);
+        address.setJoint(true);
         address.setAlias("Pickup - Customer 004");
         addresses.add(address);
 

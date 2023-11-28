@@ -7,7 +7,7 @@ package com.route4me.sdk.examples.telematics;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.telematics.TelematicsManager;
-import com.route4me.sdk.services.telematics.TelematicsVendorsInfo;
+import com.route4me.sdk.services.telematics.TelematicsVendorInfo;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -22,8 +22,8 @@ public class TelematicsGetVendorInfo {
         TelematicsManager manager = new TelematicsManager(apiKey);
 
         try {
-            TelematicsVendorsInfo vendor = manager.getTelematicsVendorInfo("3");
-            System.out.println(vendor.getVendor());
+            TelematicsVendorInfo vendor = manager.getTelematicsVendorInfo("3", "62f6197505da3f545c4fc9cb87ae76c9");
+            System.out.println(vendor);
 
         } catch (APIException ex) {
             Logger.getLogger(TelematicsRegisterMember.class.getName()).log(Level.INFO, ex.toString());
