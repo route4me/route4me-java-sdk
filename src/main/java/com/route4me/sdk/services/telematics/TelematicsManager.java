@@ -28,11 +28,19 @@ public class TelematicsManager extends Manager {
         super(apiKey);
     }
 
-    private URIBuilder getTelemaricsVendorURI() {
+    private URIBuilder getTelematicsVendorURI() {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("telematics.route4me.com");
         builder.setPath(TELEMATICS_VENDORS_V4);
+        return builder;
+    }
+
+    private URIBuilder getTelematicsVendorURI(String path) {
+        URIBuilder builder = new URIBuilder();
+        builder.setScheme("https");
+        builder.setHost("api.route4me.com");
+        builder.setPath(path);
         return builder;
     }
 
@@ -50,20 +58,25 @@ public class TelematicsManager extends Manager {
     }
 
     public TelematicsVendorsInfo getTelematicsVendorsInfo() throws APIException {
-        URIBuilder builder = getTelemaricsVendorURI();
+        URIBuilder builder = getTelematicsVendorURI(TELEMATICS_VENDORS_INFO_V4);
         return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorsInfo.class);
-
     }
 
-    public TelematicsVendorsInfo getTelematicsVendorInfo(String vendorID) throws APIException {
-        URIBuilder builder = getTelemaricsVendorURI();
-        builder.setParameter("vendor_id", vendorID);
+    public TelematicsVendorsInfo getTelematicsVendorsInfo(String apiToken) throws APIException {
+        URIBuilder builder = getTelematicsVendorURI(TELEMATICS_VENDORS_INFO_V4);
+        builder.setParameter("api_token", apiToken);
         return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorsInfo.class);
+    }
 
+    public TelematicsVendorInfo getTelematicsVendorInfo(String vendorID, String apiToken) throws APIException {
+        URIBuilder builder = getTelematicsVendorURI(TELEMATICS_VENDORS_INFO_V4);
+        builder.setParameter("api_token", apiToken);
+        builder.setParameter("vendor_id", vendorID);
+        return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorInfo.class);
     }
 
     private TelematicsVendorsInfo searchVendor(String country, String size, String keyWord, String feature, String page, String perPage) throws APIException {
-        URIBuilder builder = getTelemaricsVendorURI();
+        URIBuilder builder = getTelematicsVendorURI();
         if (country != null) {
             builder.setParameter("country", country);
         }
@@ -172,7 +185,7 @@ public class TelematicsManager extends Manager {
     }
 
     public List<TelematicsVendorComparison> compareTelematicsVendors(String vendorIDs) throws APIException {
-        URIBuilder builder = getTelemaricsVendorURI();
+        URIBuilder builder = getTelematicsVendorURI();
         builder.setParameter("vendors", vendorIDs);
         TelematicsVendorsInfo vendors = makeRequest(RequestMethod.GET, builder, "", TelematicsVendorsInfo.class);
         return parseVendorFeaturesComparison(vendors);
