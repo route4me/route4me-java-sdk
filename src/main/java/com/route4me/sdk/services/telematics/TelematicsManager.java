@@ -36,14 +36,6 @@ public class TelematicsManager extends Manager {
         return builder;
     }
 
-    private URIBuilder getTelematicsVendorURI(String path) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("api.route4me.com");
-        builder.setPath(path);
-        return builder;
-    }
-
     public TelematicsMemberRegister registerMember(Integer memberID) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_REGISTER_V4);
         builder.setParameter("member_id", memberID.toString());
@@ -58,21 +50,14 @@ public class TelematicsManager extends Manager {
     }
 
     public TelematicsVendorsInfo getTelematicsVendorsInfo() throws APIException {
-        URIBuilder builder = getTelematicsVendorURI(TELEMATICS_VENDORS_INFO_V4);
+        URIBuilder builder = getTelematicsVendorURI();
         return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorsInfo.class);
     }
 
-    public TelematicsVendorsInfo getTelematicsVendorsInfo(String apiToken) throws APIException {
-        URIBuilder builder = getTelematicsVendorURI(TELEMATICS_VENDORS_INFO_V4);
-        builder.setParameter("api_token", apiToken);
-        return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorsInfo.class);
-    }
-
-    public TelematicsVendorInfo getTelematicsVendorInfo(String vendorID, String apiToken) throws APIException {
-        URIBuilder builder = getTelematicsVendorURI(TELEMATICS_VENDORS_INFO_V4);
-        builder.setParameter("api_token", apiToken);
+    public TelematicsVendorsInfo getTelematicsVendorInfo(String vendorID) throws APIException {
+        URIBuilder builder = getTelematicsVendorURI();
         builder.setParameter("vendor_id", vendorID);
-        return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorInfo.class);
+        return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorsInfo.class);
     }
 
     private TelematicsVendorsInfo searchVendor(String country, String size, String keyWord, String feature, String page, String perPage) throws APIException {
