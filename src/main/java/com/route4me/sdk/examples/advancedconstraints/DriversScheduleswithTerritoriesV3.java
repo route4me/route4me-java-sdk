@@ -160,7 +160,7 @@ public class DriversScheduleswithTerritoriesV3 {
         optParameters.setAddresses(addresses);
 
         try {
-            DataObject responseObject = manager.runOptimization(optParameters);
+            DataObject responseObject = manager.runOptimizationWithRedirect0(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
             System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
             if (responseObject.getAddresses() != null) {
