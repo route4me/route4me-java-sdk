@@ -4,11 +4,10 @@
 [![codebeat badge](https://codebeat.co/badges/088f1145-147e-438e-aa03-9fc5323ff235)](https://codebeat.co/projects/github-com-route4me-route4me-java-sdk)
 
 ### What does Route4Me do?
-In layman's terms Route4Me solves complex variations of the [traveling salesman problem]([https://route4me.com](https://support.route4me.com/route4me-commercial-vehicle-route-planning-and-optimization/)) and the [vehicle routing problem]([https://route4me.com/](https://support.route4me.com/route4me-commercial-vehicle-route-planning-and-optimization/)). In more technical terms, 
-Route4Me solves HP-hard logistics problems that span several mathematical and scientific disciplines such as industrial engineering, operations research, algorithmic graph theory, computational geometry, combinatorial optimization, fleet management, field service management, [telematics](https://telematics.route4me.com/).
+In layman's terms Route4Me solves complex variations of the [traveling salesman problem](https://blog.route4me.com/traveling-salesman-problem/) and the [vehicle routing problem](https://blog.route4me.com/vehicle-routing-problems-real-life-solutions/). In more technical terms, Route4Me solves HP-hard logistics problems that span several mathematical and scientific disciplines such as industrial engineering, operations research, algorithmic graph theory, computational geometry, combinatorial optimization, fleet management, field service management, [telematics](https://telematics.route4me.com/).
 
 ### What does the Route4Me SDK permit me to do?
-This SDK makes it easier for you use the Route4Me API. The API has many features, but the primary features are related to creating orders and then [creating optimally sequenced driving routes](https://route4me.com) for many drivers.
+This SDK makes it easier for you use the Route4Me API. The API has many features, including [route optimizatio](https://route4me.io/),  and the primary features are related to creating orders and then [creating optimally sequenced driving routes](https://route4me.com) for many drivers.
 
 ### Who can use the Route4Me SDK (and API)?
 The service is typically used by organizations who must route many drivers to many destinations. In addition to route optimization for new (future) routes, the API can also be used to analyze historical routes, and to distribute routes to field personnel.
@@ -39,7 +38,7 @@ Viewing a Route
 There are two typical integration strategies that we recommend.  Using this SDK, you can make optimization requests and then the SDK polls the Route4Me API to detect state changes as the optimization progresses. Alternatively, you can provide a webhook/callback url, and the API will notify that callback URL every time there is a state change.
 
 ### I don't need route management or mobile capabilities. Can I just use the route planning and route optimization API?
-There are no additional costs to use the web interface or the mobile application, which mean that you can use only the API without paying extra
+There are no additional costs to use the web interface or the mobile application to view your [optimized routes](https://support.route4me.com/route-planner-routes-list/), which mean that you can use only the API without paying extra
 for our web app or mobile app.
 
 ### How fast is the route Route4Me Optimization Web Service?
