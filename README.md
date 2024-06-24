@@ -4,7 +4,7 @@
 [![codebeat badge](https://codebeat.co/badges/088f1145-147e-438e-aa03-9fc5323ff235)](https://codebeat.co/projects/github-com-route4me-route4me-java-sdk)
 
 ### What does Route4Me do?
-In layman's terms Route4Me solves complex variations of the [traveling salesman problem](https://blog.route4me.com/traveling-salesman-problem/) and the [vehicle routing problem](https://blog.route4me.com/vehicle-routing-problems-real-life-solutions/). In more technical terms, Route4Me solves HP-hard logistics problems that span several mathematical and scientific disciplines such as industrial engineering, operations research, algorithmic graph theory, computational geometry, combinatorial optimization, fleet management, field service management, [telematics](https://telematics.route4me.com/).
+In layman's terms Route4Me solves complex variations of the [traveling salesman problem](https://blog.route4me.com/traveling-salesman-problem/) and the [vehicle routing problem](https://blog.route4me.com/vehicle-routing-problems-real-life-solutions/). In more technical terms, Route4Me solves NP-hard logistics problems that span several mathematical and scientific disciplines such as industrial engineering, operations research, algorithmic graph theory, computational geometry, combinatorial optimization, fleet management, field service management, [telematics](https://telematics.route4me.com/).
 
 ### What does the Route4Me SDK permit me to do?
 This SDK makes it easier for you use the Route4Me API. The API has many features, including [route optimization](https://route4me.io/),  and the primary features are related to creating orders and then [creating optimally sequenced driving routes](https://route4me.com) for many drivers.
@@ -93,6 +93,36 @@ Route4Me does not currently lease or sell servers, and does not have on-premise 
 ### Does the Route4Me API/SDK require me to have my own programmers?
 The time required to integrate the SDK can be as little as 1 hour or may take several weeks, depending on the number of features being incorporated into the customer’s application and how much integration testing will be done by the client. A programmer’s involvement is almost always required to use Route4Me’s technology when accessing it through the API.
 
+## Examples
+
+Route4Me examples can be found [here](https://github.com/route4me/route4me-java-sdk/tree/master/src/main/java/com/route4me/sdk/examples)
+
+## Installation
+
+Maven Repository [here](https://mvnrepository.com/artifact/io.github.route4me/route4me-java-sdk)
+
+```
+<!-- https://mvnrepository.com/artifact/io.github.route4me/route4me-java-sdk -->
+<dependency>
+    <groupId>io.github.route4me</groupId>
+    <artifactId>route4me-java-sdk</artifactId>
+    <version>1.15.0</version>
+</dependency>
+```
+
+Gradle
+```
+// https://mvnrepository.com/artifact/io.github.route4me/route4me-java-sdk
+implementation group: 'io.github.route4me', name: 'route4me-java-sdk', version: '1.15.0'
+```
+
+Gradle (Kotlin)
+
+```
+// https://mvnrepository.com/artifact/io.github.route4me/route4me-java-sdk
+implementation("io.github.route4me:route4me-java-sdk:1.15.0")
+
+```
 
 ## Creating a Simple Route
 
