@@ -165,7 +165,7 @@ public class Address {
     @SerializedName("dropoff")
     private String dropOff;
     @SerializedName("joint")
-    private Integer joint;
+    private Boolean joint;
 
     @SerializedName("tags")
     @QueryParameter("tags")

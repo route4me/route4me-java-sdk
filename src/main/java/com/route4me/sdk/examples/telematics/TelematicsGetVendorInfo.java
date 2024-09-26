@@ -8,6 +8,7 @@ package com.route4me.sdk.examples.telematics;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.telematics.TelematicsManager;
 import com.route4me.sdk.services.telematics.TelematicsVendorsInfo;
+
 import java.util.logging.Level;
 import java.util.logging.Logger;
 

@@ -7,6 +7,7 @@ package com.route4me.sdk.examples.routes;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Route;
+import com.route4me.sdk.services.routing.RoutesRequest;
 import com.route4me.sdk.services.routing.RoutingManager;
 
 /**
@@ -19,9 +20,9 @@ public class AssignVehicle {
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
         try {
-            String routeId = "FA249A8FAC4D7FA7938C77784737481F";
-            String vehicleId = "64ACF1E576D078D853F935E788A42F93";
-            Route newRoute = routeManager.assignVehicle(routeId, vehicleId);
+            Route route = routeManager.getRoute(new RoutesRequest().setId("")); //SET VALID ROUTE ID
+            String vehicleId = ""; //SET VALID VEHICLE ID
+            Route newRoute = routeManager.assignVehicle(route, vehicleId);
             System.out.println(newRoute);
         } catch (APIException e) {
             //handle exceptions

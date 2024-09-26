@@ -36,6 +36,11 @@ public class OrdersManager extends Manager {
         return this.makeJSONRequest(RequestMethod.GET, builder, request, GetOrdersResponse.class).getResults();
     }
 
+    public List<List<Long>> getOrdersByCustomFields(OrderRequest request) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
+        return this.makeJSONRequest(RequestMethod.GET, builder, request, GetOrdersResponseByCustomFields.class).getResults();
+    }
+
     public List<Order> getOrdersByScheduledDate(List<String> scheduledForYYMMDD) throws APIException {
         return this.getOrdersByScheduledDate(scheduledForYYMMDD, 30, 0);
     }
@@ -106,10 +111,20 @@ public class OrdersManager extends Manager {
         private Integer total;
     }
 
+    @Getter
+    @Setter(AccessLevel.PRIVATE)
+    private static class GetOrdersResponseByCustomFields {
+        @SerializedName("results")
+        private List<List<Long>> results;
+        @SerializedName("total")
+        private Integer total;
+        @SerializedName("fields")
+        private List<String> fields;
+    }
+
     @Data
     @RequiredArgsConstructor
     private static class DeleteOrdersRequest {
-
         @SerializedName("order_ids")
         private final long[] orderIds;
     }

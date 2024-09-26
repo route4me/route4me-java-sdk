@@ -65,6 +65,12 @@ public class RoutingManager extends Manager {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         return this.makeJSONRequest(RequestMethod.POST, builder, parameters, DataObject.class);
     }
+
+    public DataObject runOptimizationWithRedirect0(OptimizationParameters parameters) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
+        builder.setParameter("redirect", "0");
+        return this.makeJSONRequest(RequestMethod.POST, builder, parameters, DataObject.class);
+    }
     
     public DataObject[] runOptimizationMulti(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
@@ -138,7 +144,7 @@ public class RoutingManager extends Manager {
     }
     
     public void deleteAddress(String routeId, Number routeDestinationId) throws APIException {
-        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
+        URIBuilder builder = Manager.defaultBuilder(ADDRESS_EP);
         builder.setParameter("route_id", routeId);
         builder.setParameter("route_destination_id", routeDestinationId.toString());
         this.makeRequest(RequestMethod.DELETE, builder, "", null);
@@ -230,6 +236,16 @@ public class RoutingManager extends Manager {
         route.setId(routeId);
         route.setParameters(params);
         return updateRoute(route);
+    }
+
+    public Route assignVehicle(Route route, String vehicle_id) throws APIException {
+        Parameters params = new Parameters();
+        params.setVehicleId(vehicle_id);
+        route.setParameters(params);
+        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
+        String routeId = route.getId();
+        builder.setParameter("route_id", routeId);
+        return this.makeJSONRequest(RequestMethod.PUT, builder, route.getParameters(), Route.class);
     }
     
     public RouteDeletedResponse deleteRoutes(String... routeIds) throws APIException {
