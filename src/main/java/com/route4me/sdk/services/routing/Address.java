@@ -165,7 +165,7 @@ public class Address {
     @SerializedName("dropoff")
     private String dropOff;
     @SerializedName("joint")
-    private Integer joint;
+    private Boolean joint;
 
     @SerializedName("tags")
     @QueryParameter("tags")
@@ -222,6 +222,24 @@ public class Address {
             this.custom_fields = new HashMap<>();
         }
         this.custom_fields.put(key, value);
+    }
+    
+    public void setJoint(int joint) {
+        this.setJoint(joint != 0);
+    }    
+
+    /**
+     * @return the joint
+     */
+    public Boolean getJoint() {
+        return joint;
+    }
+
+    /**
+     * @param joint the joint to set
+     */
+    public void setJoint(Boolean joint) {
+        this.joint = joint;
     }
 }
 // codebeat:enable[TOO_MANY_FUNCTIONS]
