@@ -25,14 +25,15 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.message.BasicNameValuePair;
 
 public class RoutingManager extends Manager {
-    
+
     private static final String ROUTE_EP = "/api.v4/route.php";
     private static final String ADDRESS_EP = "/api.v4/address.php";
     private static final String OPTIMIZATION_EP = "/api.v4/optimization_problem.php";
     private static final String DUPLICATE_ROUTE_EP = "/actions/duplicate_route.php";
     private static final String RENAME_ROUTE_EP = "/actions/route/rename_route.php";
+    private static final String MOVE_ADDRESS = "/actions/route/move_route_destination.php";
     private static final String ROUTE_SEARCH_v5_1 = "/modules/api/v5.1/routes";
-    
+
     private URIBuilder getRouteSearchURI(String endpoint) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
@@ -40,61 +41,61 @@ public class RoutingManager extends Manager {
         builder.setPath(endpoint);
         return builder;
     }
-    
+
     public RoutingManager(String apiKey) {
         super(apiKey);
     }
-    
+
     public RoutingManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
     }
-    
+
     public RoutingManager(String apiKey, boolean disableRedirects, String callBackURL) {
         super(apiKey, disableRedirects, callBackURL);
     }
-    
+
     public RoutingManager(String apiKey, String proxyHost, int proxyPort, String proxySchema) {
         super(apiKey, proxyHost, proxyPort, proxySchema);
     }
-    
+
     public RoutingManager(String apiKey, String proxyHost, int proxyPort, String proxySchema, boolean disableRedirects) {
         super(apiKey, proxyHost, proxyPort, proxySchema, disableRedirects);
     }
-    
+
     public DataObject runOptimization(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         return this.makeJSONRequest(RequestMethod.POST, builder, parameters, DataObject.class);
     }
-    
+
     public DataObject[] runOptimizationMulti(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         return this.makeJSONRequest(RequestMethod.POST, builder, parameters, DataObject[].class);
     }
-    
+
     public Optimization getOptimization(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         return this.makeJSONRequest(RequestMethod.GET, builder, parameters, Optimization.class);
     }
-    
+
     public DataObject updateOptimization(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         return this.makeJSONRequest(RequestMethod.PUT, builder, parameters, DataObject.class);
     }
-    
+
     public Optimization reOptimizationByOptimizationID(OptimizationParameters parameters) throws APIException, IllegalAccessException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         List<NameValuePair> params = QueryConverter.convertObjectToParameters(parameters);
         builder.addParameters(params);
         return this.makeJSONRequest(RequestMethod.PUT, builder, "", Optimization.class);
     }
-    
+
     public Optimization reOptimization(OptimizationParameters parameters, DataObject optimization) throws APIException, IllegalAccessException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         List<NameValuePair> params = QueryConverter.convertObjectToParameters(parameters);
         builder.addParameters(params);
         return this.makeJSONRequest(RequestMethod.PUT, builder, optimization, Optimization.class);
     }
-    
+
     public List<DataObject> getOptimizations(int limit, int offset) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         builder.setParameter("limit", Integer.toString(limit));
@@ -102,7 +103,7 @@ public class RoutingManager extends Manager {
         GetOptimizationsResponse resp = this.makeRequest(RequestMethod.GET, builder, "", GetOptimizationsResponse.class);
         return resp.getOptimizations();
     }
-    
+
     public Map<String, Object> deleteOptimization(List<String> optimizationProblemIDs) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         OptimizationProblemIDs dataObj = new OptimizationProblemIDs();
@@ -110,11 +111,11 @@ public class RoutingManager extends Manager {
         return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(dataObj), new TypeToken<Map<String, Object>>() {
         }.getType());
     }
-    
+
     public DataObject addAddressesToRoute(String routeId, List<Address> addresses) throws APIException {
         return this.addAddressesToRoute(routeId, addresses, false);
     }
-    
+
     public DataObject addAddressesToRoute(String routeId, List<Address> addresses, Boolean optimalPosition) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         builder.setParameter("route_id", routeId);
@@ -123,45 +124,55 @@ public class RoutingManager extends Manager {
         dataObj.setOptimalPosition(optimalPosition);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(dataObj), DataObject.class);
     }
-    
+
     public Address getAddress(String routeId, Number routeDestinationId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_EP);
         builder.setParameter("route_id", routeId);
         builder.setParameter("route_destination_id", routeDestinationId.toString());
         return this.makeRequest(RequestMethod.GET, builder, "", Address.class);
     }
-    
-    public DataObject moveAddresses(DataObject dataObj, String routeId) throws APIException {
-        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
-        builder.setParameter("route_id", routeId);
-        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(dataObj), DataObject.class);
+
+    public MovedAddressesResponse moveAddresses(Number routeDestinationId, String toRouteId, Number afterRouteDestinationId) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(MOVE_ADDRESS);
+        List<NameValuePair> body = new ArrayList<>();
+        body.add(new BasicNameValuePair("to_route_id", toRouteId));
+        body.add(new BasicNameValuePair("route_destination_id", routeDestinationId.toString()));
+        if (afterRouteDestinationId != null) {
+            body.add(new BasicNameValuePair("after_destination_id", afterRouteDestinationId.toString()));
+        }
+        return this.makeRequest(RequestMethod.POST, builder, body, MovedAddressesResponse.class);
     }
-    
+
+    public MovedAddressesResponse moveAddresses(Number routeDestinationId,
+            String toRouteId) throws APIException {
+        return moveAddresses(routeDestinationId, toRouteId, null);
+    }
+
     public void deleteAddress(String routeId, Number routeDestinationId) throws APIException {
-        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
+        URIBuilder builder = Manager.defaultBuilder(ADDRESS_EP);
         builder.setParameter("route_id", routeId);
         builder.setParameter("route_destination_id", routeDestinationId.toString());
         this.makeRequest(RequestMethod.DELETE, builder, "", null);
     }
-    
+
     public void deleteAddressFromOptimization(String optimizationProblemId, Number routeDestinationId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_EP);
         builder.setParameter("optimization_problem_id", optimizationProblemId);
         builder.setParameter("route_destination_id", routeDestinationId.toString());
         this.makeRequest(RequestMethod.DELETE, builder, "", null);
     }
-    
+
     public Address updateAddressAttribute(String routeId, Number routeDestinationId, Address dataObj) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_EP);
         builder.setParameter("route_id", routeId);
         builder.setParameter("route_destination_id", routeDestinationId.toString());
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(dataObj), Address.class);
     }
-    
+
     public List<Route> getRoutesbyTimeDate(String startTimeDate, String endTimeDate) throws APIException {
         return this.getRoutesbyTimeDate(startTimeDate, endTimeDate, null, null);
     }
-    
+
     public List<Route> getRoutesbyTimeDate(String startTimeDate, String endTimeDate, Integer limit, Integer offset) throws APIException {
         RoutesRequest request = new RoutesRequest();
         if (limit != null) {
@@ -170,122 +181,122 @@ public class RoutingManager extends Manager {
         if (offset != null) {
             request.setOffset(offset);
         }
-        
+
         request.setStartDate(DateTimeUtils.localDateTimeToUTCParser(startTimeDate));
         request.setEndDate(DateTimeUtils.localDateTimeToUTCParser(endTimeDate));
-        
+
         return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ROUTE_EP), request, new TypeToken<ArrayList<Route>>() {
         }.getType());
     }
-  
+
     public RouteSearchResult getRoutesbyDateTimeZone(String scheduledForStart, String scheduledForEnd, String timeZone, Integer page, Integer perPage) throws APIException {
-        
+
         URIBuilder builder = this.getRouteSearchURI(ROUTE_SEARCH_v5_1);
-        
+
         RouteSearch request = new RouteSearch();
         request.setTimeZone(timeZone);
         request.setPage(page);
         request.setPerPage(perPage);
         request.setOrderBy(Arrays.asList(Arrays.asList("route_created_unix", "desc")));
         RouteSearchFilter filters = new RouteSearchFilter(Arrays.asList(scheduledForStart, scheduledForEnd));
-        request.setFilters(filters);        
-        return this.makeJSONRequest(RequestMethod.POST, builder, request, RouteSearchResult.class);        
+        request.setFilters(filters);
+        return this.makeJSONRequest(RequestMethod.POST, builder, request, RouteSearchResult.class);
     }
 
     public RouteSearchResult getRoutesbyDateTimeZone(String scheduledForStart, String scheduledForEnd, String timeZone) throws APIException {
         return this.getRoutesbyDateTimeZone(scheduledForStart, scheduledForEnd, timeZone, 1, 30);
     }
-    
+
     public List<Route> getRoutes(RoutesRequest request) throws APIException {
         return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ROUTE_EP), request, new TypeToken<ArrayList<Route>>() {
         }.getType());
     }
-    
+
     public Route getRoute(RoutesRequest request) throws APIException {
         return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ROUTE_EP), request, Route.class);
     }
-    
+
     public Route updateRoute(Route route) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         String routeId = route.getId();
         builder.setParameter("route_id", routeId);
         return this.makeJSONRequest(RequestMethod.PUT, builder, route, Route.class);
     }
-    
+
     public Route assignDriver(String routeId, String memberID) throws APIException {
         Parameters params = new Parameters();
         params.setMemberId(memberID);
-        
+
         Route route = new Route();
         route.setId(routeId);
         route.setParameters(params);
         return updateRoute(route);
     }
-    
+
     public Route assignVehicle(String routeId, String vehicle_id) throws APIException {
         Parameters params = new Parameters();
         params.setVehicleId(vehicle_id);
-        
+
         Route route = new Route();
         route.setId(routeId);
         route.setParameters(params);
         return updateRoute(route);
     }
-    
+
     public RouteDeletedResponse deleteRoutes(String... routeIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         StringBuilder conc = new StringBuilder();
         for (String s : routeIds) {
             conc.append(s).append(',');
         }
-        
+
         builder.addParameter("route_id", conc.toString());
-        
+
         return this.makeRequest(RequestMethod.DELETE, builder, "", RouteDeletedResponse.class);
     }
-    
+
     public DuplicateRouteResponse duplicateRoute(String routeID) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(DUPLICATE_ROUTE_EP);
         builder.setParameter("route_id", routeID);
         builder.setParameter("to", "none");
         return this.makeRequest(RequestMethod.GET, builder, "", DuplicateRouteResponse.class);
     }
-    
+
     public RouteRenamedStatus renameRoute(String routeName, String routeID) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(RENAME_ROUTE_EP);
         builder.setParameter("format", "json");
-        
+
         List<NameValuePair> data = new ArrayList<>();
         data.add(new BasicNameValuePair("route_name", routeName));
         data.add(new BasicNameValuePair("route_id", routeID));
-        
+
         UrlEncodedFormEntity body = null;
         body = new UrlEncodedFormEntity(data, UTF_8);
-        
+
         return this.makeRequest(RequestMethod.POST, builder, body, RouteRenamedStatus.class);
     }
-    
+
     @Getter
     @ToString
     public static class DuplicateRouteResponse {
-        
+
         @SerializedName("optimization_problem_id")
         private String problemId;
         @SerializedName("success")
         private boolean success;
     }
-    
+
     @Getter
     @AllArgsConstructor
     private static class DeleteRoutes {
-        
+
         @SerializedName("route_id")
         private String routeId;
     }
-    
+
     @Getter
     private static class GetOptimizationsResponse {
-        
+
         @SerializedName("optimizations")
         private List<DataObject> optimizations;
     }

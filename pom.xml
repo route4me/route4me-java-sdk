@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.route4me</groupId>
     <artifactId>route4me-java-sdk</artifactId>
-    <version>1.15.0</version>
+    <version>1.16.0</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -21,16 +21,6 @@
     </licenses>
     <url>https://github.com/route4me/route4me-java-sdk</url>
     <description>>This SDK makes it easier for you use the Route4Me API, which creates optimally sequenced driving routes for many drivers.</description>
-    <distributionManagement>
-      <snapshotRepository>
-        <id>ossrh</id>
-        <url>https://s01.oss.sonatype.org/content/repositories/snapshots</url>
-      </snapshotRepository>
-      <repository>
-        <id>ossrh</id>
-        <url>https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/</url>
-      </repository>
-    </distributionManagement>
     <developers>
        <developer>
          <name>Juan</name>
@@ -53,12 +43,6 @@
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.17.1</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.logging.log4j</groupId>
-            <artifactId>log4j-core</artifactId>
             <version>2.17.1</version>
         </dependency>
         <dependency> 
@@ -97,14 +81,13 @@
     <build>
         <plugins>
             <plugin>
-              <groupId>org.sonatype.plugins</groupId>
-              <artifactId>nexus-staging-maven-plugin</artifactId>
-              <version>1.6.7</version>
+              <groupId>org.sonatype.central</groupId>
+              <artifactId>central-publishing-maven-plugin</artifactId>
+              <version>0.8.0</version>
               <extensions>true</extensions>
               <configuration>
-                 <serverId>ossrh</serverId>
-                 <nexusUrl>https://s01.oss.sonatype.org/</nexusUrl>
-                 <autoReleaseAfterClose>true</autoReleaseAfterClose>
+                 <publishingServerId>central</publishingServerId>  
+                 <autoPublish>true</autoPublish>
               </configuration>
             </plugin>
             <plugin>
@@ -120,31 +103,24 @@
                     </execution>
                 </executions>
             </plugin>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
-                <version>2.10.4</version>
+                <version>3.4.0</version>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
-                        <configuration>
-                            <additionalparam>${javadoc.opts}</additionalparam>
-                        </configuration>     
                         <goals>
-                          <goal>jar</goal>
-                        </goals>                                       
+                            <goal>jar</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
             <plugin>
               <groupId>org.apache.maven.plugins</groupId>
-              <artifactId>maven-shade-plugin</artifactId>
-              <version>3.2.0</version>
-            </plugin> 
-            <plugin>
-              <groupId>org.apache.maven.plugins</groupId>
               <artifactId>maven-gpg-plugin</artifactId>
-              <version>1.5</version>
+              <version>3.2.4</version>
               <executions>
                 <execution>
                   <id>sign-artifacts</id>
@@ -153,11 +129,31 @@
                     <goal>sign</goal>
                   </goals>
                   <configuration>
-                    <keyname>73877EBB60F02A5283255BCF8F4C1297EE1FB9A4</keyname>
-                    <passphraseServerId>73877EBB60F02A5283255BCF8F4C1297EE1FB9A4</passphraseServerId>
+                    <keyname>9895E9F375845AD5</keyname>
+                    <passphraseServerId>gpg.passphrase</passphraseServerId>
+                    <gpgArguments>
+                      <arg>--pinentry-mode</arg>
+                      <arg>loopback</arg>
+                    </gpgArguments>
                   </configuration>
                 </execution>
               </executions>
+            </plugin>
+
+            <plugin>
+              <groupId>org.apache.maven.plugins</groupId>
+              <artifactId>maven-shade-plugin</artifactId>
+              <version>3.2.0</version>
+            </plugin> 
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.0</version>
+                <configuration>
+                    <compilerArgs>
+                        <arg>-Xlint</arg>
+                    </compilerArgs>
+                </configuration>
             </plugin>
         </plugins>
     </build>
