@@ -15,7 +15,7 @@ public class DeleteAddress {
         RoutingManager manager = new RoutingManager(apiKey);
         try {
             Address addr = null;
-            List<Route> routes = manager.getRoutes(new RoutesRequest().setLimit(64));
+            List<Route> routes = manager.getRoutes(new RoutesRequest().setLimit(5));
             for (Route r : routes) {
                 Route full = manager.getRoute(new RoutesRequest().setId(r.getId()));
                 if (full.getAddresses().isEmpty()) {
@@ -31,7 +31,8 @@ public class DeleteAddress {
                     throw new RuntimeException("Cannot find an address for delete operation");
                 }
             }
-            manager.deleteAddress(addr.getOptimizationProblemId(), addr.getRouteDestinationId());
+            System.out.println("Deleting Address: " + addr.getRouteDestinationId() + " from Route: " + addr.getRouteId());
+            manager.deleteAddress(addr.getRouteId(), addr.getRouteDestinationId());
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();
