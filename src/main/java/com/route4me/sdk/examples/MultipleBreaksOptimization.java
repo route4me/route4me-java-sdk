@@ -20,7 +20,7 @@ public class MultipleBreaksOptimization {
         parameters.setShareRoute(Boolean.FALSE);
         parameters.setRouteTime(25200);
         parameters.setRouteMaxDuration(86400);
-        parameters.setVehicleCapacity("1");
+        parameters.setVehicleCapacity("100");
         parameters.setVehicleMaxDistanceMi("10000");
         parameters.setRouteName("Multiple Breaks Example");
         parameters.setOptimize(Optimize.DISTANCE.toString());
