@@ -129,7 +129,7 @@
                     <goal>sign</goal>
                   </goals>
                   <configuration>
-                    <keyname>9895E9F375845AD5</keyname>
+                    <keyname>CE74D11247F2BB52</keyname>
                     <passphraseServerId>gpg.passphrase</passphraseServerId>
                     <gpgArguments>
                       <arg>--pinentry-mode</arg>

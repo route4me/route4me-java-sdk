@@ -1,0 +1,26 @@
+name: Commit validation
+
+on:
+  [pull_request]
+
+jobs:
+  commitsar:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v1
+
+      - name: Commitsar Action
+        uses: aevea/commitsar@v0.20.2
+
+      - if: ${{ failure() }}
+        uses: superbrothers/close-pull-request@v2
+        with:
+          comment: |
+            # Uh Oh
+            ## It seems that your pull request doesn't pass conventional commit validation
+            ### Don't worry! This guide will help you to fix this issue and avoid it in future!
+            - Please check conventional commit [specification](https://www.conventionalcommits.org/en/v1.0.0/) and [tips how to write perfect messages](https://chris.beams.io/posts/git-commit/#seven-rules)
+            - If you are using IntelliJ IDEA, please take a look at [special plugin](https://plugins.jetbrains.com/plugin/13389-conventional-commit)
+            - In order to fix your commit messages you should create new pull request from another branch, **force push is not allowed**. You can do it in IntelliJ IDEA using [this guide](https://www.jetbrains.com/help/idea/edit-project-history.html) or using git cli and [that guide](https://help.github.com/en/github/committing-changes-to-your-project/changing-a-commit-message). This pull request will be closed automatically.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
