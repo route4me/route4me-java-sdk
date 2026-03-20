@@ -1,0 +1,98 @@
+name: Maven Central Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to publish"
+        required: false
+        type: string
+
+jobs:
+  build-and-publish:
+    name: Build and Publish to Maven Central
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from tag
+        id: tag_version
+        run: |
+          if [ "${{ github.event_name }}" == "push" ] && [ -n "${{ github.ref }}" ]; then
+            # Extract version from tag (remove refs/tags/ prefix and 'v' prefix if present)
+            TAG_VERSION="${{ github.ref }}"
+            TAG_VERSION=${TAG_VERSION#refs/tags/}
+            TAG_VERSION=${TAG_VERSION#v}
+            echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+            echo "Tag version: $TAG_VERSION"
+          elif [ "${{ github.event_name }}" == "release" ]; then
+            TAG_VERSION="${{ github.event.release.tag_name }}"
+            TAG_VERSION=${TAG_VERSION#v}
+            echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+            echo "Release tag version: $TAG_VERSION"
+          elif [ -n "${{ github.event.inputs.version }}" ]; then
+            TAG_VERSION="${{ github.event.inputs.version }}"
+            echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+            echo "Manual version: $TAG_VERSION"
+          else
+            # Fallback to pom.xml version
+            TAG_VERSION=$(mvn help:evaluate -Dexpression=project.version -q -DforceStdout)
+            echo "version=$TAG_VERSION" >> $GITHUB_OUTPUT
+            echo "POM version: $TAG_VERSION"
+          fi
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 8
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
+
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Set version in pom.xml
+        run: mvn versions:set -DnewVersion=${{ steps.tag_version.outputs.version }} -B
+
+      - name: Build and package
+        run: mvn clean package -DskipTests -B
+
+      - name: Display package info
+        run: |
+          echo "Publishing version: ${{ steps.tag_version.outputs.version }}"
+          ls -lh target/*.jar
+
+      - name: Deploy to Maven Central
+        run: mvn deploy -DskipTests -B
+        env:
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Upload JAR artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: maven-package
+          path: target/*.jar
+          retention-days: 30
