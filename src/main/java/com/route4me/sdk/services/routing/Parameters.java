@@ -153,6 +153,10 @@ public class Parameters {
     @SerializedName("subtour_max_revenue")
     private Integer subtourMaxRevenue;
 
+    @QueryParameter("breaks")
+    @SerializedName("breaks")
+    private List<Break> breaks;
+
     @QueryParameter("group_max_routes")
     @SerializedName("group_max_routes")
     private List<List<Object>> groupMaxRoutes;
