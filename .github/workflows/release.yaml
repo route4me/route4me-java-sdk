@@ -1,41 +1,47 @@
 name: Release
 
 on:
-  pull_request:
-    branches:
-      - master
   push:
-    branches:
-      - '[0-9]+.[0-9]+.x'
-      - '[0-9]+.x'
-      - master
+    tags:
+      - 'v*'
 
 jobs:
-  release:
-    name: release
+  deploy:
+    name: Build and Deploy to Maven Central
     runs-on: ubuntu-latest
+
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
-      - uses: actions/setup-node@v2
-        with:
-          node-version: '20'
+        uses: actions/checkout@v4
 
-      - name: Action For Semantic Release
-        uses: cycjimmy/semantic-release-action@v4
-        id: semantic
+      - name: Set up Java 8
+        uses: actions/setup-java@v4
         with:
-          semantic_version: 23
-          extra_plugins: |
-            conventional-changelog-conventionalcommits@7.0.2
-            @semantic-release/changelog
-            @semantic-release/git
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+          java-version: '8'
+          distribution: 'temurin'
+          server-id: central
+          server-username: MAVEN_CENTRAL_USERNAME
+          server-password: MAVEN_CENTRAL_PASSWORD
+          gpg-private-key: ${{ secrets.GPG_PRIVATE_KEY }}
+          gpg-passphrase: GPG_PASSPHRASE
 
-      - name: Push updates to branch for major version
-        if: steps.semantic.outputs.new_release_published == 'true'
-        run: "git push https://x-access-token:${GITHUB_TOKEN}@github.com/${GITHUB_REPOSITORY}.git HEAD:refs/heads/v${{steps.semantic.outputs.new_release_major_version}}"
+      - name: Cache Maven dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.m2/repository
+          key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
+          restore-keys: |
+            ${{ runner.os }}-maven-
+
+      - name: Set version from tag
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Releasing version: $VERSION"
+          mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPom=false -B
+
+      - name: Build and Deploy to Maven Central
+        run: mvn clean deploy -DskipTests -B
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          MAVEN_CENTRAL_USERNAME: ${{ secrets.MAVEN_CENTRAL_USERNAME }}
+          MAVEN_CENTRAL_PASSWORD: ${{ secrets.MAVEN_CENTRAL_PASSWORD }}
+          GPG_PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
