@@ -5,3 +5,5 @@ target/
 .project
 .classpath
 *.iml
+nb-configuration.xml
+nbactions.xml
