@@ -150,6 +150,23 @@ public class ManagerTest {
     }
 
     @Test
+    public void theCallersBuilderIsNotChanged() throws Exception {
+        TestManager manager = http.install(new TestManager(MockHttp.API_KEY, true, "https://example.com/done"));
+        http.respond(200, "{}").respond(200, "{}");
+        URIBuilder builder = builder();
+        builder.setParameter("route_id", "R1");
+
+        manager.makeRequest(RequestMethod.GET, builder, "", Reply.class);
+        manager.makeRequest(RequestMethod.GET, builder, "", Reply.class);
+
+        assertEquals(1, builder.getQueryParams().size());
+        for (int i = 0; i < 2; i++) {
+            http.request(i).assertApiKeyInQuery().assertQuery("redirect", "0")
+                    .assertQuery("optimized_callback_url", "https://example.com/done").assertQuery("route_id", "R1");
+        }
+    }
+
+    @Test
     public void managerWithoutKeySendsNoApiKey() throws Exception {
         TestManager manager = http.install(new TestManager(null));
         http.respond(200, "{}");

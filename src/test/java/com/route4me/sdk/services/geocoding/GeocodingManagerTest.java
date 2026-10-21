@@ -113,7 +113,6 @@ public class GeocodingManagerTest {
         assertEquals(2, http.requestCount());
     }
 
-    @Ignore("bug (unfiled): forwardGeocode adds api_key to the URL again on every retry")
     @Test
     public void forwardGeocodeSendsTheApiKeyOncePerRetry() {
         GeocodingManager manager = manager();

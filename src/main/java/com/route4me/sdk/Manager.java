@@ -221,17 +221,20 @@ public abstract class Manager implements Closeable {
     private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type, String requestContentType) throws APIException {
         HttpRequestBase hrb;
         try {
+            // Work on a copy: the caller's builder stays unchanged, so it can be sent again
+            // (for example on a retry) without repeating these parameters.
+            URIBuilder target = new URIBuilder(builder.build());
             // Redirects Management
             if (this.disableRedirects) {
-                builder.addParameter("redirect", "0");
+                target.addParameter("redirect", "0");
             }
             if (this.callBackURL != null) {
-                builder.addParameter("optimized_callback_url", this.callBackURL);
+                target.addParameter("optimized_callback_url", this.callBackURL);
             }
             if (this.apiKey != null) {
-                builder.addParameter("api_key", this.apiKey);
+                target.addParameter("api_key", this.apiKey);
             }
-            hrb = method.create(builder.build());
+            hrb = method.create(target.build());
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException(ex);
         }
