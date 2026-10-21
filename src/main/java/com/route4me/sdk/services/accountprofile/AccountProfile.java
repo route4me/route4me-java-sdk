@@ -2,6 +2,7 @@ package com.route4me.sdk.services.accountprofile;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 public class AccountProfile {
@@ -11,6 +12,7 @@ public class AccountProfile {
     @SerializedName("member_id")
     private Long memberId;
 
+    @ToString.Exclude
     @SerializedName("api_key")
     private String apiKey;
 

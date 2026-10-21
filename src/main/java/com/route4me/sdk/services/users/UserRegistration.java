@@ -7,6 +7,7 @@ package com.route4me.sdk.services.users;
 
 import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  *
@@ -31,8 +32,10 @@ public class UserRegistration {
     private String strCompanySize;
     @QueryParameter("industry")
     private String industry;
+    @ToString.Exclude
     @QueryParameter("strPassword_1")
     private String strPassword_1;
+    @ToString.Exclude
     @QueryParameter("strPassword_2")
     private String strPassword_2;
     @QueryParameter("chkTerms")
@@ -41,8 +44,10 @@ public class UserRegistration {
     private String plan;
     @QueryParameter("business_member_type")
     private String businessMemberType;
+    @ToString.Exclude
     @QueryParameter("organization_api_key")
     private String organizationApiKey;
+    @ToString.Exclude
     @QueryParameter("activation_key")
     private String activationKey;
 

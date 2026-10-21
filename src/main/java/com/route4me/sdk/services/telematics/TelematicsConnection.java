@@ -9,6 +9,7 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import java.util.Map;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  *
@@ -26,6 +27,7 @@ public class TelematicsConnection {
     @QueryParameter("host")
     @SerializedName("host")
     private String host;
+    @ToString.Exclude
     @QueryParameter("api_key")
     @SerializedName("api_key")
     private String apiKey;
@@ -35,9 +37,11 @@ public class TelematicsConnection {
     @QueryParameter("username")
     @SerializedName("username")
     private String username;
+    @ToString.Exclude
     @QueryParameter("password")
     @SerializedName("password")
     private String password;
+    @ToString.Exclude
     @QueryParameter("connection_token")
     @SerializedName("connection_token")
     private String connectionToken;

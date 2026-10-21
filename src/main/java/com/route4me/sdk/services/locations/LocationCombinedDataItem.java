@@ -2,6 +2,7 @@ package com.route4me.sdk.services.locations;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 public class LocationCombinedDataItem {
@@ -23,6 +24,7 @@ public class LocationCombinedDataItem {
     @SerializedName("external_connection_name")
     private String externalConnectionName;
 
+    @ToString.Exclude
     @SerializedName("external_connection_token")
     private String externalConnectionToken;
 }
