@@ -174,7 +174,8 @@ public abstract class Manager implements Closeable {
                 params = QueryConverter.convertObjectToParameters(requestParams);
                 builder.addParameters(params);
             } catch (IllegalAccessException ex) {
-                logger.error(ex);
+                logger.error("Could not convert {} to query parameters: {}",
+                        requestParams.getClass().getSimpleName(), Sanitizer.forLog(ex.getMessage()));
             }
         }
         return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(body), "UTF-8"), clazz, null, "application/json");
@@ -187,7 +188,8 @@ public abstract class Manager implements Closeable {
                 params = QueryConverter.convertObjectToParameters(requestParams);
                 builder.addParameters(params);
             } catch (IllegalAccessException ex) {
-                logger.error(ex);
+                logger.error("Could not convert {} to query parameters: {}",
+                        requestParams.getClass().getSimpleName(), Sanitizer.forLog(ex.getMessage()));
             }
         }
         return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(body), "UTF-8"), null, type, "application/json");

@@ -7,6 +7,7 @@ package com.route4me.sdk.services.geocoding;
 
 import com.google.gson.Gson;
 import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.utils.Sanitizer;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter.Listener;
@@ -87,7 +88,7 @@ public class GeocoderWebSockets {
                     public void call(Object... os) {
                         LOG.info("Connected to the WebSocket Geocoder");
                         if (os.length > 0) {
-                            LOG.fine(os[0].toString());
+                            LOG.fine(Sanitizer.forLog(os[0]));
                         }
                         emitTemporaryAddressesStorageID();
                     }
@@ -98,7 +99,7 @@ public class GeocoderWebSockets {
                     public void call(Object... args) {
                         LOG.info("Now Disconnected from the WebSocket Geocoder");
                         if (args.length > 0) {
-                            LOG.fine(args[0].toString());
+                            LOG.fine(Sanitizer.forLog(args[0]));
                         }
                     }
 
@@ -108,7 +109,7 @@ public class GeocoderWebSockets {
                     public void call(Object... arg0) {
                         LOG.warning("Geocode socket connection error");
                         if (arg0.length > 0) {
-                            LOG.warning(arg0[0].toString());
+                            LOG.warning(Sanitizer.forLog(arg0[0]));
                         }
                     }
                 }).on("connect_timeout", new Listener() {
@@ -116,7 +117,7 @@ public class GeocoderWebSockets {
                     public void call(Object... arg0) {
                         LOG.warning("Geocode socket connection timeout error");
                         if (arg0.length > 0) {
-                            LOG.warning(arg0[0].toString());
+                            LOG.warning(Sanitizer.forLog(arg0[0]));
                         }
                     }
                 }).on("address", new Listener() {
@@ -158,7 +159,9 @@ public class GeocoderWebSockets {
                     @Override
                     public void call(Object... arg0) {
                         LOG.warning(String.valueOf(arg0.length));
-                        LOG.warning(arg0[0].toString());
+                        if (arg0.length > 0) {
+                            LOG.warning(Sanitizer.forLog(arg0[0]));
+                        }
                     }
                 });
                 geocoderWebSocket.connect();
@@ -181,7 +184,7 @@ public class GeocoderWebSockets {
     }
 
     private void emitTemporaryAddressesStorageID() {
-        LOG.log(Level.INFO, "Emiting Temporary Addresses StorageID: {0}", this.temporaryAddressesStorageID);
+        LOG.log(Level.INFO, "Emiting Temporary Addresses StorageID: {0}", Sanitizer.forLog(this.temporaryAddressesStorageID));
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("temporary_addresses_storage_id", this.temporaryAddressesStorageID);
         try {

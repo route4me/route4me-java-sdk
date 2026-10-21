@@ -12,6 +12,7 @@ import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.Geocodings;
+import com.route4me.sdk.utils.Sanitizer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -80,7 +81,7 @@ public class GeocodingManager extends Manager {
                 Geocodings defaultGeocodings = new Geocodings(0.0, 0.0, "invalid", "0", address);
                 invalidAddress.setGeocodings(Arrays.asList(defaultGeocodings));
                 geocodedAddresses.add(invalidAddress);
-                logger.warn("Invalid Address: " + address);
+                logger.warn("Invalid Address: {}", Sanitizer.forLog(address));
             }
         }
         executor.shutdown();
@@ -92,9 +93,9 @@ public class GeocodingManager extends Manager {
                 geocodedAddress = worker.get(options.getMaxTimeout(), TimeUnit.MILLISECONDS);
                 geocodedAddresses.add(geocodedAddress);
             } catch (InterruptedException | ExecutionException ex) {
-                logger.error("Thread Execution Exception. " + ex);
+                logger.error("Thread Execution Exception. {}", Sanitizer.forLog(ex));
             } catch (TimeoutException ex) {
-                logger.error("Thread Time out Error. " + ex);
+                logger.error("Thread Time out Error. {}", Sanitizer.forLog(ex));
             }
         }
 
@@ -120,15 +121,15 @@ public class GeocodingManager extends Manager {
             } catch (APIException ex) {
                 try {
                     GeocoderAddressNotFound addressNotFound = this.gson.fromJson(ex.getMessage(), GeocoderAddressNotFound.class);
-                    logger.debug(addressNotFound.getStatus());
+                    logger.debug(Sanitizer.forLog(addressNotFound.getStatus()));
                     break;
                 } catch (IllegalStateException err) {
-                    logger.error(ex);
+                    logger.error(Sanitizer.forLog(ex));
                 } catch (JsonSyntaxException err) {
-                    logger.error(String.format("Unexpected Server response %s", ex.getMessage()));
+                    logger.error("Unexpected Server response {}", Sanitizer.forLog(ex.getMessage()));
                 }
                 retries++;
-                logger.info("Retrying due to error: " + ex);
+                logger.info("Retrying due to error: {}", Sanitizer.forLog(ex));
                 try {
                     Thread.sleep(200);
                 } catch (InterruptedException e) {
