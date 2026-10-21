@@ -91,9 +91,20 @@ public class TerritoriesManager extends Manager {
         return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteResponse.class).isDeleted();
     }
 
+    /**
+     * Updates an avoidance zone: {@code PUT /api.v4/avoidance.php?territory_id=...} with the
+     * zone as the JSON body.
+     *
+     * @param territory the zone, with its {@code territory_id} set
+     * @return the updated zone
+     * @throws APIException if the request fails
+     */
     public Territory updateAvoidanceZone(Territory territory) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(AVOIDANCE_EP);
-        return this.makeJSONRequest(RequestMethod.DELETE, builder, territory, Territory.class);
+        if (territory.getTerritoryId() != null) {
+            builder.setParameter("territory_id", territory.getTerritoryId());
+        }
+        return this.makeJSONRequest(RequestMethod.PUT, builder, territory, Territory.class);
     }
 
     public List<Territory> getAvoidanceZones() throws APIException {
@@ -119,9 +130,20 @@ public class TerritoriesManager extends Manager {
         return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteResponse.class).isDeleted();
     }
 
+    /**
+     * Updates a territory: {@code PUT /api.v4/territory.php?territory_id=...} with the
+     * territory as the JSON body.
+     *
+     * @param territory the territory, with its {@code territory_id} set
+     * @return the updated territory
+     * @throws APIException if the request fails
+     */
     public Territory updateTerritory(Territory territory) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TERRITORY_EP);
-        return this.makeJSONRequest(RequestMethod.DELETE, builder, territory, Territory.class);
+        if (territory.getTerritoryId() != null) {
+            builder.setParameter("territory_id", territory.getTerritoryId());
+        }
+        return this.makeJSONRequest(RequestMethod.PUT, builder, territory, Territory.class);
     }
 
     public List<Territory> getTerritories() throws APIException {
