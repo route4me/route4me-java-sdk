@@ -11,16 +11,21 @@ import com.route4me.sdk.queryconverter.QueryConverter;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.charset.UnsupportedCharsetException;
 import java.util.List;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
+import org.apache.http.ParseException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
@@ -244,59 +249,79 @@ public abstract class Manager implements Closeable {
             throw new RuntimeException("Method does not support body!");
         }
 
-        //try with resources to close streams
-        try (CloseableHttpResponse resp = this.httpClient().execute(hrb); InputStream is = resp.getEntity().getContent()) {
-            //response should always be present
-            if (is == null) {
-                throw new APIException("Response body is null.");
+        try (CloseableHttpResponse resp = this.httpClient().execute(hrb)) {
+            int status = resp.getStatusLine().getStatusCode();
+            String respString = readBody(resp.getEntity());
+            if (status < 200 || status > 303) {
+                if (respString.isEmpty()) {
+                    throw new APIException(String.format("Invalid status code %d and no error present.", status));
+                }
+                throw new APIException(String.format("Invalid status code %d, errors: %s", status, respString));
             }
-            try (InputStreamReader isr = new InputStreamReader(is); BufferedReader br = new BufferedReader(isr)) {
-                if (resp.getStatusLine().getStatusCode() < 200 || resp.getStatusLine().getStatusCode() > 303) {
-                    try {
-                        StringBuilder respString = responseContentParser(br);
-                        throw new APIException(String.format("Invalid status code %d, errors: %s", resp.getStatusLine().getStatusCode(), respString.toString()));
-                    } catch (IOException e) {
-                        throw new APIException(String.format("Invalid status code %d and no error present.", resp.getStatusLine().getStatusCode()));
-                    }
+            //deserialize json into an object
+            if (clazz != null && clazz != String.class) {
+                try {
+                    return this.gson.fromJson(respString, clazz);
+                } catch (JsonSyntaxException ex) {
+                    throw new APIException(ex.toString());
                 }
-                //deserialize json into an object
-                if (clazz != null && clazz != String.class) {
-                    StringBuilder respString = responseContentParser(br);
-                    try {
-                        return this.gson.fromJson(respString.toString(), clazz);
-                    } catch (JsonSyntaxException ex) {
-                        throw new APIException(ex.toString());
-                    }
-                } else if (type != null) {
-                    StringBuilder respString = responseContentParser(br);
-                    try {
-                        return this.gson.fromJson(respString.toString(), type);
-                    } catch (IllegalStateException ex) {
-                        logger.error(ex);
-                        throw new APIException(String.format("Error parsing JSON response from server. Illegal state error: %s", respString.toString()));
-                    } catch (JsonSyntaxException ex) {
-                        logger.error(String.format("Error parsing JSON response from server. Unexpected syntax: %s", respString.toString()));
-                        throw new APIException(String.format("Unexpected Server response: %s", respString.toString()));
-                    }
+            } else if (type != null) {
+                try {
+                    return this.gson.fromJson(respString, type);
+                } catch (IllegalStateException ex) {
+                    logger.error(ex);
+                    throw new APIException(String.format("Error parsing JSON response from server. Illegal state error: %s", respString));
+                } catch (JsonSyntaxException ex) {
+                    logger.error(String.format("Error parsing JSON response from server. Unexpected syntax: %s", respString));
+                    throw new APIException(String.format("Unexpected Server response: %s", respString));
                 }
-                if (clazz == String.class) {
-                    StringBuilder respString = responseContentParser(br);
-                    return (T) respString.toString();
-                }
-                return null;
             }
+            if (clazz == String.class) {
+                return (T) respString;
+            }
+            return null;
         } catch (IOException ex) {
             throw new APIException(ex);
         }
     }
 
-    private StringBuilder responseContentParser(BufferedReader br) throws IOException {
-        StringBuilder respString = new StringBuilder();
-        String line = "";
-        while ((line = br.readLine()) != null) {
-            respString.append(line);
+    /**
+     * Reads a whole response body as text, line breaks included.
+     *
+     * <p>The body is decoded with the charset its {@code Content-Type} declares, and as
+     * UTF-8 when it declares none (never with the platform default charset).
+     *
+     * @param entity the response entity, or {@code null} when the response has none (such
+     *               as a {@code 204 No Content})
+     * @return the body, or an empty string when there is no entity or no content
+     * @throws IOException if the body cannot be read
+     */
+    private static String readBody(HttpEntity entity) throws IOException {
+        if (entity == null) {
+            return "";
         }
-        return respString;
+        Charset charset = StandardCharsets.UTF_8;
+        try {
+            ContentType contentType = ContentType.get(entity);
+            if (contentType != null && contentType.getCharset() != null) {
+                charset = contentType.getCharset();
+            }
+        } catch (ParseException | UnsupportedCharsetException ex) {
+            // An unreadable or unknown charset: keep UTF-8.
+        }
+        try (InputStream in = entity.getContent()) {
+            if (in == null) {
+                return "";
+            }
+            Reader reader = new InputStreamReader(in, charset);
+            StringBuilder text = new StringBuilder();
+            char[] buffer = new char[8192];
+            int read;
+            while ((read = reader.read(buffer)) != -1) {
+                text.append(buffer, 0, read);
+            }
+            return text.toString();
+        }
     }
 
     /**

@@ -18,6 +18,7 @@ import org.junit.Test;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -457,7 +458,6 @@ public class ManagerTest {
         assertEquals("R1", reply == null ? null : reply.routeId);
     }
 
-    @Ignore("bug (unfiled): a response without a body (such as 204) throws NullPointerException")
     @Test
     public void responseWithoutBodyIsNotAnError() throws Exception {
         TestManager manager = manager();
@@ -468,13 +468,61 @@ public class ManagerTest {
         assertTrue("expected no content, got: " + result, result == null || result.isEmpty());
     }
 
-    @Ignore("bug (unfiled): response bodies are read line by line and the line breaks are dropped")
     @Test
     public void textResponseKeepsLineBreaks() throws Exception {
         TestManager manager = manager();
         http.respond(200, "id,name\n1,Depot\n", "text/csv");
 
         assertEquals("id,name\n1,Depot\n", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+    }
+
+    @Test
+    public void textResponseKeepsWindowsLineBreaks() throws Exception {
+        TestManager manager = manager();
+        http.respond(200, "id,name\r\n1,Depot\r\n", "text/csv");
+
+        assertEquals("id,name\r\n1,Depot\r\n", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+    }
+
+    @Test
+    public void responseWithoutBodyParsesToNull() throws Exception {
+        TestManager manager = manager();
+        Type listOfReplies = new TypeToken<ArrayList<Reply>>() {
+        }.getType();
+        http.respondWithoutBody(204).respondWithoutBody(204);
+
+        assertNull(manager.makeRequest(RequestMethod.DELETE, builder(), "", Reply.class));
+        assertNull(manager.makeRequest(RequestMethod.DELETE, builder(), "", listOfReplies));
+    }
+
+    @Test
+    public void errorWithoutBodyBecomesApiException() {
+        final TestManager manager = manager();
+        http.respondWithoutBody(404);
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid status code 404"));
+    }
+
+    @Test
+    public void bodyWithoutCharsetIsReadAsUtf8() throws Exception {
+        TestManager manager = manager();
+        http.respondWithBytes(200, "Caf\u00e9 \u00fc \u2713".getBytes(StandardCharsets.UTF_8), "text/plain");
+
+        assertEquals("Caf\u00e9 \u00fc \u2713", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+    }
+
+    @Test
+    public void declaredCharsetIsHonoured() throws Exception {
+        TestManager manager = manager();
+        http.respondWithBytes(200, "Caf\u00e9".getBytes(StandardCharsets.ISO_8859_1), "text/plain; charset=ISO-8859-1")
+                .respondWithBytes(200, "Caf\u00e9".getBytes(StandardCharsets.UTF_8), "text/plain; charset=no-such-charset");
+
+        assertEquals("Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+        assertEquals("an unknown charset falls back to UTF-8",
+                "Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
     }
 
     // ------------------------------------------------------------------ client life cycle
