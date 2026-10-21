@@ -3,24 +3,39 @@ name: Commit validation
 on:
   [pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   commitsar:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      # Needed to close a pull request whose commits fail the check.
+      pull-requests: write
     steps:
-      - uses: actions/checkout@v1
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          fetch-depth: 0
 
       - name: Commitsar Action
-        uses: aevea/commitsar@v0.20.2
+        uses: aevea/commitsar@916c7b483225a30d3a17f407fa25f5b25888ea69 # v0.20.2
 
-      - if: ${{ failure() }}
-        uses: superbrothers/close-pull-request@v2
-        with:
-          comment: |
-            # Uh Oh
-            ## It seems that your pull request doesn't pass conventional commit validation
-            ### Don't worry! This guide will help you to fix this issue and avoid it in future!
-            - Please check conventional commit [specification](https://www.conventionalcommits.org/en/v1.0.0/) and [tips how to write perfect messages](https://chris.beams.io/posts/git-commit/#seven-rules)
-            - If you are using IntelliJ IDEA, please take a look at [special plugin](https://plugins.jetbrains.com/plugin/13389-conventional-commit)
-            - In order to fix your commit messages you should create new pull request from another branch, **force push is not allowed**. You can do it in IntelliJ IDEA using [this guide](https://www.jetbrains.com/help/idea/edit-project-history.html) or using git cli and [that guide](https://help.github.com/en/github/committing-changes-to-your-project/changing-a-commit-message). This pull request will be closed automatically.
+      # Closes the pull request with the GitHub CLI that the runner provides, instead of
+      # a third-party action.
+      - name: Close the pull request
+        if: ${{ failure() }}
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: |
+          cat > comment.md <<'MD'
+          # Uh Oh
+          ## It seems that your pull request doesn't pass conventional commit validation
+          ### Don't worry! This guide will help you to fix this issue and avoid it in future!
+          - Please check conventional commit [specification](https://www.conventionalcommits.org/en/v1.0.0/) and [tips how to write perfect messages](https://chris.beams.io/posts/git-commit/#seven-rules)
+          - If you are using IntelliJ IDEA, please take a look at [special plugin](https://plugins.jetbrains.com/plugin/13389-conventional-commit)
+          - In order to fix your commit messages you should create new pull request from another branch, **force push is not allowed**. You can do it in IntelliJ IDEA using [this guide](https://www.jetbrains.com/help/idea/edit-project-history.html) or using git cli and [that guide](https://help.github.com/en/github/committing-changes-to-your-project/changing-a-commit-message). This pull request will be closed automatically.
+          MD
+          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file comment.md
+          gh pr close "$PR_NUMBER" --repo "$GITHUB_REPOSITORY"
