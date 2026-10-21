@@ -196,17 +196,18 @@ public class RoutingManagerTest {
         assertEquals("OPT-1", result.getOptimizationProblemId());
     }
 
-    @Ignore("bug (unfiled): updateOptimization does not put optimization_problem_id on the URL")
     @Test
     public void updateOptimizationPutsTheIdOnTheUrl() throws Exception {
         RoutingManager manager = manager();
         http.respondWithFixture(200, "optimization.json");
         OptimizationParameters request = optimizationParameters();
         request.setProblemId("OPT-1");
+        request.setReoptimize(true);
 
         manager.updateOptimization(request);
 
-        http.request().assertQuery("optimization_problem_id", "OPT-1");
+        http.request().assertQuery("optimization_problem_id", "OPT-1").assertQuery("reoptimize", "1")
+                .assertNoQuery("show_directions");
     }
 
     @Test

@@ -77,9 +77,19 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.GET, builder, parameters, Optimization.class);
     }
 
+    /**
+     * Updates an optimization: {@code PUT /api.v4/optimization_problem.php}. The
+     * optimization ID ({@code optimization_problem_id}) and the {@code reoptimize} and
+     * {@code show_directions} flags go in the query; the parameters and addresses go in the
+     * JSON body.
+     *
+     * @param parameters the optimization, with its problem ID set
+     * @return the updated optimization
+     * @throws APIException if the request fails
+     */
     public DataObject updateOptimization(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
-        return this.makeJSONRequest(RequestMethod.PUT, builder, parameters, DataObject.class);
+        return this.makeJSONRequest(RequestMethod.PUT, builder, parameters, parameters, DataObject.class);
     }
 
     public Optimization reOptimizationByOptimizationID(OptimizationParameters parameters) throws APIException, IllegalAccessException {
