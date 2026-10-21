@@ -1,0 +1,19 @@
+{
+  "results": [
+    {
+      "activity_id": "ACT-1",
+      "activity_type": "user_message",
+      "activity_timestamp": "1761040000",
+      "activity_message": "Driver is running late",
+      "route_id": "ROUTE-A1",
+      "route_name": "Morning run"
+    },
+    {
+      "activity_id": "ACT-2",
+      "activity_type": "route-optimized",
+      "activity_timestamp": "1761040100",
+      "route_id": "ROUTE-A1"
+    }
+  ],
+  "total": 2
+}
