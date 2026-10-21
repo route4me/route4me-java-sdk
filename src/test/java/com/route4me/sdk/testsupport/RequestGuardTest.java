@@ -23,7 +23,9 @@ public class RequestGuardTest {
 
     private static final String KEY = MockHttp.API_KEY;
 
-    private final RequestGuard guard = new RequestGuard(EndpointRegistry.load(), KEY);
+    /** Kept apart from the run-wide report, so the self-tests do not show up in its summary. */
+    private final DeprecatedEndpointReport.Hits hits = new DeprecatedEndpointReport.Hits();
+    private final RequestGuard guard = new RequestGuard(EndpointRegistry.load(), KEY, hits);
 
     private static CapturedRequest capture(HttpUriRequest request) throws IOException {
         return CapturedRequest.from(request);
@@ -74,8 +76,10 @@ public class RequestGuardTest {
                 capture(new HttpGet("https://telematics.route4me.com/api/vendors.php?api_key=" + KEY)),
                 "RequestGuardTest.allowsDeprecatedEndpointButRecordsIt");
         assertEquals("[]", problems.toString());
-        assertTrue(DeprecatedEndpointReport.summary().toString()
-                .contains("GET https://telematics.route4me.com/api/vendors.php"));
+        assertTrue(hits.summary().toString().contains("GET https://telematics.route4me.com/api/vendors.php"));
+        assertTrue(hits.summary().toString().contains("RequestGuardTest.allowsDeprecatedEndpointButRecordsIt"));
+        assertEquals("[Deprecated endpoints hit by unit tests: none]",
+                new DeprecatedEndpointReport.Hits().summary().toString());
     }
 
     @Test
@@ -121,7 +125,7 @@ public class RequestGuardTest {
 
     @Test
     public void managerWithoutKeyHasNothingToLeak() throws IOException {
-        RequestGuard noKey = new RequestGuard(EndpointRegistry.load(), null);
+        RequestGuard noKey = new RequestGuard(EndpointRegistry.load(), null, hits);
         assertTrue(noKey.keyLeaks(capture(new HttpGet("https://api.route4me.com/api.v4/route.php"))).isEmpty());
         assertTrue(noKey.keyLeaks(new APIException("anything")).isEmpty());
     }

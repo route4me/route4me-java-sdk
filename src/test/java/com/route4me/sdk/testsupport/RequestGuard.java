@@ -17,7 +17,7 @@ import java.util.Set;
  * <ul>
  *   <li>its scheme is {@code https};</li>
  *   <li>its (host, path) is on the registry's {@code deprecated} list, which is allowed but
- *       reported through {@link DeprecatedEndpointReport}; or its host is in
+ *       recorded for the {@link DeprecatedEndpointReport}; or its host is in
  *       {@code allowed_hosts} and its (method, host, path) matches an {@code endpoints}
  *       entry;</li>
  *   <li>the API key appears nowhere except the {@code api_key} query parameter, which is
@@ -32,14 +32,27 @@ public final class RequestGuard {
 
     private final EndpointRegistry registry;
     private final String apiKey;
+    private final DeprecatedEndpointReport.Hits deprecatedHits;
 
     /**
+     * Creates a guard that records deprecated-endpoint hits in the run-wide report.
+     *
      * @param registry the endpoint registry
      * @param apiKey   the key the managers under test were created with, or {@code null}
      */
     public RequestGuard(EndpointRegistry registry, String apiKey) {
+        this(registry, apiKey, DeprecatedEndpointReport.global());
+    }
+
+    /**
+     * @param registry       the endpoint registry
+     * @param apiKey         the key the managers under test were created with, or {@code null}
+     * @param deprecatedHits where to record requests to deprecated endpoints
+     */
+    public RequestGuard(EndpointRegistry registry, String apiKey, DeprecatedEndpointReport.Hits deprecatedHits) {
         this.registry = registry;
         this.apiKey = apiKey;
+        this.deprecatedHits = deprecatedHits;
     }
 
     /**
@@ -59,7 +72,7 @@ public final class RequestGuard {
         }
         EndpointRegistry.Entry deprecated = registry.findDeprecated(host, path);
         if (deprecated != null) {
-            DeprecatedEndpointReport.record(request.getMethod(), host, path, deprecated.getReason(), testName);
+            deprecatedHits.record(request.getMethod(), host, path, deprecated.getReason(), testName);
         } else if (!registry.isAllowedHost(host)) {
             problems.add(request + ": host '" + host + "' is not in allowed_hosts " + registry.getAllowedHosts()
                     + " of endpoints.json");
