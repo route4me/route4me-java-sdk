@@ -7,6 +7,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.http.Route4MeRedirectStrategy;
 import com.route4me.sdk.queryconverter.QueryConverter;
 import com.route4me.sdk.utils.Sanitizer;
 import java.io.*;
@@ -50,6 +51,9 @@ import org.apache.logging.log4j.LogManager;
  * ({@code https://wh.route4me.com/modules/api/v5.0/} and {@code v5.1/}), so it stays out of
  * URLs and server logs. Every other request sends it as the {@code api_key} query
  * parameter, which the V4 API requires.
+ *
+ * <p>Redirects are followed only over https to the Route4Me API hosts; see
+ * {@link Route4MeRedirectStrategy}.
  *
  * <p>Every request carries the connect, socket (read) and connection-request timeouts of
  * the manager; see {@link #setConnectTimeout(int)}, {@link #setSocketTimeout(int)} and
@@ -408,6 +412,7 @@ public abstract class Manager implements Closeable {
         return HttpClients.custom()
                 .setConnectionManager(pool)
                 .setDefaultRequestConfig(this.requestConfig())
+                .setRedirectStrategy(new Route4MeRedirectStrategy())
                 .setUserAgent(USER_AGENT)
                 .build();
     }

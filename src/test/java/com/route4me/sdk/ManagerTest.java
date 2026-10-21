@@ -10,6 +10,7 @@ import com.route4me.sdk.testsupport.MockHttp;
 import com.route4me.sdk.utils.Sanitizer;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.RedirectException;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
@@ -18,7 +19,11 @@ import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.sun.net.httpserver.HttpServer;
+
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -801,6 +806,40 @@ public class ManagerTest {
             assertEquals(1, clients.size());
         } finally {
             pool.shutdownNow();
+            manager.close();
+        }
+    }
+
+    @Test
+    public void theDefaultClientRefusesRedirectsAwayFromRoute4Me() throws Exception {
+        HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+        server.createContext("/", exchange -> {
+            String target = exchange.getRequestURI().getPath().endsWith("/plain")
+                    ? "http://api.route4me.com/api.v4/route.php" : "https://example.com/collect";
+            exchange.getResponseHeaders().add("Location", target);
+            exchange.sendResponseHeaders(302, -1);
+            exchange.close();
+        });
+        server.start();
+        final TestManager manager = new TestManager(MockHttp.API_KEY);
+        try {
+            for (String path : Arrays.asList("/foreign", "/plain")) {
+                final URIBuilder local = new URIBuilder().setScheme("http")
+                        .setHost(server.getAddress().getAddress().getHostAddress())
+                        .setPort(server.getAddress().getPort()).setPath(path);
+
+                APIException error = http.expectApiException(
+                        () -> manager.makeRequest(RequestMethod.GET, local, "", Reply.class));
+
+                Throwable cause = error.getCause();
+                while (cause != null && !(cause instanceof RedirectException)) {
+                    cause = cause.getCause();
+                }
+                assertTrue("expected a RedirectException in " + error, cause != null);
+                assertTrue(cause.getMessage(), cause.getMessage().startsWith("Refused to follow a redirect to "));
+            }
+        } finally {
+            server.stop(0);
             manager.close();
         }
     }
