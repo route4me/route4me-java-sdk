@@ -164,11 +164,26 @@ public class TerritoriesManager extends Manager {
         return this.getTerritory(territoryId, true, false);
     }
 
+    /**
+     * Gets a territory: {@code GET /api.v4/territory.php?territory_id=...}.
+     *
+     * @param territoryId the territory ID
+     * @param addresses   whether to include the addresses in the territory; {@code null}
+     *                    leaves the {@code addresses} parameter out
+     * @param orders      whether to include the orders in the territory; {@code null}
+     *                    leaves the {@code orders} parameter out
+     * @return the territory
+     * @throws APIException if the request fails
+     */
     public Territory getTerritory(String territoryId, Boolean addresses, Boolean orders) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TERRITORY_EP);
         builder.setParameter("territory_id", territoryId);
-        builder.setParameter("orders", orders.toString());
-        builder.setParameter("addresses", addresses.toString());
+        if (orders != null) {
+            builder.setParameter("orders", orders.toString());
+        }
+        if (addresses != null) {
+            builder.setParameter("addresses", addresses.toString());
+        }
         return this.makeRequest(RequestMethod.GET, builder, "", Territory.class);
     }
 

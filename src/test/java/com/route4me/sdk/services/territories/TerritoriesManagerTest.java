@@ -2,7 +2,6 @@ package com.route4me.sdk.services.territories;
 
 import com.route4me.sdk.testsupport.Fixtures;
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -100,7 +99,6 @@ public class TerritoriesManagerTest {
         http.request(3).assertQuery("orders", "true").assertQuery("addresses", "true");
     }
 
-    @Ignore("bug (unfiled): getTerritory(id, null, null) throws NullPointerException on the Boolean flags")
     @Test
     public void getTerritoryAcceptsNullFlags() throws Exception {
         TerritoriesManager manager = manager();
@@ -108,7 +106,8 @@ public class TerritoriesManagerTest {
 
         manager.getTerritory("T-POLY", null, null);
 
-        http.request().assertEndpoint("GET", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY");
+        http.request().assertEndpoint("GET", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY")
+                .assertNoQuery("orders").assertNoQuery("addresses");
     }
 
     @Test
