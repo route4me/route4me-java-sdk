@@ -21,7 +21,9 @@ import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -66,13 +68,31 @@ public class EnumValuesTest {
         }
     }
 
-    @Ignore("bug (unfiled): Constants.TypeofMatrix and Constants.DirectionsMethod toString() return the "
+    @Ignore("bug (unfiled): Constants.AlgorithmType, TypeofMatrix and DirectionsMethod toString() return the "
             + "constant name instead of the API value")
     @Test
     public void everyValueEnumReturnsItsApiValueFromToString() throws Exception {
         for (Class<?> type : valueEnums()) {
             assertValuesMatchToString(type);
         }
+    }
+
+    @Test
+    public void numericCodesAreDistinctWithinEachEnum() throws Exception {
+        int checked = 0;
+        for (Class<?> type : valueEnums()) {
+            Method getValue = findGetValue(type);
+            if (getValue == null || getValue.getReturnType() != int.class) {
+                continue;
+            }
+            Set<Object> codes = new HashSet<>();
+            for (Object constant : type.getEnumConstants()) {
+                assertTrue(type.getSimpleName() + " repeats code " + getValue.invoke(constant),
+                        codes.add(getValue.invoke(constant)));
+            }
+            checked++;
+        }
+        assertTrue("expected the numeric enums to be found", checked >= 8);
     }
 
     @Test
@@ -86,10 +106,22 @@ public class EnumValuesTest {
     }
 
     @Test
-    public void orderStatusCodesRoundTrip() {
-        for (OrderStatus status : OrderStatus.values()) {
-            assertSame(status, OrderStatus.get(status.getValue()));
+    public void numericCodesRoundTripThroughGet() throws Exception {
+        List<Class<?>> enums = valueEnums();
+        enums.add(OrderStatus.class);
+        int checked = 0;
+        for (Class<?> type : enums) {
+            Method getValue = findGetValue(type);
+            Method lookup = findStaticGet(type);
+            if (getValue == null || getValue.getReturnType() != int.class || lookup == null) {
+                continue;
+            }
+            for (Object constant : type.getEnumConstants()) {
+                assertSame(type.getSimpleName() + "." + constant, constant, lookup.invoke(null, getValue.invoke(constant)));
+            }
+            checked++;
         }
+        assertTrue("expected enums with a get(int) lookup", checked >= 5);
     }
 
     @Ignore("bug #40: SourceType is mutable; setValue changes the shared enum constant")
@@ -119,6 +151,15 @@ public class EnumValuesTest {
             return true;
         } catch (NoSuchMethodException e) {
             return false;
+        }
+    }
+
+    private static Method findStaticGet(Class<?> type) {
+        try {
+            Method lookup = type.getMethod("get", int.class);
+            return Modifier.isStatic(lookup.getModifiers()) ? lookup : null;
+        } catch (NoSuchMethodException e) {
+            return null;
         }
     }
 

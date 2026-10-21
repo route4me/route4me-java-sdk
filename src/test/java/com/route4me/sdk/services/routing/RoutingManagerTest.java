@@ -1,5 +1,7 @@
 package com.route4me.sdk.services.routing;
 
+import com.route4me.sdk.services.routing.balance.Balance;
+import com.route4me.sdk.services.routing.balance.BalanceMode;
 import com.route4me.sdk.services.routing.search.RouteSearchResult;
 import com.route4me.sdk.testsupport.Fixtures;
 import com.route4me.sdk.testsupport.MockHttp;
@@ -98,6 +100,58 @@ public class RoutingManagerTest {
         assertEquals(Long.valueOf(5002), result.getAddresses().get(1).getRouteDestinationId());
         assertEquals("Morning run", result.getParameters().getRouteName());
         assertTrue(result.getLinks().getRoute().contains("ROUTE-A1"));
+    }
+
+    @Test
+    public void runOptimizationSendsNestedOptionsWithApiFieldNames() throws Exception {
+        RoutingManager manager = manager();
+        http.respondWithFixture(200, "optimization.json");
+        Bundling bundling = new Bundling();
+        bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ADDRESS.getValue());
+        SlowDowns slowDowns = new SlowDowns();
+        slowDowns.setServiceTime(10);
+        slowDowns.setTravelTime(20);
+        Break lunch = new Break();
+        lunch.setMode(1);
+        lunch.setDuration(1800);
+        lunch.setModeParams(Arrays.asList(4, 5));
+        Parameters parameters = new Parameters();
+        parameters.setAlgorithmType(Constants.AlgorithmType.CVRP_TW_MD.getValue());
+        parameters.setTravelMode(Constants.TravelMode.DRIVING.toString());
+        parameters.setOptimize(Constants.Optimize.TIME.toString());
+        parameters.setUTurn(Constants.UTurn.UTURN_DEPART_SHORTEST.getValue());
+        parameters.setBalance(new Balance(BalanceMode.DESTINATIONS_COUNT.toString()));
+        parameters.setBundling(bundling);
+        parameters.setSlowdowns(slowDowns);
+        parameters.setBreaks(Collections.singletonList(lunch));
+        OptimizationParameters request = new OptimizationParameters();
+        request.setParameters(parameters);
+        request.setAddresses(Arrays.asList(
+                new Address("100 Example St", true, "Depot", 40.1, -74.1, 0),
+                new Address("200 Sample Ave", false, 40.2, -74.2, 300, 28800, 36000),
+                new Address("300 Demo Rd", 40.3, -74.3, 600, 32400, 39600),
+                new Address("400 Test Blvd", "Back door", 40.4, -74.4, 900)));
+
+        manager.runOptimization(request);
+
+        http.request()
+                .assertJson("parameters.algorithm_type", "4")
+                .assertJson("parameters.travel_mode", "Driving")
+                .assertJson("parameters.optimize", "Time")
+                .assertJson("parameters.uturn", 1)
+                .assertJson("parameters.balance.mode", "destinations_count")
+                .assertJson("parameters.bundling.mode", 1)
+                .assertJson("parameters.slowdowns.service_time", 10)
+                .assertJson("parameters.slowdowns.travel_time", 20)
+                .assertJson("parameters.breaks[0].duration", 1800)
+                .assertJson("parameters.breaks[0].mode_params[1]", 5)
+                .assertJson("addresses[0].alias", "Depot")
+                .assertJson("addresses[0].is_depot", true)
+                .assertJson("addresses[1].time_window_start", 28800)
+                .assertJson("addresses[1].time_window_end", 36000)
+                .assertJson("addresses[2].time_window_start", 32400)
+                .assertJson("addresses[3].alias", "Back door")
+                .assertJson("addresses[3].time", 900);
     }
 
     @Test
