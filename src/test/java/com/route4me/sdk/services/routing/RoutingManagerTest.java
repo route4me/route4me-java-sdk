@@ -225,6 +225,19 @@ public class RoutingManagerTest {
         assertEquals("OPT-1", optimization.getOptimizationProblemId());
     }
 
+    @Ignore("bug (unfiled): reOptimizationByOptimizationID sends the JSON string \"\" as its body")
+    @Test
+    public void reOptimizationByIdSendsNoBody() throws Exception {
+        RoutingManager manager = manager();
+        http.respondWithFixture(200, "optimization_with_routes.json");
+        OptimizationParameters request = new OptimizationParameters();
+        request.setProblemId("OPT-1");
+
+        manager.reOptimizationByOptimizationID(request);
+
+        http.request().assertNoBody();
+    }
+
     @Test
     public void reOptimizationSendsTheOptimizationAsBody() throws Exception {
         RoutingManager manager = manager();

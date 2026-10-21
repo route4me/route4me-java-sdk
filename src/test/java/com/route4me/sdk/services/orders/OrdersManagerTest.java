@@ -105,6 +105,21 @@ public class OrdersManagerTest {
         assertEquals("Example Bakery", orders.get(0).getAddressAlias());
     }
 
+    @Ignore("bug (unfiled): getOrders sends OrderFilter.toString() (Lombok text) as the filter query parameter")
+    @Test
+    public void getOrdersDoesNotSendJavaToStringAsTheFilter() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, ordersPage());
+        OrderFilter filter = new OrderFilter();
+        filter.setDisplay("all");
+        OrderRequest request = new OrderRequest().setFilter(filter);
+
+        manager.getOrders(request);
+
+        String sent = http.request().query("filter");
+        assertFalse("filter=" + sent, sent != null && sent.startsWith("OrderFilter("));
+    }
+
     @Test
     public void getOrdersByScheduledDatePostsAFilter() throws Exception {
         OrdersManager manager = manager();

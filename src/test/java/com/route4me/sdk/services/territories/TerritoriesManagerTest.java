@@ -99,6 +99,17 @@ public class TerritoriesManagerTest {
         http.request(3).assertQuery("orders", "true").assertQuery("addresses", "true");
     }
 
+    @Ignore("bug (unfiled): getTerritory(id, null, null) throws NullPointerException on the Boolean flags")
+    @Test
+    public void getTerritoryAcceptsNullFlags() throws Exception {
+        TerritoriesManager manager = manager();
+        http.respondWithFixture(200, "territory.json");
+
+        manager.getTerritory("T-POLY", null, null);
+
+        http.request().assertEndpoint("GET", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY");
+    }
+
     @Test
     public void deleteTerritorySendsTheIdAndReadsTheStatus() throws Exception {
         TerritoriesManager manager = manager();
