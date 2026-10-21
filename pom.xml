@@ -74,11 +74,31 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <!-- Stay on 1.x: validator.route4me.com runs a Socket.IO 2 server (Engine.IO 3),
+                 which socket.io-client 2.x cannot talk to. -->
             <groupId>io.socket</groupId>
             <artifactId>socket.io-client</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
         </dependency>
     </dependencies>
+    <dependencyManagement>
+        <dependencies>
+            <!-- Patched releases of what socket.io-client 1.0.2 asks for: okhttp 3.12.12
+                 (CVE-2021-0341, which can accept a wrong certificate), its okio 1.15.0
+                 (CVE-2023-3635) and org.json 20090211 (CVE-2022-45688, CVE-2023-5072).
+                 okhttp 4.12.0 brings okio 3.6.0. All of them run on Java 8. -->
+            <dependency>
+                <groupId>com.squareup.okhttp3</groupId>
+                <artifactId>okhttp</artifactId>
+                <version>4.12.0</version>
+            </dependency>
+            <dependency>
+                <groupId>org.json</groupId>
+                <artifactId>json</artifactId>
+                <version>20260814</version>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <build>
         <plugins>
             <plugin>
