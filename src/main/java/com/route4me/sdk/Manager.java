@@ -12,6 +12,7 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.List;
+import java.util.function.Supplier;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
@@ -35,6 +36,11 @@ public abstract class Manager {
     private RequestConfig requestProxyConfig;
     private boolean disableRedirects;
     private String callBackURL;
+    /**
+     * Test-only: when not {@code null}, supplies the HTTP client for each request
+     * instead of the clients built in {@code makeRequest}. Only tests set it.
+     */
+    private Supplier<CloseableHttpClient> httpClientSupplier;
 
     public Manager(String apiKey) {
         this.apiKey = apiKey;
@@ -185,12 +191,16 @@ public abstract class Manager {
         PoolingHttpClientConnectionManager poolingConnManager = new PoolingHttpClientConnectionManager();
         poolingConnManager.setMaxTotal(10);
         poolingConnManager.setDefaultMaxPerRoute(10);
-        CloseableHttpClient client = HttpClients.custom().setConnectionManager(poolingConnManager).build();
+        CloseableHttpClient client = this.httpClientSupplier != null
+                ? this.httpClientSupplier.get()
+                : HttpClients.custom().setConnectionManager(poolingConnManager).build();
         try {
             // Redirects Management
             if (this.disableRedirects) {
                 builder.addParameter("redirect", "0");
-                client = HttpClients.custom().disableRedirectHandling().build();
+                if (this.httpClientSupplier == null) {
+                    client = HttpClients.custom().disableRedirectHandling().build();
+                }
             }
             if (this.callBackURL != null) {
                 builder.addParameter("optimized_callback_url", this.callBackURL);
@@ -282,6 +292,24 @@ public abstract class Manager {
             respString.append(line);
         }
         return respString;
+    }
+
+    /**
+     * Test-only hook: makes every request of this manager use the HTTP client returned by
+     * {@code supplier} instead of the clients this class builds.
+     *
+     * <p>This method is package-private and is not part of the public API. It exists so
+     * that offline unit tests can capture the outgoing requests and return canned
+     * responses. Production code never calls it; while no supplier is set (the default),
+     * requests are sent exactly as before. The supplied client is closed after each
+     * request, like the default one, and the {@code redirect=0} query parameter is still
+     * added when redirects are disabled.
+     *
+     * @param supplier returns the client for one request, or {@code null} to go back to
+     *                 the default clients
+     */
+    void setHttpClientSupplier(Supplier<CloseableHttpClient> supplier) {
+        this.httpClientSupplier = supplier;
     }
 
     /**
