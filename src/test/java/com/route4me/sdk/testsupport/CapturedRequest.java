@@ -9,6 +9,8 @@ import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpRequestBase;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.util.EntityUtils;
@@ -55,15 +57,17 @@ public final class CapturedRequest {
     private final List<NameValuePair> query;
     private final String body;
     private final String entityContentType;
+    private final String proxy;
 
     private CapturedRequest(String method, URI uri, Map<String, List<String>> headers,
-                            String body, String entityContentType) {
+                            String body, String entityContentType, String proxy) {
         this.method = method;
         this.uri = uri;
         this.headers = headers;
         this.query = Collections.unmodifiableList(URLEncodedUtils.parse(uri, StandardCharsets.UTF_8));
         this.body = body;
         this.entityContentType = entityContentType;
+        this.proxy = proxy;
     }
 
     /**
@@ -93,7 +97,14 @@ public final class CapturedRequest {
                 contentType = entity.getContentType() == null ? null : entity.getContentType().getValue();
             }
         }
-        return new CapturedRequest(request.getMethod(), request.getURI(), headers, body, contentType);
+        String proxy = null;
+        if (request instanceof HttpRequestBase) {
+            RequestConfig config = ((HttpRequestBase) request).getConfig();
+            if (config != null && config.getProxy() != null) {
+                proxy = config.getProxy().toURI();
+            }
+        }
+        return new CapturedRequest(request.getMethod(), request.getURI(), headers, body, contentType, proxy);
     }
 
     // ------------------------------------------------------------------ accessors
@@ -131,6 +142,11 @@ public final class CapturedRequest {
     /** @return the request headers, by name, in the order they were set */
     public Map<String, List<String>> getHeaders() {
         return Collections.unmodifiableMap(headers);
+    }
+
+    /** @return the proxy set in the request config, as {@code scheme://host:port}, or {@code null} */
+    public String getProxy() {
+        return proxy;
     }
 
     /** @return the body text, or {@code null} when the request has no entity */
