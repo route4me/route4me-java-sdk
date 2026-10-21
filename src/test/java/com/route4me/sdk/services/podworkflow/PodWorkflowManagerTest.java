@@ -23,10 +23,12 @@ public class PodWorkflowManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private PodWorkflowManager manager() {
         return http.install(new PodWorkflowManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample POD workflow with fake data. */
     private static PodWorkflow workflow() {
         PodWorkflow workflow = new PodWorkflow();
         workflow.setWorkflowId("delivery");

@@ -27,10 +27,12 @@ public class OptimizationProfileManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private OptimizationProfileManager manager() {
         return http.install(new OptimizationProfileManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample optimization profile create request with fake data. */
     private static OptimizationProfileCreateRequest createRequest() {
         OptimizationProfileCreateRequest request = new OptimizationProfileCreateRequest();
         request.setProfileName("Default");

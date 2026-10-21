@@ -26,6 +26,7 @@ public class RouteDestinationsManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private RouteDestinationsManager manager() {
         return http.install(new RouteDestinationsManager(MockHttp.API_KEY));
     }

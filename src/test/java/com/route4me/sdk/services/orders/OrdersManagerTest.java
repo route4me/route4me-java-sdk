@@ -30,14 +30,17 @@ public class OrdersManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private OrdersManager manager() {
         return http.install(new OrdersManager(MockHttp.API_KEY));
     }
 
+    /** Returns an {@code order.php} search response with one order. */
     private static String ordersPage() {
         return "{\"results\":[" + Fixtures.read("order.json") + "],\"total\":1}";
     }
 
+    /** Builds a sample order with fake data. */
     private static Order order() {
         Order order = new Order();
         order.setAddress1("100 Example St, Springfield");
@@ -201,6 +204,7 @@ public class OrdersManagerTest {
         assertFalse(json.toString(), json.has("dateInserted"));
     }
 
+    /** Returns a string field of {@code json}, or {@code null} when it is absent. */
     private static String stringField(JsonObject json, String name) {
         return json.has(name) ? json.get(name).getAsString() : null;
     }

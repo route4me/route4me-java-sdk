@@ -28,10 +28,12 @@ public class AddressBookManagerV5Test {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private AddressBookManagerV5 manager() {
         return http.install(new AddressBookManagerV5(MockHttp.API_KEY));
     }
 
+    /** Builds a sample address book contact with fake data. */
     private static AddressBookContactV5 contact() {
         AddressBookContactV5 contact = new AddressBookContactV5();
         contact.setAddress1("100 Example St");
@@ -42,6 +44,7 @@ public class AddressBookManagerV5Test {
         return contact;
     }
 
+    /** Builds a sample filtered contacts query with fake data. */
     private static AddressBookContactsBodyRequest query() {
         AddressBookFilters filters = new AddressBookFilters();
         filters.setSearchQuery("Bakery");

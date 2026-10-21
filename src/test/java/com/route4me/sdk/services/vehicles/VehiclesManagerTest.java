@@ -30,10 +30,12 @@ public class VehiclesManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private VehiclesManager manager() {
         return http.install(new VehiclesManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample vehicle with fake data. */
     private static Vehicles vehicle() {
         Vehicles vehicle = new Vehicles();
         vehicle.setVehicleId("VEH-1");

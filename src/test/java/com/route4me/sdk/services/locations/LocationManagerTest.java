@@ -25,10 +25,12 @@ public class LocationManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private LocationManager manager() {
         return http.install(new LocationManager(MockHttp.API_KEY));
     }
 
+    /** Adds sample filters and paging to a locations request. */
     private static <T extends LocationCombinedRequest> T withFilters(T request) {
         LocationFilters filters = new LocationFilters();
         filters.setSearchQuery("Bakery");

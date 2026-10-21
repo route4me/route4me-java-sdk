@@ -36,10 +36,12 @@ public class VehiclesManagerV5Test {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private VehiclesManagerV5 manager() {
         return http.install(new VehiclesManagerV5(MockHttp.API_KEY));
     }
 
+    /** Builds a sample vehicle with fake data. */
     private static VehicleV5 vehicle() {
         VehicleV5 vehicle = new VehicleV5();
         vehicle.setVehicleAlias("Van 1");
@@ -50,6 +52,7 @@ public class VehiclesManagerV5Test {
         return vehicle;
     }
 
+    /** Builds a sample vehicle profile with fake data. */
     private static VehicleProfile profile() {
         VehicleProfile profile = new VehicleProfile();
         profile.setName("Box truck");
@@ -58,6 +61,7 @@ public class VehiclesManagerV5Test {
         return profile;
     }
 
+    /** Builds a sample vehicle capacity profile with fake data. */
     private static VehicleCapacityProfile capacity() {
         VehicleCapacityProfile capacity = new VehicleCapacityProfile();
         capacity.setName("Small van");

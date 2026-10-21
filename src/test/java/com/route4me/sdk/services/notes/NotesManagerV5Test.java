@@ -24,10 +24,12 @@ public class NotesManagerV5Test {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private NotesManagerV5 manager() {
         return http.install(new NotesManagerV5(MockHttp.API_KEY));
     }
 
+    /** Builds a sample note store request with fake data. */
     private static NoteStoreRequest storeRequest() {
         NoteStoreRequest request = new NoteStoreRequest();
         request.setRouteId("ROUTE-A1");

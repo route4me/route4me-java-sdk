@@ -21,10 +21,12 @@ public class PredictOptimizationTimeManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private PredictOptimizationTimeManager manager() {
         return http.install(new PredictOptimizationTimeManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample two-address optimization request with fake data. */
     private static OptimizationParameters request() {
         Parameters parameters = new Parameters();
         parameters.setRouteName("Morning run");

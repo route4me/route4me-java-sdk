@@ -20,6 +20,7 @@ public class TrackingManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private TrackingManager manager() {
         return http.install(new TrackingManager(MockHttp.API_KEY));
     }

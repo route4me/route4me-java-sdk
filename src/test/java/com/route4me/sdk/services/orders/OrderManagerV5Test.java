@@ -35,10 +35,12 @@ public class OrderManagerV5Test {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private OrderManagerV5 manager() {
         return http.install(new OrderManagerV5(MockHttp.API_KEY));
     }
 
+    /** Builds a sample order with fake data. */
     private static OrderV5 order() {
         GeoPoint geo = new GeoPoint();
         geo.setLat(40.1);
@@ -52,6 +54,7 @@ public class OrderManagerV5Test {
         return order;
     }
 
+    /** Builds a sample set of order filters with fake data. */
     private static OrderFilters filters() {
         OrderFilters filters = new OrderFilters();
         filters.setSearchQuery("Example");

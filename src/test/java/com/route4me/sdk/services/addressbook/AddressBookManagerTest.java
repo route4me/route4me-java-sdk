@@ -24,10 +24,12 @@ public class AddressBookManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private AddressBookManager manager() {
         return http.install(new AddressBookManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample address book contact with fake data. */
     private static Contact contact() {
         Contact contact = new Contact();
         contact.setAddressAlias("Example Bakery");

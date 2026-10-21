@@ -20,10 +20,12 @@ public class DriverReviewManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private DriverReviewManager manager() {
         return http.install(new DriverReviewManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample driver review with fake data. */
     private static DriverReview review() {
         DriverReview review = new DriverReview();
         review.setTrackingNumber("TRK-1");

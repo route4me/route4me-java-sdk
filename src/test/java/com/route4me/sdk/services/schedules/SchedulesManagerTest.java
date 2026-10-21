@@ -30,10 +30,12 @@ public class SchedulesManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private SchedulesManager manager() {
         return http.install(new SchedulesManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample schedule with fake data. */
     private static Schedule schedule() {
         Schedule schedule = new Schedule();
         schedule.setName("Weekdays");
@@ -45,6 +47,7 @@ public class SchedulesManagerTest {
         return schedule;
     }
 
+    /** Builds a sample route schedule with fake data. */
     private static RouteSchedule routeSchedule() {
         RouteSchedule routeSchedule = new RouteSchedule();
         routeSchedule.setRouteId("ROUTE-A1");

@@ -22,6 +22,7 @@ public class NotesManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private NotesManager manager() {
         return http.install(new NotesManager(MockHttp.API_KEY));
     }

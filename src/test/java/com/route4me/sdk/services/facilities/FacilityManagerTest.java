@@ -31,10 +31,12 @@ public class FacilityManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private FacilityManager manager() {
         return http.install(new FacilityManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample facility create request with fake data. */
     private static FacilityCreateRequest createRequest() {
         FacilityCoordinates coordinates = new FacilityCoordinates();
         coordinates.setLat(40.5);

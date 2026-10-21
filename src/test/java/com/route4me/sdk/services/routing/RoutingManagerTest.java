@@ -35,10 +35,12 @@ public class RoutingManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private RoutingManager manager() {
         return http.install(new RoutingManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample two-address optimization request with fake data. */
     private static OptimizationParameters optimizationParameters() {
         Parameters parameters = new Parameters();
         parameters.setRouteName("Morning run");

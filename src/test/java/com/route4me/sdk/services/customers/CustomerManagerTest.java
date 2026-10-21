@@ -25,10 +25,12 @@ public class CustomerManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private CustomerManager manager() {
         return http.install(new CustomerManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample customer store request with fake data. */
     private static CustomerStoreRequest storeRequest() {
         CustomerContact contact = new CustomerContact();
         contact.setType("billing");

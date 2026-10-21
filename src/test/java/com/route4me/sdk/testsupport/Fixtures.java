@@ -14,6 +14,7 @@ public final class Fixtures {
 
     private static final String FOLDER = "/fixtures/";
 
+    /** Not instantiable: static helpers only. */
     private Fixtures() {
     }
 

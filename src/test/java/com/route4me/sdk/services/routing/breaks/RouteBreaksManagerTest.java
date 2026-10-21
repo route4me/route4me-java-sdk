@@ -25,6 +25,7 @@ public class RouteBreaksManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private RouteBreaksManager manager() {
         return http.install(new RouteBreaksManager(MockHttp.API_KEY));
     }
@@ -63,6 +64,7 @@ public class RouteBreaksManagerTest {
         http.request(0).assertJson("replace_existing_breaks", false);
     }
 
+    /** Asserts the break type and amount of a captured route-breaks request. */
     private static void assertType(CapturedRequest request, String type, int amount) {
         request.assertEndpoint("POST", HOST, BREAKS_EP)
                 .assertJson("breaks[0].type", type)

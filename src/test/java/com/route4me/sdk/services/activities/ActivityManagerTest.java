@@ -20,6 +20,7 @@ public class ActivityManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private ActivityManager manager() {
         return http.install(new ActivityManager(MockHttp.API_KEY));
     }

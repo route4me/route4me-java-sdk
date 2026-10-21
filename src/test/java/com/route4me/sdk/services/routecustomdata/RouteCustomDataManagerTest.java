@@ -23,6 +23,7 @@ public class RouteCustomDataManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private RouteCustomDataManager manager() {
         return http.install(new RouteCustomDataManager(MockHttp.API_KEY));
     }

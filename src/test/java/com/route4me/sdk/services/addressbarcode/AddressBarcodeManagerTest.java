@@ -22,6 +22,7 @@ public class AddressBarcodeManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private AddressBarcodeManager manager() {
         return http.install(new AddressBarcodeManager(MockHttp.API_KEY));
     }

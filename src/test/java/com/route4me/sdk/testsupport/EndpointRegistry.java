@@ -79,6 +79,7 @@ public final class EndpointRegistry {
         }
     }
 
+    /** Created by Gson from {@code endpoints.json}. */
     private EndpointRegistry() {
     }
 
@@ -94,6 +95,7 @@ public final class EndpointRegistry {
         return instance;
     }
 
+    /** Parses the registry from a classpath resource. */
     private static EndpointRegistry read(String resource) {
         try (InputStream in = EndpointRegistry.class.getResourceAsStream(resource)) {
             if (in == null) {

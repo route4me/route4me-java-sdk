@@ -30,6 +30,7 @@ public class ApiKeyExposureTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Fails when {@code text} contains {@code secret}. */
     private static void assertHidden(String what, String text, String secret) {
         assertFalse(what + " must not contain the secret value", text.contains(secret));
     }

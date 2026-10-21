@@ -21,6 +21,7 @@ public class RouteStatusManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private RouteStatusManager manager() {
         return http.install(new RouteStatusManager(MockHttp.API_KEY));
     }

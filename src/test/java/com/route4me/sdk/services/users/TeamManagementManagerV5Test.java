@@ -24,10 +24,12 @@ public class TeamManagementManagerV5Test {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private TeamManagementManagerV5 manager() {
         return http.install(new TeamManagementManagerV5(MockHttp.API_KEY));
     }
 
+    /** Builds a sample team member request with fake data. */
     private static TeamMemberRequest member() {
         TeamMemberRequest request = new TeamMemberRequest();
         request.setMemberEmail("driver@example.com");

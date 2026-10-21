@@ -40,6 +40,7 @@ public class GeocodingManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private GeocodingManager manager() {
         return http.install(new GeocodingManager(MockHttp.API_KEY));
     }
@@ -51,6 +52,7 @@ public class GeocodingManagerTest {
         manager.bulkGeocoder(Collections.<String>emptyList(), options);
     }
 
+    /** Builds a geocoder URL for {@code address}, as {@code ThreadBasedGeocoding} does. */
     private static URIBuilder addressBuilder(String address) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
@@ -291,6 +293,7 @@ public class GeocodingManagerTest {
         assertEquals(1.0, coordinates.getLatitude(), 0.0);
     }
 
+    /** Returns the result for {@code address}, failing when there is none. */
     private static Address findByAddress(List<Address> addresses, String address) {
         for (Address candidate : addresses) {
             if (address.equals(candidate.getAddress())) {

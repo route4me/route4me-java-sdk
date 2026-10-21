@@ -29,10 +29,12 @@ public class TerritoriesManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private TerritoriesManager manager() {
         return http.install(new TerritoriesManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample polygon territory with fake data. */
     private static Territory polygonTerritory(String id) {
         TerritoryData data = new TerritoryData();
         data.setType("poly");

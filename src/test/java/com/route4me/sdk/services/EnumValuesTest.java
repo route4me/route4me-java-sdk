@@ -134,6 +134,7 @@ public class EnumValuesTest {
         }
     }
 
+    /** Asserts that each constant's {@code toString()} equals its String {@code getValue()}. */
     private static void assertValuesMatchToString(Class<?> type) throws Exception {
         Method getValue = findGetValue(type);
         for (Object constant : type.getEnumConstants()) {
@@ -145,6 +146,7 @@ public class EnumValuesTest {
         }
     }
 
+    /** Returns whether the enum declares its own {@code toString()}. */
     private static boolean overridesToString(Class<?> type) {
         try {
             type.getDeclaredMethod("toString");
@@ -154,6 +156,7 @@ public class EnumValuesTest {
         }
     }
 
+    /** Returns the enum's static {@code get(int)} lookup, or {@code null}. */
     private static Method findStaticGet(Class<?> type) {
         try {
             Method lookup = type.getMethod("get", int.class);
@@ -163,6 +166,7 @@ public class EnumValuesTest {
         }
     }
 
+    /** Returns the enum's {@code getValue()} method, or {@code null}. */
     private static Method findGetValue(Class<?> type) {
         try {
             return type.getMethod("getValue");

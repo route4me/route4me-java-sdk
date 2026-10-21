@@ -93,10 +93,12 @@ public class ManagerTest {
         int count;
     }
 
+    /** Returns a builder for {@link #PATH} on the V4 API host. */
     private static URIBuilder builder() {
         return Manager.defaultBuilder(PATH);
     }
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private TestManager manager() {
         return http.install(new TestManager(MockHttp.API_KEY));
     }

@@ -11,6 +11,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
  */
 public final class ManagerTestAccess {
 
+    /** Not instantiable: static helpers only. */
     private ManagerTestAccess() {
     }
 

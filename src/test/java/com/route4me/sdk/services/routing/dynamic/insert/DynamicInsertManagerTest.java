@@ -22,6 +22,7 @@ public class DynamicInsertManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private DynamicInsertManager manager() {
         return http.install(new DynamicInsertManager(MockHttp.API_KEY));
     }

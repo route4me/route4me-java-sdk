@@ -366,6 +366,7 @@ public final class MockHttp implements TestRule {
         };
     }
 
+    /** Captures, checks and answers one request; the mocked {@code execute} calls this. */
     private CloseableHttpResponse execute(HttpUriRequest request) throws IOException {
         CapturedRequest captured = CapturedRequest.from(request);
         requests.add(captured);
@@ -395,6 +396,7 @@ public final class MockHttp implements TestRule {
         return ((CannedResponse) step).toHttpResponse();
     }
 
+    /** Formats guard problems as one assertion message. */
     private static String guardMessage(List<String> problems) {
         StringBuilder message = new StringBuilder("Request guard failed:");
         for (String problem : problems) {
@@ -441,6 +443,7 @@ public final class MockHttp implements TestRule {
     private static final class LogCapture extends Handler {
         private final List<LogRecord> records = new CopyOnWriteArrayList<>();
 
+        /** Starts capturing records on the root logger. */
         static LogCapture start() {
             LogCapture capture = new LogCapture();
             Logger.getLogger("").addHandler(capture);

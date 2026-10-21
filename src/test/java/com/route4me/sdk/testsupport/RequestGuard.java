@@ -138,6 +138,7 @@ public final class RequestGuard {
         return leaks;
     }
 
+    /** Walks the cause and suppressed chains once, collecting key leaks. */
     private void collectLeaks(Throwable throwable, List<String> leaks, Set<Throwable> seen) {
         if (throwable == null || !seen.add(throwable)) {
             return;
@@ -159,10 +160,12 @@ public final class RequestGuard {
         return hasKey() && contains(text);
     }
 
+    /** Returns whether there is a key to look for. */
     private boolean hasKey() {
         return apiKey != null && !apiKey.isEmpty();
     }
 
+    /** Returns whether {@code text} contains the key. */
     private boolean contains(String text) {
         return text != null && text.contains(apiKey);
     }

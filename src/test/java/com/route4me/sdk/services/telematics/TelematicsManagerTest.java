@@ -31,10 +31,12 @@ public class TelematicsManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private TelematicsManager manager() {
         return http.install(new TelematicsManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample telematics connection with fake vendor credentials. */
     private static TelematicsConnection credentials() {
         TelematicsConnection credentials = new TelematicsConnection();
         credentials.setName("Example connection");

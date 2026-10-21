@@ -23,10 +23,12 @@ public class UsersManagerTest {
     @Rule
     public final MockHttp http = new MockHttp();
 
+    /** Returns a manager that sends its requests to the mocked client. */
     private UsersManager manager() {
         return http.install(new UsersManager(MockHttp.API_KEY));
     }
 
+    /** Builds a sample user with fake data. */
     private static User user() {
         User user = new User();
         user.setMemberFirstName("Alex");

@@ -27,10 +27,12 @@ public class RequestGuardTest {
     private final DeprecatedEndpointReport.Hits hits = new DeprecatedEndpointReport.Hits();
     private final RequestGuard guard = new RequestGuard(EndpointRegistry.load(), KEY, hits);
 
+    /** Copies a request the way {@link MockHttp} does. */
     private static CapturedRequest capture(HttpUriRequest request) throws IOException {
         return CapturedRequest.from(request);
     }
 
+    /** Runs the guard on a request and checks that no message prints the key. */
     private List<String> check(HttpUriRequest request) throws IOException {
         List<String> problems = guard.check(capture(request), "RequestGuardTest");
         for (String problem : problems) {
