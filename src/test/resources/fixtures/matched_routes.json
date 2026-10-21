@@ -1,0 +1,14 @@
+[
+  {
+    "route_name": "Morning run",
+    "route_id": "ROUTE-A1",
+    "recommended_insertion_stop_number": 3,
+    "old_distance": 12.5,
+    "new_distance": 13.1,
+    "old_time": 3600,
+    "new_time": 3900,
+    "percentage_distance_increase": 4.8,
+    "percentage_time_increase": 8.3,
+    "time_violation": 0
+  }
+]
