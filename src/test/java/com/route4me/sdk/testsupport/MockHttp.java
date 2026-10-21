@@ -60,8 +60,9 @@ import static org.junit.Assert.assertEquals;
  * <p>Every captured request goes through the {@link RequestGuard}: a request to an unknown
  * host or endpoint, over plain http, or with the API key outside the {@code api_key} query
  * parameter fails the test. The guard also fails the test when the API key appears in an
- * exception that escapes the test, in one returned by {@link #expectThrows}, or in a
- * {@code java.util.logging} record written during the test.
+ * exception that escapes the test (for a failed assertion: in the exception it wraps), in
+ * one returned by {@link #expectThrows}, or in a {@code java.util.logging} record written
+ * during the test.
  */
 public final class MockHttp implements TestRule {
 
@@ -90,6 +91,7 @@ public final class MockHttp implements TestRule {
     private final AtomicInteger closeCount = new AtomicInteger();
     private volatile CannedResponse defaultResponse;
     private volatile IOException closeFailure;
+    private volatile long responseDelayMillis;
     private volatile String testName;
 
     /** Creates the rule and its mocked client. */
@@ -202,6 +204,17 @@ public final class MockHttp implements TestRule {
      */
     public MockHttp failNextRequest(IOException failure) {
         steps.add(failure);
+        return this;
+    }
+
+    /**
+     * Makes every response arrive after a delay, to simulate a slow server.
+     *
+     * @param millis how long {@code HttpClient.execute} waits before answering
+     * @return this rule
+     */
+    public MockHttp delayResponses(long millis) {
+        responseDelayMillis = millis;
         return this;
     }
 
@@ -331,7 +344,8 @@ public final class MockHttp implements TestRule {
                     throw failure;
                 }
                 List<String> problems = new ArrayList<>(violations);
-                problems.addAll(guard.keyLeaks(failure));
+                // A failed assertion is the test's own message; only what it wraps comes from the SDK.
+                problems.addAll(guard.keyLeaks(failure instanceof AssertionError ? failure.getCause() : failure));
                 for (LogRecord record : logs.records()) {
                     if (guard.containsKey(record.getMessage())) {
                         problems.add("the API key appears in a log message from " + record.getLoggerName());
@@ -366,6 +380,14 @@ public final class MockHttp implements TestRule {
         }
         if (step == null) {
             throw new AssertionError("No canned response is queued for " + captured + "; call respond(...) first");
+        }
+        if (responseDelayMillis > 0) {
+            try {
+                Thread.sleep(responseDelayMillis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException("Interrupted while delaying the response", e);
+            }
         }
         if (step instanceof IOException) {
             throw (IOException) step;

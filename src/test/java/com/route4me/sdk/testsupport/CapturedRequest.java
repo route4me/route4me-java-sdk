@@ -398,8 +398,10 @@ public final class CapturedRequest {
      * @return this request
      */
     public CapturedRequest assertApiKeyInQuery() {
-        assertEquals("api_key query parameter in " + this,
-                Collections.singletonList(MockHttp.API_KEY), queryValues("api_key"));
+        List<String> values = queryValues("api_key");
+        assertEquals("Number of api_key query parameters in " + this, 1, values.size());
+        assertTrue("The api_key query parameter in " + this + " is not the test key",
+                MockHttp.API_KEY.equals(values.get(0)));
         return this;
     }
 
