@@ -4,10 +4,11 @@ import com.google.gson.ExclusionStrategy;
 import com.google.gson.FieldAttributes;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.queryconverter.QueryConverter;
+import com.route4me.sdk.utils.Sanitizer;
 import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
@@ -187,7 +188,7 @@ public abstract class Manager implements Closeable {
                     builder.addParameters(params);
                 }
             } catch (IllegalAccessException e) {
-                throw new APIException("Could not convert " + requestParams.toString() + " to query parameters.", e);
+                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName() + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams), "UTF-8"), clazz, null, "application/json");
@@ -204,7 +205,7 @@ public abstract class Manager implements Closeable {
                     builder.addParameters(params);
                 }
             } catch (IllegalAccessException e) {
-                throw new APIException("Could not convert " + requestParams.toString() + " to query parameters.", e);
+                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName() + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams), "UTF-8"), null, type, "application/json");
@@ -249,40 +250,38 @@ public abstract class Manager implements Closeable {
             throw new RuntimeException("Method does not support body!");
         }
 
+        String safeUrl = this.redact(Sanitizer.redactUrl(hrb.getURI().toString()));
         try (CloseableHttpResponse resp = this.httpClient().execute(hrb)) {
             int status = resp.getStatusLine().getStatusCode();
             String respString = readBody(resp.getEntity());
             if (status < 200 || status > 303) {
-                if (respString.isEmpty()) {
-                    throw new APIException(String.format("Invalid status code %d and no error present.", status));
-                }
-                throw new APIException(String.format("Invalid status code %d, errors: %s", status, respString));
+                throw APIException.forErrorStatus(method.name(), safeUrl, status,
+                        respString.isEmpty() ? null : this.redact(respString));
             }
             //deserialize json into an object
-            if (clazz != null && clazz != String.class) {
-                try {
+            try {
+                if (clazz != null && clazz != String.class) {
                     return this.gson.fromJson(respString, clazz);
-                } catch (JsonSyntaxException ex) {
-                    throw new APIException(ex.toString());
-                }
-            } else if (type != null) {
-                try {
+                } else if (type != null) {
                     return this.gson.fromJson(respString, type);
-                } catch (IllegalStateException ex) {
-                    logger.error(ex);
-                    throw new APIException(String.format("Error parsing JSON response from server. Illegal state error: %s", respString));
-                } catch (JsonSyntaxException ex) {
-                    logger.error(String.format("Error parsing JSON response from server. Unexpected syntax: %s", respString));
-                    throw new APIException(String.format("Unexpected Server response: %s", respString));
                 }
+            } catch (JsonParseException | IllegalStateException ex) {
+                String expected = clazz != null ? clazz.getSimpleName() : type.getTypeName();
+                throw APIException.forUnparsableResponse(method.name(), safeUrl, status, this.redact(respString),
+                        expected, ex);
             }
             if (clazz == String.class) {
                 return (T) respString;
             }
             return null;
         } catch (IOException ex) {
-            throw new APIException(ex);
+            throw APIException.forIOException(method.name(), safeUrl, ex);
         }
+    }
+
+    /** Removes the API key of this manager from a text, for exceptions and logs. */
+    private String redact(String text) {
+        return Sanitizer.redact(text, this.apiKey);
     }
 
     /**

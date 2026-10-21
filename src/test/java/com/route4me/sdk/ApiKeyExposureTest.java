@@ -129,7 +129,6 @@ public class ApiKeyExposureTest {
 
     // ------------------------------------------------------------------ exception messages
 
-    @Ignore("security: APIException messages embed the raw error response body, so an echoed key leaks")
     @Test
     public void errorStatusMessageDoesNotEchoTheApiKey() {
         final RoutingManager manager = http.install(new RoutingManager(MockHttp.API_KEY));
@@ -138,9 +137,11 @@ public class ApiKeyExposureTest {
         APIException error = http.expectApiException(() -> manager.getRoute(new RoutesRequest()));
 
         assertHidden("APIException message", error.getMessage(), MockHttp.API_KEY);
+        assertHidden("APIException errors", error.getErrors().toString(), MockHttp.API_KEY);
+        assertHidden("APIException body", error.getResponseBody(), MockHttp.API_KEY);
+        assertHidden("APIException URL", error.getUrl(), MockHttp.API_KEY);
     }
 
-    @Ignore("security: APIException messages embed the raw response body on a JSON parse error")
     @Test
     public void parseErrorMessageDoesNotEchoTheResponse() {
         final RoutingManager manager = http.install(new RoutingManager(MockHttp.API_KEY));
@@ -149,5 +150,7 @@ public class ApiKeyExposureTest {
         APIException error = http.expectApiException(() -> manager.getRoutes(new RoutesRequest()));
 
         assertHidden("APIException message", error.getMessage(), MockHttp.API_KEY);
+        assertHidden("APIException message", error.getMessage(), "api_key\"");
+        assertHidden("APIException body", error.getResponseBody(), MockHttp.API_KEY);
     }
 }

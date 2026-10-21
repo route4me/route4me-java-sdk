@@ -1,11 +1,13 @@
 package com.route4me.sdk;
 
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import com.route4me.sdk.testsupport.MockHttp;
+import com.route4me.sdk.utils.Sanitizer;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.config.RequestConfig;
@@ -370,12 +372,53 @@ public class ManagerTest {
     public void errorStatusBecomesApiExceptionWithTheStatusCode() {
         final TestManager manager = manager();
         http.respondWithFixture(400, "error_400.json");
+        final URIBuilder builder = builder().setParameter("route_id", "R1");
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder, "", Reply.class));
+
+        assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid status code 400 for GET "
+                + "https://api.route4me.com" + PATH));
+        assertEquals(400, error.getStatusCode());
+        assertEquals("GET", error.getMethod());
+        assertFalse("the message has no query string: " + error.getMessage(), error.getMessage().contains("route_id"));
+        assertTrue(error.getUrl(), error.getUrl().contains("route_id=R1"));
+        assertTrue(error.getUrl(), error.getUrl().contains("api_key=" + Sanitizer.REDACTED));
+        assertEquals(0, http.closeCount());
+    }
+
+    @Test
+    public void errorStatusExposesTheV4ErrorsAndTheFirstOneInTheMessage() {
+        final TestManager manager = manager();
+        http.respond(400, json("{'errors':['Route not found','Second problem'],'timestamp':1}"));
 
         APIException error = http.expectApiException(
                 () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
 
-        assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid status code 400"));
-        assertEquals(0, http.closeCount());
+        assertEquals(Arrays.asList("Route not found", "Second problem"), error.getErrors());
+        assertTrue(error.getMessage(), error.getMessage().endsWith(": Route not found"));
+        assertFalse(error.getMessage(), error.getMessage().contains("Second problem"));
+        assertEquals(json("{'errors':['Route not found','Second problem'],'timestamp':1}"), error.getResponseBody());
+        assertNull(error.getCode());
+        assertTrue(error.getMessages().isEmpty());
+    }
+
+    @Test
+    public void errorStatusExposesTheV5CodeAndMessages() {
+        final TestManager manager = manager();
+        http.respond(422, json("{'status':false,'code':422,'exit_code':0,"
+                + "'messages':{'vehicle_alias':['The alias is required.'],'vehicle_make':['Unknown make.']}}"));
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.POST, builder(), "{}", Reply.class));
+
+        assertEquals(422, error.getStatusCode());
+        assertEquals(Integer.valueOf(422), error.getCode());
+        assertEquals(Collections.singletonList("The alias is required."), error.getMessages().get("vehicle_alias"));
+        assertEquals(Collections.singletonList("Unknown make."), error.getMessages().get("vehicle_make"));
+        assertTrue(error.getErrors().isEmpty());
+        assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid status code 422 for POST "));
+        assertTrue(error.getMessage(), error.getMessage().endsWith(": The alias is required."));
     }
 
     @Test
@@ -387,6 +430,26 @@ public class ManagerTest {
                 () -> manager.makeRequest(RequestMethod.POST, builder(), "{}", Reply.class));
 
         assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid status code 503"));
+        assertEquals(503, error.getStatusCode());
+    }
+
+    @Test
+    public void errorMessageNeverShowsTheRawBody() {
+        final TestManager manager = manager();
+        StringBuilder body = new StringBuilder("<html><body>");
+        for (int i = 0; i < 500; i++) {
+            body.append("Bad gateway ");
+        }
+        body.append("</body></html>");
+        http.respond(502, body.toString(), "text/html");
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals("Invalid status code 502 for GET https://api.route4me.com" + PATH, error.getMessage());
+        assertEquals(APIException.MAX_BODY_LENGTH, error.getResponseBody().length());
+        assertTrue(error.getResponseBody().startsWith("<html><body>Bad gateway"));
+        assertTrue(error.getResponseBody().endsWith("..."));
     }
 
     @Test
@@ -412,8 +475,15 @@ public class ManagerTest {
         APIException forType = http.expectApiException(
                 () -> manager.makeRequest(RequestMethod.GET, builder(), "", listOfReplies));
 
-        assertTrue(forClass.getMessage(), forClass.getMessage().contains("JsonSyntaxException"));
-        assertTrue(forType.getMessage(), forType.getMessage().startsWith("Unexpected Server response"));
+        assertEquals("Unexpected server response for GET https://api.route4me.com" + PATH
+                + " (status 200): the body is not valid JSON for Reply", forClass.getMessage());
+        assertTrue(forClass.getCause() instanceof JsonParseException);
+        assertEquals("not json at all {", forClass.getResponseBody());
+        assertEquals(200, forClass.getStatusCode());
+        assertTrue(forType.getMessage(), forType.getMessage().startsWith("Unexpected server response for GET "));
+        assertTrue(forType.getMessage(), forType.getMessage().endsWith("java.util.ArrayList<"
+                + Reply.class.getName() + ">"));
+        assertTrue(forType.getCause() instanceof JsonParseException);
     }
 
     @Test
@@ -424,10 +494,11 @@ public class ManagerTest {
         APIException error = http.expectApiException(
                 () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
 
-        assertEquals("connection timed out", error.getMessage());
+        assertEquals("GET https://api.route4me.com" + PATH + " failed: connection timed out", error.getMessage());
+        assertEquals(0, error.getStatusCode());
+        assertNull(error.getResponseBody());
     }
 
-    @Ignore("bug (unfiled): APIException(Exception) keeps the message but drops the cause")
     @Test
     public void networkFailureKeepsTheCause() {
         final TestManager manager = manager();
@@ -438,6 +509,17 @@ public class ManagerTest {
                 () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
 
         assertSame(cause, error.getCause());
+    }
+
+    @Test
+    public void networkFailureMessageHasNoLineBreaks() {
+        final TestManager manager = manager();
+        http.failNextRequest(new IOException("first line\r\nINFO forged log line"));
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertFalse(error.getMessage(), error.getMessage().contains("\n") || error.getMessage().contains("\r"));
     }
 
     @Test
