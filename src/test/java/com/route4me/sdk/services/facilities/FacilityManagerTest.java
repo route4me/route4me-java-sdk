@@ -1,7 +1,6 @@
 package com.route4me.sdk.services.facilities;
 
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -12,11 +11,6 @@ import static org.junit.Assert.assertEquals;
 
 /**
  * Unit tests for {@link FacilityManager}: facilities and facility types on the V5 API.
- *
- * <p>The registry has {@code /facilities} and {@code /facilities/types} but not the
- * {@code /{id}} forms, although the unauthenticated probe found them alive (401). The
- * tests for those methods are ignored with a {@code registry:} reason until the registry
- * is updated.
  */
 public class FacilityManagerTest {
 
@@ -25,8 +19,6 @@ public class FacilityManagerTest {
     private static final String FACILITY = json("{'facility_id':'FAC-1','root_member_id':1001,"
             + "'facility_alias':'North hub','address':'100 Example St','coordinates':{'lat':40.5,'lng':-74.5},"
             + "'status':1,'facility_types':[{'facility_type_id':1,'facility_type_alias':'Hub','is_default':true}]}");
-    private static final String REGISTRY_ID =
-            "registry: /modules/api/v5.0/facilities/{} is not in endpoints.json (the probe found it alive)";
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -101,7 +93,6 @@ public class FacilityManagerTest {
         assertEquals("Hub", types.getData().get(0).getFacilityTypeAlias());
     }
 
-    @Ignore(REGISTRY_ID)
     @Test
     public void getFacilityPutsTheIdInThePath() throws Exception {
         FacilityManager manager = manager();
@@ -113,7 +104,6 @@ public class FacilityManagerTest {
         assertEquals("Hub", facility.getFacilityTypes().get(0).getFacilityTypeAlias());
     }
 
-    @Ignore(REGISTRY_ID)
     @Test
     public void updateFacilityPutsTheFacility() throws Exception {
         FacilityManager manager = manager();
@@ -126,7 +116,6 @@ public class FacilityManagerTest {
         http.request().assertEndpoint("PUT", HOST, FACILITIES_EP + "/FAC-1").assertJson("facility_alias", "South hub");
     }
 
-    @Ignore(REGISTRY_ID)
     @Test
     public void deleteFacilityReturnsTheDeletedFacilities() throws Exception {
         FacilityManager manager = manager();
@@ -137,8 +126,6 @@ public class FacilityManagerTest {
         http.request().assertEndpoint("DELETE", HOST, FACILITIES_EP + "/FAC-1").assertNoBody();
         assertEquals("FAC-1", deleted[0].getFacilityId());
     }
-
-    @Ignore("registry: /modules/api/v5.0/facilities/types/{} is not in endpoints.json (the probe found it alive)")
     @Test
     public void getFacilityTypePutsTheIdInThePath() throws Exception {
         FacilityManager manager = manager();

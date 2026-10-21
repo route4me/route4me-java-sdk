@@ -13,10 +13,8 @@ import static org.junit.Assert.assertTrue;
  * Unit tests for {@link VehiclesManagerV5}: vehicles, bulk operations, vehicle profiles and
  * capacity profiles on the V5 API.
  *
- * <p>The update methods send {@code PUT}, but the registry knows only {@code GET},
- * {@code DELETE} and (for the profiles) {@code PATCH} on those paths, and the job-tracker
- * paths are not in the registry. Those tests assert the request the SDK means to send and
- * are ignored with a {@code registry:} reason.
+ * <p>The update methods send {@code PUT}, which the API accepts next to the {@code PATCH}
+ * the specs document; both are in the endpoint registry.
  */
 public class VehiclesManagerV5Test {
 
@@ -117,8 +115,6 @@ public class VehiclesManagerV5Test {
 
         http.request().assertContentType("application/json");
     }
-
-    @Ignore("registry: PUT /modules/api/v5.0/vehicles/{} is not in endpoints.json (only GET and DELETE are)")
     @Test
     public void updateVehiclePutsTheVehicle() throws Exception {
         VehiclesManagerV5 manager = manager();
@@ -185,8 +181,6 @@ public class VehiclesManagerV5Test {
         assertTrue(restored.getStatus());
     }
 
-    @Ignore("registry: /modules/api/v5.0/vehicles/job-tracker/{result,status}/{} are not in endpoints.json "
-            + "(the probe found them alive)")
     @Test
     public void jobTrackerLookupsPutTheJobIdInThePath() throws Exception {
         VehiclesManagerV5 manager = manager();
@@ -222,8 +216,6 @@ public class VehiclesManagerV5Test {
         assertEquals("Box truck", profiles.getData().get(0).getName());
         assertEquals(Integer.valueOf(3), fetched.getVehicleProfileId());
     }
-
-    @Ignore("registry: PUT /modules/api/v5.0/vehicle-profiles/{} is not in endpoints.json (the registry has PATCH)")
     @Test
     public void updateVehicleProfileSendsTheProfile() throws Exception {
         VehiclesManagerV5 manager = manager();
@@ -256,8 +248,6 @@ public class VehiclesManagerV5Test {
         assertEquals(10.5, fetched.getData().getMaxVolume(), 0.0);
     }
 
-    @Ignore("registry: PUT /modules/api/v5.0/vehicle-capacity-profiles/{} is not in endpoints.json "
-            + "(the registry has PATCH)")
     @Test
     public void updateVehicleCapacityProfileSendsTheProfile() throws Exception {
         VehiclesManagerV5 manager = manager();

@@ -67,7 +67,7 @@ public class RequestGuardTest {
         assertEquals(1, unknown.size());
         assertTrue(unknown.get(0).contains("is not a known endpoint"));
 
-        List<String> wrongMethod = check(new HttpPut("https://wh.route4me.com/modules/api/v5.0/vehicles/V1"));
+        List<String> wrongMethod = check(new HttpPut("https://wh.route4me.com/modules/api/v5.0/equipment-types/E1"));
         assertEquals(1, wrongMethod.size());
         assertTrue(wrongMethod.get(0), wrongMethod.get(0).contains("known methods"));
     }

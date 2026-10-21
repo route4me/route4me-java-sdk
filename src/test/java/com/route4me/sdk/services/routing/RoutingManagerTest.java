@@ -494,8 +494,6 @@ public class RoutingManagerTest {
         assertTrue(result.isSuccess());
         assertTrue(result.toString().contains("OPT-2"));
     }
-
-    @Ignore("registry: POST /actions/route/rename_route.php is not in endpoints.json")
     @Test
     public void renameRoutePostsTheNewName() throws Exception {
         RoutingManager manager = manager();

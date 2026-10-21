@@ -1,7 +1,6 @@
 package com.route4me.sdk.services.orders;
 
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -15,10 +14,6 @@ import static org.junit.Assert.assertTrue;
 /**
  * Unit tests for {@link OrderManagerV5}: the V5 orders platform, archive, history and
  * order custom fields.
- *
- * <p>Some paths the manager calls are not in the endpoint registry. Their tests assert the
- * request the SDK means to send and are ignored with a {@code registry:} reason until the
- * registry is updated or the SDK is changed.
  */
 public class OrderManagerV5Test {
 
@@ -164,8 +159,6 @@ public class OrderManagerV5Test {
         assertEquals("gate", fields.getData().get(0).getOrderCustomFieldName());
         assertEquals("FIELD-1", created.getData().getOrderCustomFieldUuid());
     }
-
-    @Ignore("registry: POST /modules/api/v5.0/orders-platform/create is not in endpoints.json")
     @Test
     public void createOrderPostsTheOrder() throws Exception {
         OrderManagerV5 manager = manager();
@@ -180,8 +173,6 @@ public class OrderManagerV5Test {
                 .assertJson("custom_data.gate", "A1");
         assertEquals("ORDER-UUID-1", created.getOrderUuid());
     }
-
-    @Ignore("registry: /modules/api/v5.0/orders-platform/{} is not in endpoints.json")
     @Test
     public void getUpdateAndDeleteOrderUseTheUuid() throws Exception {
         OrderManagerV5 manager = manager();
@@ -197,8 +188,6 @@ public class OrderManagerV5Test {
         assertEquals(12.5, fetched.getWeight(), 0.0);
         assertTrue(deleted.getStatus());
     }
-
-    @Ignore("registry: PUT and DELETE /modules/api/v5.0/orders-platform/order-custom-user-fields/{} are not in endpoints.json")
     @Test
     public void updateAndDeleteCustomUserFieldUseTheUuid() throws Exception {
         OrderManagerV5 manager = manager();

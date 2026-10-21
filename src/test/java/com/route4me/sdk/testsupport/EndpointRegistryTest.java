@@ -44,7 +44,7 @@ public class EndpointRegistryTest {
 
     @Test
     public void methodSpecificEntryMatchesOnlyThatMethod() {
-        String path = "/modules/api/v5.0/vehicles/V1";
+        String path = "/modules/api/v5.0/equipment-types/E1";
         assertNotNull(registry.findEndpoint("GET", "wh.route4me.com", path));
         assertNotNull(registry.findEndpoint("DELETE", "wh.route4me.com", path));
         assertNull(registry.findEndpoint("PUT", "wh.route4me.com", path));

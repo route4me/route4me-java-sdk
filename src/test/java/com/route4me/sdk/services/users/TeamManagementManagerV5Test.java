@@ -1,7 +1,6 @@
 package com.route4me.sdk.services.users;
 
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -73,8 +72,6 @@ public class TeamManagementManagerV5Test {
                 .assertJson("users[0].member_email", "driver@example.com")
                 .assertJson("conflicts", "overwrite");
     }
-
-    @Ignore("registry: PUT /modules/api/v5.0/team/users/{} is not in endpoints.json (the registry has PATCH)")
     @Test
     public void updateTeamMemberSendsTheChanges() throws Exception {
         TeamManagementManagerV5 manager = manager();

@@ -1,7 +1,6 @@
 package com.route4me.sdk.services.vehicles;
 
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -13,11 +12,6 @@ import static org.junit.Assert.assertEquals;
 /**
  * Unit tests for {@link VehiclesManager}, the V4-era vehicles API on
  * {@code wh.route4me.com/modules/api/vehicles}.
- *
- * <p>Every method of this manager calls {@code /modules/api/vehicles}, which is not in the
- * endpoint registry (the V5 vehicles API is {@code /modules/api/v5.0/vehicles}). The request
- * guard rejects those calls, so the tests below are ignored until the endpoint is either
- * confirmed and added to {@code endpoints.json}, or the manager is moved to the V5 API.
  */
 public class VehiclesManagerTest {
 
@@ -25,7 +19,6 @@ public class VehiclesManagerTest {
     private static final String VEHICLES_EP = "/modules/api/vehicles";
     private static final String VEHICLE_JSON =
             json("{'vehicle_id':'VEH-1','vehicle_alias':'Van 1','vehicle_make':'Ford','vehicle_model_year':2023}");
-    private static final String REGISTRY = "registry: /modules/api/vehicles is not in endpoints.json";
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -44,7 +37,6 @@ public class VehiclesManagerTest {
         return vehicle;
     }
 
-    @Ignore(REGISTRY)
     @Test
     public void getVehiclesListsTheVehicles() throws Exception {
         VehiclesManager manager = manager();
@@ -56,7 +48,6 @@ public class VehiclesManagerTest {
         assertEquals("Van 1", vehicles.get(0).getVehicleAlias());
     }
 
-    @Ignore(REGISTRY)
     @Test
     public void getVehicleAndDeleteVehiclePutTheIdInThePath() throws Exception {
         VehiclesManager manager = manager();
@@ -70,7 +61,6 @@ public class VehiclesManagerTest {
         assertEquals("Ford", vehicle.getVehicleMake());
     }
 
-    @Ignore(REGISTRY)
     @Test
     public void newVehiclePostsAndUpdateVehiclePutsTheVehicle() throws Exception {
         VehiclesManager manager = manager();
@@ -84,7 +74,6 @@ public class VehiclesManagerTest {
         http.request(1).assertEndpoint("PUT", HOST, VEHICLES_EP + "/VEH-1").assertJson("vehicle_id", "VEH-1");
     }
 
-    @Ignore(REGISTRY)
     @Test
     public void errorBecomesApiException() {
         final VehiclesManager manager = manager();
