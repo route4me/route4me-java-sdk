@@ -6,6 +6,10 @@
 
 ## AdvancedConstraints Examples Description: 
 
+The examples that read `locations.csv` and `schedules.csv` use
+[OpenCSV](https://opencsv.sourceforge.net/). The SDK no longer depends on it, so add
+`com.opencsv:opencsv` (5.x) to your own project to run them.
+
 ### 1
 
 TEST CASE: Tags and Different Time Windows Fleets
