@@ -2,10 +2,13 @@ package com.route4me.sdk;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.accountprofile.AccountProfile;
+import com.route4me.sdk.services.locations.LocationCombinedDataItem;
 import com.route4me.sdk.services.routing.RoutesRequest;
 import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.telematics.TelematicsConnection;
+import com.route4me.sdk.services.telematics.TelematicsMemberRegister;
 import com.route4me.sdk.services.users.Registration;
+import com.route4me.sdk.services.users.TeamMemberRequest;
 import com.route4me.sdk.services.users.User;
 import com.route4me.sdk.services.users.UserRegistration;
 import com.route4me.sdk.testsupport.MockHttp;
@@ -24,7 +27,7 @@ import static org.junit.Assert.assertFalse;
  */
 public class ApiKeyExposureTest {
 
-    /** A made-up password; only its presence in the output matters. */
+    /** A made-up password or token; only its presence in the output matters. */
     private static final String PASSWORD = "example-password-value";
 
     @Rule
@@ -92,6 +95,36 @@ public class ApiKeyExposureTest {
 
         assertHidden("UserRegistration.toString()", registration.toString(), MockHttp.API_KEY);
         assertHidden("UserRegistration.toString()", registration.toString(), PASSWORD);
+    }
+
+    @Ignore("security: TeamMemberRequest.toString() (Lombok @Data) prints member_password")
+    @Test
+    public void teamMemberRequestToStringHidesThePassword() {
+        TeamMemberRequest request = new TeamMemberRequest();
+        request.setMemberEmail("driver@example.com");
+        request.setMemberPassword(PASSWORD);
+
+        assertHidden("TeamMemberRequest.toString()", request.toString(), PASSWORD);
+    }
+
+    @Ignore("security: TelematicsMemberRegister.toString() (Lombok @Data) prints the telematics api_token")
+    @Test
+    public void telematicsMemberRegisterToStringHidesTheToken() {
+        TelematicsMemberRegister registration = new TelematicsMemberRegister();
+        registration.setTelematicRegisterID("REG-1");
+        registration.setApiToken(PASSWORD);
+
+        assertHidden("TelematicsMemberRegister.toString()", registration.toString(), PASSWORD);
+    }
+
+    @Ignore("security: LocationCombinedDataItem.toString() (Lombok @Data) prints external_connection_token")
+    @Test
+    public void locationItemToStringHidesTheConnectionToken() {
+        LocationCombinedDataItem item = new LocationCombinedDataItem();
+        item.setAddress1("100 Example St");
+        item.setExternalConnectionToken(PASSWORD);
+
+        assertHidden("LocationCombinedDataItem.toString()", item.toString(), PASSWORD);
     }
 
     // ------------------------------------------------------------------ exception messages
