@@ -188,6 +188,21 @@ public class TelematicsManagerTest {
         http.request(4).assertQuery("feature", "satellite").assertNoQuery("country");
     }
 
+    @Test
+    public void oneArgumentSearchesCallTheVendorsEndpoint() throws Exception {
+        TelematicsManager manager = manager();
+        http.respondToAll(200, Fixtures.read("telematics_vendors_info.json"));
+
+        TelematicsVendorsInfo bySize = manager.searchVendorBySize("global");
+        manager.searchVendorByKeyWord("fleet");
+        manager.searchVendorByFeature("satellite");
+
+        for (int i = 0; i < 3; i++) {
+            http.request(i).assertEndpoint("GET", LEGACY_HOST, VENDORS_EP).assertNoQuery("page");
+        }
+        assertEquals(2, bySize.getVendors().size());
+    }
+
     @Ignore("bug #38: searchVendorBySize(size) delegates to searchVendorByCountry")
     @Test
     public void searchVendorBySizeSendsTheSize() throws Exception {
