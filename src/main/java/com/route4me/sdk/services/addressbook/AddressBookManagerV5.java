@@ -24,11 +24,11 @@ public class AddressBookManagerV5 extends Manager {
     public AddressBookManagerV5(String apiKey) { super(apiKey); }
     public AddressBookManagerV5(String apiKey, boolean disableRedirects) { super(apiKey, disableRedirects); }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -57,7 +57,7 @@ public class AddressBookManagerV5 extends Manager {
     }
 
     public AddressBookContactV5 updateContact(long addressId, AddressBookContactV5 contact) throws APIException {
-        return this.makeRequest(RequestMethod.PUT, v5Builder(CONTACTS_EP + "/" + addressId), this.gson.toJson(contact), AddressBookContactV5.class);
+        return this.makeRequest(RequestMethod.PUT, v5Builder(CONTACTS_EP, addressId), this.gson.toJson(contact), AddressBookContactV5.class);
     }
 
     public AddressBookContactV5[] batchUpdateContacts(BatchUpdateContactsRequest request) throws APIException {
@@ -88,10 +88,10 @@ public class AddressBookManagerV5 extends Manager {
     }
 
     public StatusResponse getJobStatus(String jobId) throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(JOB_STATUS_EP + "/" + jobId), (HttpEntity) null, StatusResponse.class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(JOB_STATUS_EP, jobId), (HttpEntity) null, StatusResponse.class);
     }
 
     public StatusResponse getJobResult(String jobId) throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(JOB_RESULT_EP + "/" + jobId), (HttpEntity) null, StatusResponse.class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(JOB_RESULT_EP, jobId), (HttpEntity) null, StatusResponse.class);
     }
 }

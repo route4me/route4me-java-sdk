@@ -14,11 +14,11 @@ public class TeamManagementManagerV5 extends Manager {
     public TeamManagementManagerV5(String apiKey) { super(apiKey); }
     public TeamManagementManagerV5(String apiKey, boolean disableRedirects) { super(apiKey, disableRedirects); }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -27,7 +27,7 @@ public class TeamManagementManagerV5 extends Manager {
     }
 
     public TeamMember getTeamMemberById(long userId) throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(TEAM_USERS_EP + "/" + userId), (HttpEntity) null, TeamMember.class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(TEAM_USERS_EP, userId), (HttpEntity) null, TeamMember.class);
     }
 
     public TeamMember createTeamMember(TeamMemberRequest request) throws APIException {
@@ -35,11 +35,11 @@ public class TeamManagementManagerV5 extends Manager {
     }
 
     public TeamMember updateTeamMember(long userId, TeamMemberRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.PUT, v5Builder(TEAM_USERS_EP + "/" + userId), this.gson.toJson(request), TeamMember.class);
+        return this.makeRequest(RequestMethod.PUT, v5Builder(TEAM_USERS_EP, userId), this.gson.toJson(request), TeamMember.class);
     }
 
     public TeamMember deleteTeamMember(long userId) throws APIException {
-        return this.makeRequest(RequestMethod.DELETE, v5Builder(TEAM_USERS_EP + "/" + userId), "", TeamMember.class);
+        return this.makeRequest(RequestMethod.DELETE, v5Builder(TEAM_USERS_EP, userId), "", TeamMember.class);
     }
 
     public void bulkCreateTeamMembers(TeamMemberRequest[] members, String conflictStrategy) throws APIException {

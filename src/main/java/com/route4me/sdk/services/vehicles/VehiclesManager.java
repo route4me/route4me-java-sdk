@@ -25,11 +25,11 @@ public class VehiclesManager extends Manager {
         super(apiKey);
     }
     
-    private URIBuilder getURI(String endpoint){
+    private URIBuilder getURI(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
     
@@ -40,12 +40,12 @@ public class VehiclesManager extends Manager {
     }
 
     public Vehicles getVehicle(String vehicleID) throws APIException {
-        URIBuilder builder = this.getURI(VEHICLES_EP + "/" + vehicleID);
+        URIBuilder builder = this.getURI(VEHICLES_EP, vehicleID);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, Vehicles.class);
     }
             
     public Vehicles deleteVehicle(String vehicleID) throws APIException {
-        URIBuilder builder = this.getURI(VEHICLES_EP + "/" + vehicleID);
+        URIBuilder builder = this.getURI(VEHICLES_EP, vehicleID);
         return this.makeRequest(RequestMethod.DELETE, builder, (HttpEntity) null, Vehicles.class);
     }
 
@@ -55,7 +55,7 @@ public class VehiclesManager extends Manager {
     }
 
     public Vehicles updateVehicle(Vehicles vehicle) throws APIException {
-        URIBuilder builder = this.getURI(VEHICLES_EP + "/" + vehicle.getVehicleId());
+        URIBuilder builder = this.getURI(VEHICLES_EP, vehicle.getVehicleId());
         return this.makeJSONRequest(RequestMethod.PUT, builder, vehicle, Vehicles.class);
     }
     

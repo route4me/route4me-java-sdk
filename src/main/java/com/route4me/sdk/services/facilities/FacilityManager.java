@@ -20,16 +20,16 @@ public class FacilityManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
     public FacilityResource getFacility(String facilityId) throws APIException {
-        URIBuilder builder = v5Builder(FACILITIES_EP + "/" + facilityId);
+        URIBuilder builder = v5Builder(FACILITIES_EP, facilityId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, FacilityResource.class);
     }
 
@@ -49,12 +49,12 @@ public class FacilityManager extends Manager {
     }
 
     public FacilityResource updateFacility(String facilityId, FacilityUpdateRequest request) throws APIException {
-        URIBuilder builder = v5Builder(FACILITIES_EP + "/" + facilityId);
+        URIBuilder builder = v5Builder(FACILITIES_EP, facilityId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), FacilityResource.class);
     }
 
     public FacilityResource[] deleteFacility(String facilityId) throws APIException {
-        URIBuilder builder = v5Builder(FACILITIES_EP + "/" + facilityId);
+        URIBuilder builder = v5Builder(FACILITIES_EP, facilityId);
         return this.makeRequest(RequestMethod.DELETE, builder, "", FacilityResource[].class);
     }
 
@@ -64,7 +64,7 @@ public class FacilityManager extends Manager {
     }
 
     public FacilityTypeResource getFacilityType(int typeId) throws APIException {
-        URIBuilder builder = v5Builder(FACILITY_TYPES_EP + "/" + typeId);
+        URIBuilder builder = v5Builder(FACILITY_TYPES_EP, typeId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, FacilityTypeResource.class);
     }
 }

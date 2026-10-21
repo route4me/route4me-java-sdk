@@ -20,11 +20,11 @@ public class CustomerManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -34,7 +34,7 @@ public class CustomerManager extends Manager {
     }
 
     public CustomerShowResource getCustomerById(String customerId) throws APIException {
-        URIBuilder builder = v5Builder(CUSTOMERS_EP + "/" + customerId);
+        URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, CustomerShowResource.class);
     }
 
@@ -44,12 +44,12 @@ public class CustomerManager extends Manager {
     }
 
     public CustomerResource updateCustomer(String customerId, CustomerStoreRequest request) throws APIException {
-        URIBuilder builder = v5Builder(CUSTOMERS_EP + "/" + customerId);
+        URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), CustomerResource.class);
     }
 
     public void deleteCustomer(String customerId) throws APIException {
-        URIBuilder builder = v5Builder(CUSTOMERS_EP + "/" + customerId);
+        URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);
         this.makeRequest(RequestMethod.DELETE, builder, "", String.class);
     }
 }

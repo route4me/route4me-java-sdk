@@ -70,7 +70,8 @@ public final class RequestGuard {
     public List<String> check(CapturedRequest request, String testName) {
         List<String> problems = new ArrayList<>();
         String host = request.getHost();
-        String path = request.getPath();
+        // Match on the raw path: an encoded "/" (%2F) inside an ID stays inside its segment.
+        String path = request.getUri().getRawPath();
 
         if (!"https".equals(request.getScheme())) {
             problems.add(request + ": scheme must be https, not " + request.getScheme());

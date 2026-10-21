@@ -16,6 +16,7 @@ import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
+import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -137,6 +138,42 @@ public abstract class Manager implements Closeable {
         builder.setHost("api.route4me.com");
         builder.setPath(endpoint);
         return builder;
+    }
+
+    /**
+     * Sets the path of a builder to an endpoint followed by path segments, such as IDs.
+     *
+     * <p>Each segment is percent-encoded as one segment: a {@code /} in it becomes
+     * {@code %2F}, so a value such as {@code ../secret} cannot climb out of the endpoint and
+     * send the request, with the API key, to another one.
+     *
+     * @param builder  the builder to change
+     * @param endpoint the endpoint path, such as {@code /modules/api/v5.0/vehicles}
+     * @param segments the segments to append after it, converted with
+     *                 {@link String#valueOf(Object)}; none leaves the endpoint as it is
+     * @return {@code builder}
+     * @throws IllegalArgumentException if a segment is {@code null}, empty, {@code .} or
+     *                                  {@code ..}
+     */
+    protected static URIBuilder withPathSegments(URIBuilder builder, String endpoint, Object... segments) {
+        if (segments == null || segments.length == 0) {
+            return builder.setPath(endpoint);
+        }
+        List<String> parts = new ArrayList<>();
+        for (String part : endpoint.split("/")) {
+            if (!part.isEmpty()) {
+                parts.add(part);
+            }
+        }
+        for (Object segment : segments) {
+            String value = segment == null ? null : String.valueOf(segment);
+            if (value == null || value.isEmpty() || ".".equals(value) || "..".equals(value)) {
+                throw new IllegalArgumentException("Invalid value for a URL path segment: "
+                        + (value == null ? "null" : "'" + Sanitizer.forLog(value, 100) + "'"));
+            }
+            parts.add(value);
+        }
+        return builder.setPathSegments(parts);
     }
 
     protected <T> T makeRequest(RequestMethod method, URIBuilder builder, List<NameValuePair> body, Class<T> clazz) throws APIException {

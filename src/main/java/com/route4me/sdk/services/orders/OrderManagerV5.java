@@ -27,11 +27,11 @@ public class OrderManagerV5 extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -41,17 +41,17 @@ public class OrderManagerV5 extends Manager {
     }
 
     public OrderV5 getOrder(String orderUuid) throws APIException {
-        URIBuilder builder = v5Builder(ORDERS_PLATFORM_EP + "/" + orderUuid);
+        URIBuilder builder = v5Builder(ORDERS_PLATFORM_EP, orderUuid);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, OrderV5.class);
     }
 
     public OrderV5 updateOrder(String orderUuid, OrderV5 order) throws APIException {
-        URIBuilder builder = v5Builder(ORDERS_PLATFORM_EP + "/" + orderUuid);
+        URIBuilder builder = v5Builder(ORDERS_PLATFORM_EP, orderUuid);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(order), OrderV5.class);
     }
 
     public StatusResponse deleteOrder(String orderUuid) throws APIException {
-        URIBuilder builder = v5Builder(ORDERS_PLATFORM_EP + "/" + orderUuid);
+        URIBuilder builder = v5Builder(ORDERS_PLATFORM_EP, orderUuid);
         return this.makeRequest(RequestMethod.DELETE, builder, "", StatusResponse.class);
     }
 
@@ -103,12 +103,12 @@ public class OrderManagerV5 extends Manager {
     }
 
     public CustomUserFieldResponse updateCustomUserField(String fieldUuid, UpdateCustomUserFieldRequest request) throws APIException {
-        URIBuilder builder = v5Builder(ORDERS_CUSTOM_FIELDS_EP + "/" + fieldUuid);
+        URIBuilder builder = v5Builder(ORDERS_CUSTOM_FIELDS_EP, fieldUuid);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), CustomUserFieldResponse.class);
     }
 
     public CustomUserFieldResponse deleteCustomUserField(String fieldUuid) throws APIException {
-        URIBuilder builder = v5Builder(ORDERS_CUSTOM_FIELDS_EP + "/" + fieldUuid);
+        URIBuilder builder = v5Builder(ORDERS_CUSTOM_FIELDS_EP, fieldUuid);
         return this.makeRequest(RequestMethod.DELETE, builder, "", CustomUserFieldResponse.class);
     }
 }

@@ -19,11 +19,11 @@ public class DriverReviewManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -39,7 +39,7 @@ public class DriverReviewManager extends Manager {
     }
 
     public DriverReviewResponse getDriverReviewById(String ratingId) throws APIException {
-        URIBuilder builder = v5Builder(DRIVER_REVIEW_EP + "/" + ratingId);
+        URIBuilder builder = v5Builder(DRIVER_REVIEW_EP, ratingId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, DriverReviewResponse.class);
     }
 
@@ -49,7 +49,7 @@ public class DriverReviewManager extends Manager {
     }
 
     public DriverReviewResponse updateDriverReview(String ratingId, DriverReview review) throws APIException {
-        URIBuilder builder = v5Builder(DRIVER_REVIEW_EP + "/" + ratingId);
+        URIBuilder builder = v5Builder(DRIVER_REVIEW_EP, ratingId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(review), DriverReviewResponse.class);
     }
 }
