@@ -8,7 +8,9 @@ import com.route4me.sdk.queryconverter.QueryParameter;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.junit.Ignore;
 import org.junit.Rule;
@@ -18,10 +20,20 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Set;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -131,7 +143,7 @@ public class ManagerTest {
                 .assertHeader("User-Agent", "Route4Me Java SDK")
                 .assertNoBody();
         assertNull(http.request().header("Content-Type"));
-        assertEquals("the client is closed after each request", 1, http.closeCount());
+        assertEquals("the client is kept for the next request", 0, http.closeCount());
     }
 
     @Test
@@ -340,7 +352,7 @@ public class ManagerTest {
 
         assertEquals("Method does not support body!", error.getMessage());
         http.assertNoRequests();
-        assertEquals(1, http.closeCount());
+        assertEquals(0, http.closeCount());
     }
 
     @Test
@@ -362,7 +374,7 @@ public class ManagerTest {
                 () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
 
         assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid status code 400"));
-        assertEquals(1, http.closeCount());
+        assertEquals(0, http.closeCount());
     }
 
     @Test
@@ -427,7 +439,6 @@ public class ManagerTest {
         assertSame(cause, error.getCause());
     }
 
-    @Ignore("bug #37: return inside finally swallows the APIException when close() fails")
     @Test
     public void closeFailureDoesNotSwallowTheApiException() {
         final TestManager manager = manager();
@@ -436,7 +447,6 @@ public class ManagerTest {
         http.expectApiException(() -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
     }
 
-    @Ignore("bug #37: return inside finally discards the parsed result when close() fails")
     @Test
     public void closeFailureDoesNotDiscardTheResult() throws Exception {
         TestManager manager = manager();
@@ -465,5 +475,129 @@ public class ManagerTest {
         http.respond(200, "id,name\n1,Depot\n", "text/csv");
 
         assertEquals("id,name\n1,Depot\n", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+    }
+
+    // ------------------------------------------------------------------ client life cycle
+
+    @Test
+    public void everyRequestCarriesTheDefaultTimeouts() throws Exception {
+        TestManager manager = manager();
+        http.respond(200, "{}");
+
+        manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
+
+        RequestConfig config = http.request().getRequestConfig();
+        assertEquals(Manager.DEFAULT_CONNECT_TIMEOUT_MS, config.getConnectTimeout());
+        assertEquals(Manager.DEFAULT_SOCKET_TIMEOUT_MS, config.getSocketTimeout());
+        assertEquals(Manager.DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS, config.getConnectionRequestTimeout());
+        assertEquals(6050, Manager.DEFAULT_CONNECT_TIMEOUT_MS);
+        assertEquals(30000, Manager.DEFAULT_SOCKET_TIMEOUT_MS);
+        assertEquals(6050, Manager.DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS);
+        assertTrue("redirects are followed unless disabled", config.isRedirectsEnabled());
+        assertNull(config.getProxy());
+    }
+
+    @Test
+    public void changedTimeoutsApplyToLaterRequests() throws Exception {
+        TestManager manager = manager();
+        http.respond(200, "{}");
+        manager.setConnectTimeout(1000);
+        manager.setSocketTimeout(2000);
+        manager.setConnectionRequestTimeout(0);
+
+        manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
+
+        RequestConfig config = http.request().getRequestConfig();
+        assertEquals(1000, config.getConnectTimeout());
+        assertEquals(2000, config.getSocketTimeout());
+        assertEquals(0, config.getConnectionRequestTimeout());
+        assertEquals(1000, manager.getConnectTimeout());
+        assertEquals(2000, manager.getSocketTimeout());
+        assertEquals(0, manager.getConnectionRequestTimeout());
+    }
+
+    @Test
+    public void negativeTimeoutsAreRejected() {
+        final TestManager manager = new TestManager(MockHttp.API_KEY);
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.setConnectTimeout(-1));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.setSocketTimeout(-1));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.setConnectionRequestTimeout(-1));
+        assertEquals(Manager.DEFAULT_CONNECT_TIMEOUT_MS, manager.getConnectTimeout());
+    }
+
+    @Test
+    public void disabledRedirectsAreAlsoOffInTheRequestConfig() throws Exception {
+        TestManager manager = http.install(new TestManager(MockHttp.API_KEY, true));
+        http.respond(200, "{}");
+
+        manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
+
+        assertFalse(http.request().getRequestConfig().isRedirectsEnabled());
+    }
+
+    @Test
+    public void requestsShareOneClientThatCloseReleases() throws Exception {
+        TestManager manager = manager();
+        http.respond(200, "{}").respond(200, "{}");
+
+        manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
+        manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
+        assertEquals(0, http.closeCount());
+
+        manager.close();
+        manager.close();
+        assertEquals("close() closes the client once", 1, http.closeCount());
+    }
+
+    @Test
+    public void closePropagatesTheCloseFailure() throws Exception {
+        final TestManager manager = manager();
+        http.failOnClose(new IOException("close failed"));
+
+        IOException error = http.expectThrows(IOException.class, manager::close);
+
+        assertEquals("close failed", error.getMessage());
+    }
+
+    @Test
+    public void defaultClientIsCreatedOnceAndAgainAfterClose() throws Exception {
+        TestManager manager = new TestManager(MockHttp.API_KEY);
+        try {
+            CloseableHttpClient first = manager.httpClient();
+            assertSame(first, manager.httpClient());
+            manager.close();
+            CloseableHttpClient second = manager.httpClient();
+            assertNotSame(first, second);
+        } finally {
+            manager.close();
+        }
+        manager.close();
+    }
+
+    @Test
+    public void concurrentFirstRequestsGetTheSameClient() throws Exception {
+        final TestManager manager = new TestManager(MockHttp.API_KEY);
+        final int threads = 8;
+        final CountDownLatch start = new CountDownLatch(1);
+        ExecutorService pool = Executors.newFixedThreadPool(threads);
+        try {
+            List<Future<CloseableHttpClient>> results = new ArrayList<>();
+            for (int i = 0; i < threads; i++) {
+                results.add(pool.submit(() -> {
+                    start.await();
+                    return manager.httpClient();
+                }));
+            }
+            start.countDown();
+            Set<CloseableHttpClient> clients = Collections.newSetFromMap(new IdentityHashMap<CloseableHttpClient, Boolean>());
+            for (Future<CloseableHttpClient> result : results) {
+                clients.add(result.get(10, TimeUnit.SECONDS));
+            }
+            assertEquals(1, clients.size());
+        } finally {
+            pool.shutdownNow();
+            manager.close();
+        }
     }
 }

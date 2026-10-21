@@ -12,7 +12,6 @@ import java.io.*;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.util.List;
-import java.util.function.Supplier;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
@@ -28,19 +27,48 @@ import org.apache.http.impl.client.HttpClients;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.logging.log4j.LogManager;
 
-public abstract class Manager {
+/**
+ * Base class of the SDK managers: it builds the requests, sends them and parses the responses.
+ *
+ * <p>Each manager owns one HTTP client with a small connection pool. The client is created
+ * on the first request and shared by every later request of the same manager, also when
+ * several threads use the manager at once. Reuse a manager instead of creating one per
+ * call, and close it when you no longer need it, to release its connections:
+ * <pre>{@code
+ * try (RoutingManager manager = new RoutingManager(apiKey)) {
+ *     DataObject optimization = manager.runOptimization(parameters);
+ * }
+ * }</pre>
+ *
+ * <p>Every request carries the connect, socket (read) and connection-request timeouts of
+ * the manager; see {@link #setConnectTimeout(int)}, {@link #setSocketTimeout(int)} and
+ * {@link #setConnectionRequestTimeout(int)}.
+ */
+public abstract class Manager implements Closeable {
+
+    /** Default time to open a connection, in milliseconds. */
+    public static final int DEFAULT_CONNECT_TIMEOUT_MS = 6050;
+    /** Default time to wait for data on an open connection, in milliseconds. */
+    public static final int DEFAULT_SOCKET_TIMEOUT_MS = 30000;
+    /** Default time to wait for a free connection from the pool, in milliseconds. */
+    public static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS = 6050;
+
+    private static final int MAX_CONNECTIONS = 10;
+    private static final String USER_AGENT = "Route4Me Java SDK";
 
     protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(Manager.class);
     private final String apiKey;
     protected Gson gson;
-    private RequestConfig requestProxyConfig;
+    private HttpHost proxy;
     private boolean disableRedirects;
     private String callBackURL;
-    /**
-     * Test-only: when not {@code null}, supplies the HTTP client for each request
-     * instead of the clients built in {@code makeRequest}. Only tests set it.
-     */
-    private Supplier<CloseableHttpClient> httpClientSupplier;
+    private volatile int connectTimeout = DEFAULT_CONNECT_TIMEOUT_MS;
+    private volatile int socketTimeout = DEFAULT_SOCKET_TIMEOUT_MS;
+    private volatile int connectionRequestTimeout = DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS;
+    /** Guards the creation, replacement and closing of {@link #httpClient}. */
+    private final Object clientLock = new Object();
+    /** The client of this manager; {@code null} until the first request or after {@link #close()}. */
+    private volatile CloseableHttpClient httpClient;
 
     public Manager(String apiKey) {
         this.apiKey = apiKey;
@@ -76,10 +104,7 @@ public abstract class Manager {
 
     public Manager(String apiKey, String proxyHost, int proxyPort, String proxySchema) {
         this(apiKey);
-        HttpHost proxy = new HttpHost(proxyHost, proxyPort, proxySchema);
-        this.requestProxyConfig = RequestConfig.custom()
-                .setProxy(proxy)
-                .build();
+        this.proxy = new HttpHost(proxyHost, proxyPort, proxySchema);
     }
 
     public Manager(String apiKey, String proxyHost, int proxyPort, String proxySchema, boolean disableRedirects) {
@@ -188,19 +213,11 @@ public abstract class Manager {
     }
 
     private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type, String requestContentType) throws APIException {
-        PoolingHttpClientConnectionManager poolingConnManager = new PoolingHttpClientConnectionManager();
-        poolingConnManager.setMaxTotal(10);
-        poolingConnManager.setDefaultMaxPerRoute(10);
-        CloseableHttpClient client = this.httpClientSupplier != null
-                ? this.httpClientSupplier.get()
-                : HttpClients.custom().setConnectionManager(poolingConnManager).build();
+        HttpRequestBase hrb;
         try {
             // Redirects Management
             if (this.disableRedirects) {
                 builder.addParameter("redirect", "0");
-                if (this.httpClientSupplier == null) {
-                    client = HttpClients.custom().disableRedirectHandling().build();
-                }
             }
             if (this.callBackURL != null) {
                 builder.addParameter("optimized_callback_url", this.callBackURL);
@@ -208,80 +225,68 @@ public abstract class Manager {
             if (this.apiKey != null) {
                 builder.addParameter("api_key", this.apiKey);
             }
-            HttpRequestBase hrb = method.create(builder.build());
-            // Adding User-Agent
-            hrb.setHeader("User-Agent", "Route4Me Java SDK");
-
-            if (requestContentType != null) {
-                hrb.setHeader("Content-type", requestContentType);
-            }
-            // Checking If a proxy was set. 
-            if (this.requestProxyConfig != null) {
-                hrb.setConfig(this.requestProxyConfig);
-            }
-            //if there's any entity to be attached to the body and request supports it, do it.
-            if (body != null && hrb instanceof HttpEntityEnclosingRequestBase) {
-                ((HttpEntityEnclosingRequestBase) hrb).setEntity(body);
-            } else if (body != null) {
-                throw new RuntimeException("Method does not support body!");
-            }
-
-            //try with resources to close streams
-            try (CloseableHttpResponse resp = client.execute(hrb); InputStream is = resp.getEntity().getContent()) {
-                //response should always be present
-                if (is == null) {
-                    throw new APIException("Response body is null.");
-                }
-                try (InputStreamReader isr = new InputStreamReader(is); BufferedReader br = new BufferedReader(isr)) {
-                    if (resp.getStatusLine().getStatusCode() < 200 || resp.getStatusLine().getStatusCode() > 303) {
-                        try {
-                            StringBuilder respString = responseContentParser(br);
-                            throw new APIException(String.format("Invalid status code %d, errors: %s", resp.getStatusLine().getStatusCode(), respString.toString()));
-                        } catch (IOException e) {
-                            throw new APIException(String.format("Invalid status code %d and no error present.", resp.getStatusLine().getStatusCode()));
-                        }
-                    }
-                    //deserialize json into an object
-                    if (clazz != null && clazz != String.class) {
-                        StringBuilder respString = responseContentParser(br);
-                        try {
-                            return this.gson.fromJson(respString.toString(), clazz);
-                        } catch (JsonSyntaxException ex) {
-                            throw new APIException(ex.toString());
-                        }
-                    } else if (type != null) {
-                        StringBuilder respString = responseContentParser(br);
-                        try {
-                            return this.gson.fromJson(respString.toString(), type);
-                        } catch (IllegalStateException ex) {
-                            logger.error(ex);
-                            throw new APIException(String.format("Error parsing JSON response from server. Illegal state error: %s", respString.toString()));
-                        } catch (JsonSyntaxException ex) {
-                            logger.error(String.format("Error parsing JSON response from server. Unexpected syntax: %s", respString.toString()));
-                            throw new APIException(String.format("Unexpected Server response: %s", respString.toString()));
-                        }
-                    }
-                    if (clazz == String.class) {
-                        StringBuilder respString = responseContentParser(br);
-                        return (T) respString.toString();
-                    }
-                    return null;
-                }
-            } catch (IOException ex) {
-                throw new APIException(ex);
-            } catch (JsonSyntaxException ex) {
-                logger.error(ex);
-                return null;
-            }
+            hrb = method.create(builder.build());
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException(ex);
-        } finally {
-            try {
-                client.close();
-            } catch (IOException ex) {
-                logger.error(ex);
+        }
+        // Adding User-Agent
+        hrb.setHeader("User-Agent", USER_AGENT);
+
+        if (requestContentType != null) {
+            hrb.setHeader("Content-type", requestContentType);
+        }
+        // Timeouts, proxy and redirect handling of this manager.
+        hrb.setConfig(this.requestConfig());
+        //if there's any entity to be attached to the body and request supports it, do it.
+        if (body != null && hrb instanceof HttpEntityEnclosingRequestBase) {
+            ((HttpEntityEnclosingRequestBase) hrb).setEntity(body);
+        } else if (body != null) {
+            throw new RuntimeException("Method does not support body!");
+        }
+
+        //try with resources to close streams
+        try (CloseableHttpResponse resp = this.httpClient().execute(hrb); InputStream is = resp.getEntity().getContent()) {
+            //response should always be present
+            if (is == null) {
+                throw new APIException("Response body is null.");
+            }
+            try (InputStreamReader isr = new InputStreamReader(is); BufferedReader br = new BufferedReader(isr)) {
+                if (resp.getStatusLine().getStatusCode() < 200 || resp.getStatusLine().getStatusCode() > 303) {
+                    try {
+                        StringBuilder respString = responseContentParser(br);
+                        throw new APIException(String.format("Invalid status code %d, errors: %s", resp.getStatusLine().getStatusCode(), respString.toString()));
+                    } catch (IOException e) {
+                        throw new APIException(String.format("Invalid status code %d and no error present.", resp.getStatusLine().getStatusCode()));
+                    }
+                }
+                //deserialize json into an object
+                if (clazz != null && clazz != String.class) {
+                    StringBuilder respString = responseContentParser(br);
+                    try {
+                        return this.gson.fromJson(respString.toString(), clazz);
+                    } catch (JsonSyntaxException ex) {
+                        throw new APIException(ex.toString());
+                    }
+                } else if (type != null) {
+                    StringBuilder respString = responseContentParser(br);
+                    try {
+                        return this.gson.fromJson(respString.toString(), type);
+                    } catch (IllegalStateException ex) {
+                        logger.error(ex);
+                        throw new APIException(String.format("Error parsing JSON response from server. Illegal state error: %s", respString.toString()));
+                    } catch (JsonSyntaxException ex) {
+                        logger.error(String.format("Error parsing JSON response from server. Unexpected syntax: %s", respString.toString()));
+                        throw new APIException(String.format("Unexpected Server response: %s", respString.toString()));
+                    }
+                }
+                if (clazz == String.class) {
+                    StringBuilder respString = responseContentParser(br);
+                    return (T) respString.toString();
+                }
                 return null;
             }
+        } catch (IOException ex) {
+            throw new APIException(ex);
         }
     }
 
@@ -295,21 +300,155 @@ public abstract class Manager {
     }
 
     /**
-     * Test-only hook: makes every request of this manager use the HTTP client returned by
-     * {@code supplier} instead of the clients this class builds.
+     * Builds the request configuration of this manager: its timeouts, its proxy, and
+     * whether redirects are followed.
+     *
+     * @return a new configuration with the current settings
+     */
+    private RequestConfig requestConfig() {
+        return RequestConfig.custom()
+                .setConnectTimeout(this.connectTimeout)
+                .setSocketTimeout(this.socketTimeout)
+                .setConnectionRequestTimeout(this.connectionRequestTimeout)
+                .setProxy(this.proxy)
+                .setRedirectsEnabled(!this.disableRedirects)
+                .build();
+    }
+
+    /**
+     * Returns the HTTP client of this manager, creating it on first use. Concurrent callers
+     * get the same client.
+     *
+     * <p>Package-private so that the unit tests can check the client's life cycle.
+     *
+     * @return the client
+     */
+    CloseableHttpClient httpClient() {
+        CloseableHttpClient client = this.httpClient;
+        if (client == null) {
+            synchronized (this.clientLock) {
+                client = this.httpClient;
+                if (client == null) {
+                    client = this.buildHttpClient();
+                    this.httpClient = client;
+                }
+            }
+        }
+        return client;
+    }
+
+    /** Creates the pooled client that this manager uses for all its requests. */
+    private CloseableHttpClient buildHttpClient() {
+        PoolingHttpClientConnectionManager pool = new PoolingHttpClientConnectionManager();
+        pool.setMaxTotal(MAX_CONNECTIONS);
+        pool.setDefaultMaxPerRoute(MAX_CONNECTIONS);
+        return HttpClients.custom()
+                .setConnectionManager(pool)
+                .setDefaultRequestConfig(this.requestConfig())
+                .setUserAgent(USER_AGENT)
+                .build();
+    }
+
+    /**
+     * Closes the HTTP client of this manager and releases its pooled connections.
+     *
+     * <p>Closing twice is harmless. A manager that sends another request after
+     * {@code close()} creates a new client, which must be closed again.
+     *
+     * @throws IOException if the client fails to close
+     */
+    @Override
+    public void close() throws IOException {
+        CloseableHttpClient client;
+        synchronized (this.clientLock) {
+            client = this.httpClient;
+            this.httpClient = null;
+        }
+        if (client != null) {
+            client.close();
+        }
+    }
+
+    /**
+     * Test-only hook: makes every request of this manager go through {@code client}
+     * instead of the client this class creates.
      *
      * <p>This method is package-private and is not part of the public API. It exists so
      * that offline unit tests can capture the outgoing requests and return canned
-     * responses. Production code never calls it; while no supplier is set (the default),
-     * requests are sent exactly as before. The supplied client is closed after each
-     * request, like the default one, and the {@code redirect=0} query parameter is still
-     * added when redirects are disabled.
+     * responses. Production code never calls it. The client is used like the default one:
+     * it is kept for all later requests and closed by {@link #close()}. A client this
+     * manager created earlier is not closed.
      *
-     * @param supplier returns the client for one request, or {@code null} to go back to
-     *                 the default clients
+     * @param client the client for all later requests, or {@code null} to go back to a
+     *               client created by this manager
      */
-    void setHttpClientSupplier(Supplier<CloseableHttpClient> supplier) {
-        this.httpClientSupplier = supplier;
+    void setHttpClient(CloseableHttpClient client) {
+        synchronized (this.clientLock) {
+            this.httpClient = client;
+        }
+    }
+
+    /**
+     * @return the connect timeout in milliseconds; {@link #DEFAULT_CONNECT_TIMEOUT_MS} unless changed
+     */
+    public int getConnectTimeout() {
+        return connectTimeout;
+    }
+
+    /**
+     * Sets how long a request may take to open a connection. It applies to the requests
+     * sent after the call.
+     *
+     * @param millis the timeout in milliseconds; {@code 0} waits forever
+     * @throws IllegalArgumentException if {@code millis} is negative
+     */
+    public void setConnectTimeout(int millis) {
+        this.connectTimeout = checkTimeout(millis);
+    }
+
+    /**
+     * @return the socket (read) timeout in milliseconds; {@link #DEFAULT_SOCKET_TIMEOUT_MS} unless changed
+     */
+    public int getSocketTimeout() {
+        return socketTimeout;
+    }
+
+    /**
+     * Sets how long a request may wait for data on an open connection. It applies to the
+     * requests sent after the call.
+     *
+     * @param millis the timeout in milliseconds; {@code 0} waits forever
+     * @throws IllegalArgumentException if {@code millis} is negative
+     */
+    public void setSocketTimeout(int millis) {
+        this.socketTimeout = checkTimeout(millis);
+    }
+
+    /**
+     * @return the connection-request timeout in milliseconds;
+     * {@link #DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS} unless changed
+     */
+    public int getConnectionRequestTimeout() {
+        return connectionRequestTimeout;
+    }
+
+    /**
+     * Sets how long a request may wait for a free connection from the pool of this
+     * manager. It applies to the requests sent after the call.
+     *
+     * @param millis the timeout in milliseconds; {@code 0} waits forever
+     * @throws IllegalArgumentException if {@code millis} is negative
+     */
+    public void setConnectionRequestTimeout(int millis) {
+        this.connectionRequestTimeout = checkTimeout(millis);
+    }
+
+    /** Rejects negative timeouts, which Apache HttpClient would read as "system default". */
+    private static int checkTimeout(int millis) {
+        if (millis < 0) {
+            throw new IllegalArgumentException("A timeout cannot be negative: " + millis);
+        }
+        return millis;
     }
 
     /**

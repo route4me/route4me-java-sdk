@@ -58,16 +58,18 @@ public final class CapturedRequest {
     private final String body;
     private final String entityContentType;
     private final String proxy;
+    private final RequestConfig config;
 
     private CapturedRequest(String method, URI uri, Map<String, List<String>> headers,
-                            String body, String entityContentType, String proxy) {
+                            String body, String entityContentType, RequestConfig config) {
         this.method = method;
         this.uri = uri;
         this.headers = headers;
         this.query = Collections.unmodifiableList(URLEncodedUtils.parse(uri, StandardCharsets.UTF_8));
         this.body = body;
         this.entityContentType = entityContentType;
-        this.proxy = proxy;
+        this.config = config;
+        this.proxy = config != null && config.getProxy() != null ? config.getProxy().toURI() : null;
     }
 
     /**
@@ -97,14 +99,8 @@ public final class CapturedRequest {
                 contentType = entity.getContentType() == null ? null : entity.getContentType().getValue();
             }
         }
-        String proxy = null;
-        if (request instanceof HttpRequestBase) {
-            RequestConfig config = ((HttpRequestBase) request).getConfig();
-            if (config != null && config.getProxy() != null) {
-                proxy = config.getProxy().toURI();
-            }
-        }
-        return new CapturedRequest(request.getMethod(), request.getURI(), headers, body, contentType, proxy);
+        RequestConfig config = request instanceof HttpRequestBase ? ((HttpRequestBase) request).getConfig() : null;
+        return new CapturedRequest(request.getMethod(), request.getURI(), headers, body, contentType, config);
     }
 
     // ------------------------------------------------------------------ accessors
@@ -147,6 +143,14 @@ public final class CapturedRequest {
     /** @return the proxy set in the request config, as {@code scheme://host:port}, or {@code null} */
     public String getProxy() {
         return proxy;
+    }
+
+    /**
+     * @return the per-request configuration (timeouts, proxy, redirects) the SDK set, or
+     * {@code null} when it set none
+     */
+    public RequestConfig getRequestConfig() {
+        return config;
     }
 
     /** @return the body text, or {@code null} when the request has no entity */
