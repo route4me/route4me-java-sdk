@@ -35,7 +35,7 @@ public class DynamicInsertManagerTest {
         List<MatchedRoute> matches = manager.lookForNewDestination("2026-10-22", 40.5, -74.5,
                 InsertMode.OPTIMAL_ANYWHERE, RecommendedBy.DISTANCE, 3, Arrays.asList("ROUTE-A1", "ROUTE-A2"));
 
-        http.request().assertEndpoint("POST", HOST, LOOKUP_EP).assertApiKeyInQuery()
+        http.request().assertEndpoint("POST", HOST, LOOKUP_EP).assertApiKeyAsBearer()
                 .assertContentType("application/json")
                 .assertJson("route_info_server", "v5")
                 .assertJson("scheduled_for", "2026-10-22")

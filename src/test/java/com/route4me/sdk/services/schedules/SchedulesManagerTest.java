@@ -66,7 +66,7 @@ public class SchedulesManagerTest {
 
         ScheduleList schedules = manager.getSchedules();
 
-        http.request().assertEndpoint("GET", HOST, BASE + "/schedules").assertApiKeyInQuery().assertNoBody();
+        http.request().assertEndpoint("GET", HOST, BASE + "/schedules").assertApiKeyAsBearer().assertNoBody();
         assertEquals("Weekdays", schedules.getData().get(0).getName());
         assertEquals(Integer.valueOf(7), schedules.getData().get(0).getAdvanceInterval());
     }

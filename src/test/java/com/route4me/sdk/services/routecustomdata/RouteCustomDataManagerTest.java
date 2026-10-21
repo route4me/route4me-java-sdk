@@ -36,7 +36,7 @@ public class RouteCustomDataManagerTest {
         Map<String, String> data = manager.getRouteCustomData("ROUTE-A1");
         Map<String, String> updated = manager.updateRouteCustomData("ROUTE-A1", Collections.singletonMap("region", "north"));
 
-        http.request(0).assertEndpoint("GET", HOST, ROUTES_EP + "/ROUTE-A1/custom-data").assertApiKeyInQuery()
+        http.request(0).assertEndpoint("GET", HOST, ROUTES_EP + "/ROUTE-A1/custom-data").assertApiKeyAsBearer()
                 .assertNoBody();
         http.request(1).assertEndpoint("PUT", HOST, ROUTES_EP + "/ROUTE-A1/custom-data").assertJson("region", "north");
         assertEquals("am", data.get("shift"));

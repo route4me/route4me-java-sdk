@@ -37,7 +37,7 @@ public class RouteBreaksManagerTest {
 
         Object result = manager.insertBreakAfterCertainTravelTime(900, 7200, true, "ROUTE-A1", "ROUTE-A2");
 
-        http.request().assertEndpoint("POST", HOST, BREAKS_EP).assertApiKeyInQuery()
+        http.request().assertEndpoint("POST", HOST, BREAKS_EP).assertApiKeyAsBearer()
                 .assertContentType("application/json")
                 .assertJson("route_id[0]", "ROUTE-A1")
                 .assertJson("route_id[1]", "ROUTE-A2")

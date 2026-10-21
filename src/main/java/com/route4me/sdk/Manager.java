@@ -46,6 +46,11 @@ import org.apache.logging.log4j.LogManager;
  * }
  * }</pre>
  *
+ * <p>The API key goes in an {@code Authorization: Bearer} header on requests to the V5 API
+ * ({@code https://wh.route4me.com/modules/api/v5.0/} and {@code v5.1/}), so it stays out of
+ * URLs and server logs. Every other request sends it as the {@code api_key} query
+ * parameter, which the V4 API requires.
+ *
  * <p>Every request carries the connect, socket (read) and connection-request timeouts of
  * the manager; see {@link #setConnectTimeout(int)}, {@link #setSocketTimeout(int)} and
  * {@link #setConnectionRequestTimeout(int)}.
@@ -60,6 +65,10 @@ public abstract class Manager implements Closeable {
     public static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS = 6050;
 
     private static final int MAX_CONNECTIONS = 10;
+    /** The host of the V5 API, which takes the API key as a bearer token. */
+    private static final String V5_HOST = "wh.route4me.com";
+    /** The path prefixes of the V5 API on {@link #V5_HOST}. */
+    private static final String[] V5_PATH_PREFIXES = {"/modules/api/v5.0", "/modules/api/v5.1"};
     private static final String USER_AGENT = "Route4Me Java SDK";
 
     protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(Manager.class);
@@ -220,6 +229,7 @@ public abstract class Manager implements Closeable {
 
     private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type, String requestContentType) throws APIException {
         HttpRequestBase hrb;
+        boolean bearer;
         try {
             // Work on a copy: the caller's builder stays unchanged, so it can be sent again
             // (for example on a retry) without repeating these parameters.
@@ -231,12 +241,16 @@ public abstract class Manager implements Closeable {
             if (this.callBackURL != null) {
                 target.addParameter("optimized_callback_url", this.callBackURL);
             }
-            if (this.apiKey != null) {
+            bearer = sendsKeyAsBearerToken(target.getHost(), target.getPath());
+            if (this.apiKey != null && !bearer) {
                 target.addParameter("api_key", this.apiKey);
             }
             hrb = method.create(target.build());
         } catch (URISyntaxException ex) {
             throw new IllegalArgumentException(ex);
+        }
+        if (this.apiKey != null && bearer) {
+            hrb.setHeader("Authorization", "Bearer " + this.apiKey);
         }
         // Adding User-Agent
         hrb.setHeader("User-Agent", USER_AGENT);
@@ -280,6 +294,28 @@ public abstract class Manager implements Closeable {
         } catch (IOException ex) {
             throw APIException.forIOException(method.name(), safeUrl, ex);
         }
+    }
+
+    /**
+     * Tells whether a request sends the API key as a bearer token: requests to the V5 API
+     * ({@code https://wh.route4me.com/modules/api/v5.0/...} and {@code .../v5.1/...}) send
+     * it in an {@code Authorization: Bearer} header; all other requests send it as the
+     * {@code api_key} query parameter, which the V4 API requires.
+     *
+     * @param host the request host
+     * @param path the decoded request path
+     * @return {@code true} for a V5 request
+     */
+    static boolean sendsKeyAsBearerToken(String host, String path) {
+        if (host == null || path == null || !V5_HOST.equalsIgnoreCase(host)) {
+            return false;
+        }
+        for (String prefix : V5_PATH_PREFIXES) {
+            if (path.startsWith(prefix + "/") || path.equals(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** Removes the API key of this manager from a text, for exceptions and logs. */

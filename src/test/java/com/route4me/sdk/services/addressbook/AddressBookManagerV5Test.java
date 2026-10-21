@@ -65,7 +65,7 @@ public class AddressBookManagerV5Test {
         AddressBookContactsResponse all = manager.getContacts(query());
         manager.getContactsPaginated(query());
 
-        http.request(0).assertEndpoint("POST", HOST, ADDRESSES_EP + "/index/all").assertApiKeyInQuery()
+        http.request(0).assertEndpoint("POST", HOST, ADDRESSES_EP + "/index/all").assertApiKeyAsBearer()
                 .assertJson("filters.search_query", "Bakery")
                 .assertJson("filters.address_id[0]", 12345)
                 .assertJson("page", 1)

@@ -36,7 +36,7 @@ public class AddressBarcodeManagerTest {
         GetAddressBarcodesResponse page = manager.getAddressBarcodes("ROUTE-A1", 5002L, 50, "CUR-1");
         manager.getAddressBarcodes(null, null, null, null);
 
-        http.request(0).assertEndpoint("GET", HOST, BARCODES_EP).assertApiKeyInQuery()
+        http.request(0).assertEndpoint("GET", HOST, BARCODES_EP).assertApiKeyAsBearer()
                 .assertQuery("route_id", "ROUTE-A1")
                 .assertQuery("route_destination_id", "5002")
                 .assertQuery("limit", "50")

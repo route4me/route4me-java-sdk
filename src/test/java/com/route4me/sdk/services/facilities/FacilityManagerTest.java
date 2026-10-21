@@ -53,7 +53,7 @@ public class FacilityManagerTest {
         FacilitiesPaginateResource page = manager.getFacilities(2, 10, 1, 3, "hub");
         manager.getFacilities(null, null, null, null, null);
 
-        http.request(0).assertEndpoint("GET", HOST, FACILITIES_EP).assertApiKeyInQuery()
+        http.request(0).assertEndpoint("GET", HOST, FACILITIES_EP).assertApiKeyAsBearer()
                 .assertQuery("page", "2")
                 .assertQuery("per_page", "10")
                 .assertQuery("status", "1")

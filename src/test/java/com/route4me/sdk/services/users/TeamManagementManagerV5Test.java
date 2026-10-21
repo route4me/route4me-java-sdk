@@ -49,7 +49,7 @@ public class TeamManagementManagerV5Test {
         manager.createTeamMember(member());
         manager.deleteTeamMember(1002L);
 
-        http.request(0).assertEndpoint("GET", HOST, USERS_EP).assertApiKeyInQuery().assertNoBody();
+        http.request(0).assertEndpoint("GET", HOST, USERS_EP).assertApiKeyAsBearer().assertNoBody();
         http.request(1).assertEndpoint("GET", HOST, USERS_EP + "/1002");
         http.request(2).assertEndpoint("POST", HOST, USERS_EP)
                 .assertJson("member_email", "driver@example.com")

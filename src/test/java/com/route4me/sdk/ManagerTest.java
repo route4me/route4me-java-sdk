@@ -113,6 +113,11 @@ public class ManagerTest {
         return Manager.defaultBuilder(PATH);
     }
 
+    /** Returns a builder for {@code path} on the V5 host. */
+    private static URIBuilder wh(String path) {
+        return new URIBuilder().setScheme("https").setHost("wh.route4me.com").setPath(path);
+    }
+
     /** Returns a manager that sends its requests to the mocked client. */
     private TestManager manager() {
         return http.install(new TestManager(MockHttp.API_KEY));
@@ -164,6 +169,58 @@ public class ManagerTest {
             http.request(i).assertApiKeyInQuery().assertQuery("redirect", "0")
                     .assertQuery("optimized_callback_url", "https://example.com/done").assertQuery("route_id", "R1");
         }
+    }
+
+    @Test
+    public void v5RequestsSendTheKeyAsABearerToken() throws Exception {
+        TestManager manager = manager();
+        http.respond(200, "{}").respond(200, "{}");
+
+        manager.makeRequest(RequestMethod.GET, wh("/modules/api/v5.0/vehicles"), "", Reply.class);
+        manager.makeRequest(RequestMethod.POST, wh("/modules/api/v5.1/routes"), "{}", Reply.class);
+
+        http.request(0).assertApiKeyAsBearer().assertHeader("Authorization", "Bearer " + MockHttp.API_KEY);
+        http.request(1).assertApiKeyAsBearer();
+    }
+
+    @Test
+    public void otherRequestsKeepTheKeyInTheQuery() throws Exception {
+        TestManager manager = manager();
+        http.respondToAll(200, "{}");
+        URIBuilder rapid = new URIBuilder().setScheme("https").setHost("rapid.route4me.com").setPath("/timezone");
+
+        manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
+        manager.makeRequest(RequestMethod.GET, wh("/modules/api/vehicles"), "", Reply.class);
+        manager.makeRequest(RequestMethod.GET, wh("/api.v4/note_custom_types.php"), "", Reply.class);
+        manager.makeRequest(RequestMethod.GET, rapid, "", Reply.class);
+
+        for (int i = 0; i < 4; i++) {
+            http.request(i).assertApiKeyInQuery();
+        }
+    }
+
+    @Test
+    public void managerWithoutKeySendsNoAuthorizationHeader() throws Exception {
+        TestManager manager = http.install(new TestManager(null));
+        http.respond(200, "{}");
+
+        manager.makeRequest(RequestMethod.GET, wh("/modules/api/v5.0/vehicles"), "", Reply.class);
+
+        assertNull(http.request().header("Authorization"));
+        http.request().assertNoQuery("api_key");
+    }
+
+    @Test
+    public void onlyV5PathsOnTheV5HostUseTheBearerToken() {
+        assertTrue(Manager.sendsKeyAsBearerToken("wh.route4me.com", "/modules/api/v5.0/vehicles"));
+        assertTrue(Manager.sendsKeyAsBearerToken("WH.ROUTE4ME.COM", "/modules/api/v5.1/routes"));
+        assertTrue(Manager.sendsKeyAsBearerToken("wh.route4me.com", "/modules/api/v5.0"));
+        assertFalse(Manager.sendsKeyAsBearerToken("wh.route4me.com", "/modules/api/v5.00/vehicles"));
+        assertFalse(Manager.sendsKeyAsBearerToken("wh.route4me.com", "/modules/api/vehicles"));
+        assertFalse(Manager.sendsKeyAsBearerToken("wh.route4me.com", "/api/v5.0/geotab-integration/x"));
+        assertFalse(Manager.sendsKeyAsBearerToken("api.route4me.com", "/modules/api/v5.0/vehicles"));
+        assertFalse(Manager.sendsKeyAsBearerToken(null, "/modules/api/v5.0/vehicles"));
+        assertFalse(Manager.sendsKeyAsBearerToken("wh.route4me.com", null));
     }
 
     @Test

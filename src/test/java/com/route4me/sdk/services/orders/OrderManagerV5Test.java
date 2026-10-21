@@ -70,7 +70,7 @@ public class OrderManagerV5Test {
 
         SearchOrdersResponse response = manager.searchOrders(request);
 
-        http.request().assertEndpoint("POST", HOST, PLATFORM_EP).assertApiKeyInQuery()
+        http.request().assertEndpoint("POST", HOST, PLATFORM_EP).assertApiKeyAsBearer()
                 .assertJson("filters.search_query", "Example")
                 .assertJson("filters.tracking_number[0]", "TRK-1")
                 .assertJson("filters.day_scheduled_for_YYYYMMDD[0]", "2026-10-22")

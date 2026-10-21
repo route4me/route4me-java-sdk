@@ -100,6 +100,42 @@ public class RequestGuardTest {
     }
 
     @Test
+    public void acceptsTheKeyAsABearerTokenOnTheV5Api() throws IOException {
+        HttpGet v50 = new HttpGet("https://wh.route4me.com/modules/api/v5.0/vehicles");
+        v50.setHeader("Authorization", "Bearer " + KEY);
+        HttpPost v51 = new HttpPost("https://wh.route4me.com/modules/api/v5.1/routes");
+        v51.setHeader("authorization", "Bearer " + KEY);
+
+        assertEquals("[]", check(v50).toString());
+        assertEquals("[]", check(v51).toString());
+    }
+
+    @Test
+    public void rejectsTheKeyInTheQueryOnTheV5Api() throws IOException {
+        List<String> problems = check(new HttpGet("https://wh.route4me.com/modules/api/v5.0/vehicles?api_key=" + KEY));
+        assertEquals(1, problems.size());
+        assertTrue(problems.get(0), problems.get(0).contains("query parameter 'api_key'"));
+        assertTrue(problems.get(0), problems.get(0).contains("Authorization header"));
+    }
+
+    @Test
+    public void rejectsOtherAuthorizationSchemesOnTheV5Api() throws IOException {
+        HttpGet request = new HttpGet("https://wh.route4me.com/modules/api/v5.0/vehicles");
+        request.setHeader("Authorization", "Token " + KEY);
+        List<String> problems = check(request);
+        assertEquals(1, problems.size());
+        assertTrue(problems.get(0).contains("header 'Authorization'"));
+    }
+
+    @Test
+    public void nonV5PathsOnTheV5HostKeepTheKeyInTheQuery() throws IOException {
+        assertEquals("[]", check(new HttpGet("https://wh.route4me.com/modules/api/vehicles?api_key=" + KEY)).toString());
+        HttpGet bearer = new HttpGet("https://wh.route4me.com/modules/api/vehicles");
+        bearer.setHeader("Authorization", "Bearer " + KEY);
+        assertEquals(1, check(bearer).size());
+    }
+
+    @Test
     public void rejectsKeyInOtherQueryParameterOrPath() throws IOException {
         assertEquals(1, check(new HttpGet("https://api.route4me.com/api.v4/route.php?route_id=" + KEY)).size());
         assertTrue(check(new HttpGet("https://wh.route4me.com/modules/api/v5.0/vehicles/" + KEY)).toString()

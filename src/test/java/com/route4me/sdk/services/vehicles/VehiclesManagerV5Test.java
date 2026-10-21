@@ -78,7 +78,7 @@ public class VehiclesManagerV5Test {
         VehicleV5[] vehicles = manager.getVehicles(2, 25);
         manager.getVehicles(null, null);
 
-        http.request(0).assertEndpoint("GET", HOST, VEHICLES_EP).assertApiKeyInQuery()
+        http.request(0).assertEndpoint("GET", HOST, VEHICLES_EP).assertApiKeyAsBearer()
                 .assertQuery("page", "2").assertQuery("per_page", "25").assertNoBody();
         http.request(1).assertNoQuery("page").assertNoQuery("per_page");
         assertEquals("Van 1", vehicles[0].getVehicleAlias());

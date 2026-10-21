@@ -59,8 +59,9 @@ import static org.junit.Assert.assertEquals;
  * }</pre>
  *
  * <p>Every captured request goes through the {@link RequestGuard}: a request to an unknown
- * host or endpoint, over plain http, or with the API key outside the {@code api_key} query
- * parameter fails the test. The guard also fails the test when the API key appears in an
+ * host or endpoint, over plain http, or with the API key outside its place (the
+ * {@code Authorization: Bearer} header on the V5 API, the {@code api_key} query parameter
+ * elsewhere) fails the test. The guard also fails the test when the API key appears in an
  * exception that escapes the test (for a failed assertion: in the exception it wraps), in
  * one returned by {@link #expectThrows}, or in a {@code java.util.logging} record written
  * during the test.
