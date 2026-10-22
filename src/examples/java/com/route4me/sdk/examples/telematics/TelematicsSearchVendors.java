@@ -45,6 +45,10 @@ public class TelematicsSearchVendors {
      * @param vendors the answer of the search
      */
     private static void print(TelematicsVendorsV5Response vendors) {
+        if (vendors == null || vendors.getData() == null) {
+            System.out.println("No vendors");
+            return;
+        }
         for (TelematicsVendorInfo vendor : vendors.getData()) {
             System.out.println(vendor);
         }

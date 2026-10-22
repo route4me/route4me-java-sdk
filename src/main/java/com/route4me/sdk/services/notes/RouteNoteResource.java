@@ -13,7 +13,7 @@ public class RouteNoteResource {
     /** Route ID (32-char hex string) ({@code route_id}). */
     @SerializedName("route_id") private String routeId;
     /** Route destination ID ({@code route_destination_id}). */
-    @SerializedName("route_destination_id") private Integer routeDestinationId;
+    @SerializedName("route_destination_id") private Long routeDestinationId;
     /** Destination UUID (32-char hex string) ({@code destination_uuid}). */
     @SerializedName("destination_uuid") private String destinationUuid;
     /** Timestamp when note was added (formatted string) ({@code ts_added}). */

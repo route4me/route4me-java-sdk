@@ -132,7 +132,7 @@ public class OrderManagerV5Test {
         update.setOrderIds(Arrays.asList(ORDER_ID, ORDER_ID_2));
         update.setData(order());
         BatchDeleteOrdersRequest delete = new BatchDeleteOrdersRequest();
-        delete.setOrderUuids(Arrays.asList(ORDER_ID, ORDER_ID_2));
+        delete.setOrderIds(Arrays.asList(ORDER_ID, ORDER_ID_2));
         BatchUpdateFilterOrderRequest byFilter = new BatchUpdateFilterOrderRequest();
         byFilter.setFilters(filters());
         byFilter.setSearch(search());
@@ -371,6 +371,14 @@ public class OrderManagerV5Test {
         http.respond(200, json("{'data':[[1]]}"));
 
         http.expectApiException(manager::getOrderCustomFields);
+    }
+
+    @Test
+    public void updateOrderCustomFieldRequiresTheRequest() {
+        final OrderManagerV5 manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateOrderCustomField(42L, null));
+        http.assertNoRequests();
     }
 
     @Test

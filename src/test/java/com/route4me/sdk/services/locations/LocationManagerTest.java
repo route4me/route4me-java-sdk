@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.locations;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -22,6 +23,9 @@ public class LocationManagerTest {
     private static final String LOCATIONS_EP = "/modules/api/v5.0/address-book/locations";
     private static final String LOCATION_TYPE = json("{'location_type_id':'LT-1','name':'Store',"
             + "'description':'Retail store','is_parent_type':false,'is_child_type':true,'root_member_id':1000}");
+    private static final String JOB_ID = "C0FFEE0000000000000000000000000E";
+    private static final String EXPORT_STATUS_URL =
+            "https://" + HOST + "/modules/api/v5.0/address-book/job-tracker/status/" + JOB_ID;
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -131,7 +135,7 @@ public class LocationManagerTest {
     public void exportColumnsAndExport() throws Exception {
         LocationManager manager = manager();
         http.respond(200, json("[{'field_name':'address_1','field_title':'Address','group':'main','allowed':true}]"))
-                .respond(200, json("{'status':true}"));
+                .respondWithHeaders(202, null, "X-Job-Id", JOB_ID, "Location", EXPORT_STATUS_URL);
         LocationExportRequest export = withFilters(new LocationExportRequest());
         export.setColumns(Arrays.asList("address_1", "address_alias"));
         export.setFilename("locations.csv");
@@ -140,7 +144,7 @@ public class LocationManagerTest {
         export.setAddressIds(Collections.singletonList(12345));
 
         LocationExportColumnsResource[] columns = manager.getLocationsExportColumns(new LocationCombinedRequest());
-        StatusResponse status = manager.exportLocations(export);
+        AsyncJob job = manager.exportLocations(export);
 
         http.request(0).assertEndpoint("POST", HOST, LOCATIONS_EP + "/export/columns");
         http.request(1).assertEndpoint("POST", HOST, LOCATIONS_EP + "/export")
@@ -150,7 +154,10 @@ public class LocationManagerTest {
                 .assertJson("tz", "UTC")
                 .assertJson("address_ids[0]", 12345);
         assertEquals("Address", columns[0].getFieldTitle());
-        assertTrue(status.getStatus());
+        assertEquals(202, job.getStatusCode());
+        assertEquals(JOB_ID, job.getJobId());
+        assertEquals(EXPORT_STATUS_URL, job.getLocation());
+        assertEquals("", job.getBody());
     }
 
     @Test
@@ -253,9 +260,13 @@ public class LocationManagerTest {
         LocationManager manager = manager();
         http.respondWithoutBody(202);
 
-        assertNull(manager.exportLocations(withFilters(new LocationExportRequest())));
+        AsyncJob job = manager.exportLocations(withFilters(new LocationExportRequest()));
 
         http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/export").assertJson("page", 1);
+        assertEquals(202, job.getStatusCode());
+        assertNull(job.getJobId());
+        assertNull(job.getLocation());
+        assertEquals("", job.getBody());
     }
 
     @Test

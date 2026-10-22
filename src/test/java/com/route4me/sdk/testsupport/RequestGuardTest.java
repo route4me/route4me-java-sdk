@@ -9,6 +9,7 @@ import org.apache.http.entity.StringEntity;
 import org.junit.Test;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -75,13 +76,44 @@ public class RequestGuardTest {
     @Test
     public void allowsDeprecatedEndpointButRecordsIt() throws IOException {
         List<String> problems = guard.check(
-                capture(new HttpGet("https://telematics.route4me.com/api/vendors.php?api_key=" + KEY)),
+                capture(new HttpGet("https://telematics.route4me.com/api/vendors.php?vendor_id=55")),
                 "RequestGuardTest.allowsDeprecatedEndpointButRecordsIt");
         assertEquals("[]", problems.toString());
         assertTrue(hits.summary().toString().contains("GET https://telematics.route4me.com/api/vendors.php"));
         assertTrue(hits.summary().toString().contains("RequestGuardTest.allowsDeprecatedEndpointButRecordsIt"));
         assertEquals("[Deprecated endpoints hit by unit tests: none]",
                 new DeprecatedEndpointReport.Hits().summary().toString());
+    }
+
+    @Test
+    public void rejectsTheKeySentToADeprecatedHost() throws IOException {
+        List<String> problems = check(new HttpGet("https://telematics.route4me.com/api/vendors.php?api_key=" + KEY));
+        assertEquals(problems.toString(), 1, problems.size());
+        assertTrue(problems.get(0), problems.get(0).contains("the API key was sent to 'telematics.route4me.com'"));
+    }
+
+    @Test
+    public void rejectsTheKeySentToAnyOtherHostInAnyPlace() throws IOException {
+        HttpGet header = new HttpGet("https://validator.route4me.com/socket.io/");
+        header.setHeader("Authorization", "Bearer " + KEY);
+        HttpPost body = new HttpPost("https://rapid.route4me.com/timezone");
+        body.setEntity(new StringEntity("{\"key\":\"" + KEY + "\"}", "UTF-8"));
+
+        for (HttpUriRequest request : Arrays.asList(new HttpGet("https://rapid.route4me.com/timezone?api_key=" + KEY),
+                header, body)) {
+            List<String> problems = check(request);
+            assertTrue(problems.toString(), problems.toString().contains("only [api.route4me.com, wh.route4me.com]"));
+        }
+        assertEquals("[]", guard.keyLeaks(capture(new HttpGet("https://rapid.route4me.com/timezone"))).toString());
+    }
+
+    @Test
+    public void rejectsANonDefaultPort() throws IOException {
+        List<String> problems = check(new HttpGet("https://api.route4me.com:8443/api.v4/route.php?api_key=" + KEY));
+        assertEquals(problems.toString(), 1, problems.size());
+        assertTrue(problems.get(0), problems.get(0).contains("port must be the https default (443), not 8443"));
+        assertEquals("[]", check(new HttpGet("https://api.route4me.com:443/api.v4/route.php?api_key=" + KEY))
+                .toString());
     }
 
     @Test

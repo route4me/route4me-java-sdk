@@ -1,43 +1,27 @@
 package com.route4me.sdk.examples.addresses;
 
 import com.route4me.sdk.exception.APIException;
-import com.route4me.sdk.services.routing.Address;
-import com.route4me.sdk.services.routing.Route;
-import com.route4me.sdk.services.routing.RoutesRequest;
 import com.route4me.sdk.services.routing.RoutingManager;
 
-import java.util.List;
-
 /**
- * Finds an address of a route ({@link RoutingManager#getRoutes}, {@link RoutingManager#getRoute}) that is not a
- * depot, and removes it with {@link RoutingManager#deleteAddress}.
+ * Removes one stop from a route with {@link RoutingManager#deleteAddress}. Set {@code ROUTE_ID} to a route of a test
+ * account and {@code ROUTE_DESTINATION_ID} to one of its stops that is not a depot: the example deletes that stop.
  */
 public class DeleteAddress {
 
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        String routeDestinationId = System.getenv("ROUTE_DESTINATION_ID");
+        if (routeId == null || routeId.isEmpty() || routeDestinationId == null || routeDestinationId.isEmpty()) {
+            System.err.println("Set ROUTE_ID and ROUTE_DESTINATION_ID to a route of a test account and one of its"
+                    + " stops; this example deletes the stop.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         try {
-            Address addr = null;
-            List<Route> routes = manager.getRoutes(new RoutesRequest().setLimit(5));
-            for (Route r : routes) {
-                Route full = manager.getRoute(new RoutesRequest().setId(r.getId()));
-                if (full.getAddresses().isEmpty()) {
-                    continue;
-                }
-                for (Address add : full.getAddresses()) {
-                    if (!add.getDepot()) {
-                        addr = add;
-                        break;
-                    }
-                }
-                if (addr == null) {
-                    throw new RuntimeException("Cannot find an address for delete operation");
-                }
-            }
-            System.out.println("Deleting Address: " + addr.getRouteDestinationId() + " from Route: "
-                    + addr.getRouteId());
-            manager.deleteAddress(addr.getRouteId(), addr.getRouteDestinationId());
+            System.out.println("Deleting Address: " + routeDestinationId + " from Route: " + routeId);
+            manager.deleteAddress(routeId, Long.valueOf(routeDestinationId));
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();

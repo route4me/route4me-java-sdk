@@ -8,11 +8,11 @@ import java.util.List;
 /** The answer of {@link RoutingManager#deleteRoutes(String...)}. */
 @Data
 public class RouteDeletedResponse {
-    /** If true, the route duplicated successfully ({@code deleted}). */
+    /** Whether the routes were deleted ({@code deleted}). */
     @SerializedName("deleted")
     private boolean deleted;
 
-    /** If true, the route duplication process was asynchronous ({@code async}). */
+    /** Whether the deletion runs in the background ({@code async}). */
     @SerializedName("async")
     private boolean async;
 
@@ -20,7 +20,7 @@ public class RouteDeletedResponse {
     @SerializedName("route_id")
     private String routeId;
 
-    /** An array of the duplicated route IDs ({@code route_ids}). */
+    /** The IDs of the deleted routes ({@code route_ids}). */
     @SerializedName("route_ids")
     private List<String> addresses;
 }

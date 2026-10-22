@@ -14,7 +14,6 @@ import org.apache.http.impl.EnglishReasonPhraseCatalog;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
-import org.junit.AssumptionViolatedException;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
@@ -30,9 +29,12 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Formatter;
 import java.util.logging.Handler;
+import java.util.logging.Level;
 import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import static org.junit.Assert.assertEquals;
 
@@ -61,10 +63,18 @@ import static org.junit.Assert.assertEquals;
  * <p>Every captured request goes through the {@link RequestGuard}: a request to an unknown
  * host or endpoint, over plain http, or with the API key outside its place (the
  * {@code Authorization: Bearer} header on the V5 API, the {@code api_key} query parameter
- * elsewhere) fails the test. The guard also fails the test when the API key appears in an
+ * elsewhere on {@code api.route4me.com} and {@code wh.route4me.com}, nowhere on any other
+ * host) fails the test. The guard also fails the test when the API key appears in an
  * exception that escapes the test (for a failed assertion: in the exception it wraps), in
- * one returned by {@link #expectThrows}, or in a {@code java.util.logging} record written
- * during the test.
+ * one returned by {@link #expectThrows}, or in a log event written during the test: a
+ * Log4j 2 event at any level (see {@link Log4jCapture}), or a {@code java.util.logging}
+ * record, for which the {@code com.route4me} loggers are set to {@code ALL} while the test
+ * runs. Guard failures are reported even when the test ends in an assumption failure.
+ *
+ * <p>The rule also installs the {@link NetworkBlock}, so a manager that a test forgot to
+ * {@link #install} fails instead of reaching the network. Only managers created with
+ * {@link #API_KEY}, or with no key, can be installed: the guard looks for that key, so it
+ * could not see another one leak.
  */
 public final class MockHttp implements TestRule {
 
@@ -84,6 +94,9 @@ public final class MockHttp implements TestRule {
          */
         void run() throws Exception;
     }
+
+    /** Fills in the parameters of a {@code java.util.logging} record. */
+    private static final Formatter MESSAGES = new SimpleFormatter();
 
     private final RequestGuard guard = new RequestGuard(EndpointRegistry.load(), API_KEY);
     private final CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
@@ -135,6 +148,12 @@ public final class MockHttp implements TestRule {
      * @return the same manager
      */
     public <M extends Manager> M install(M manager) {
+        String key = ManagerTestAccess.apiKey(manager);
+        if (key != null && !API_KEY.equals(key)) {
+            throw new IllegalArgumentException("Create the manager with MockHttp.API_KEY or no key: the request"
+                    + " guard looks for MockHttp.API_KEY, so it could not see another key in the requests, the"
+                    + " exceptions or the logs");
+        }
         ManagerTestAccess.useHttpClient(manager, client);
         return manager;
     }
@@ -197,6 +216,25 @@ public final class MockHttp implements TestRule {
      */
     public MockHttp respondWithoutBody(int status) {
         steps.add(new CannedResponse(status, (String) null, null));
+        return this;
+    }
+
+    /**
+     * Queues a JSON response with response headers for the next request, such as the
+     * {@code X-Job-Id} and {@code Location} headers of a {@code 202 Accepted} job.
+     *
+     * @param status  the HTTP status code
+     * @param body    the response body, or {@code null} for a response without an entity
+     * @param headers the header names and values, in pairs:
+     *                {@code "X-Job-Id", "JOB-1", "Location", "https://..."}
+     * @return this rule
+     * @throws IllegalArgumentException if {@code headers} does not hold name and value pairs
+     */
+    public MockHttp respondWithHeaders(int status, String body, String... headers) {
+        if (headers.length % 2 != 0) {
+            throw new IllegalArgumentException("Give the headers as name and value pairs");
+        }
+        steps.add(new CannedResponse(status, body, body == null ? null : "application/json", headers.clone()));
         return this;
     }
 
@@ -347,27 +385,37 @@ public final class MockHttp implements TestRule {
         return new Statement() {
             @Override
             public void evaluate() throws Throwable {
-                testName = description.getTestClass().getSimpleName() + "." + description.getMethodName();
+                testName = (description.getTestClass() == null ? description.getClassName()
+                        : description.getTestClass().getSimpleName()) + "." + description.getMethodName();
+                NetworkBlock.install();
                 LogCapture logs = LogCapture.start();
+                Log4jCapture log4j = Log4jCapture.start();
                 Throwable failure = null;
                 try {
                     base.evaluate();
                 } catch (Throwable thrown) {
                     failure = thrown;
                 } finally {
+                    log4j.stop();
                     logs.stop();
                 }
-                if (failure instanceof AssumptionViolatedException) {
-                    throw failure;
-                }
+                // Checked before an assumption failure is passed on: the SDK may have caught
+                // and swallowed a guard failure before the test was skipped.
                 List<String> problems = new ArrayList<>(violations);
                 // A failed assertion is the test's own message; only what it wraps comes from the SDK.
                 problems.addAll(guard.keyLeaks(failure instanceof AssertionError ? failure.getCause() : failure));
                 for (LogRecord record : logs.records()) {
-                    if (guard.containsKey(record.getMessage())) {
+                    if (guard.containsKey(record.getMessage()) || guard.containsKey(MESSAGES.formatMessage(record))) {
                         problems.add("the API key appears in a log message from " + record.getLoggerName());
                     }
                     problems.addAll(guard.keyLeaks(record.getThrown()));
+                }
+                for (Log4jCapture.Event event : log4j.events()) {
+                    if (guard.containsKey(event.getMessage())) {
+                        problems.add("the API key appears in a Log4j " + event.getLevel() + " message from "
+                                + event.getLoggerName());
+                    }
+                    problems.addAll(guard.keyLeaks(event.getThrown()));
                 }
                 if (!problems.isEmpty()) {
                     AssertionError error = new AssertionError(guardMessage(problems));
@@ -422,18 +470,27 @@ public final class MockHttp implements TestRule {
         return message.toString();
     }
 
-    /** A status code and optional body; each request gets a fresh response object. */
+    /** A status code, optional body and headers; each request gets a fresh response object. */
     private static final class CannedResponse {
+        private static final String[] NO_HEADERS = {};
+
         private final int status;
         private final String body;
         private final byte[] bytes;
         private final String contentType;
+        /** Header names and values, in pairs. */
+        private final String[] headers;
 
         CannedResponse(int status, String body, String contentType) {
+            this(status, body, contentType, NO_HEADERS);
+        }
+
+        CannedResponse(int status, String body, String contentType, String[] headers) {
             this.status = status;
             this.body = body;
             this.bytes = null;
             this.contentType = contentType;
+            this.headers = headers;
         }
 
         CannedResponse(int status, byte[] bytes, String contentType) {
@@ -441,11 +498,15 @@ public final class MockHttp implements TestRule {
             this.body = null;
             this.bytes = bytes;
             this.contentType = contentType;
+            this.headers = NO_HEADERS;
         }
 
         CloseableHttpResponse toHttpResponse() {
             String reason = EnglishReasonPhraseCatalog.INSTANCE.getReason(status, Locale.ENGLISH);
             ClosableResponse response = new ClosableResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, status, reason));
+            for (int i = 0; i < headers.length; i += 2) {
+                response.addHeader(headers[i], headers[i + 1]);
+            }
             if (body != null) {
                 response.setEntity(new StringEntity(body, ContentType.create(contentType, StandardCharsets.UTF_8)));
             } else if (bytes != null) {
@@ -469,19 +530,45 @@ public final class MockHttp implements TestRule {
         }
     }
 
-    /** Collects {@code java.util.logging} records written while a test runs. */
+    /**
+     * Collects {@code java.util.logging} records written while a test runs. The
+     * {@code com.route4me} loggers are set to {@link Level#ALL} meanwhile, so that their
+     * {@code FINE} records are checked too; other loggers keep their level, and the console
+     * handler keeps its own. Only the most recently started capture records, so a nested rule
+     * hides the outer one until it stops.
+     */
     private static final class LogCapture extends Handler {
+        /** The capture that records; {@code null} when none runs. */
+        private static volatile LogCapture active;
+
         private final List<LogRecord> records = new CopyOnWriteArrayList<>();
+        /** Held strongly while the test runs: java.util.logging keeps loggers only weakly. */
+        private final Logger sdkLogger = Logger.getLogger("com.route4me");
+        private final Level sdkLevel;
+        private final LogCapture previous;
+
+        private LogCapture(LogCapture previous) {
+            this.previous = previous;
+            this.sdkLevel = sdkLogger.getLevel();
+        }
 
         /** Starts capturing records on the root logger. */
-        static LogCapture start() {
-            LogCapture capture = new LogCapture();
+        static synchronized LogCapture start() {
+            LogCapture capture = new LogCapture(active);
+            capture.sdkLogger.setLevel(Level.ALL);
             Logger.getLogger("").addHandler(capture);
+            active = capture;
             return capture;
         }
 
         void stop() {
-            Logger.getLogger("").removeHandler(this);
+            synchronized (LogCapture.class) {
+                Logger.getLogger("").removeHandler(this);
+                sdkLogger.setLevel(sdkLevel);
+                if (active == this) {
+                    active = previous;
+                }
+            }
         }
 
         List<LogRecord> records() {
@@ -490,7 +577,9 @@ public final class MockHttp implements TestRule {
 
         @Override
         public void publish(LogRecord record) {
-            records.add(record);
+            if (active == this) {
+                records.add(record);
+            }
         }
 
         @Override

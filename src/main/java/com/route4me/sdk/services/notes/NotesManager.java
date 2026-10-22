@@ -107,17 +107,22 @@ public class NotesManager extends Manager {
     }
 
     /**
-     * Adds a custom note type: {@code POST https://api.route4me.com/api.v4/note_custom_types.php}, with the type as
-     * the JSON body. The C# SDK ({@code AddCustomNoteType}) sends the same request.
+     * Adds a custom note type: {@code POST https://api.route4me.com/api.v4/note_custom_types.php}, with
+     * {@code {"type": ..., "values": [...]}} as the JSON body, as the C# and PHP SDKs send it (the API rejects the V4
+     * spec's {@code note_custom_type} and {@code note_custom_type_values}).
      *
-     * @param request the name, the values and the kind of field of the type; {@code note_custom_type} is required
-     * @return {@code result} {@code OK} and the number of types added
-     * @throws IllegalArgumentException if {@code request} is {@code null} or has no {@code note_custom_type}
+     * @param request the name, the values and the kind of field of the type; the name ({@code type}) and at least one
+     *     value ({@code values}) are required
+     * @return {@code result} {@code OK} and the number of types added ({@code affected})
+     * @throws IllegalArgumentException if {@code request} is {@code null}, or has no name or no values; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public CustomNoteTypeResponse addCustomNoteType(CustomNoteTypeRequest request) throws APIException {
         if (request == null || request.getNoteCustomType() == null || request.getNoteCustomType().isEmpty()) {
-            throw new IllegalArgumentException("A custom note type needs note_custom_type");
+            throw new IllegalArgumentException("A custom note type needs a name (type)");
+        }
+        if (request.getNoteCustomTypeValues() == null || request.getNoteCustomTypeValues().isEmpty()) {
+            throw new IllegalArgumentException("A custom note type needs at least one value (values)");
         }
         URIBuilder builder = Manager.defaultBuilder(CUSTOM_NOTE_TYPES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), CustomNoteTypeResponse.class);

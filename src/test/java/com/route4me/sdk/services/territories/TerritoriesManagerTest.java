@@ -276,6 +276,22 @@ public class TerritoriesManagerTest {
     }
 
     @Test
+    public void polygonLookupSkipsTerritoriesWithoutAShapeAndAnEmptyReply() {
+        TerritoriesManager manager = manager();
+        http.respond(200, json("[null,{'territory_id':'T-NONE'},{'territory_id':'T-NOTYPE','territory':{}},"
+                + "{'territory_id':'T-NODATA','territory':{'type':'poly'}},"
+                + "{'territory_id':'T-OK','territory':{'type':'poly',"
+                + "'data':['40.0,-74.0','41.0,-74.0','41.0,-75.0']}}]"))
+                .respondWithoutBody(200);
+
+        List<TerritoryPolygon> polygons = manager.getPolygonsFromTerritories();
+
+        assertEquals(1, polygons.size());
+        assertEquals("T-OK", polygons.get(0).getTerritory().getTerritoryId());
+        assertTrue("an empty reply gives no polygons", manager.getPolygonsFromTerritories().isEmpty());
+    }
+
+    @Test
     public void polygonLookupReturnsNothingWhenTheRequestFails() {
         TerritoriesManager manager = manager();
         http.respondWithFixture(400, "error_400.json");

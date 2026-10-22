@@ -2,29 +2,27 @@ package com.route4me.sdk.examples.addresses;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.MovedAddressesResponse;
-import com.route4me.sdk.services.routing.Route;
-import com.route4me.sdk.services.routing.RoutesRequest;
 import com.route4me.sdk.services.routing.RoutingManager;
 
-import java.util.List;
-
 /**
- * Moves a destination from one route to another with {@link RoutingManager#moveAddresses}, after finding both
- * routes with {@link RoutingManager#getRoutes} and {@link RoutingManager#getRoute}.
+ * Moves a stop to another route with {@link RoutingManager#moveAddresses}. Set {@code ROUTE_DESTINATION_ID} to a stop
+ * of a test account and {@code TO_ROUTE_ID} to the route that receives it: the example changes both routes.
  */
 public class MoveAddressesToRoute {
 
     public static void main(String[] args) {
+        String routeDestinationId = System.getenv("ROUTE_DESTINATION_ID");
+        String toRouteId = System.getenv("TO_ROUTE_ID");
+        if (routeDestinationId == null || routeDestinationId.isEmpty() || toRouteId == null || toRouteId.isEmpty()) {
+            System.err.println("Set ROUTE_DESTINATION_ID and TO_ROUTE_ID to a stop and a route of a test account;"
+                    + " this example moves the stop.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         try {
-            List<Route> routes = manager.getRoutes(new RoutesRequest().setLimit(2));
-            Route fromRoute = manager.getRoute(new RoutesRequest().setId(routes.get(0).getId()));
-            Route toRoute = manager.getRoute(new RoutesRequest().setId(routes.get(1).getId()));
-            Number routeDestinationId = fromRoute.getAddresses().get(3).getRouteDestinationId();
-            System.out.println("Moving Destination " + routeDestinationId + " from Route " + fromRoute.getId()
-                    + " to Route " + toRoute.getId());
-            MovedAddressesResponse response = manager.moveAddresses(routeDestinationId, toRoute.getId());
+            System.out.println("Moving Destination " + routeDestinationId + " to Route " + toRouteId);
+            MovedAddressesResponse response = manager.moveAddresses(Long.valueOf(routeDestinationId), toRouteId);
             System.out.println(response);
         } catch (APIException e) {
             //handle exception

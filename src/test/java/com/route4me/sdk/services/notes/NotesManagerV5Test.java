@@ -19,8 +19,8 @@ public class NotesManagerV5Test {
     private static final String HOST = "wh.route4me.com";
     private static final String NOTES_EP = "/modules/api/v5.0/notes";
     private static final String NOTE = json("{'note_id':9001,'note_uuid':'NOTE-UUID-1','route_id':'ROUTE-A1',"
-            + "'route_destination_id':5002,'contents':'Left at the "
-                    + "door','activity_type':'dropoff','lat':40.5,'lng':-74.5}");
+            + "'route_destination_id':3000000002,'contents':'Left at the door',"
+            + "'activity_type':'dropoff','lat':40.5,'lng':-74.5}");
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -70,6 +70,7 @@ public class NotesManagerV5Test {
                 .assertJson("strNoteContents", "Left with the neighbour");
         http.request(3).assertEndpoint("DELETE", HOST, NOTES_EP + "/9001").assertNoBody();
         assertEquals("NOTE-UUID-1", created.getNoteUuid());
+        assertEquals("64-bit stop IDs", Long.valueOf(3000000002L), created.getRouteDestinationId());
         assertEquals(Integer.valueOf(9001), deleted.getNoteId());
     }
 

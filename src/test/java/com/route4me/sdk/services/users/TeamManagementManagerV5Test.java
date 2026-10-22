@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.users;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -10,6 +11,7 @@ import java.util.Collections;
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 
 /**
  * Unit tests for {@link TeamManagementManagerV5}: team members on the V5 API.
@@ -19,6 +21,9 @@ public class TeamManagementManagerV5Test {
     private static final String HOST = "wh.route4me.com";
     private static final String USERS_EP = "/modules/api/v5.0/team/users";
     private static final String BULK_INSERT_EP = "/modules/api/v5.0/team/bulk-insert";
+    private static final String JOB_ID = "C0FFEE0000000000000000000000000E";
+    private static final String JOB_STATUS_URL = "https://" + HOST + "/modules/api/v5.0/team/job-tracker/status/"
+            + JOB_ID;
     private static final String MEMBER = json("{'member_id':1002,'member_email':'driver@example.com',"
             + "'member_type':'SUB_ACCOUNT_DRIVER','member_first_name':'Sam','member_last_name':'Driver',"
             + "'custom_data':{'shift':'am'}}");
@@ -131,26 +136,35 @@ public class TeamManagementManagerV5Test {
     @Test
     public void bulkCreateTeamMembersPostsUsersAndConflictStrategy() throws Exception {
         TeamManagementManagerV5 manager = manager();
-        http.respond(200, "{}").respond(200, "{}");
+        http.respondWithHeaders(200, "{}", "Location", JOB_STATUS_URL).respond(200, "{}");
 
-        manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member()}, "overwrite");
-        manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member()}, null);
+        AsyncJob job = manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member()}, "overwrite");
+        AsyncJob noLocation = manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member()}, null);
 
-        http.request(0).assertEndpoint("POST", HOST, BULK_INSERT_EP)
+        http.request(0).assertEndpoint("POST", HOST, BULK_INSERT_EP).assertApiKeyAsBearer()
                 .assertJson("users[0].member_email", "driver@example.com")
                 .assertJson("users[0].OWNER_MEMBER_ID", 1001)
                 .assertJson("conflicts", "overwrite");
         http.request(1).assertJsonLacks("conflicts");
+        assertEquals(200, job.getStatusCode());
+        assertEquals(JOB_ID, job.getJobId());
+        assertEquals(JOB_STATUS_URL, job.getLocation());
+        assertEquals("{}", job.getBody());
+        assertNull(noLocation.getJobId());
     }
 
     @Test
     public void bulkCreateTeamMembersAcceptsAnEmptyAcceptedReply() throws Exception {
         TeamManagementManagerV5 manager = manager();
-        http.respondWithoutBody(202);
+        http.respondWithHeaders(202, null, "X-Job-Id", JOB_ID, "Location", JOB_STATUS_URL);
 
-        manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member()}, "skip");
+        AsyncJob job = manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member()}, "skip");
 
         http.request().assertEndpoint("POST", HOST, BULK_INSERT_EP);
+        assertEquals(202, job.getStatusCode());
+        assertEquals(JOB_ID, job.getJobId());
+        assertEquals(JOB_STATUS_URL, job.getLocation());
+        assertEquals("", job.getBody());
     }
 
     @Test
@@ -166,6 +180,30 @@ public class TeamManagementManagerV5Test {
         http.expectThrows(IllegalArgumentException.class,
                 () -> manager.bulkCreateTeamMembers(new TeamMemberRequest[] {null}, "skip"));
         http.assertNoRequests();
+    }
+
+    @Test
+    public void bulkCreateTeamMembersRequiresAnOwnerForEachMember() throws Exception {
+        final TeamManagementManagerV5 manager = manager();
+        final TeamMemberRequest noOwner = member();
+        noOwner.setOwnerMemberId(null);
+        final TeamMemberRequest emptyEmail = member();
+        emptyEmail.setOwnerMemberId(null);
+        emptyEmail.setOwnerEmail("");
+        TeamMemberRequest byEmail = member();
+        byEmail.setOwnerMemberId(null);
+        byEmail.setOwnerEmail("owner@example.com");
+        http.respondWithHeaders(202, null, "X-Job-Id", JOB_ID);
+
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member(), noOwner}, "skip"));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.bulkCreateTeamMembers(new TeamMemberRequest[] {emptyEmail}, "skip"));
+        http.assertNoRequests();
+        manager.bulkCreateTeamMembers(new TeamMemberRequest[] {byEmail}, "skip");
+
+        http.request().assertJson("users[0].owner_email", "owner@example.com")
+                .assertJsonLacks("users[0].OWNER_MEMBER_ID");
     }
 
     @Test

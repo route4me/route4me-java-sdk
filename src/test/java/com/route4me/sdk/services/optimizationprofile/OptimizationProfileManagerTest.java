@@ -159,6 +159,17 @@ public class OptimizationProfileManagerTest {
     }
 
     @Test
+    public void assignOptimizationProfileRequiresBothIds() {
+        final OptimizationProfileManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.assignOptimizationProfile(null, "PROF-1"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.assignOptimizationProfile("", "PROF-1"));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.assignOptimizationProfile("C0FFEE00000000000000000000000003", null));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void assignOptimizationProfileAcceptsAnEmptyReply() throws Exception {
         OptimizationProfileManager manager = manager();
         http.respondWithoutBody(204);

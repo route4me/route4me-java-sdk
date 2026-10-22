@@ -12,17 +12,27 @@ import com.route4me.sdk.services.users.UsersManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** Creates a user of the account with {@link UsersManager#createUser}. */
+/**
+ * Creates a user of the account with the deprecated {@link UsersManager#createUser}. New code uses
+ * {@code TeamManagementManagerV5.createTeamMember}; see {@link CreateTeamMemberV5}.
+ */
 public class CreateUser {
+    // Shows a deprecated V4 user.php method (obsolete in the C# SDK) until it is removed.
+    @SuppressWarnings("deprecation")
     public static void main(String[] args) {
+        String password = System.getenv("R4M_NEW_MEMBER_PASSWORD");
+        if (password == null || password.isEmpty()) {
+            System.err.println("Set R4M_NEW_MEMBER_PASSWORD to the password of the new user.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         User user = new User();
         user.setMemberFirstName("Clay");
         user.setMemberLastName("Abraham");
-        user.setMemberEmail("sssss+newdispatcher@gmail.com");
-        user.setMemberPassword("123456Secret");
+        user.setMemberEmail("new.dispatcher@example.com");
+        user.setMemberPassword(password);
         user.setDateOfBirth("1978");
-        user.setMemberPhone("571-22-5555");
+        user.setMemberPhone("+1-555-555-0100");
         user.setMemberZipcode("22102");
         user.setMemberType(Constants.MemberType.SUB_ACCOUNT_DRIVER.toString());
         user.setHideRoutedAddresses(Constants.MemberPropertyValue.FALSE.toString());

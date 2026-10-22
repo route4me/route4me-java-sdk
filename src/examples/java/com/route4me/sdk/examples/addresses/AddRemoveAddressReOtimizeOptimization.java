@@ -53,8 +53,12 @@ public class AddRemoveAddressReOtimizeOptimization {
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();
+            return;
         }
-
+        if (optimizationResponse.getAddresses() == null) {
+            System.err.println("The optimization has no addresses to add to");
+            return;
+        }
 
         // Adding More Addresses to Optimization
         System.out.println("\nAdding More Stops and Reoptimizing");
@@ -76,7 +80,7 @@ public class AddRemoveAddressReOtimizeOptimization {
             optimizationUpdated = manager.reOptimization(optParameters, optimizationResponse);
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
             System.out.println("State:" + Constants.OptimizationState.get(optimizationUpdated.getState().intValue()));
-            if (optimizationResponse.getAddresses() != null) {
+            if (optimizationUpdated.getAddresses() != null) {
                 for (Address address : optimizationUpdated.getAddresses()) {
                     System.out.println(address.getAddress());
                 }
@@ -112,7 +116,7 @@ public class AddRemoveAddressReOtimizeOptimization {
             optimizationUpdated = manager.reOptimizationByOptimizationID(optParameters);
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
             System.out.println("State:" + Constants.OptimizationState.get(optimizationUpdated.getState().intValue()));
-            if (optimizationResponse.getAddresses() != null) {
+            if (optimizationUpdated.getAddresses() != null) {
                 for (Address address : optimizationUpdated.getAddresses()) {
                     System.out.println(address.getAddress());
                 }
@@ -153,7 +157,7 @@ public class AddRemoveAddressReOtimizeOptimization {
             optimizationUpdated = manager.reOptimization(optParameters, optimizationResponse);
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
             System.out.println("State:" + Constants.OptimizationState.get(optimizationUpdated.getState().intValue()));
-            if (optimizationResponse.getAddresses() != null) {
+            if (optimizationUpdated.getAddresses() != null) {
                 for (Address address : optimizationUpdated.getAddresses()) {
                     System.out.println(address.getAddress());
                 }

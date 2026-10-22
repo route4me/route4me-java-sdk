@@ -37,8 +37,8 @@ public class GeocodingManagerTest {
     private static final String ADDRESS_EP = "/api/address.php";
     private static final String GEOCODER_EP = "/api/geocoder.php";
     private static final String DETAILED_RESULT =
-            json("[{'name':'100 Example "
-                    + "St','type':'street','confidence':'high','coordinates':{'lat':40.1,'lng':-74.1}}]");
+            json("[{'name':'100 Example St','type':'street','confidence':'high',"
+                    + "'coordinates':{'lat':40.1,'lng':-74.1}}]");
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -197,6 +197,20 @@ public class GeocodingManagerTest {
         assertEquals(-74.1, geocoded.getLongitude(), 0.0);
         assertEquals("street", geocoded.getGeocodings().get(0).getType());
         assertEquals("invalid", findByAddress(results, "ab").getGeocodings().get(0).getType());
+    }
+
+    @Test
+    public void aDetailedMatchWithoutCoordinatesKeepsItsOwnLatitudeAndLongitude() {
+        GeocodingManager manager = manager();
+        http.respond(200, json("[{'name':'100 Example St','type':'street','lat':40.2,'lng':-74.2},"
+                + "{'name':'Example','type':'city'}]"));
+
+        Address result = new ThreadBasedGeocoding(manager, "100 Example St", new GeocoderOptions(1)).call();
+
+        assertEquals(40.2, result.getLatitude(), 0.0);
+        assertEquals(-74.2, result.getLongitude(), 0.0);
+        assertEquals("street", result.getGeocodings().get(0).getType());
+        assertEquals(0.0, result.getGeocodings().get(1).getLatitude(), 0.0);
     }
 
     @Test
@@ -425,6 +439,24 @@ public class GeocodingManagerTest {
         assertEquals("TMP-1", response.getTemporaryAddressesStorageID());
         assertEquals(Integer.valueOf(2), response.getAddressCount());
         assertTrue(response.getStatus());
+    }
+
+    @Test
+    public void websocketsGeocoderReturnsAnIdleGeocoderWhenTheUploadReplyIsIncomplete() throws Exception {
+        GeocodingManager manager = manager();
+        http.respondWithoutBody(200).respond(200, json("{'optimization_problem_id':'P1','address_count':2}"))
+                .respond(200, json("{'temporary_addresses_storage_id':'S1'}"));
+        Field socket = GeocoderWebSockets.class.getDeclaredField("geocoderWebSocket");
+        socket.setAccessible(true);
+
+        for (int i = 0; i < 3; i++) {
+            GeocoderWebSockets geocoder = manager.websocketsGeocoder(new ArrayList<Address>());
+
+            assertNull("no socket may be opened in a unit test", socket.get(geocoder));
+            assertNull(geocoder.getAddresses());
+            geocoder.closeGeoCodeSocketIO();
+        }
+        assertEquals(3, http.requestCount());
     }
 
     @Test

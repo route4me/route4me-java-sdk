@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.vehicles;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.testsupport.CapturedRequest;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
@@ -36,6 +37,8 @@ public class VehiclesManagerV5Test {
     private static final String CAPACITY = json("{'data':{'vehicle_capacity_profile_id':4,'name':'Small van',"
             + "'max_volume':10.5,'max_weight':1200,'max_items_number':80}}");
     private static final String JOB = json("{'job_id':'JOB-1','status':'processing'}");
+    private static final String JOB_ID = "C0FFEE0000000000000000000000000E";
+    private static final String JOB_STATUS_URL = "https://" + HOST + VEHICLES_EP + "/job-tracker/status/" + JOB_ID;
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -43,6 +46,19 @@ public class VehiclesManagerV5Test {
     /** Returns a manager that sends its requests to the mocked client. */
     private VehiclesManagerV5 manager() {
         return http.install(new VehiclesManagerV5(MockHttp.API_KEY));
+    }
+
+    /** Queues a {@code 202 Accepted} reply without a body, with the job ID and the job status URL. */
+    private void respondWithQueuedJob() {
+        http.respondWithHeaders(202, null, "X-Job-Id", JOB_ID, "Location", JOB_STATUS_URL);
+    }
+
+    /** Asserts that a job came back from {@link #respondWithQueuedJob()}. */
+    private static void assertQueuedJob(AsyncJob job) {
+        assertEquals(202, job.getStatusCode());
+        assertEquals(JOB_ID, job.getJobId());
+        assertEquals(JOB_STATUS_URL, job.getLocation());
+        assertEquals("", job.getBody());
     }
 
     /** Builds a sample vehicle with fake data. */
@@ -185,6 +201,18 @@ public class VehiclesManagerV5Test {
         http.expectThrows(IllegalArgumentException.class, () -> manager.createVehicle(null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.createVehicle(noAlias));
         http.expectThrows(IllegalArgumentException.class, () -> manager.createVehicle(emptyAlias));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void updatesAndThePendingSyncRequireABody() {
+        final VehiclesManagerV5 manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateVehicle("C0FFEE00000000000000000000000001", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateVehicleProfile("7", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateVehicleCapacityProfile("7", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.syncPendingTelematicsData(null));
         http.assertNoRequests();
     }
 
@@ -381,38 +409,66 @@ public class VehiclesManagerV5Test {
     // ------------------------------------------------------------------ bulk operations and jobs
 
     @Test
-    public void bulkOperationsPostTheVehicleIdsAndAcceptAnEmptyReply() throws Exception {
+    public void bulkOperationsPostTheVehicleIdsAndReturnTheJob() throws Exception {
         VehiclesManagerV5 manager = manager();
         String[] ids = {VEHICLE_ID, OTHER_VEHICLE_ID};
-        http.respondWithoutBody(202).respondWithoutBody(202).respondWithoutBody(202).respondWithoutBody(202);
+        for (int i = 0; i < 4; i++) {
+            respondWithQueuedJob();
+        }
 
-        assertNull(manager.activateVehicles(ids));
-        assertNull(manager.deactivateVehicles(ids));
-        assertNull(manager.deleteVehicles(ids));
-        assertNull(manager.restoreVehicles(ids));
+        AsyncJob[] jobs = {manager.activateVehicles(ids), manager.deactivateVehicles(ids),
+            manager.deleteVehicles(ids), manager.restoreVehicles(ids)};
 
         String[] paths = {"/bulk/activate", "/bulk/deactivate", "/bulk/delete", "/bulk/restore"};
         for (int i = 0; i < paths.length; i++) {
             http.request(i).assertEndpoint("POST", HOST, VEHICLES_EP + paths[i]).assertNoQuery("vehicle_ids[]")
+                    .assertApiKeyAsBearer()
                     .assertJson("vehicle_ids[0]", VEHICLE_ID)
                     .assertJson("vehicle_ids[1]", OTHER_VEHICLE_ID);
+            assertQueuedJob(jobs[i]);
         }
     }
 
     @Test
-    public void bulkOperationsReadAJobInTheBody() throws Exception {
+    public void bulkOperationsAcceptAnEmptyReplyWithoutHeaders() throws Exception {
+        VehiclesManagerV5 manager = manager();
+        http.respondWithoutBody(202);
+
+        AsyncJob job = manager.activateVehicles(new String[] {VEHICLE_ID});
+
+        assertEquals(202, job.getStatusCode());
+        assertNull(job.getJobId());
+        assertNull(job.getBodyAs(VehicleJobResponse.class));
+    }
+
+    @Test
+    public void bulkOperationsKeepAJobInTheBodyReadable() throws Exception {
         VehiclesManagerV5 manager = manager();
         http.respondToAll(202, JOB);
         String[] ids = {VEHICLE_ID};
 
-        VehicleJobResponse[] jobs = {manager.activateVehicles(ids), manager.deactivateVehicles(ids),
+        AsyncJob[] jobs = {manager.activateVehicles(ids), manager.deactivateVehicles(ids),
             manager.deleteVehicles(ids), manager.restoreVehicles(ids),
             manager.updateVehicles(Collections.singletonList(withId(VEHICLE_ID)))};
 
-        for (VehicleJobResponse job : jobs) {
-            assertEquals("JOB-1", job.getJobId());
-            assertEquals("processing", job.getStatus());
+        for (AsyncJob job : jobs) {
+            VehicleJobResponse body = job.getBodyAs(VehicleJobResponse.class);
+            assertEquals("JOB-1", body.getJobId());
+            assertEquals("processing", body.getStatus());
         }
+    }
+
+    @Test
+    public void jobIdOfABulkOperationFeedsTheJobStatus() throws Exception {
+        VehiclesManagerV5 manager = manager();
+        respondWithQueuedJob();
+        http.respond(200, json("{'status':'processing'}"));
+
+        AsyncJob job = manager.deleteVehicles(new String[] {VEHICLE_ID});
+        VehicleJobResponse status = manager.getVehicleJobStatus(job.getJobId());
+
+        http.request(1).assertEndpoint("GET", HOST, VEHICLES_EP + "/job-tracker/status/" + JOB_ID);
+        assertEquals("processing", status.getStatus());
     }
 
     @Test
@@ -437,10 +493,11 @@ public class VehiclesManagerV5Test {
     @Test
     public void updateVehiclesPostsTheVehicles() throws Exception {
         VehiclesManagerV5 manager = manager();
-        http.respondWithoutBody(202);
+        respondWithQueuedJob();
 
-        assertNull(manager.updateVehicles(Arrays.asList(withId(VEHICLE_ID), withId(OTHER_VEHICLE_ID))));
+        AsyncJob job = manager.updateVehicles(Arrays.asList(withId(VEHICLE_ID), withId(OTHER_VEHICLE_ID)));
 
+        assertQueuedJob(job);
         http.request().assertEndpoint("POST", HOST, VEHICLES_EP + "/bulk/update")
                 .assertJson("vehicles[0].vehicle_id", VEHICLE_ID).assertJson("vehicles[0].vehicle_alias", "Van 9")
                 .assertJson("vehicles[1].vehicle_id", OTHER_VEHICLE_ID)

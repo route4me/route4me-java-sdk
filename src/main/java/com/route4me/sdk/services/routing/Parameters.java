@@ -98,7 +98,7 @@ public class Parameters {
     /** The unique internal id of a vehicle to assign to the route ({@code vehicle_id}). */
     @SerializedName("vehicle_id")
     private String vehicleId;
-    /** The vehicle ID, to be assigned to the route ({@code driver_id}). */
+    /** The ID of the driver to assign to the route; the API prefers {@code member_id} ({@code driver_id}). */
     @SerializedName("driver_id")
     private String driverId;
     /**

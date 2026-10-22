@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.telematics;
 
+import com.google.gson.Gson;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.testsupport.Fixtures;
 import com.route4me.sdk.testsupport.MockHttp;
@@ -17,16 +18,13 @@ import static org.junit.Assert.assertTrue;
 /**
  * Unit tests for {@link TelematicsManager}: telematics registration, connections and vendors.
  *
- * <p>The vendor methods still call {@code telematics.route4me.com}, which is retired. The
- * endpoint registry lists it as deprecated, so these tests pass, and the guard reports
- * each hit in the deprecated-endpoint summary.
+ * <p>The deprecated vendor methods of the retired {@code telematics.route4me.com} host throw
+ * without sending a request, so the API key never reaches that host.
  */
 public class TelematicsManagerTest {
 
     private static final String API = "api.route4me.com";
-    private static final String LEGACY_HOST = "telematics.route4me.com";
     private static final String WH = "wh.route4me.com";
-    private static final String VENDORS_EP = "/api/vendors.php";
     private static final String CONNECTIONS_EP = "/api.v4/telematics/connections.php";
     /** A made-up telematics API token, not the account API key. */
     private static final String TOKEN = "TELEMATICS-TOKEN";
@@ -149,137 +147,40 @@ public class TelematicsManagerTest {
 
     // ------------------------------------------------------------------ vendors (retired host)
 
-    @Test
-    @SuppressWarnings("deprecation")
-    public void getTelematicsVendorsInfoUsesTheRetiredHost() throws Exception {
-        TelematicsManager manager = manager();
-        http.respondWithFixture(200, "telematics_vendors_info.json");
-
-        TelematicsVendorsInfo info = manager.getTelematicsVendorsInfo();
-
-        http.request().assertEndpoint("GET", LEGACY_HOST, VENDORS_EP).assertApiKeyInQuery();
-        assertEquals(2, info.getVendors().size());
-        assertEquals("engine-hours", info.getVendors().get(0).getFeatures().get(1).getSlug());
+    /** Expects a call on the retired host to throw without sending anything. */
+    private void assertRetired(MockHttp.Call call) {
+        APIException error = http.expectApiException(call);
+        assertEquals(TelematicsManager.RETIRED_HOST_MESSAGE, error.getMessage());
+        assertTrue(error.getMessage(), error.getMessage().contains("getTelematicsVendorsV5"));
+        http.assertNoRequests();
     }
 
     @Test
     @SuppressWarnings("deprecation")
-    public void getTelematicsVendorInfoSendsTheVendorId() throws Exception {
-        TelematicsManager manager = manager();
-        http.respond(200, json("{'vendor':{'id':'55','name':'Example Fleet'}}"));
-
-        TelematicsVendorsInfo info = manager.getTelematicsVendorInfo("55");
-
-        http.request().assertEndpoint("GET", LEGACY_HOST, VENDORS_EP).assertQuery("vendor_id", "55");
-        assertEquals("Example Fleet", info.getVendor().getName());
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void searchesWithPagingSendTheirOwnParameter() throws Exception {
-        TelematicsManager manager = manager();
-        http.respondToAll(200, json("{'vendors':[]}"));
-
-        manager.searchVendorByCountry("GB");
-        manager.searchVendorByCountry("GB", "2", "10");
-        manager.searchVendorBySize("global", "1", "5");
-        manager.searchVendorByKeyWord("fleet", "1", "5");
-        manager.searchVendorByFeature("satellite", "1", "5");
-
-        http.request(0).assertEndpoint("GET", LEGACY_HOST, VENDORS_EP).assertQuery("country", "GB")
-                .assertNoQuery("page");
-        http.request(1).assertQuery("country", "GB").assertQuery("page", "2").assertQuery("per_page", "10");
-        http.request(2).assertQuery("size", "global").assertNoQuery("country").assertQuery("per_page", "5");
-        http.request(3).assertQuery("s", "fleet").assertNoQuery("country");
-        http.request(4).assertQuery("feature", "satellite").assertNoQuery("country");
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void oneArgumentSearchesCallTheVendorsEndpoint() throws Exception {
-        TelematicsManager manager = manager();
+    public void retiredHostMethodsThrowWithoutSendingTheKey() {
+        final TelematicsManager manager = manager();
         http.respondToAll(200, Fixtures.read("telematics_vendors_info.json"));
 
-        TelematicsVendorsInfo bySize = manager.searchVendorBySize("global");
-        manager.searchVendorByKeyWord("fleet");
-        manager.searchVendorByFeature("satellite");
-
-        for (int i = 0; i < 3; i++) {
-            http.request(i).assertEndpoint("GET", LEGACY_HOST, VENDORS_EP).assertNoQuery("page");
-        }
-        assertEquals(2, bySize.getVendors().size());
+        assertRetired(manager::getTelematicsVendorsInfo);
+        assertRetired(() -> manager.getTelematicsVendorInfo("55"));
+        assertRetired(() -> manager.searchVendorByCountry("GB"));
+        assertRetired(() -> manager.searchVendorByCountry("GB", "2", "10"));
+        assertRetired(() -> manager.searchVendorBySize("global"));
+        assertRetired(() -> manager.searchVendorBySize("global", "1", "5"));
+        assertRetired(() -> manager.searchVendorByKeyWord("fleet"));
+        assertRetired(() -> manager.searchVendorByKeyWord("fleet", "1", "5"));
+        assertRetired(() -> manager.searchVendorByFeature("satellite"));
+        assertRetired(() -> manager.searchVendorByFeature("satellite", "1", "5"));
+        assertRetired(() -> manager.compareTelematicsVendors("55,56"));
     }
 
     @Test
-    @SuppressWarnings("deprecation")
-    public void searchVendorBySizeSendsTheSize() throws Exception {
-        TelematicsManager manager = manager();
-        http.respond(200, json("{'vendors':[]}"));
+    public void retiredHostModelsStillParse() {
+        TelematicsVendorsInfo info = new Gson().fromJson(
+                Fixtures.read("telematics_vendors_info.json"), TelematicsVendorsInfo.class);
 
-        manager.searchVendorBySize("global");
-
-        http.request().assertQuery("size", "global").assertNoQuery("country");
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void searchVendorByKeyWordSendsTheKeyword() throws Exception {
-        TelematicsManager manager = manager();
-        http.respond(200, json("{'vendors':[]}"));
-
-        manager.searchVendorByKeyWord("fleet");
-
-        http.request().assertQuery("s", "fleet").assertNoQuery("country");
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void searchVendorByFeatureSendsTheFeature() throws Exception {
-        TelematicsManager manager = manager();
-        http.respond(200, json("{'vendors':[]}"));
-
-        manager.searchVendorByFeature("satellite");
-
-        http.request().assertQuery("feature", "satellite").assertNoQuery("country");
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void compareTelematicsVendorsListsTheFeatures() throws Exception {
-        TelematicsManager manager = manager();
-        http.respondWithFixture(200, "telematics_vendors_info.json");
-
-        List<TelematicsVendorComparison> comparison = manager.compareTelematicsVendors("55,56");
-
-        http.request().assertEndpoint("GET", LEGACY_HOST, VENDORS_EP).assertQuery("vendors", "55,56");
-        assertEquals(2, comparison.size());
-        assertEquals("55", comparison.get(0).getId());
-        assertEquals("Example Fleet", comparison.get(0).getName());
-        assertEquals("Satellite,Engine hours", comparison.get(0).getFeatures());
-        assertEquals("ID=56 Name=Sample Trackers Features=Satellite", comparison.get(1).toString());
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void compareTelematicsVendorsSkipsMissingData() throws Exception {
-        TelematicsManager manager = manager();
-        http.respond(200, json("{'vendors':[null,{'id':'57','name':'No Features'}]}")).respondWithoutBody(200);
-
-        List<TelematicsVendorComparison> partial = manager.compareTelematicsVendors("57");
-        List<TelematicsVendorComparison> empty = manager.compareTelematicsVendors("58");
-
-        assertEquals(1, partial.size());
-        assertEquals("", partial.get(0).getFeatures());
-        assertTrue(empty.isEmpty());
-    }
-
-    @Test
-    @SuppressWarnings("deprecation")
-    public void vendorErrorBecomesApiException() {
-        final TelematicsManager manager = manager();
-        http.respond(500, json("{'errors':['unavailable']}"));
-
-        http.expectApiException(manager::getTelematicsVendorsInfo);
+        assertEquals(2, info.getVendors().size());
+        assertEquals("engine-hours", info.getVendors().get(0).getFeatures().get(1).getSlug());
     }
 
     // ------------------------------------------------------------------ V5 vendors
@@ -322,8 +223,8 @@ public class TelematicsManagerTest {
     public void getTelematicsVendorV5GetsOneVendor() throws Exception {
         TelematicsManager manager = manager();
         http.respond(200, json("{'id':55,'is_enabled':true,'is_readonly':false,'name':'tomtom','title':'TomTom',"
-                + "'icon':null,'hint':'Use the API "
-                        + "key','created_at':'2026-01-01T00:00:00Z','updated_at':'2026-02-01T00:00:00Z',"
+                + "'icon':null,'hint':'Use the API key',"
+                + "'created_at':'2026-01-01T00:00:00Z','updated_at':'2026-02-01T00:00:00Z',"
                 + "'sync_entities':[{'id':'vehicles','alias':'vehicles','title':'Vehicles','default_value':true}],"
                 + "'credentials':[{'name':'api_key','is_required':true,'default':null}]}"));
 

@@ -12,11 +12,13 @@ import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.RedirectException;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -262,19 +264,51 @@ public class ManagerTest {
     }
 
     @Test
-    public void otherRequestsKeepTheKeyInTheQuery() throws Exception {
+    public void otherRequestsToTheApiHostsKeepTheKeyInTheQuery() throws Exception {
         TestManager manager = manager();
         http.respondToAll(200, "{}");
-        URIBuilder rapid = new URIBuilder().setScheme("https").setHost("rapid.route4me.com").setPath("/timezone");
 
         manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
         manager.makeRequest(RequestMethod.GET, wh("/modules/api/vehicles"), "", Reply.class);
         manager.makeRequest(RequestMethod.GET, wh("/api.v4/note_custom_types.php"), "", Reply.class);
-        manager.makeRequest(RequestMethod.GET, rapid, "", Reply.class);
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 3; i++) {
             http.request(i).assertApiKeyInQuery();
         }
+    }
+
+    @Test
+    public void requestsToOtherHostsCarryNoKey() throws Exception {
+        TestManager manager = manager();
+        http.respondToAll(200, "{}");
+        URIBuilder rapid = new URIBuilder().setScheme("https").setHost("rapid.route4me.com").setPath("/timezone");
+
+        manager.makeRequest(RequestMethod.GET, rapid, "", Reply.class);
+        manager.makeRequest(RequestMethod.POST, rapid, "{}", Reply.class);
+
+        for (int i = 0; i < 2; i++) {
+            http.request(i).assertNoQuery("api_key");
+            assertNull(http.request(i).header("Authorization"));
+        }
+    }
+
+    @Test
+    public void onlyTheRoute4MeApiHostsReceiveTheKey() {
+        assertTrue(Manager.takesApiKey("https", "api.route4me.com", -1));
+        assertTrue(Manager.takesApiKey("https", "WH.route4me.com", 443));
+        assertFalse(Manager.takesApiKey("https", "telematics.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("https", "rapid.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("https", "api.route4me.com.example.com", -1));
+        assertFalse(Manager.takesApiKey("https", null, -1));
+    }
+
+    @Test
+    public void theKeyIsNeverSentWithoutTlsOrOnAnotherPort() {
+        assertFalse(Manager.takesApiKey("http", "api.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("http", "wh.route4me.com", 80));
+        assertFalse(Manager.takesApiKey(null, "api.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("https", "api.route4me.com", 8443));
+        assertFalse(Manager.takesApiKey("https", "wh.route4me.com", 80));
     }
 
     @Test
@@ -702,6 +736,55 @@ public class ManagerTest {
     }
 
     @Test
+    public void errorBodiesHideCredentialMembers() {
+        final TestManager manager = manager();
+        http.respond(422, json("{'errors':['bad connection'],'connection_token':'TOKEN-9',"
+                + "'vendor':{'password':'pw-9'}}")).respond(200, json("{'session_guid':'GUID-7','member_id':"));
+
+        APIException status = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+        APIException unparsable = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals(json("{'errors':['bad connection'],'connection_token':'REDACTED',"
+                + "'vendor':{'password':'REDACTED'}}"), status.getResponseBody());
+        assertEquals(Collections.singletonList("bad connection"), status.getErrors());
+        assertEquals(json("{'session_guid':'REDACTED','member_id':"), unparsable.getResponseBody());
+    }
+
+    @Test
+    public void closingTheManagerDuringARequestGivesAnApiException() throws Exception {
+        final TestManager manager = new TestManager(MockHttp.API_KEY);
+        CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
+        Mockito.when(client.execute(Mockito.any(HttpUriRequest.class))).thenAnswer(invocation -> {
+            manager.close();
+            throw new IllegalStateException("Connection pool shut down");
+        });
+        manager.setHttpClient(client);
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals("GET https://api.route4me.com" + PATH + " failed: the manager was closed while the request ran",
+                error.getMessage());
+        assertTrue(error.getCause().getCause() instanceof IllegalStateException);
+    }
+
+    @Test
+    public void anUncheckedClientFailureGivesAnApiException() throws Exception {
+        final TestManager manager = new TestManager(MockHttp.API_KEY);
+        CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
+        Mockito.when(client.execute(Mockito.any(HttpUriRequest.class)))
+                .thenThrow(new IllegalStateException("Connection is still allocated"));
+        manager.setHttpClient(client);
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: Connection is still allocated"));
+    }
+
+    @Test
     public void networkFailureBecomesApiException() {
         final TestManager manager = manager();
         http.failNextRequest(new IOException("connection timed out"));
@@ -821,6 +904,101 @@ public class ManagerTest {
         assertEquals("Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
         assertEquals("an unknown charset falls back to UTF-8",
                 "Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+    }
+
+    // ------------------------------------------------------------------ background jobs
+
+    /** The V5 bulk endpoint the job tests post to. */
+    private static final String JOB_PATH = "/modules/api/v5.0/vehicles/bulk/activate";
+    /** A job status URL, as the API puts it in the {@code Location} header. */
+    private static final String JOB_STATUS_URL =
+            "https://wh.route4me.com/modules/api/v5.0/vehicles/job-tracker/status/C0FFEE0000000000000000000000000A";
+
+    @Test
+    public void jobRequestReturnsTheStatusHeadersAndBody() throws Exception {
+        TestManager manager = manager();
+        http.respondWithHeaders(202, null, "X-Job-Id", "JOB-1", "Location", JOB_STATUS_URL)
+                .respondWithHeaders(202, "{}", "location", JOB_STATUS_URL)
+                .respondWithHeaders(200, json("{'status':true}"));
+
+        AsyncJob byHeader = manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), json("{'vehicle_ids':['V1']}"));
+        AsyncJob byLocation = manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), "");
+        AsyncJob done = manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), (HttpEntity) null);
+
+        http.request(0).assertEndpoint("POST", "wh.route4me.com", JOB_PATH).assertContentType("application/json")
+                .assertJson("vehicle_ids[0]", "V1");
+        http.request(1).assertNoBody();
+        http.request(2).assertNoBody();
+        assertEquals(202, byHeader.getStatusCode());
+        assertEquals("JOB-1", byHeader.getJobId());
+        assertEquals(JOB_STATUS_URL, byHeader.getLocation());
+        assertEquals("", byHeader.getBody());
+        assertEquals("C0FFEE0000000000000000000000000A", byLocation.getJobId());
+        assertEquals("{}", byLocation.getBody());
+        assertEquals(200, done.getStatusCode());
+        assertNull(done.getJobId());
+        assertEquals(json("{'status':true}"), done.getBody());
+    }
+
+    @Test
+    public void jobRequestWithANullStringBodySendsNoBody() throws Exception {
+        TestManager manager = manager();
+        http.respondWithHeaders(202, null, "X-Job-Id", "JOB-2");
+
+        AsyncJob job = manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), (String) null);
+
+        http.request().assertNoBody();
+        assertEquals("JOB-2", job.getJobId());
+    }
+
+    @Test
+    public void jobRequestToTheV5ApiSendsTheBearerTokenAndNoApiKey() throws Exception {
+        TestManager manager = manager();
+        http.respondWithHeaders(202, null, "X-Job-Id", "JOB-1");
+
+        manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), "{}");
+
+        http.request().assertApiKeyAsBearer().assertNoQuery("api_key")
+                .assertHeader("Accept", "application/json, */*;q=0.8")
+                .assertHeader("User-Agent", "Route4Me Java SDK");
+    }
+
+    @Test
+    public void jobRequestToTheV4ApiKeepsTheKeyInTheQuery() throws Exception {
+        TestManager manager = http.install(new TestManager(MockHttp.API_KEY, true));
+        http.respondWithHeaders(202, null, "Location", JOB_STATUS_URL);
+
+        AsyncJob job = manager.makeJobRequest(RequestMethod.PUT, builder(), "{}");
+
+        http.request().assertApiKeyInQuery().assertQuery("redirect", "0");
+        assertFalse(http.request().getRequestConfig().isRedirectsEnabled());
+        assertEquals("C0FFEE0000000000000000000000000A", job.getJobId());
+    }
+
+    @Test
+    public void jobRequestWithAnErrorStatusThrowsApiException() {
+        final TestManager manager = manager();
+        http.respondWithHeaders(422, json("{'status':false,'messages':{'vehicle_ids':['Required.']}}"),
+                "X-Job-Id", "JOB-1");
+
+        APIException error = http.expectApiException(
+                () -> manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), "{}"));
+
+        assertEquals(422, error.getStatusCode());
+        assertEquals(Collections.singletonList("Required."), error.getMessages().get("vehicle_ids"));
+        assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid status code 422 for POST "
+                + "https://wh.route4me.com" + JOB_PATH));
+    }
+
+    @Test
+    public void jobRequestNetworkFailureThrowsApiException() {
+        final TestManager manager = manager();
+        http.failNextRequest(new IOException("connection reset"));
+
+        APIException error = http.expectApiException(
+                () -> manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), "{}"));
+
+        assertEquals("POST https://wh.route4me.com" + JOB_PATH + " failed: connection reset", error.getMessage());
     }
 
     // ------------------------------------------------------------------ client life cycle

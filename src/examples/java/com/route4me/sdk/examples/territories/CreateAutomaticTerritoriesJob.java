@@ -1,14 +1,18 @@
 package com.route4me.sdk.examples.territories;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.territories.AutomaticTerritoriesAddress;
 import com.route4me.sdk.services.territories.AutomaticTerritoriesJobRequest;
+import com.route4me.sdk.services.territories.AutomaticTerritoriesJobStatus;
 import com.route4me.sdk.services.territories.TerritoriesManagerV5;
 import java.util.Arrays;
 
 /**
  * Starts a job that clusters four addresses into territories with
- * {@link TerritoriesManagerV5#createAutomaticTerritoriesJob}.
+ * {@link TerritoriesManagerV5#createAutomaticTerritoriesJob}, then reads its status with
+ * {@link TerritoriesManagerV5#getAutomaticTerritoriesJobStatus}. Once the job is over,
+ * {@link TerritoriesManagerV5#getAutomaticTerritoriesJobResult} reads the clusters.
  */
 public class CreateAutomaticTerritoriesJob {
     public static void main(String[] args) {
@@ -22,8 +26,12 @@ public class CreateAutomaticTerritoriesJob {
                 new AutomaticTerritoriesAddress("4", 38.3560218811, -77.4427642822)));
         request.setMode(0);
         try {
-            String answer = manager.createAutomaticTerritoriesJob(request);
-            System.out.println("Job accepted: " + answer);
+            AsyncJob job = manager.createAutomaticTerritoriesJob(request);
+            System.out.println("Job accepted: " + job.getJobId());
+            if (job.getJobId() != null) {
+                AutomaticTerritoriesJobStatus status = manager.getAutomaticTerritoriesJobStatus(job.getJobId());
+                System.out.println("Job status: " + status.getStatus());
+            }
         } catch (APIException e) {
             e.printStackTrace();
         }

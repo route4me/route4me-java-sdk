@@ -10,7 +10,7 @@ import java.util.Map;
 @Data
 public class Contact {
 
-    /** Timestamp of an order creation ({@code created_timestamp}). */
+    /** When the contact was created, as a Unix timestamp ({@code created_timestamp}). */
     @SerializedName("created_timestamp")
     private Double createdTimestamp;
     /** Unique ID of the contact ({@code address_id}). */
@@ -28,7 +28,7 @@ public class Contact {
     /** Address_2 field ({@code address_2}). */
     @SerializedName("address_2")
     private String address2;
-    /** A unique identifier for the user to whom the route was assigned ({@code member_id}). */
+    /** The ID of the member the contact belongs to ({@code member_id}). */
     @SerializedName("member_id")
     private Integer memberId;
     /** First name ({@code first_name}). */
@@ -80,7 +80,7 @@ public class Contact {
     /** In how many routes is included address ({@code in_route_count}). */
     @SerializedName("in_route_count")
     private Integer inRouteCount;
-    /** How many times the order visited ({@code visited_count}). */
+    /** How many times the contact was visited ({@code visited_count}). */
     @SerializedName("visited_count")
     private Integer visitedCount;
     /** When the last time an address was visited ({@code last_visited_timestamp}). */
@@ -107,7 +107,7 @@ public class Contact {
     /** Local timezone ({@code local_timezone_string}). */
     @SerializedName("local_timezone_string")
     private String localTimezoneString;
-    /** Order icon color on a map ({@code color}). */
+    /** The icon color of the contact on a map ({@code color}). */
     @SerializedName("color")
     private String color;
     /** The contact's icon on the map ({@code address_icon}). */

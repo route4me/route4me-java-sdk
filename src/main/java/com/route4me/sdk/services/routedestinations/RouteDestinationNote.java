@@ -46,11 +46,11 @@ public class RouteDestinationNote {
 
     /** Latitude where the note was recorded ({@code lat}). */
     @SerializedName("lat")
-    private Float latitude;
+    private Double latitude;
 
     /** Longitude where the note was recorded ({@code lng}). */
     @SerializedName("lng")
-    private Float longitude;
+    private Double longitude;
 
     /** Type of device used to add the note (e.g., "mobile", "web") ({@code device_type}). */
     @SerializedName("device_type")

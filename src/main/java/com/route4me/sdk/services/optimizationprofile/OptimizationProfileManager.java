@@ -193,18 +193,30 @@ public class OptimizationProfileManager extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/orders/aggregation/assign-optimization-profile}, with {@code
      * {"group_id": ..., "optimization_profile_id": ...}} as the JSON body.
      *
-     * @param groupId the ID of the group of orders
-     * @param optimizationProfileId the ID of the optimization profile, from {@link #getOptimizationProfiles()}
+     * @param groupId the ID of the group of orders; required
+     * @param optimizationProfileId the ID of the optimization profile, from {@link #getOptimizationProfiles()};
+     *     required
      * @return the answer of the API
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code groupId} or {@code optimizationProfileId} is {@code null} or empty;
+     *     nothing is sent
      */
     public OptimizationProfileAssignResponse assignOptimizationProfile(String groupId, String optimizationProfileId)
             throws APIException {
+        requireText(groupId, "group_id");
+        requireText(optimizationProfileId, "optimization_profile_id");
         OptimizationProfileAssignRequest request = new OptimizationProfileAssignRequest();
         request.setGroupId(groupId);
         request.setOptimizationProfileId(optimizationProfileId);
         URIBuilder builder = v5Builder(ASSIGN_TO_ORDERS_GROUP_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 OptimizationProfileAssignResponse.class);
+    }
+
+    /** Rejects a required text that is {@code null} or empty, before any request is sent. */
+    private static void requireText(String value, String name) {
+        if (value == null || value.isEmpty()) {
+            throw new IllegalArgumentException(name + " is required");
+        }
     }
 }

@@ -91,6 +91,8 @@ public class RouteStatusManagerTest {
                 () -> manager.setRouteStopStatus(new long[0], "completed"));
         http.expectThrows(IllegalArgumentException.class, () -> manager.setRouteStopStatus(new long[] {5002}, null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.setRouteStopStatus(new long[] {5002}, ""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteStatus("ROUTE-1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteStatus("ROUTE-1", null, "DEV-1"));
         http.assertNoRequests();
     }
 

@@ -11,13 +11,17 @@ import java.util.Locale;
 
 /**
  * Reads a JSON boolean that the Route4Me API sends as {@code true}/{@code false}, as a number
- * ({@code 1}/{@code 0}) or as a string ({@code "1"}, {@code "0"}, {@code "true"},
- * {@code "false"}), and writes it as a JSON boolean.
+ * ({@code 1}/{@code 0}) or as a string, and writes it as a JSON boolean.
  *
  * <p>The API is written in PHP, and many of its boolean fields arrive as {@code 0} or
  * {@code 1}, for example {@code is_predefined} of a vehicle profile. Gson's own adapter
- * rejects those, so the whole reply failed to parse. {@link #register(GsonBuilder)} installs
+ * rejects numbers, so the whole reply failed to parse. {@link #register(GsonBuilder)} installs
  * this adapter for both {@code Boolean} and {@code boolean}.
+ *
+ * <p>A number is {@code true} unless it is 0. A string is {@code true} when it is {@code "1"}
+ * or {@code "true"} in any case, and {@code false} otherwise ({@code "0"}, {@code "false"},
+ * {@code ""} or any other text), as Gson's own adapter read strings in 1.16.1 (with
+ * {@code Boolean.parseBoolean}), so a string never makes a reply fail.
  */
 public final class LenientBooleanAdapter extends TypeAdapter<Boolean> {
 
@@ -55,10 +59,10 @@ public final class LenientBooleanAdapter extends TypeAdapter<Boolean> {
      * Reads a JSON boolean, number or string as a boolean.
      *
      * @param in the JSON reader
-     * @return the value; {@code null} for a JSON {@code null}
+     * @return the value; {@code null} for a JSON {@code null}; for a string, {@code true} for
+     *     {@code "1"} and {@code "true"} (any case) and {@code false} for any other text
      * @throws IOException if the reader fails
-     * @throws JsonSyntaxException if the value is not a boolean, a number or one of the strings
-     *     {@code "1"}, {@code "0"}, {@code "true"} or {@code "false"}
+     * @throws JsonSyntaxException if the value is an object or an array
      */
     @Override
     public Boolean read(JsonReader in) throws IOException {
@@ -72,24 +76,15 @@ public final class LenientBooleanAdapter extends TypeAdapter<Boolean> {
             case NUMBER:
                 return in.nextDouble() != 0;
             case STRING:
-                return parse(in.nextString(), in);
+                return parse(in.nextString());
             default:
                 throw new JsonSyntaxException("Expected a boolean but was " + token + " at " + in.getPath());
         }
     }
 
-    private static Boolean parse(String text, JsonReader in) {
+    /** Reads a string as Gson's own adapter did, and {@code "1"} as {@code true} too. */
+    private static Boolean parse(String text) {
         String value = text.trim().toLowerCase(Locale.ROOT);
-        if ("1".equals(value) || "true".equals(value)) {
-            return Boolean.TRUE;
-        }
-        if ("0".equals(value) || "false".equals(value)) {
-            return Boolean.FALSE;
-        }
-        if (value.isEmpty()) {
-            return null;
-        }
-        throw new JsonSyntaxException("Expected a boolean but was the string \"" + Sanitizer.forLog(text)
-                + "\" at " + in.getPath());
+        return "1".equals(value) || "true".equals(value);
     }
 }

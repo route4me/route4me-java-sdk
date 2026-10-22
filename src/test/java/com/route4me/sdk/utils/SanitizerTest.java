@@ -2,8 +2,15 @@ package com.route4me.sdk.utils;
 
 import org.junit.Test;
 
+import java.io.IOException;
+
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for {@link Sanitizer}.
@@ -95,5 +102,58 @@ public class SanitizerTest {
         }
         assertEquals(Sanitizer.DEFAULT_LOG_LENGTH, Sanitizer.forLog(text).length());
         assertEquals("01234...", Sanitizer.forLog(text, 8));
+    }
+    @Test
+    public void redactJsonHidesCredentialMembersAtAnyDepth() {
+        String body = "{\"name\":\"Fleet\",\"api_key\":\"VENDOR-KEY\",\"data\":{\"password\" : \"p\\\"w\","
+                + "\"connection_token\":\"TOKEN-1\",\"pin_password\":1234},\"tokens_left\":3}";
+
+        String redacted = Sanitizer.redactJson(body);
+
+        assertEquals("{\"name\":\"Fleet\",\"api_key\":\"REDACTED\",\"data\":{\"password\" : \"REDACTED\","
+                + "\"connection_token\":\"REDACTED\",\"pin_password\":\"REDACTED\"},\"tokens_left\":3}", redacted);
+    }
+
+    @Test
+    public void redactJsonKeepsOtherTextAsItIs() {
+        String body = "{\"errors\":[\"Route not found\"],\"note\":\"the \\\"password\\\": field\"}";
+
+        assertSame(body, Sanitizer.redactJson(body));
+        assertEquals("<html>password: x</html>", Sanitizer.redactJson("<html>password: x</html>"));
+        assertEquals("{\"session_guid\":\"REDACTED\",\"cut", Sanitizer.redactJson("{\"session_guid\":\"G-1\",\"cut"));
+        assertNull(Sanitizer.redactJson(null));
+    }
+
+    @Test
+    public void redactCauseKeepsACleanCause() {
+        IOException clean = new IOException("connection reset", new IOException("socket closed"));
+
+        assertSame(clean, Sanitizer.redactCause(clean, KEY));
+        assertNull(Sanitizer.redactCause(null, KEY));
+    }
+
+    @Test
+    public void redactCauseCopiesAChainThatQuotesACredential() {
+        IOException root = new IOException("Circular redirect to 'https://api.route4me.com/x?api_key=" + KEY + "'");
+        IOException wrapper = new IOException(root.toString(), root);
+
+        IOException safe = Sanitizer.redactCause(wrapper, null);
+
+        assertNotSame(wrapper, safe);
+        assertFalse(safe.getMessage(), safe.getMessage().contains(KEY));
+        assertTrue(safe.getMessage(), safe.getMessage().contains("api_key=REDACTED"));
+        assertFalse(safe.getCause().getMessage().contains(KEY));
+        assertArrayEquals(wrapper.getStackTrace(), safe.getStackTrace());
+        assertNull(safe.getCause().getCause());
+    }
+
+    @Test
+    public void redactCauseHidesTheSecretItself() {
+        IOException cause = new IOException("refused /modules/api/v5.0/" + KEY);
+
+        IOException safe = Sanitizer.redactCause(cause, KEY);
+
+        assertEquals("refused /modules/api/v5.0/REDACTED", safe.getMessage());
+        assertSame(cause, Sanitizer.redactCause(cause, null));
     }
 }

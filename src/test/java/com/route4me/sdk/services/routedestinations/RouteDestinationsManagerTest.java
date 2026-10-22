@@ -19,7 +19,10 @@ public class RouteDestinationsManagerTest {
 
     private static final String HOST = "wh.route4me.com";
     private static final String DESTINATIONS_EP = "/modules/api/v5.0/route-destinations";
-    private static final String DESTINATION = json("{'route_destination_id':5002,'destination_name':'Example Bakery',"
+    /** A stop ID above Integer.MAX_VALUE: the API's IDs are 64-bit. */
+    private static final long LARGE_ID = 3000000002L;
+    private static final String DESTINATION = json("{'route_destination_id':3000000002,"
+            + "'destination_name':'Example Bakery','notes':[{'lat':40.1234567,'lng':-74.7654321}],"
             + "'service_time':'300','is_depot':'0','customer_id':'CUST-1','facilities':[{'facility_id':7,"
             + "'facility_alias':'North hub','facility_types':[{'facility_type_id':1,'facility_type_alias':'Hub'}]}]}");
 
@@ -95,7 +98,9 @@ public class RouteDestinationsManagerTest {
                 .assertJson("fields[1]", "destination_name")
                 .assertJson("not_filters.address_stop_type[0]", "BREAK")
                 .assertJson("route.query", "Morning");
-        assertEquals(Integer.valueOf(5002), list.getItems().get(0).getRouteDestinationId());
+        assertEquals(Long.valueOf(LARGE_ID), list.getItems().get(0).getRouteDestinationId());
+        assertEquals(40.1234567, list.getItems().get(0).getNotes().get(0).getLatitude(), 0.0);
+        assertEquals(-74.7654321, list.getItems().get(0).getNotes().get(0).getLongitude(), 0.0);
     }
 
     @Test
@@ -113,12 +118,14 @@ public class RouteDestinationsManagerTest {
     @Test
     public void getDestinationByLabelCodeSendsTheCode() throws Exception {
         RouteDestinationsManager manager = manager();
-        http.respond(200, json("{'destination_id':5002,'route_id':'ROUTE-A1','label_code':'LBL-1','sequence_no':3}"));
+        http.respond(200, json("{'destination_id':3000000002,'route_id':'ROUTE-A1','label_code':'LBL-1',"
+                + "'sequence_no':3}"));
 
         SortingFilteringResource sorting = manager.getDestinationByLabelCode("LBL-1");
 
         http.request().assertEndpoint("GET", HOST, DESTINATIONS_EP + "/sorting").assertQuery("label_code", "LBL-1");
         assertEquals(Integer.valueOf(3), sorting.getSequenceNo());
+        assertEquals(Long.valueOf(LARGE_ID), sorting.getDestinationId());
     }
 
     @Test
@@ -137,16 +144,16 @@ public class RouteDestinationsManagerTest {
         RouteDestinationsManager manager = manager();
         http.respond(200, json("{'optimized_sequence':[1,0]}"));
         SequenceCoordinate first = new SequenceCoordinate();
-        first.setLat(40.5f);
-        first.setLng(-74.5f);
+        first.setLat(40.1234567);
+        first.setLng(-74.7654321);
         DestinationSequenceRequest request = new DestinationSequenceRequest();
         request.setCoordinates(Arrays.asList(first, new SequenceCoordinate()));
 
         DestinationSequenceResponse response = manager.getDestinationSequence(request);
 
         http.request().assertEndpoint("POST", HOST, DESTINATIONS_EP + "/sequence")
-                .assertJson("coordinates[0].lat", 40.5)
-                .assertJson("coordinates[0].lng", -74.5);
+                .assertJson("coordinates[0].lat", 40.1234567)
+                .assertJson("coordinates[0].lng", -74.7654321);
         assertArrayEquals(new int[] {1, 0}, response.getOptimizedSequence());
     }
 

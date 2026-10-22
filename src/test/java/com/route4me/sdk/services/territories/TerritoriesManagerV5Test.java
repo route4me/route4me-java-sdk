@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.territories;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,6 +10,7 @@ import java.util.Collections;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Unit tests for {@link TerritoriesManagerV5}: V5 territories, avoidance zones and automatic territory jobs.
@@ -94,7 +96,8 @@ public class TerritoriesManagerV5Test {
     @Test
     public void createAutomaticTerritoriesJobPostsTheAddresses() throws Exception {
         TerritoriesManagerV5 manager = manager();
-        http.respond(202, "{}").respondWithoutBody(202);
+        String statusUrl = "https://" + HOST + V5 + "/automatic-territories/job-tracker/status/" + JOB_ID;
+        http.respondWithHeaders(202, "[]", "X-job-id", JOB_ID, "Location", statusUrl).respondWithoutBody(202);
         AutomaticTerritoriesJobRequest request = new AutomaticTerritoriesJobRequest();
         request.setAddresses(Arrays.asList(new AutomaticTerritoriesAddress("A1", 40.5, -74.5),
                 new AutomaticTerritoriesAddress(2, 40.6, -74.6)));
@@ -103,8 +106,8 @@ public class TerritoriesManagerV5Test {
         AutomaticTerritoriesJobRequest byStorage = new AutomaticTerritoriesJobRequest();
         byStorage.setTemporaryAddressesStorageId("STORAGE-1");
 
-        String body = manager.createAutomaticTerritoriesJob(request);
-        String empty = manager.createAutomaticTerritoriesJob(byStorage);
+        AsyncJob job = manager.createAutomaticTerritoriesJob(request);
+        AsyncJob empty = manager.createAutomaticTerritoriesJob(byStorage);
 
         http.request(0).assertEndpoint("POST", HOST, V5 + "/automatic-territories").assertApiKeyAsBearer()
                 .assertJson("addresses[0].id", "A1")
@@ -114,8 +117,27 @@ public class TerritoriesManagerV5Test {
                 .assertJson("params[0]", "4")
                 .assertJsonLacks("temporary_addresses_storage_id");
         http.request(1).assertJson("temporary_addresses_storage_id", "STORAGE-1").assertJsonLacks("addresses");
-        assertEquals("{}", body);
-        assertEquals("", empty);
+        assertEquals(202, job.getStatusCode());
+        assertEquals(JOB_ID, job.getJobId());
+        assertEquals(statusUrl, job.getLocation());
+        assertEquals("[]", job.getBody());
+        assertNull(empty.getJobId());
+        assertEquals("", empty.getBody());
+    }
+
+    @Test
+    public void jobIdOfAnAutomaticTerritoriesJobFeedsTheJobStatus() throws Exception {
+        TerritoriesManagerV5 manager = manager();
+        http.respondWithHeaders(202, "{}", "Location", V5 + "/automatic-territories/job-tracker/status/" + JOB_ID)
+                .respond(200, json("{'status':'processing'}"));
+        AutomaticTerritoriesJobRequest request = new AutomaticTerritoriesJobRequest();
+        request.setTemporaryAddressesStorageId("STORAGE-1");
+
+        AsyncJob job = manager.createAutomaticTerritoriesJob(request);
+        manager.getAutomaticTerritoriesJobStatus(job.getJobId());
+
+        assertEquals(JOB_ID, job.getJobId());
+        http.request(1).assertEndpoint("GET", HOST, V5 + "/automatic-territories/job-tracker/status/" + JOB_ID);
     }
 
     @Test

@@ -289,6 +289,17 @@ public class OrdersManagerTest {
     }
 
     @Test
+    public void customUserFieldWritesRequireTheField() {
+        final OrdersManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createOrderCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateOrderCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateOrderCustomUserField(new OrderCustomUserField()));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void updateOrderCustomUserFieldPutsTheField() throws Exception {
         OrdersManager manager = manager();
         http.respond(200, "{\"result\":\"OK\",\"affected\":1,\"data\":" + CUSTOM_FIELD + "}");
@@ -321,7 +332,7 @@ public class OrdersManagerTest {
     public void getOrdersUpdatesSendsTheLastKnownTimestamp() throws Exception {
         OrdersManager manager = manager();
         http.respond(200, json("{'data':[{'order_id':7001,'updated_timestamp':'1761040000',"
-                + "'EXT_FIELD_custom_data':{'gate':'A1'}}]}"));
+                + "'EXT_FIELD_custom_data':{'gate':'A1'}},{'order_id':7002,'EXT_FIELD_custom_data':[]}]}"));
 
         OrdersUpdatesResponse updates = manager.getOrdersUpdates(1761000000L);
 
@@ -331,6 +342,7 @@ public class OrdersManagerTest {
         assertEquals(Long.valueOf(7001L), updates.getData().get(0).getOrderId());
         assertEquals("1761040000", updates.getData().get(0).getUpdatedTimestamp());
         assertEquals("A1", updates.getData().get(0).getCustomData().get("gate"));
+        assertTrue("PHP sends an empty map as []", updates.getData().get(1).getCustomData().isEmpty());
     }
 
     @Test

@@ -13,6 +13,7 @@ import static org.junit.Assert.assertEquals;
  * Unit tests for {@link VehiclesManager}, the V4-era vehicles API on
  * {@code wh.route4me.com/modules/api/vehicles}.
  */
+@SuppressWarnings("deprecation") // VehiclesManager is deprecated (obsolete in C#), but its requests stay tested
 public class VehiclesManagerTest {
 
     private static final String HOST = "wh.route4me.com";

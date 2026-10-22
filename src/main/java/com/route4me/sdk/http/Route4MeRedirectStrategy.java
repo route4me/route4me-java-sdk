@@ -16,8 +16,12 @@ import org.apache.http.protocol.HttpContext;
  * The redirect policy of the SDK's HTTP clients: a redirect is followed only when it
  * leads, over https, to one of the Route4Me API hosts in {@link #ALLOWED_HOSTS}.
  *
- * <p>A redirect keeps the request's query string and headers, and with them the API key.
- * Following one to another host, or to plain http, would hand the key to whoever runs it.
+ * <p>A redirect keeps the request's query string and headers, and with them the API key
+ * (Apache HttpClient copies the {@code Authorization} header too). Following one to another
+ * host, or to plain http, would hand the key to whoever runs it. The allowed hosts are the
+ * only two that receive the key, {@code api.route4me.com} and {@code wh.route4me.com}; the
+ * other Route4Me hosts, such as {@code rapid.route4me.com} and {@code validator.route4me.com},
+ * are refused as well.
  * Such a redirect fails the request with a {@link RedirectException} instead, which the
  * SDK reports as an {@link com.route4me.sdk.exception.APIException} with that cause.
  *
@@ -27,9 +31,9 @@ import org.apache.http.protocol.HttpContext;
  */
 public class Route4MeRedirectStrategy extends DefaultRedirectStrategy {
 
-    /** The hosts a redirect may lead to. */
+    /** The hosts a redirect may lead to: the two hosts that receive the API key. */
     public static final List<String> ALLOWED_HOSTS = Collections.unmodifiableList(Arrays.asList(
-            "api.route4me.com", "wh.route4me.com", "rapid.route4me.com", "validator.route4me.com"));
+            "api.route4me.com", "wh.route4me.com"));
 
     private static final String HTTPS = "https";
     private static final int HTTPS_PORT = 443;

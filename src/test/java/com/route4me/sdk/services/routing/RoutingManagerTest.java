@@ -17,6 +17,7 @@ import java.util.Map;
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -595,6 +596,33 @@ public class RoutingManagerTest {
     // ------------------------------------------------------------------ route updates with query flags
 
     @Test
+    public void updateRouteRejectsAMissingRouteOrIdBeforeSending() {
+        final RoutingManager manager = manager();
+        final Route noId = new Route();
+        final Route emptyId = new Route();
+        emptyId.setId("");
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRoute(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRoute(noId));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRoute(emptyId, null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateRoute(null, new RouteUpdateParameters().setReoptimize(true)));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.assignDriver(null, "1"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.assignVehicle("", "V1"));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void routeSharingRequiresTheRouteAndTheRecipient() {
+        final RoutingManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.routeSharing(null, "dispatcher@example.com"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.routeSharing("ROUTE-A1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.routeSharing("ROUTE-A1", ""));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void updateRouteWithParametersSendsTheFlagsInTheQuery() throws Exception {
         RoutingManager manager = manager();
         http.respondToAll(200, Fixtures.read("route.json"));
@@ -710,6 +738,7 @@ public class RoutingManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void resequenceReoptimizeRouteSendsTheV3Query() throws Exception {
         RoutingManager manager = manager();
         http.respondToAll(200, json("{'status':true}"));
@@ -725,6 +754,12 @@ public class RoutingManagerTest {
                 .assertNoBody();
         http.request(1).assertNoQuery("disable_optimization").assertNoQuery("optimize");
         assertTrue(result.getStatus());
+    }
+
+    @Test
+    public void resequenceReoptimizeRouteIsDeprecatedForUpdateRoute() throws Exception {
+        assertNotNull(RoutingManager.class.getMethod("resequenceReoptimizeRoute", String.class, Boolean.class,
+                String.class).getAnnotation(Deprecated.class));
     }
 
     @Test
@@ -784,7 +819,8 @@ public class RoutingManagerTest {
                 .assertApiKeyInQuery()
                 .assertQuery("format", "json")
                 .assertContentType("application/x-www-form-urlencoded")
-                .assertForm("route_destination_ids", "5002,5003");
+                .assertForm("route_destination_id", "5002,5003");
+        assertEquals("the API rejects the plural name (409)", 1, http.request().formFields().size());
         assertTrue(result.getAsJsonObject().get("deleted").getAsBoolean());
     }
 

@@ -13,7 +13,7 @@ import lombok.Data;
 @Data
 public class GeocoderResponse {
 
-    /** The ID of the stored addresses ({@code optimization_problem_id}). */
+    /** The optimization problem ID ({@code optimization_problem_id}). */
     @SerializedName("optimization_problem_id")
     @QueryParameter("optimization_problem_id")
     private String optimizationProblemID;

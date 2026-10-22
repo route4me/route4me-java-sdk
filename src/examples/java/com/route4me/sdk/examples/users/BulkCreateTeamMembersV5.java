@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.users;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.accountprofile.AccountProfileManager;
 import com.route4me.sdk.services.users.TeamManagementManagerV5;
@@ -26,8 +27,9 @@ public class BulkCreateTeamMembersV5 {
                 member.setOwnerMemberId(ownerId);
                 members[i] = member;
             }
-            manager.bulkCreateTeamMembers(members, "skip");
-            System.out.println("The API creates the members in a background job");
+            AsyncJob job = manager.bulkCreateTeamMembers(members, "skip");
+            System.out.println("The API creates the members in background job " + job.getJobId()
+                    + "; its status: " + job.getLocation());
         } catch (APIException e) {
             e.printStackTrace();
         }
