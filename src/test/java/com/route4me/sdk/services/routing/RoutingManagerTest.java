@@ -474,20 +474,32 @@ public class RoutingManagerTest {
         RouteDeletedResponse result = manager.deleteRoutes("ROUTE-A1", "ROUTE-A2");
 
         http.request().assertEndpoint("DELETE", API, ROUTE_EP).assertNoBody();
-        assertTrue(http.request().query("route_id").startsWith("ROUTE-A1,ROUTE-A2"));
+        http.request().assertQuery("route_id", "ROUTE-A1,ROUTE-A2");
         assertTrue(result.isDeleted());
         assertEquals(Arrays.asList("ROUTE-A1", "ROUTE-A2"), result.getAddresses());
     }
 
-    @Ignore("bug #41: deleteRoutes leaves a trailing comma in the route_id list")
     @Test
     public void deleteRoutesHasNoTrailingComma() throws Exception {
         RoutingManager manager = manager();
-        http.respond(200, json("{'deleted':true}"));
+        http.respond(200, json("{'deleted':true}")).respond(200, json("{'deleted':true}"));
 
         manager.deleteRoutes("ROUTE-A1", "ROUTE-A2");
+        manager.deleteRoutes("ROUTE-A3");
 
-        http.request().assertQuery("route_id", "ROUTE-A1,ROUTE-A2");
+        http.request(0).assertQuery("route_id", "ROUTE-A1,ROUTE-A2");
+        http.request(1).assertQuery("route_id", "ROUTE-A3");
+    }
+
+    @Test
+    public void deleteRoutesNeedsAtLeastOneValidId() {
+        final RoutingManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes());
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes((String[]) null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes("ROUTE-A1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes(""));
+        http.assertNoRequests();
     }
 
     @Test

@@ -253,14 +253,25 @@ public class RoutingManager extends Manager {
         return updateRoute(route);
     }
 
+    /**
+     * Deletes routes: {@code DELETE /api.v4/route.php?route_id=ID1,ID2,...}.
+     *
+     * @param routeIds the IDs of the routes to delete; at least one
+     * @return the deletion result
+     * @throws IllegalArgumentException if no route ID is given, or one is {@code null} or empty
+     * @throws APIException             if the request fails
+     */
     public RouteDeletedResponse deleteRoutes(String... routeIds) throws APIException {
-        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
-        StringBuilder conc = new StringBuilder();
-        for (String s : routeIds) {
-            conc.append(s).append(',');
+        if (routeIds == null || routeIds.length == 0) {
+            throw new IllegalArgumentException("At least one route ID is required");
         }
-
-        builder.addParameter("route_id", conc.toString());
+        for (String routeId : routeIds) {
+            if (routeId == null || routeId.isEmpty()) {
+                throw new IllegalArgumentException("A route ID must not be null or empty");
+            }
+        }
+        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
+        builder.addParameter("route_id", String.join(",", routeIds));
 
         return this.makeRequest(RequestMethod.DELETE, builder, "", RouteDeletedResponse.class);
     }
