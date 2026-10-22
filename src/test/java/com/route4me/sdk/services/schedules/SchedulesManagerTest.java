@@ -284,6 +284,41 @@ public class SchedulesManagerTest {
         assertEquals("ROUTE-C1", copies.getScheduledRoutes().get(0).getChildRouteId());
     }
 
+    // ------------------------------------------------------------------ schedule calendar (V4)
+
+    @Test
+    public void getScheduleCalendarSendsTheV4QueryWithFlagsAsOneOrZero() throws Exception {
+        SchedulesManager manager = manager();
+        http.respondToAll(200, json("{'address_book':{'2026-10-22':3},'orders':{'2026-10-22':5},"
+                + "'routes_count':{'2026-10-22':2}}"));
+        ScheduleCalendarRequest request = new ScheduleCalendarRequest();
+        request.setDateFromString("2026-10-20");
+        request.setDateToString("2026-10-26");
+        request.setMemberId(1001L);
+        request.setTimezoneOffsetMinutes(-240);
+        request.setOrders(true);
+        request.setAddressBook(false);
+        request.setRoutesCount(true);
+
+        ScheduleCalendarResponse calendar = manager.getScheduleCalendar(request);
+        manager.getScheduleCalendar(new ScheduleCalendarRequest());
+
+        http.request(0).assertEndpoint("GET", "api.route4me.com", "/api/schedule_calendar_data.php")
+                .assertApiKeyInQuery()
+                .assertQuery("date_from_string", "2026-10-20")
+                .assertQuery("date_to_string", "2026-10-26")
+                .assertQuery("member_id", "1001")
+                .assertQuery("timezone_offset_minutes", "-240")
+                .assertQuery("orders", "1")
+                .assertQuery("ab", "0")
+                .assertQuery("routes_count", "1")
+                .assertNoBody();
+        http.request(1).assertNoQuery("date_from_string").assertNoQuery("orders").assertNoQuery("ab");
+        assertEquals(Integer.valueOf(3), calendar.getAddressBook().get("2026-10-22"));
+        assertEquals(Integer.valueOf(5), calendar.getOrders().get("2026-10-22"));
+        assertEquals(Integer.valueOf(2), calendar.getRoutesCount().get("2026-10-22"));
+    }
+
     @Test
     public void disabledRedirectsAddRedirectZero() throws Exception {
         SchedulesManager manager = http.install(new SchedulesManager(MockHttp.API_KEY, true));

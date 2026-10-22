@@ -10,7 +10,8 @@ import org.apache.http.client.utils.URIBuilder;
  * Manages recurring routes through the V5 API ({@code https://wh.route4me.com/modules/api/v5.0/recurring-routes}): the
  * schedules, the route schedules that link a route
  * to a schedule, master routes, and the routes a schedule created. The account needs the recurring routes module;
- * without it the API answers 403.
+ * without it the API answers 403. {@link #getScheduleCalendar(ScheduleCalendarRequest)} reads the schedule calendar
+ * from the V4 API ({@code https://api.route4me.com}).
  */
 public class SchedulesManager extends Manager {
 
@@ -25,6 +26,7 @@ public class SchedulesManager extends Manager {
     private static final String SCHEDULED_ROUTES_GET_COPIES_EP = V5_BASE
             + "/recurring-routes/scheduled-routes/get-copies";
     private static final String MASTER_ROUTES_EP = V5_BASE + "/recurring-routes/master-routes";
+    private static final String SCHEDULE_CALENDAR_EP = "/api/schedule_calendar_data.php";
 
     /**
      * Creates a manager that sends its requests with an API key.
@@ -322,5 +324,23 @@ public class SchedulesManager extends Manager {
         URIBuilder builder = v5Builder(SCHEDULED_ROUTES_GET_COPIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 RouteScheduleCopiesResponse.class);
+    }
+
+    // --- Schedule calendar (V4) ---
+
+    /**
+     * Counts the scheduled address book contacts, orders and routes of each day of a period: {@code GET
+     * https://api.route4me.com/api/schedule_calendar_data.php}, with the request as the query
+     * ({@code date_from_string}, {@code date_to_string}, {@code member_id}, {@code timezone_offset_minutes},
+     * {@code orders}, {@code ab} and {@code routes_count}). This V4 request sends the API key as the
+     * {@code api_key} query parameter.
+     *
+     * @param request the period and the counts to return; {@code null} sends none of them
+     * @return the counts of each day
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public ScheduleCalendarResponse getScheduleCalendar(ScheduleCalendarRequest request) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(SCHEDULE_CALENDAR_EP);
+        return this.makeJSONRequest(RequestMethod.GET, builder, request, ScheduleCalendarResponse.class);
     }
 }
