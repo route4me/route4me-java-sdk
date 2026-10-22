@@ -5,7 +5,6 @@ import com.route4me.sdk.services.routing.balance.BalanceMode;
 import com.route4me.sdk.services.routing.search.RouteSearchResult;
 import com.route4me.sdk.testsupport.Fixtures;
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -226,7 +225,6 @@ public class RoutingManagerTest {
         assertEquals("OPT-1", optimization.getOptimizationProblemId());
     }
 
-    @Ignore("bug (unfiled): reOptimizationByOptimizationID sends the JSON string \"\" as its body")
     @Test
     public void reOptimizationByIdSendsNoBody() throws Exception {
         RoutingManager manager = manager();

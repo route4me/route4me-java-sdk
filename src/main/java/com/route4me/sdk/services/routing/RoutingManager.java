@@ -13,6 +13,7 @@ import com.route4me.sdk.utils.DateTimeUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.util.ArrayList;
@@ -92,11 +93,21 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, parameters, parameters, DataObject.class);
     }
 
+    /**
+     * Re-optimizes an optimization:
+     * {@code PUT /api.v4/optimization_problem.php?optimization_problem_id=...&reoptimize=1}.
+     * Everything goes in the query; the request has no body.
+     *
+     * @param parameters the optimization ID and flags
+     * @return the re-optimized optimization
+     * @throws APIException           if the request fails
+     * @throws IllegalAccessException if the parameters cannot be read
+     */
     public Optimization reOptimizationByOptimizationID(OptimizationParameters parameters) throws APIException, IllegalAccessException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         List<NameValuePair> params = QueryConverter.convertObjectToParameters(parameters);
         builder.addParameters(params);
-        return this.makeJSONRequest(RequestMethod.PUT, builder, "", Optimization.class);
+        return this.makeRequest(RequestMethod.PUT, builder, (HttpEntity) null, Optimization.class);
     }
 
     public Optimization reOptimization(OptimizationParameters parameters, DataObject optimization) throws APIException, IllegalAccessException {
