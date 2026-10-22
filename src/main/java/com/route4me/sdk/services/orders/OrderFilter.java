@@ -23,18 +23,26 @@ import lombok.experimental.Accessors;
 @Data
 @Accessors(chain = true)
 public class OrderFilter {
+    /** Available values: "all", "routed", "unrouted" ({@code display}). */
     @QueryParameter("display")
     @SerializedName("display")
     private String display;
+    /**
+     * Start and end dates to filter the orders by schedule. e.g. ["2019-06-01", "2019-06-18"] ({@code
+     * scheduled_for_YYMMDD}).
+     */
     @SerializedName("scheduled_for_YYMMDD")
     @QueryParameter("scheduled_for_YYMMDD")
     private List<String> scheduledForYYMMDD;
+    /** The field name, field value pairs for filtering ({@code terms}). */
     @SerializedName("terms")
     @QueryParameter("terms")
     private Map<String, Object> terms;
+    /** An array of the order status codes ({@code statuses}). */
     @SerializedName("statuses")
     @QueryParameter("statuses")
     private List<Integer> statuses;
+    /** An array of the tracking numbers to filter the orders by tracking numbers ({@code tracking_numbers}). */
     @SerializedName("tracking_numbers")
     @QueryParameter("tracking_numbers")
     private List<String> trackingNumbers;

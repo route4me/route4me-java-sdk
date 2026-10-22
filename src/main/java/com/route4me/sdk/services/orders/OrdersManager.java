@@ -16,19 +16,44 @@ import org.apache.http.client.utils.URIBuilder;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * Manages orders through the V4 API ({@code https://api.route4me.com/api.v4/order.php}). {@link OrderManagerV5} covers
+ * the V5 order
+ * platform.
+ */
 public class OrdersManager extends Manager {
 
+    /** The path of the orders, on {@code api.route4me.com}. */
     public static final String ORDERS_EP = "/api.v4/order.php";
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as the {@code api_key} query parameter
+     */
     public OrdersManager(String apiKey) {
         super(apiKey);
     }
 
+    /**
+     * Creates an order: {@code POST https://api.route4me.com/api.v4/order.php}, with the order as the JSON body.
+     *
+     * @param order the order
+     * @return the created order
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Order addOrder(Order order) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
         return this.makeJSONRequest(RequestMethod.POST, builder, order, Order.class);
     }
 
+    /**
+     * Gets one order: {@code GET https://api.route4me.com/api.v4/order.php?order_id=...}.
+     *
+     * @param orderId the order ID
+     * @return the order
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Order getOrder(long orderId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
         builder.setParameter("order_id", Long.toString(orderId));
@@ -154,11 +179,26 @@ public class OrdersManager extends Manager {
         return this.orderByFilter(filter, 30, 0);
     }
 
+    /**
+     * Updates an order: {@code PUT https://api.route4me.com/api.v4/order.php}, with the order as the JSON body.
+     *
+     * @param order the order, with its order ID
+     * @return the updated order
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Order updateOrder(Order order) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
         return this.makeJSONRequest(RequestMethod.PUT, builder, order, Order.class);
     }
 
+    /**
+     * Deletes orders: {@code DELETE https://api.route4me.com/api.v4/order.php}, with {@code {"order_ids": [...]}} as
+     * the JSON body.
+     *
+     * @param orderIds the order IDs
+     * @return the status of the request
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public StatusResponse deleteOrders(long... orderIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
         return this.makeJSONRequest(RequestMethod.DELETE, builder, new DeleteOrdersRequest(orderIds),
@@ -169,8 +209,10 @@ public class OrdersManager extends Manager {
     @Setter(AccessLevel.PRIVATE)
     private static class GetOrdersResponse {
 
+        /** An array of the Order type objects ({@code results}). */
         @SerializedName("results")
         private List<Order> results;
+        /** Total number of the returned orders ({@code total}). */
         @SerializedName("total")
         private Integer total;
     }
@@ -179,6 +221,7 @@ public class OrdersManager extends Manager {
     @RequiredArgsConstructor
     private static class DeleteOrdersRequest {
 
+        /** The IDs of the orders to delete ({@code order_ids}). */
         @SerializedName("order_ids")
         private final long[] orderIds;
     }
