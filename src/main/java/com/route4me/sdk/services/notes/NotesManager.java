@@ -40,7 +40,8 @@ public class NotesManager extends Manager {
         }
         List<NameValuePair> data = new ArrayList<>();
         data.add(new BasicNameValuePair("strNoteContents", content));
-        data.add(new BasicNameValuePair("strUpdateType", updateType.toString()));
+        // Without a type the note is "unclassified", as in the C# SDK.
+        data.add(new BasicNameValuePair("strUpdateType", updateType != null ? updateType.toString() : "unclassified"));
         return this.makeRequest(RequestMethod.POST, builder, data, AddedNote.class);
     }
 

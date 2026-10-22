@@ -52,6 +52,22 @@ public class DynamicInsertManager extends Manager {
 
     }
 
+    /**
+     * Finds the routes that a new destination fits best:
+     * {@code POST /modules/api/v5.0/routes/lookup-for-new-destination}.
+     *
+     * @param scheduledFor  the route date, such as {@code 2026-10-22}; {@code null} leaves it out
+     * @param lat           the latitude of the new destination
+     * @param lng           the longitude of the new destination
+     * @param insertMode    where the destination may go; {@code null} leaves it out and the
+     *                      API uses its default
+     * @param recommendedBy what the ranking minimises; {@code null} leaves it out and the
+     *                      API uses its default
+     * @param limit         the maximum number of routes to return
+     * @param routeIDs      the routes to consider; {@code null} considers all
+     * @return the matching routes, best first
+     * @throws APIException if the request fails
+     */
     public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode, RecommendedBy recommendedBy, Integer limit, List<String> routeIDs) throws APIException {
         URIBuilder builder = this.getURI(ROUTE_DYNAMIC_INSERT);
         DynamicInsert body = new DynamicInsert();
@@ -59,9 +75,9 @@ public class DynamicInsertManager extends Manager {
         body.setScheduledFor(scheduledFor);
         body.setLatitude(lat);
         body.setLongitude(lng);
-        body.setInsertMode(insertMode.getValue());
+        body.setInsertMode(insertMode != null ? insertMode.getValue() : null);
         body.setLookupResultsLimit(limit);
-        body.setRecommendBy(recommendedBy.getValue());
+        body.setRecommendBy(recommendedBy != null ? recommendedBy.getValue() : null);
         body.setRouteIDs(routeIDs);
 
         return this.makeJSONRequest(RequestMethod.POST, builder, body, new TypeToken<ArrayList<MatchedRoute>>() {

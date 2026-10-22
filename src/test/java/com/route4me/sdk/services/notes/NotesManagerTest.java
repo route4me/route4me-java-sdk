@@ -77,6 +77,16 @@ public class NotesManagerTest {
     }
 
     @Test
+    public void addAddressNotesWithoutATypeIsUnclassified() throws Exception {
+        NotesManager manager = manager();
+        http.respond(200, json("{'status':true,'note_id':'9003'}"));
+
+        manager.addAddressNotes(new NoteRequest().setRouteId("ROUTE-A1").setAddressId("5002"), "Hello", null);
+
+        http.request().assertForm("strUpdateType", "unclassified");
+    }
+
+    @Test
     public void errorBecomesApiException() {
         final NotesManager manager = manager();
         http.respondWithFixture(400, "error_400.json");
