@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 public class QueryConverterTest {
@@ -68,11 +69,13 @@ public class QueryConverterTest {
     }
 
     @Test
-    public void testBooleanFalseConvertsToFalse() throws IllegalAccessException {
+    public void testBooleanFalseConvertsToZero() throws IllegalAccessException {
+        // PHP reads the string "false" as true, so false must be sent as 0.
         TestPojo pojo = new TestPojo();
         pojo.inactive = false;
         List<NameValuePair> params = QueryConverter.convertObjectToParameters(pojo);
-        assertTrue(params.stream().anyMatch(p -> p.getName().equals("inactive") && p.getValue().equals("false")));
+        assertTrue(params.stream().anyMatch(p -> p.getName().equals("inactive") && p.getValue().equals("0")));
+        assertFalse(params.stream().anyMatch(p -> p.getValue().equals("false")));
     }
 
     @Test

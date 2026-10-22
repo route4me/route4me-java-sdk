@@ -281,11 +281,12 @@ public class TerritoriesManager extends Manager {
     public Territory getTerritory(String territoryId, Boolean addresses, Boolean orders) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TERRITORY_EP);
         builder.setParameter("territory_id", territoryId);
+        // 1 or 0, not "true" or "false": PHP reads the string "false" as true.
         if (orders != null) {
-            builder.setParameter("orders", orders.toString());
+            builder.setParameter("orders", orders ? "1" : "0");
         }
         if (addresses != null) {
-            builder.setParameter("addresses", addresses.toString());
+            builder.setParameter("addresses", addresses ? "1" : "0");
         }
         return this.makeRequest(RequestMethod.GET, builder, "", Territory.class);
     }

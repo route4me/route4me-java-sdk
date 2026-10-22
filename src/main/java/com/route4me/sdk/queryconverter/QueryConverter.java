@@ -38,23 +38,32 @@ public class QueryConverter {
                 //if array add multiple parameters
                 if (fieldValue.getClass().isArray()) {
                     for (int i = 0; i < Array.getLength(fieldValue); i++) {
-                        parameters.add(new BasicNameValuePair(annot.value(), Array.get(fieldValue, i).toString()));
+                        parameters.add(new BasicNameValuePair(annot.value(), v4Value(Array.get(fieldValue, i))));
                     }
                 } else if (fieldValue instanceof Iterable) { //or iterable
                     for (Object element : (Iterable) fieldValue) {
-                        parameters.add(new BasicNameValuePair(annot.value(), element.toString()));
+                        parameters.add(new BasicNameValuePair(annot.value(), v4Value(element)));
                     }
                 } else {
-                    //Convert booleans to numbers
-                    if (fieldValue instanceof Boolean && ((Boolean) fieldValue).booleanValue()) {
-                        parameters.add(new BasicNameValuePair(annot.value(), "1"));
-                    } else {
-                        parameters.add(new BasicNameValuePair(annot.value(), fieldValue.toString()));
-                    }
+                    parameters.add(new BasicNameValuePair(annot.value(), v4Value(fieldValue)));
                 }
             }
         }
         return parameters;
+    }
+
+    /**
+     * Returns the text of one V4 query value. A boolean becomes {@code 1} or {@code 0}: PHP
+     * reads any non-empty string, {@code "false"} included, as true.
+     *
+     * @param value the value, not {@code null}
+     * @return the value as sent
+     */
+    private static String v4Value(Object value) {
+        if (value instanceof Boolean) {
+            return ((Boolean) value).booleanValue() ? "1" : "0";
+        }
+        return value.toString();
     }
 
     /**
