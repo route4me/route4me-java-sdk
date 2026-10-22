@@ -25,16 +25,16 @@ public class RouteDestinationsManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
     public RouteDestinationResource getDestination(String id) throws APIException {
-        URIBuilder builder = v5Builder(ROUTE_DESTINATIONS_EP + "/" + id);
+        URIBuilder builder = v5Builder(ROUTE_DESTINATIONS_EP, id);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteDestinationResource.class);
     }
 
@@ -68,7 +68,7 @@ public class RouteDestinationsManager extends Manager {
     }
 
     public RouteDestinationsByOrderResponse getDestinationsByOrder(String orderUuid) throws APIException {
-        URIBuilder builder = v5Builder(ORDER_EP + "/" + orderUuid);
+        URIBuilder builder = v5Builder(ORDER_EP, orderUuid);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteDestinationsByOrderResponse.class);
     }
 

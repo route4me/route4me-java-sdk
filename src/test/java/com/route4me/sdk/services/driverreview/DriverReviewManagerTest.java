@@ -43,7 +43,7 @@ public class DriverReviewManagerTest {
         DriverReviewsResponse reviews = manager.getDriverReviews(5, 1001L, "2026-10-01", "2026-10-31", 1, 10);
         manager.getDriverReviews(null, null, null, null, null, null);
 
-        http.request(0).assertEndpoint("GET", HOST, REVIEWS_EP).assertApiKeyInQuery()
+        http.request(0).assertEndpoint("GET", HOST, REVIEWS_EP).assertApiKeyAsBearer()
                 .assertQuery("rating", "5")
                 .assertQuery("member_id", "1001")
                 .assertQuery("start", "2026-10-01")

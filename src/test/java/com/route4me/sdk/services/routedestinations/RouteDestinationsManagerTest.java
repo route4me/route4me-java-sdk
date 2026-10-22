@@ -38,7 +38,7 @@ public class RouteDestinationsManagerTest {
 
         RouteDestinationResource destination = manager.getDestination("5002");
 
-        http.request().assertEndpoint("GET", HOST, DESTINATIONS_EP + "/5002").assertApiKeyInQuery().assertNoBody();
+        http.request().assertEndpoint("GET", HOST, DESTINATIONS_EP + "/5002").assertApiKeyAsBearer().assertNoBody();
         assertEquals("Example Bakery", destination.getDestinationName());
         assertEquals("CUST-1", destination.getCustomerId());
         assertEquals("Hub", destination.getFacilities().get(0).getFacilityTypes().get(0).getFacilityTypeAlias());

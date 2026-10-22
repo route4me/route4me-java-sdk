@@ -3,6 +3,7 @@ package com.route4me.sdk.services.users;
 import com.google.gson.annotations.SerializedName;
 import java.util.Map;
 import lombok.Data;
+import lombok.ToString;
 
 @Data
 public class User {
@@ -15,6 +16,7 @@ public class User {
     private String memberLastName;
     @SerializedName("member_email")
     private String memberEmail;
+    @ToString.Exclude
     @SerializedName("member_password")
     private String memberPassword;
     @SerializedName("account_type_id")
@@ -27,6 +29,7 @@ public class User {
     private String readonlyUser;
     @SerializedName("show_superuser_addresses")
     private String showSuperuserAddresses;
+    @ToString.Exclude
     @SerializedName("api_key")
     private String apiKey;
     @SerializedName("hashed_member_id")

@@ -12,7 +12,10 @@ import java.util.Arrays;
 import java.util.concurrent.Callable;
 import org.apache.http.client.utils.URIBuilder;
 
-public class ThreadBasedGeocoding implements Callable {
+/**
+ * Geocodes one address for {@link GeocodingManager#bulkGeocoder}.
+ */
+public class ThreadBasedGeocoding implements Callable<Address> {
 
     private static final String GEOCODING_ADDRESS = "/api/address.php";
 
@@ -43,7 +46,7 @@ public class ThreadBasedGeocoding implements Callable {
     }
 
     private <T> T geocoder(Class<T> clazz) {
-        return manager.forwardGeocode(getBuilder(), clazz);
+        return manager.forwardGeocode(getBuilder(), clazz, options.getMaxRetries());
     }
 
     @Override
@@ -51,15 +54,19 @@ public class ThreadBasedGeocoding implements Callable {
         return this.address;
     }
 
+    /**
+     * Geocodes the address.
+     *
+     * @return the address with its coordinates and geocodings; unmatched (coordinates 0,
+     * one geocoding of type {@code "invalid"}) when the geocoder finds no match or fails
+     */
     @Override
-    public Address call() throws Exception {
-        Address geocodedAddress = new Address(address, 0.0, 0.0);
-        Geocodings defaultGeocodings = new Geocodings(0.0, 0.0, "invalid", "0", address);
-        geocodedAddress.setGeocodings(Arrays.asList(defaultGeocodings));
+    public Address call() {
+        Address geocodedAddress = GeocodingManager.unmatched(address);
         switch (options.getDetailed()) {
             case DETAILED:
                 Geocodings[] geocodes = geocoder(Geocodings[].class);
-                if (geocodes != null) {
+                if (geocodes != null && geocodes.length > 0 && geocodes[0] != null) {
                     geocodes = fixGeocodings(geocodes);
                     geocodedAddress.setGeocodings(Arrays.asList(geocodes));
                     geocodedAddress.setLatitude(geocodes[0].getCoordinates().getLatitude());
@@ -81,8 +88,10 @@ public class ThreadBasedGeocoding implements Callable {
     private Geocodings[] fixGeocodings(Geocodings[] geocodes) {
         // This is done to maintain the backward compatibility
         for (Geocodings g : geocodes) {
-            g.setLatitude(g.getCoordinates().getLatitude());
-            g.setLongitude(g.getCoordinates().getLongitude());
+            if (g != null) {
+                g.setLatitude(g.getCoordinates().getLatitude());
+                g.setLongitude(g.getCoordinates().getLongitude());
+            }
         }
         return geocodes;
     }

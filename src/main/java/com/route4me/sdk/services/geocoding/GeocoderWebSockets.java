@@ -7,6 +7,7 @@ package com.route4me.sdk.services.geocoding;
 
 import com.google.gson.Gson;
 import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.utils.Sanitizer;
 import io.socket.client.IO;
 import io.socket.client.Socket;
 import io.socket.emitter.Emitter.Listener;
@@ -25,7 +26,11 @@ public class GeocoderWebSockets {
 
     private final static Logger LOG = Logger.getLogger(GeocoderWebSockets.class.getName());
 
-    public static Socket geocoderWebSocket;
+    /**
+     * The connection of this geocoder; {@code null} until {@link #startGeocoding} connects.
+     * Each geocoder has its own, so that two jobs never share or close each other's socket.
+     */
+    private Socket geocoderWebSocket;
 
     private static final String GEOCODER_URL = "https://validator.route4me.com";
 
@@ -37,10 +42,16 @@ public class GeocoderWebSockets {
     private long nextDownloadStage = 0;
     private String temporaryAddressesStorageID;
 
-    private final long bufferFailSafeMaxAddresses = 100;
-    private final long chunkSize = Math.round(Math.min(100, Math.max(100, this.totalAddresses / 100)));
-    private final long chunksLimit = Math.round(Math.ceil(bufferFailSafeMaxAddresses / chunkSize));
-    private final long maxAddressesToBeDownloaded = chunkSize * chunksLimit;
+    /** The number of addresses to download in one stage, before the chunks are split. */
+    private static final int BUFFER_FAIL_SAFE_MAX_ADDRESSES = 100;
+    /** The smallest and largest chunk the validator is asked for. */
+    private static final int MIN_CHUNK_SIZE = 10;
+    private static final int MAX_CHUNK_SIZE = 200;
+
+    // Set by startGeocoding, from the number of addresses of the job.
+    private long chunkSize;
+    private long chunksLimit;
+    private long maxAddressesToBeDownloaded;
 
     public GeocoderWebSockets() {
         this.geocodedAddresses = null;
@@ -87,7 +98,7 @@ public class GeocoderWebSockets {
                     public void call(Object... os) {
                         LOG.info("Connected to the WebSocket Geocoder");
                         if (os.length > 0) {
-                            LOG.fine(os[0].toString());
+                            LOG.fine(Sanitizer.forLog(os[0]));
                         }
                         emitTemporaryAddressesStorageID();
                     }
@@ -98,7 +109,7 @@ public class GeocoderWebSockets {
                     public void call(Object... args) {
                         LOG.info("Now Disconnected from the WebSocket Geocoder");
                         if (args.length > 0) {
-                            LOG.fine(args[0].toString());
+                            LOG.fine(Sanitizer.forLog(args[0]));
                         }
                     }
 
@@ -108,7 +119,7 @@ public class GeocoderWebSockets {
                     public void call(Object... arg0) {
                         LOG.warning("Geocode socket connection error");
                         if (arg0.length > 0) {
-                            LOG.warning(arg0[0].toString());
+                            LOG.warning(Sanitizer.forLog(arg0[0]));
                         }
                     }
                 }).on("connect_timeout", new Listener() {
@@ -116,7 +127,7 @@ public class GeocoderWebSockets {
                     public void call(Object... arg0) {
                         LOG.warning("Geocode socket connection timeout error");
                         if (arg0.length > 0) {
-                            LOG.warning(arg0[0].toString());
+                            LOG.warning(Sanitizer.forLog(arg0[0]));
                         }
                     }
                 }).on("address", new Listener() {
@@ -158,7 +169,9 @@ public class GeocoderWebSockets {
                     @Override
                     public void call(Object... arg0) {
                         LOG.warning(String.valueOf(arg0.length));
-                        LOG.warning(arg0[0].toString());
+                        if (arg0.length > 0) {
+                            LOG.warning(Sanitizer.forLog(arg0[0]));
+                        }
                     }
                 });
                 geocoderWebSocket.connect();
@@ -173,7 +186,7 @@ public class GeocoderWebSockets {
     public void closeGeoCodeSocketIO() {
         if (geocoderWebSocket != null) {
             geocoderWebSocket.off("address");
-            geocoderWebSocket.off("address_bulk");
+            geocoderWebSocket.off("addresses_bulk");
             geocoderWebSocket.emit("disconnect");
             geocoderWebSocket.disconnect();
             geocoderWebSocket.close();
@@ -181,7 +194,7 @@ public class GeocoderWebSockets {
     }
 
     private void emitTemporaryAddressesStorageID() {
-        LOG.log(Level.INFO, "Emiting Temporary Addresses StorageID: {0}", this.temporaryAddressesStorageID);
+        LOG.log(Level.INFO, "Emiting Temporary Addresses StorageID: {0}", Sanitizer.forLog(this.temporaryAddressesStorageID));
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("temporary_addresses_storage_id", this.temporaryAddressesStorageID);
         try {
@@ -194,6 +207,12 @@ public class GeocoderWebSockets {
 
     public void startGeocoding(String temporaryAddressesStorageID, int totalAddresses) {
         this.totalAddresses = totalAddresses;
+        // One chunk per hundredth of the job, from 10 to 200 addresses, and as many chunks
+        // as fill a stage of 100 addresses (the same rule as the C# SDK). Floating-point
+        // division: with integer division the chunk was always 100.
+        this.chunkSize = Math.round(Math.min(MAX_CHUNK_SIZE, Math.max(MIN_CHUNK_SIZE, totalAddresses / 100.0)));
+        this.chunksLimit = (long) Math.ceil(BUFFER_FAIL_SAFE_MAX_ADDRESSES / (double) this.chunkSize);
+        this.maxAddressesToBeDownloaded = this.chunkSize * this.chunksLimit;
         this.temporaryAddressesStorageID = temporaryAddressesStorageID;
         geocodedAddresses = new ArrayList<>();
         if (geocoderWebSocket == null || !geocoderWebSocket.connected()) {

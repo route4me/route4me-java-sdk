@@ -20,26 +20,26 @@ public class RouteStatusManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
     public RouteStatusResponse getRouteStatus(String routeId) throws APIException {
-        URIBuilder builder = v5Builder(ROUTE_STATUS_EP + "/" + routeId);
+        URIBuilder builder = v5Builder(ROUTE_STATUS_EP, routeId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteStatusResponse.class);
     }
 
     public RouteStatusResponse updateRouteStatus(String routeId, RouteStatusRequest request) throws APIException {
-        URIBuilder builder = v5Builder(ROUTE_STATUS_EP + "/" + routeId);
+        URIBuilder builder = v5Builder(ROUTE_STATUS_EP, routeId);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), RouteStatusResponse.class);
     }
 
     public RouteStatusHistoryResponse getRouteStatusHistory(String routeId, String orderBy, Long start, Long end) throws APIException {
-        URIBuilder builder = v5Builder(ROUTE_STATUS_EP + "/" + routeId + "/history");
+        URIBuilder builder = v5Builder(ROUTE_STATUS_EP, routeId, "history");
         if (orderBy != null) {
             builder.setParameter("order_by", orderBy);
         }
@@ -53,7 +53,7 @@ public class RouteStatusManager extends Manager {
     }
 
     public RouteStatusResponse rollbackRouteStatus(String routeId) throws APIException {
-        URIBuilder builder = v5Builder(ROUTE_STATUS_EP + "/" + routeId + "/rollback");
+        URIBuilder builder = v5Builder(ROUTE_STATUS_EP, routeId, "rollback");
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteStatusResponse.class);
     }
 

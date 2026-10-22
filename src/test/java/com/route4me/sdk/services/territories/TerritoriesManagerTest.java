@@ -1,7 +1,7 @@
 package com.route4me.sdk.services.territories;
 
+import com.route4me.sdk.testsupport.Fixtures;
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -99,7 +99,6 @@ public class TerritoriesManagerTest {
         http.request(3).assertQuery("orders", "true").assertQuery("addresses", "true");
     }
 
-    @Ignore("bug (unfiled): getTerritory(id, null, null) throws NullPointerException on the Boolean flags")
     @Test
     public void getTerritoryAcceptsNullFlags() throws Exception {
         TerritoriesManager manager = manager();
@@ -107,7 +106,8 @@ public class TerritoriesManagerTest {
 
         manager.getTerritory("T-POLY", null, null);
 
-        http.request().assertEndpoint("GET", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY");
+        http.request().assertEndpoint("GET", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY")
+                .assertNoQuery("orders").assertNoQuery("addresses");
     }
 
     @Test
@@ -135,7 +135,6 @@ public class TerritoriesManagerTest {
         assertEquals("Downtown", updated.getTerritoryName());
     }
 
-    @Ignore("bug #31: updateTerritory sends DELETE instead of PUT")
     @Test
     public void updateTerritorySendsPut() throws Exception {
         TerritoriesManager manager = manager();
@@ -146,7 +145,6 @@ public class TerritoriesManagerTest {
         http.request().assertMethod("PUT");
     }
 
-    @Ignore("bug #31: updateTerritory does not put territory_id on the URL")
     @Test
     public void updateTerritoryPutsTheIdOnTheUrl() throws Exception {
         TerritoriesManager manager = manager();
@@ -155,6 +153,27 @@ public class TerritoriesManagerTest {
         manager.updateTerritory(polygonTerritory("T-POLY"));
 
         http.request().assertQuery("territory_id", "T-POLY");
+    }
+
+    @Test
+    public void updatesWithoutAnIdSendNoTerritoryIdParameter() throws Exception {
+        TerritoriesManager manager = manager();
+        http.respondToAll(200, Fixtures.read("territory.json"));
+
+        manager.updateTerritory(polygonTerritory(null));
+        manager.updateAvoidanceZone(polygonTerritory(null));
+
+        http.request(0).assertEndpoint("PUT", HOST, TERRITORY_EP).assertNoQuery("territory_id");
+        http.request(1).assertEndpoint("PUT", HOST, AVOIDANCE_EP).assertNoQuery("territory_id");
+    }
+
+    @Test
+    public void deletesWithAnEmptyResponseReportFalse() throws Exception {
+        TerritoriesManager manager = manager();
+        http.respondWithoutBody(200).respondWithoutBody(200);
+
+        assertFalse(manager.deleteTerritory("T-POLY"));
+        assertFalse(manager.deleteAvoidanceZone("T-POLY"));
     }
 
     @Test
@@ -212,7 +231,6 @@ public class TerritoriesManagerTest {
         http.request().assertPath(AVOIDANCE_EP).assertJson("territory_id", "T-POLY");
     }
 
-    @Ignore("bug #31: updateAvoidanceZone sends DELETE instead of PUT")
     @Test
     public void updateAvoidanceZoneSendsPut() throws Exception {
         TerritoriesManager manager = manager();
@@ -223,7 +241,6 @@ public class TerritoriesManagerTest {
         http.request().assertMethod("PUT");
     }
 
-    @Ignore("bug #31: updateAvoidanceZone does not put territory_id on the URL")
     @Test
     public void updateAvoidanceZonePutsTheIdOnTheUrl() throws Exception {
         TerritoriesManager manager = manager();

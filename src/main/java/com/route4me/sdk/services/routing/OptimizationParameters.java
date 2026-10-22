@@ -11,10 +11,13 @@ import java.util.List;
 @Accessors(chain = true)
 public class OptimizationParameters {
     @QueryParameter("optimization_problem_id")
+    @SerializedName("optimization_problem_id")
     private String problemId;
     @QueryParameter("reoptimize")
+    @SerializedName("reoptimize")
     private Boolean reoptimize;
     @QueryParameter("show_directions")
+    @SerializedName("show_directions")
     private Boolean showDirections;
     @SerializedName("parameters")
     private Parameters parameters;

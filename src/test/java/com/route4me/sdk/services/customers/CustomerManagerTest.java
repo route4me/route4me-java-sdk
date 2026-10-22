@@ -70,7 +70,7 @@ public class CustomerManagerTest {
 
         CustomerListResponse response = manager.getCustomersList(parameters);
 
-        http.request().assertEndpoint("POST", HOST, CUSTOMERS_EP + "/list").assertApiKeyInQuery()
+        http.request().assertEndpoint("POST", HOST, CUSTOMERS_EP + "/list").assertApiKeyAsBearer()
                 .assertJson("filters.search_query", "Bakery")
                 .assertJson("filters.status[1]", 2)
                 .assertJson("page", 1)

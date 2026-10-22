@@ -2,7 +2,6 @@ package com.route4me.sdk.services.routing.breaks;
 
 import com.route4me.sdk.testsupport.CapturedRequest;
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -37,7 +36,7 @@ public class RouteBreaksManagerTest {
 
         Object result = manager.insertBreakAfterCertainTravelTime(900, 7200, true, "ROUTE-A1", "ROUTE-A2");
 
-        http.request().assertEndpoint("POST", HOST, BREAKS_EP).assertApiKeyInQuery()
+        http.request().assertEndpoint("POST", HOST, BREAKS_EP).assertApiKeyAsBearer()
                 .assertContentType("application/json")
                 .assertJson("route_id[0]", "ROUTE-A1")
                 .assertJson("route_id[1]", "ROUTE-A2")
@@ -79,7 +78,17 @@ public class RouteBreaksManagerTest {
         http.expectApiException(() -> manager.insertBreakAfterCertainLocations(600, 5, false, "ROUTE-A1"));
     }
 
-    @Ignore("bug #35: a null break amount is auto-unboxed and throws NullPointerException")
+    @Test
+    public void breaksNeedARoute() {
+        final RouteBreaksManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.insertBreakAfterCertainLocations(600, 5, false));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.insertBreakAfterCertainLocations(600, 5, false, (String[]) null));
+        http.assertNoRequests();
+    }
+
     @Test
     public void nullAmountDoesNotThrowNullPointerException() throws Exception {
         RouteBreaksManager manager = manager();

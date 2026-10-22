@@ -13,7 +13,7 @@ public enum SourceType {
         DEPOTS("depots"),
         ADDRESSES("input_addresses");
 
-        private String value;
+        private final String value;
 
         private SourceType(String value) {
             this.value = value;
@@ -29,13 +29,6 @@ public enum SourceType {
          */
         public String getValue() {
             return value;
-        }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(String value) {
-            this.value = value;
         }
     
 }

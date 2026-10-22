@@ -26,11 +26,11 @@ public class OptimizationProfileManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -40,7 +40,7 @@ public class OptimizationProfileManager extends Manager {
     }
 
     public OptimizationProfile getOptimizationProfileById(String profileId) throws APIException {
-        URIBuilder builder = v5Builder(PROFILES_EP + "/" + profileId);
+        URIBuilder builder = v5Builder(PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, OptimizationProfile.class);
     }
 
@@ -50,12 +50,12 @@ public class OptimizationProfileManager extends Manager {
     }
 
     public OptimizationProfile updateOptimizationProfile(String profileId, OptimizationProfileCreateRequest request) throws APIException {
-        URIBuilder builder = v5Builder(PROFILES_EP + "/" + profileId);
+        URIBuilder builder = v5Builder(PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), OptimizationProfile.class);
     }
 
     public boolean deleteOptimizationProfile(String profileId) throws APIException {
-        URIBuilder builder = v5Builder(PROFILES_EP + "/" + profileId);
+        URIBuilder builder = v5Builder(PROFILES_EP, profileId);
         this.makeRequest(RequestMethod.DELETE, builder, "", String.class);
         return true;
     }

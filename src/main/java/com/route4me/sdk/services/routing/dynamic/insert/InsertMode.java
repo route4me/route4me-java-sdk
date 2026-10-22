@@ -33,7 +33,7 @@ public enum InsertMode {
     END_OF_ROUTE("end_of_route"),
     BEGINNING_OF_ROUTE("beginning_of_route");
 
-    private String value;
+    private final String value;
 
     private InsertMode(String value) {
         this.value = value;
@@ -49,13 +49,6 @@ public enum InsertMode {
      */
     public String getValue() {
         return value;
-    }
-
-    /**
-     * @param value the value to set
-     */
-    public void setValue(String value) {
-        this.value = value;
     }
 
 }

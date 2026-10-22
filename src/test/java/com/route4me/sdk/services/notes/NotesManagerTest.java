@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static org.junit.Assert.assertNull;
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -45,6 +46,14 @@ public class NotesManagerTest {
     }
 
     @Test
+    public void getAddressNotesOfAnEmptyResponseIsNull() throws Exception {
+        NotesManager manager = manager();
+        http.respondWithoutBody(200);
+
+        assertNull(manager.getAddressNotes("ROUTE-A1", "5002"));
+    }
+
+    @Test
     public void addAddressNotesSendsLocationInTheQueryAndTheNoteAsAForm() throws Exception {
         NotesManager manager = manager();
         http.respond(200, json("{'status':true,'note_id':'9002','note':{'note_id':9002,'contents':'Gate code 1234'}}"));
@@ -65,6 +74,16 @@ public class NotesManagerTest {
         assertTrue(added.getStatus());
         assertEquals("9002", added.getNoteId());
         assertEquals("Gate code 1234", added.getNote().getContent());
+    }
+
+    @Test
+    public void addAddressNotesWithoutATypeIsUnclassified() throws Exception {
+        NotesManager manager = manager();
+        http.respond(200, json("{'status':true,'note_id':'9003'}"));
+
+        manager.addAddressNotes(new NoteRequest().setRouteId("ROUTE-A1").setAddressId("5002"), "Hello", null);
+
+        http.request().assertForm("strUpdateType", "unclassified");
     }
 
     @Test

@@ -3,6 +3,7 @@ package com.route4me.sdk.services.vehicles;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.queryconverter.QueryConverter;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -34,11 +35,11 @@ public class VehiclesManagerV5 extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -52,7 +53,7 @@ public class VehiclesManagerV5 extends Manager {
     }
 
     public VehicleV5 getVehicleById(String vehicleId) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLES_EP + "/" + vehicleId);
+        URIBuilder builder = v5Builder(VEHICLES_EP, vehicleId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleV5.class);
     }
 
@@ -62,12 +63,12 @@ public class VehiclesManagerV5 extends Manager {
     }
 
     public VehicleV5 updateVehicle(String vehicleId, VehicleV5 vehicle) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLES_EP + "/" + vehicleId);
+        URIBuilder builder = v5Builder(VEHICLES_EP, vehicleId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(vehicle), VehicleV5.class);
     }
 
     public VehicleV5 deleteVehicle(String vehicleId) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLES_EP + "/" + vehicleId);
+        URIBuilder builder = v5Builder(VEHICLES_EP, vehicleId);
         return this.makeRequest(RequestMethod.DELETE, builder, "", VehicleV5.class);
     }
 
@@ -85,11 +86,7 @@ public class VehiclesManagerV5 extends Manager {
 
     public VehicleLocationResponse getVehicleLocations(String[] vehicleIds) throws APIException {
         URIBuilder builder = v5Builder(VEHICLES_LOCATION_EP);
-        if (vehicleIds != null) {
-            for (String id : vehicleIds) {
-                builder.addParameter("ids[]", id);
-            }
-        }
+        builder.addParameters(QueryConverter.toBracketedParameters("ids", vehicleIds));
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleLocationResponse.class);
     }
 
@@ -124,12 +121,12 @@ public class VehiclesManagerV5 extends Manager {
     }
 
     public StatusResponse getVehicleJobResult(String jobId) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLES_JOB_RESULT_EP + "/" + jobId);
+        URIBuilder builder = v5Builder(VEHICLES_JOB_RESULT_EP, jobId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, StatusResponse.class);
     }
 
     public StatusResponse getVehicleJobStatus(String jobId) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLES_JOB_STATUS_EP + "/" + jobId);
+        URIBuilder builder = v5Builder(VEHICLES_JOB_STATUS_EP, jobId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, StatusResponse.class);
     }
 
@@ -143,7 +140,7 @@ public class VehiclesManagerV5 extends Manager {
     }
 
     public VehicleProfile getVehicleProfileById(String profileId) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP + "/" + profileId);
+        URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleProfile.class);
     }
 
@@ -153,12 +150,12 @@ public class VehiclesManagerV5 extends Manager {
     }
 
     public VehicleProfile updateVehicleProfile(String profileId, VehicleProfile profile) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP + "/" + profileId);
+        URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(profile), VehicleProfile.class);
     }
 
     public VehicleProfile deleteVehicleProfile(String profileId) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP + "/" + profileId);
+        URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.DELETE, builder, "", VehicleProfile.class);
     }
 
@@ -172,7 +169,7 @@ public class VehiclesManagerV5 extends Manager {
     }
 
     public VehicleCapacityProfileResponse getVehicleCapacityProfileById(String profileId) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP + "/" + profileId);
+        URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleCapacityProfileResponse.class);
     }
 
@@ -182,12 +179,12 @@ public class VehiclesManagerV5 extends Manager {
     }
 
     public VehicleCapacityProfileResponse updateVehicleCapacityProfile(String profileId, VehicleCapacityProfile profile) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP + "/" + profileId);
+        URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(profile), VehicleCapacityProfileResponse.class);
     }
 
     public VehicleCapacityProfileResponse deleteVehicleCapacityProfile(String profileId) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP + "/" + profileId);
+        URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.DELETE, builder, "", VehicleCapacityProfileResponse.class);
     }
 }

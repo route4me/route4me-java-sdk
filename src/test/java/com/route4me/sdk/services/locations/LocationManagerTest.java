@@ -50,7 +50,7 @@ public class LocationManagerTest {
 
         LocationCombinedResource combined = manager.getLocationsCombined(withFilters(new LocationCombinedRequest()));
 
-        http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/list/combined").assertApiKeyInQuery()
+        http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/list/combined").assertApiKeyAsBearer()
                 .assertJson("filters.search_query", "Bakery")
                 .assertJson("filters.is_depot[0]", false)
                 .assertJson("page", 1)

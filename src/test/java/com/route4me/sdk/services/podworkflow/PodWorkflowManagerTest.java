@@ -46,7 +46,7 @@ public class PodWorkflowManagerTest {
         PodWorkflowsResponse page = manager.getPodWorkflows(10, "CUR-1", "Deliv");
         manager.getPodWorkflows(null, null, null);
 
-        http.request(0).assertEndpoint("GET", HOST, WORKFLOWS_EP).assertApiKeyInQuery()
+        http.request(0).assertEndpoint("GET", HOST, WORKFLOWS_EP).assertApiKeyAsBearer()
                 .assertQuery("per_page", "10").assertQuery("cursor", "CUR-1").assertQuery("search_query", "Deliv");
         http.request(1).assertNoQuery("per_page").assertNoQuery("cursor").assertNoQuery("search_query");
         assertEquals("WF-1", page.getData().get(0).getWorkflowGuid());

@@ -14,9 +14,17 @@ public class TrackingManager extends Manager {
         super(apiKey);
     }
 
-    public void setGPS(GPSPosition position) throws APIException {
+    /**
+     * Records a GPS position of a route: {@code GET /track/set.php}, with the position as
+     * query parameters and no body.
+     *
+     * @param position the position, with its route, member and device
+     * @return the server's answer, with the status and the transaction ID
+     * @throws APIException if the request fails
+     */
+    public SetGpsResponse setGPS(GPSPosition position) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(SET_LOCATION_EP);
-        this.makeJSONRequest(RequestMethod.GET, builder, position, null);
+        return this.makeJSONRequest(RequestMethod.GET, builder, position, SetGpsResponse.class);
     }
 
     public DataObject getLastLocation(String routeId) throws APIException {

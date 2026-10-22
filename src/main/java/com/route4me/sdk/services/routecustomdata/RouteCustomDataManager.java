@@ -26,22 +26,22 @@ public class RouteCustomDataManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
     public Map<String, String> getRouteCustomData(String routeId) throws APIException {
-        URIBuilder builder = v5Builder(ROUTES_CUSTOM_DATA_EP + "/" + routeId + "/custom-data");
+        URIBuilder builder = v5Builder(ROUTES_CUSTOM_DATA_EP, routeId, "custom-data");
         Type type = new TypeToken<HashMap<String, String>>() {}.getType();
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, type);
     }
 
     public Map<String, String> updateRouteCustomData(String routeId, Map<String, String> customData) throws APIException {
-        URIBuilder builder = v5Builder(ROUTES_CUSTOM_DATA_EP + "/" + routeId + "/custom-data");
+        URIBuilder builder = v5Builder(ROUTES_CUSTOM_DATA_EP, routeId, "custom-data");
         Type type = new TypeToken<HashMap<String, String>>() {}.getType();
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(customData), type);
     }

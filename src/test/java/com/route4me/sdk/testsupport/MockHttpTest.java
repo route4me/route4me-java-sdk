@@ -56,7 +56,7 @@ public class MockHttpTest {
                 .assertApiKeyInQuery()
                 .assertHeader("User-Agent", "Route4Me Java SDK")
                 .assertNoBody();
-        assertEquals(1, http.closeCount());
+        assertEquals("the manager keeps its client between requests", 0, http.closeCount());
     }
 
     @Test

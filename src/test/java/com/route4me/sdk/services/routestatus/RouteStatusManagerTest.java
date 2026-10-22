@@ -33,7 +33,7 @@ public class RouteStatusManagerTest {
 
         RouteStatusResponse status = manager.getRouteStatus("ROUTE-A1");
 
-        http.request().assertEndpoint("GET", HOST, STATUS_EP + "/ROUTE-A1").assertApiKeyInQuery().assertNoBody();
+        http.request().assertEndpoint("GET", HOST, STATUS_EP + "/ROUTE-A1").assertApiKeyAsBearer().assertNoBody();
         assertEquals("started", status.getStatus());
         assertEquals(Long.valueOf(1761040000L), status.getStartedAt());
         assertEquals(40.5, status.getLatitude(), 0.0);

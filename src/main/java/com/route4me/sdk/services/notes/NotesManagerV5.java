@@ -15,11 +15,11 @@ public class NotesManagerV5 extends Manager {
     public NotesManagerV5(String apiKey) { super(apiKey); }
     public NotesManagerV5(String apiKey, boolean disableRedirects) { super(apiKey, disableRedirects); }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -28,26 +28,26 @@ public class NotesManagerV5 extends Manager {
     }
 
     public RouteNoteResource getNote(String noteId) throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(NOTES_EP + "/" + noteId), (HttpEntity) null, RouteNoteResource.class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(NOTES_EP, noteId), (HttpEntity) null, RouteNoteResource.class);
     }
 
     public RouteNoteResource updateNote(String noteId, NoteUpdateRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_EP + "/" + noteId), this.gson.toJson(request), RouteNoteResource.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_EP, noteId), this.gson.toJson(request), RouteNoteResource.class);
     }
 
     public DeleteNoteResponse deleteNote(String noteId) throws APIException {
-        return this.makeRequest(RequestMethod.DELETE, v5Builder(NOTES_EP + "/" + noteId), "", DeleteNoteResponse.class);
+        return this.makeRequest(RequestMethod.DELETE, v5Builder(NOTES_EP, noteId), "", DeleteNoteResponse.class);
     }
 
     public RouteNoteCollection getNotesByRoute(String routeId, Integer page, Integer perPage) throws APIException {
-        URIBuilder builder = v5Builder(NOTES_EP + "/route/" + routeId);
+        URIBuilder builder = v5Builder(NOTES_EP + "/route", routeId);
         if (page != null) builder.setParameter("page", String.valueOf(page));
         if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteNoteCollection.class);
     }
 
     public RouteNoteCollection getNotesByDestination(String routeDestinationId, Integer page, Integer perPage) throws APIException {
-        URIBuilder builder = v5Builder(NOTES_EP + "/destination/" + routeDestinationId);
+        URIBuilder builder = v5Builder(NOTES_EP + "/destination", routeDestinationId);
         if (page != null) builder.setParameter("page", String.valueOf(page));
         if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteNoteCollection.class);

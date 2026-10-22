@@ -1,7 +1,6 @@
 package com.route4me.sdk.services.vehicles;
 
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -78,7 +77,7 @@ public class VehiclesManagerV5Test {
         VehicleV5[] vehicles = manager.getVehicles(2, 25);
         manager.getVehicles(null, null);
 
-        http.request(0).assertEndpoint("GET", HOST, VEHICLES_EP).assertApiKeyInQuery()
+        http.request(0).assertEndpoint("GET", HOST, VEHICLES_EP).assertApiKeyAsBearer()
                 .assertQuery("page", "2").assertQuery("per_page", "25").assertNoBody();
         http.request(1).assertNoQuery("page").assertNoQuery("per_page");
         assertEquals("Van 1", vehicles[0].getVehicleAlias());
@@ -105,7 +104,6 @@ public class VehiclesManagerV5Test {
         assertEquals(Long.valueOf(1001), created.getMemberId());
     }
 
-    @Ignore("bug (unfiled): V5 JSON bodies are sent as text/plain, without Content-Type application/json")
     @Test
     public void createVehicleSendsJsonContentType() throws Exception {
         VehiclesManagerV5 manager = manager();
@@ -113,7 +111,7 @@ public class VehiclesManagerV5Test {
 
         manager.createVehicle(vehicle());
 
-        http.request().assertContentType("application/json");
+        http.request().assertContentType("application/json; charset=UTF-8");
     }
     @Test
     public void updateVehiclePutsTheVehicle() throws Exception {
@@ -148,10 +146,12 @@ public class VehiclesManagerV5Test {
 
         VehicleLocationResponse locations = manager.getVehicleLocations(new String[] {"VEH-1", "VEH-2"});
         manager.getVehicleLocations(null);
+        manager.getVehicleLocations(new String[] {"VEH-3"});
 
         http.request(0).assertEndpoint("GET", HOST, VEHICLES_EP + "/location")
                 .assertQueryValues("ids[]", "VEH-1", "VEH-2");
         http.request(1).assertNoQuery("ids[]");
+        http.request(2).assertQueryValues("ids[]", "VEH-3").assertNoQuery("ids");
         assertEquals(40.5, locations.getData().get(0).getLat(), 0.0);
     }
 

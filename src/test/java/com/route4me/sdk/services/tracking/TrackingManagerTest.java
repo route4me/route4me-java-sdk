@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Unit tests for {@link TrackingManager}: sending a GPS position and reading the last
@@ -32,13 +33,13 @@ public class TrackingManagerTest {
     @Test
     public void setGpsSendsThePositionAsQueryParametersWithoutABody() throws Exception {
         TrackingManager manager = manager();
-        http.respond(200, json("{'status':true}"));
+        http.respond(200, json("{'status':true,'tx_id':'TX-1'}"));
         GPSPosition position = new GPSPosition().setRouteId("ROUTE-A1").setMemberId("1001")
                 .setLatitude(40.5).setLongitude(-74.5).setAltitude(10.0).setCourse(90).setSpeed(35.5f)
                 .setDeviceType(Constants.DeviceType.ANDROID_PHONE).setFormat(Constants.Format.SERIALIZED)
                 .setDeviceGUID("DEVICE-1").setDeviceTimestamp("2026-10-21 10:00:00").setAppVersion("1.0");
 
-        manager.setGPS(position);
+        SetGpsResponse response = manager.setGPS(position);
 
         http.request().assertEndpoint("GET", HOST, "/track/set.php").assertApiKeyInQuery()
                 .assertQuery("route_id", "ROUTE-A1")
@@ -54,6 +55,9 @@ public class TrackingManagerTest {
                 .assertQuery("device_timestamp", "2026-10-21 10:00:00")
                 .assertQuery("app_version", "1.0")
                 .assertNoBody();
+        assertNull("a GET without a body has no Content-Type", http.request().header("Content-Type"));
+        assertEquals(Boolean.TRUE, response.getStatus());
+        assertEquals("TX-1", response.getTxId());
     }
 
     @Test

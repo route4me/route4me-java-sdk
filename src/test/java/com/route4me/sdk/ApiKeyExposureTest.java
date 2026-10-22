@@ -12,18 +12,17 @@ import com.route4me.sdk.services.users.TeamMemberRequest;
 import com.route4me.sdk.services.users.User;
 import com.route4me.sdk.services.users.UserRegistration;
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Checks that credentials do not leak through {@code toString()} or exception messages,
  * where they end up in logs.
  *
- * <p>Each test asserts the safe behaviour. The ones that fail today are ignored with a
- * {@code security:} reason, so a fix only has to remove the {@code @Ignore}.
+ * <p>Each test asserts the safe behaviour.
  */
 public class ApiKeyExposureTest {
 
@@ -40,7 +39,6 @@ public class ApiKeyExposureTest {
 
     // ------------------------------------------------------------------ toString()
 
-    @Ignore("security: User.toString() (Lombok @Data) prints api_key and member_password")
     @Test
     public void userToStringHidesCredentials() {
         User user = new User();
@@ -52,7 +50,6 @@ public class ApiKeyExposureTest {
         assertHidden("User.toString()", user.toString(), PASSWORD);
     }
 
-    @Ignore("security: AccountProfile.toString() (Lombok @Data) prints api_key")
     @Test
     public void accountProfileToStringHidesTheApiKey() {
         AccountProfile profile = new AccountProfile();
@@ -62,29 +59,33 @@ public class ApiKeyExposureTest {
         assertHidden("AccountProfile.toString()", profile.toString(), MockHttp.API_KEY);
     }
 
-    @Ignore("security: TelematicsConnection.toString() (Lombok @Data) prints the vendor api_key and password")
     @Test
     public void telematicsConnectionToStringHidesCredentials() {
         TelematicsConnection connection = new TelematicsConnection();
         connection.setUsername("fleet-user");
         connection.setApiKey(MockHttp.API_KEY);
         connection.setPassword(PASSWORD);
+        connection.setConnectionToken("example-connection-token");
 
         assertHidden("TelematicsConnection.toString()", connection.toString(), MockHttp.API_KEY);
         assertHidden("TelematicsConnection.toString()", connection.toString(), PASSWORD);
+        assertHidden("TelematicsConnection.toString()", connection.toString(), "example-connection-token");
+        assertTrue("other fields are still shown", connection.toString().contains("fleet-user"));
     }
 
-    @Ignore("security: Registration.toString() (Lombok @Data) prints api_key")
     @Test
     public void registrationToStringHidesTheApiKey() {
         Registration registration = new Registration();
         registration.setMemberEmail("alex@example.com");
         registration.setApiKey(MockHttp.API_KEY);
+        registration.setSessionGUID("example-session-guid");
+        registration.setSessionID("example-session-id");
 
         assertHidden("Registration.toString()", registration.toString(), MockHttp.API_KEY);
+        assertHidden("Registration.toString()", registration.toString(), "example-session-guid");
+        assertHidden("Registration.toString()", registration.toString(), "example-session-id");
     }
 
-    @Ignore("security: UserRegistration.toString() (Lombok @Data) prints organization_api_key and passwords")
     @Test
     public void userRegistrationToStringHidesCredentials() {
         UserRegistration registration = new UserRegistration();
@@ -92,12 +93,13 @@ public class ApiKeyExposureTest {
         registration.setOrganizationApiKey(MockHttp.API_KEY);
         registration.setStrPassword_1(PASSWORD);
         registration.setStrPassword_2(PASSWORD);
+        registration.setActivationKey("example-activation-key");
 
         assertHidden("UserRegistration.toString()", registration.toString(), MockHttp.API_KEY);
         assertHidden("UserRegistration.toString()", registration.toString(), PASSWORD);
+        assertHidden("UserRegistration.toString()", registration.toString(), "example-activation-key");
     }
 
-    @Ignore("security: TeamMemberRequest.toString() (Lombok @Data) prints member_password")
     @Test
     public void teamMemberRequestToStringHidesThePassword() {
         TeamMemberRequest request = new TeamMemberRequest();
@@ -107,7 +109,6 @@ public class ApiKeyExposureTest {
         assertHidden("TeamMemberRequest.toString()", request.toString(), PASSWORD);
     }
 
-    @Ignore("security: TelematicsMemberRegister.toString() (Lombok @Data) prints the telematics api_token")
     @Test
     public void telematicsMemberRegisterToStringHidesTheToken() {
         TelematicsMemberRegister registration = new TelematicsMemberRegister();
@@ -117,7 +118,6 @@ public class ApiKeyExposureTest {
         assertHidden("TelematicsMemberRegister.toString()", registration.toString(), PASSWORD);
     }
 
-    @Ignore("security: LocationCombinedDataItem.toString() (Lombok @Data) prints external_connection_token")
     @Test
     public void locationItemToStringHidesTheConnectionToken() {
         LocationCombinedDataItem item = new LocationCombinedDataItem();
@@ -129,7 +129,6 @@ public class ApiKeyExposureTest {
 
     // ------------------------------------------------------------------ exception messages
 
-    @Ignore("security: APIException messages embed the raw error response body, so an echoed key leaks")
     @Test
     public void errorStatusMessageDoesNotEchoTheApiKey() {
         final RoutingManager manager = http.install(new RoutingManager(MockHttp.API_KEY));
@@ -138,9 +137,11 @@ public class ApiKeyExposureTest {
         APIException error = http.expectApiException(() -> manager.getRoute(new RoutesRequest()));
 
         assertHidden("APIException message", error.getMessage(), MockHttp.API_KEY);
+        assertHidden("APIException errors", error.getErrors().toString(), MockHttp.API_KEY);
+        assertHidden("APIException body", error.getResponseBody(), MockHttp.API_KEY);
+        assertHidden("APIException URL", error.getUrl(), MockHttp.API_KEY);
     }
 
-    @Ignore("security: APIException messages embed the raw response body on a JSON parse error")
     @Test
     public void parseErrorMessageDoesNotEchoTheResponse() {
         final RoutingManager manager = http.install(new RoutingManager(MockHttp.API_KEY));
@@ -149,5 +150,7 @@ public class ApiKeyExposureTest {
         APIException error = http.expectApiException(() -> manager.getRoutes(new RoutesRequest()));
 
         assertHidden("APIException message", error.getMessage(), MockHttp.API_KEY);
+        assertHidden("APIException message", error.getMessage(), "api_key\"");
+        assertHidden("APIException body", error.getResponseBody(), MockHttp.API_KEY);
     }
 }

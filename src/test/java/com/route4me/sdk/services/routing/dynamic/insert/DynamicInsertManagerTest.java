@@ -1,7 +1,6 @@
 package com.route4me.sdk.services.routing.dynamic.insert;
 
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -35,7 +34,7 @@ public class DynamicInsertManagerTest {
         List<MatchedRoute> matches = manager.lookForNewDestination("2026-10-22", 40.5, -74.5,
                 InsertMode.OPTIMAL_ANYWHERE, RecommendedBy.DISTANCE, 3, Arrays.asList("ROUTE-A1", "ROUTE-A2"));
 
-        http.request().assertEndpoint("POST", HOST, LOOKUP_EP).assertApiKeyInQuery()
+        http.request().assertEndpoint("POST", HOST, LOOKUP_EP).assertApiKeyAsBearer()
                 .assertContentType("application/json")
                 .assertJson("route_info_server", "v5")
                 .assertJson("scheduled_for", "2026-10-22")
@@ -75,7 +74,6 @@ public class DynamicInsertManagerTest {
                 InsertMode.OPTIMAL_AFTER_LAST_VISITED, RecommendedBy.DISTANCE, 1));
     }
 
-    @Ignore("bug #36: lookForNewDestination throws NullPointerException when insertMode or recommendedBy is null")
     @Test
     public void optionalEnumsMayBeNull() throws Exception {
         DynamicInsertManager manager = manager();

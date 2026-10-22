@@ -18,6 +18,15 @@ public class ActivityManager extends Manager {
         return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(GET_ACTIVITIES_EP), request, Activities.class);
     }
 
+    /**
+     * Posts a user message to the activity feed of a route:
+     * {@code POST /api.v4/activity_feed.php}.
+     *
+     * @param message the message
+     * @param routeId the route ID
+     * @throws APIException if the request fails, or if the answer is empty, has no
+     *                      {@code status} or has {@code "status": false}
+     */
     public void logActivity(String message, String routeId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ACTIVITY_FEED_EP);
         Activity activity = new Activity();
@@ -25,7 +34,8 @@ public class ActivityManager extends Manager {
         activity.setMessage(message);
         activity.setType(ActivityType.USER_MESSAGE);
         StatusResponse resp = this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(activity), StatusResponse.class);
-        if (!resp.getStatus()) {
+        // An empty body or a missing status counts as a failure, like an explicit false.
+        if (resp == null || !Boolean.TRUE.equals(resp.getStatus())) {
             throw new APIException("Operation has not succeeded with an unknown error");
         }
     }

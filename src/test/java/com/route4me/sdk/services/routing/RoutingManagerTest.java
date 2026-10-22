@@ -5,7 +5,6 @@ import com.route4me.sdk.services.routing.balance.BalanceMode;
 import com.route4me.sdk.services.routing.search.RouteSearchResult;
 import com.route4me.sdk.testsupport.Fixtures;
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -196,17 +195,35 @@ public class RoutingManagerTest {
         assertEquals("OPT-1", result.getOptimizationProblemId());
     }
 
-    @Ignore("bug (unfiled): updateOptimization does not put optimization_problem_id on the URL")
     @Test
     public void updateOptimizationPutsTheIdOnTheUrl() throws Exception {
         RoutingManager manager = manager();
         http.respondWithFixture(200, "optimization.json");
         OptimizationParameters request = optimizationParameters();
         request.setProblemId("OPT-1");
+        request.setReoptimize(true);
 
         manager.updateOptimization(request);
 
-        http.request().assertQuery("optimization_problem_id", "OPT-1");
+        http.request().assertQuery("optimization_problem_id", "OPT-1").assertQuery("reoptimize", "1")
+                .assertNoQuery("show_directions");
+    }
+
+    @Test
+    public void optimizationFlagsUseTheirApiNamesInTheJsonBody() throws Exception {
+        RoutingManager manager = manager();
+        http.respondWithFixture(200, "optimization.json");
+        OptimizationParameters request = optimizationParameters();
+        request.setProblemId("OPT-1");
+        request.setReoptimize(true);
+        request.setShowDirections(false);
+
+        manager.updateOptimization(request);
+
+        http.request().assertJson("optimization_problem_id", "OPT-1")
+                .assertJson("reoptimize", true)
+                .assertJson("show_directions", false)
+                .assertJsonLacks("problemId", "showDirections");
     }
 
     @Test
@@ -225,7 +242,6 @@ public class RoutingManagerTest {
         assertEquals("OPT-1", optimization.getOptimizationProblemId());
     }
 
-    @Ignore("bug (unfiled): reOptimizationByOptimizationID sends the JSON string \"\" as its body")
     @Test
     public void reOptimizationByIdSendsNoBody() throws Exception {
         RoutingManager manager = manager();
@@ -265,6 +281,14 @@ public class RoutingManagerTest {
         http.request().assertEndpoint("GET", API, OPTIMIZATION_EP).assertQuery("limit", "10").assertQuery("offset", "20");
         assertEquals(1, optimizations.size());
         assertEquals("OPT-1", optimizations.get(0).getOptimizationProblemId());
+    }
+
+    @Test
+    public void getOptimizationsOfAnEmptyResponseIsNull() throws Exception {
+        RoutingManager manager = manager();
+        http.respondWithoutBody(200);
+
+        assertNull(manager.getOptimizations(10, 0));
     }
 
     @Test
@@ -465,20 +489,32 @@ public class RoutingManagerTest {
         RouteDeletedResponse result = manager.deleteRoutes("ROUTE-A1", "ROUTE-A2");
 
         http.request().assertEndpoint("DELETE", API, ROUTE_EP).assertNoBody();
-        assertTrue(http.request().query("route_id").startsWith("ROUTE-A1,ROUTE-A2"));
+        http.request().assertQuery("route_id", "ROUTE-A1,ROUTE-A2");
         assertTrue(result.isDeleted());
         assertEquals(Arrays.asList("ROUTE-A1", "ROUTE-A2"), result.getAddresses());
     }
 
-    @Ignore("bug #41: deleteRoutes leaves a trailing comma in the route_id list")
     @Test
     public void deleteRoutesHasNoTrailingComma() throws Exception {
         RoutingManager manager = manager();
-        http.respond(200, json("{'deleted':true}"));
+        http.respond(200, json("{'deleted':true}")).respond(200, json("{'deleted':true}"));
 
         manager.deleteRoutes("ROUTE-A1", "ROUTE-A2");
+        manager.deleteRoutes("ROUTE-A3");
 
-        http.request().assertQuery("route_id", "ROUTE-A1,ROUTE-A2");
+        http.request(0).assertQuery("route_id", "ROUTE-A1,ROUTE-A2");
+        http.request(1).assertQuery("route_id", "ROUTE-A3");
+    }
+
+    @Test
+    public void deleteRoutesNeedsAtLeastOneValidId() {
+        final RoutingManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes());
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes((String[]) null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes("ROUTE-A1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes(""));
+        http.assertNoRequests();
     }
 
     @Test

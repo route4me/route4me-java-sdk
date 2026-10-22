@@ -1,0 +1,11 @@
+# osv-scanner configuration: advisories reviewed and accepted, each with its reason.
+
+[[IgnoredVulns]]
+id = "GHSA-85xx-xhjm-rhrw"
+ignoreUntil = 2027-04-30
+reason = """CVE-2022-25867 (NullPointerException on a malformed packet) is listed for
+socket.io-client before 2.0.1, but 1.0.2 carries the fix: its IOParser.Decoder rejects
+unknown packet types, illegal attachments and invalid payloads with a DecodingException.
+The SDK cannot move to 2.x: validator.route4me.com runs a Socket.IO 2 server (Engine.IO 3),
+and the 2.x Java client fails to connect to it ("server error"), checked on 2026-10-22.
+Review again when the server is upgraded or by the date above."""

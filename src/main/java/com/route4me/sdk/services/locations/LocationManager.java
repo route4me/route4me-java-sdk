@@ -26,11 +26,11 @@ public class LocationManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -77,7 +77,7 @@ public class LocationManager extends Manager {
     }
 
     public LocationTypeResource getLocationTypeById(String locationTypeId) throws APIException {
-        URIBuilder builder = v5Builder(LOCATION_TYPES_EP + "/" + locationTypeId);
+        URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, LocationTypeResource.class);
     }
 
@@ -87,12 +87,12 @@ public class LocationManager extends Manager {
     }
 
     public LocationTypeResource updateLocationType(String locationTypeId, StoreLocationTypeRequest request) throws APIException {
-        URIBuilder builder = v5Builder(LOCATION_TYPES_EP + "/" + locationTypeId);
+        URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), LocationTypeResource.class);
     }
 
     public DeleteLocationTypeResponse deleteLocationType(String locationTypeId) throws APIException {
-        URIBuilder builder = v5Builder(LOCATION_TYPES_EP + "/" + locationTypeId);
+        URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
         return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteLocationTypeResponse.class);
     }
 }

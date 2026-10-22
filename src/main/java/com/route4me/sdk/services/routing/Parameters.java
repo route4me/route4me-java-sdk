@@ -125,9 +125,10 @@ public class Parameters {
     private Boolean isDynamicStartTime;
     @SerializedName("depots")
     private List<Object> depots;
+    /** {@code null} (the default) leaves the option out of the request. */
     @QueryParameter("use_mixed_pickup_delivery_demands")
     @SerializedName("use_mixed_pickup_delivery_demands")
-    private boolean useMixedPickupDeliveryDemands;
+    private Boolean useMixedPickupDeliveryDemands;
     @QueryParameter("balance")
     @SerializedName("balance")
     private Balance balance;
@@ -160,7 +161,46 @@ public class Parameters {
     @SerializedName("group_max_routes")
     private List<List<Object>> groupMaxRoutes;
 
+    /**
+     * Sets {@code use_mixed_pickup_delivery_demands}; the same as
+     * {@link #setUseMixedPickupDeliveryDemands(boolean)}.
+     *
+     * @param useMixedPickupDeliveryDemands whether pickup and delivery demands may mix
+     */
     public void isUseMixedPickupDeliveryDemands(boolean useMixedPickupDeliveryDemands) {
+        this.useMixedPickupDeliveryDemands = useMixedPickupDeliveryDemands;
+    }
+
+    /**
+     * @return whether pickup and delivery demands may mix on a route; {@code false} when
+     * the option is not set
+     */
+    public boolean isUseMixedPickupDeliveryDemands() {
+        return Boolean.TRUE.equals(this.useMixedPickupDeliveryDemands);
+    }
+
+    /**
+     * @return {@code use_mixed_pickup_delivery_demands}, or {@code null} when it is not set
+     * and so not sent
+     */
+    public Boolean getUseMixedPickupDeliveryDemands() {
+        return this.useMixedPickupDeliveryDemands;
+    }
+
+    /**
+     * @param useMixedPickupDeliveryDemands whether pickup and delivery demands may mix on
+     *                                      a route
+     */
+    public void setUseMixedPickupDeliveryDemands(boolean useMixedPickupDeliveryDemands) {
+        this.useMixedPickupDeliveryDemands = useMixedPickupDeliveryDemands;
+    }
+
+    /**
+     * @param useMixedPickupDeliveryDemands whether pickup and delivery demands may mix on
+     *                                      a route; {@code null} leaves the option out of
+     *                                      the request
+     */
+    public void setUseMixedPickupDeliveryDemands(Boolean useMixedPickupDeliveryDemands) {
         this.useMixedPickupDeliveryDemands = useMixedPickupDeliveryDemands;
     }
 

@@ -16,7 +16,8 @@ public class GeocoderAddressNotFound {
     @SerializedName("status")
     String status;
     
-    @SerializedName("resutls")
+    /** The number of results. The API spells the key {@code resutls}; {@code results} is accepted too. */
+    @SerializedName(value = "resutls", alternate = {"results"})
     Integer results;
    
     

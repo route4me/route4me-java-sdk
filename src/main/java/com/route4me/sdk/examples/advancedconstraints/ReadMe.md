@@ -1,10 +1,14 @@
 # Route4Me Java SDK
 
-[![Build Status](https://travis-ci.org/route4me/route4me-java-sdk.svg?branch=master)](https://travis-ci.org/route4me/route4me-java-sdk)
+[![Code Quality](https://github.com/route4me/route4me-java-sdk/actions/workflows/code-quality.yml/badge.svg?branch=master)](https://github.com/route4me/route4me-java-sdk/actions/workflows/code-quality.yml)
 [![codebeat badge](https://codebeat.co/badges/088f1145-147e-438e-aa03-9fc5323ff235)](https://codebeat.co/projects/github-com-route4me-route4me-java-sdk)
 
 
 ## AdvancedConstraints Examples Description: 
+
+The examples that read `locations.csv` and `schedules.csv` use
+[OpenCSV](https://opencsv.sourceforge.net/). The SDK no longer depends on it, so add
+`com.opencsv:opencsv` (5.x) to your own project to run them.
 
 ### 1
 

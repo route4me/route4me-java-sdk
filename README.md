@@ -1,6 +1,6 @@
 # Route4Me Java SDK
 
-[![Build Status](https://travis-ci.org/route4me/route4me-java-sdk.svg?branch=master)](https://travis-ci.org/route4me/route4me-java-sdk)
+[![Code Quality](https://github.com/route4me/route4me-java-sdk/actions/workflows/code-quality.yml/badge.svg?branch=master)](https://github.com/route4me/route4me-java-sdk/actions/workflows/code-quality.yml)
 [![codebeat badge](https://codebeat.co/badges/088f1145-147e-438e-aa03-9fc5323ff235)](https://codebeat.co/projects/github-com-route4me-route4me-java-sdk)
 
 ### What does Route4Me do?

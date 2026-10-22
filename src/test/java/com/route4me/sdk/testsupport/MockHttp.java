@@ -7,6 +7,7 @@ import org.apache.http.HttpVersion;
 import org.apache.http.StatusLine;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.ByteArrayEntity;
 import org.apache.http.entity.ContentType;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.EnglishReasonPhraseCatalog;
@@ -58,8 +59,9 @@ import static org.junit.Assert.assertEquals;
  * }</pre>
  *
  * <p>Every captured request goes through the {@link RequestGuard}: a request to an unknown
- * host or endpoint, over plain http, or with the API key outside the {@code api_key} query
- * parameter fails the test. The guard also fails the test when the API key appears in an
+ * host or endpoint, over plain http, or with the API key outside its place (the
+ * {@code Authorization: Bearer} header on the V5 API, the {@code api_key} query parameter
+ * elsewhere) fails the test. The guard also fails the test when the API key appears in an
  * exception that escapes the test (for a failed assertion: in the exception it wraps), in
  * one returned by {@link #expectThrows}, or in a {@code java.util.logging} record written
  * during the test.
@@ -173,13 +175,28 @@ public final class MockHttp implements TestRule {
     }
 
     /**
+     * Queues a response whose body is raw bytes, with a content type sent exactly as given.
+     * Use it to check how the SDK decodes a body, for example one without a declared
+     * charset.
+     *
+     * @param status      the HTTP status code
+     * @param body        the response body
+     * @param contentType the {@code Content-Type} value, such as {@code text/plain}
+     * @return this rule
+     */
+    public MockHttp respondWithBytes(int status, byte[] body, String contentType) {
+        steps.add(new CannedResponse(status, body.clone(), contentType));
+        return this;
+    }
+
+    /**
      * Queues a response without an entity, like a real {@code 204 No Content}.
      *
      * @param status the HTTP status code
      * @return this rule
      */
     public MockHttp respondWithoutBody(int status) {
-        steps.add(new CannedResponse(status, null, null));
+        steps.add(new CannedResponse(status, (String) null, null));
         return this;
     }
 
@@ -409,11 +426,20 @@ public final class MockHttp implements TestRule {
     private static final class CannedResponse {
         private final int status;
         private final String body;
+        private final byte[] bytes;
         private final String contentType;
 
         CannedResponse(int status, String body, String contentType) {
             this.status = status;
             this.body = body;
+            this.bytes = null;
+            this.contentType = contentType;
+        }
+
+        CannedResponse(int status, byte[] bytes, String contentType) {
+            this.status = status;
+            this.body = null;
+            this.bytes = bytes;
             this.contentType = contentType;
         }
 
@@ -422,6 +448,10 @@ public final class MockHttp implements TestRule {
             ClosableResponse response = new ClosableResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, status, reason));
             if (body != null) {
                 response.setEntity(new StringEntity(body, ContentType.create(contentType, StandardCharsets.UTF_8)));
+            } else if (bytes != null) {
+                ByteArrayEntity entity = new ByteArrayEntity(bytes);
+                entity.setContentType(contentType);
+                response.setEntity(entity);
             }
             return response;
         }

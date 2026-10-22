@@ -1,15 +1,16 @@
 package com.route4me.sdk.services.addressbook;
 
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
 import java.util.List;
 
+import static org.junit.Assert.assertFalse;
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -81,7 +82,6 @@ public class AddressBookManagerTest {
         assertEquals("Example Bakery", contact.getAddressAlias());
     }
 
-    @Ignore("bug #33: getContact wraps address_id in literal single quotes")
     @Test
     public void getContactSendsThePlainId() throws Exception {
         AddressBookManager manager = manager();
@@ -90,6 +90,25 @@ public class AddressBookManagerTest {
         manager.getContact(12345);
 
         http.request().assertQuery("address_id", "12345");
+    }
+
+    @Test
+    public void emptyResponsesDoNotThrow() throws Exception {
+        AddressBookManager manager = manager();
+        http.respondWithoutBody(200).respondWithoutBody(200);
+
+        assertNull(manager.getContacts(new ContactsRequest()));
+        assertFalse(manager.deleteContact(Arrays.<Number>asList(12345)));
+    }
+
+    @Test
+    public void getContactReturnsNullWhenNothingMatches() throws Exception {
+        AddressBookManager manager = manager();
+        http.respond(200, json("{'results':[],'total':0}")).respond(200, "{}").respondWithoutBody(200);
+
+        assertNull(manager.getContact(99999));
+        assertNull(manager.getContact(99999));
+        assertNull(manager.getContact(99999));
     }
 
     @Test

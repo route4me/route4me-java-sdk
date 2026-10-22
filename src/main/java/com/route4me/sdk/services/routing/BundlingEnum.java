@@ -22,7 +22,7 @@ public class BundlingEnum {
         BUNDLING_BY_ANY_CUSTOM_DATA(4),
         BUNDLING_BY_MULTIPLE_FIELDS(5);
 
-        private int value;
+        private final int value;
         private static final Map<Integer, BundlingEnum.BundlingMode> lookup
                 = new HashMap<>();
 
@@ -43,13 +43,6 @@ public class BundlingEnum {
             return value;
         }
 
-        /**
-         * @param value the value to set
-         */
-        public void setValue(int value) {
-            this.value = value;
-        }
-
         public static BundlingEnum.BundlingMode get(int code) {
             return lookup.get(code);
         }
@@ -62,7 +55,7 @@ public class BundlingEnum {
         KEEP_ORIGINAL_SERVICE_TIME(1),
         USE_CUSTOM_SERVICE_TIME(2);
 
-        private int value;
+        private final int value;
         private static final Map<Integer, BundlingEnum.BundlingFirstItemMode> lookup
                 = new HashMap<>();
 
@@ -83,13 +76,6 @@ public class BundlingEnum {
             return value;
         }
 
-        /**
-         * @param value the value to set
-         */
-        public void setValue(int value) {
-            this.value = value;
-        }
-
         public static BundlingEnum.BundlingFirstItemMode get(int code) {
             return lookup.get(code);
         }
@@ -102,7 +88,7 @@ public class BundlingEnum {
         USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM(2),
         DO_NOT_ADD_SERVICE_TIME_FOR_ADDITIONAL_ITEM(3);
 
-        private int value;
+        private final int value;
         private static final Map<Integer, BundlingEnum.BundlingAdditionalItemMode> lookup
                 = new HashMap<>();
 
@@ -123,13 +109,6 @@ public class BundlingEnum {
             return value;
         }
 
-        /**
-         * @param value the value to set
-         */
-        public void setValue(int value) {
-            this.value = value;
-        }
-
         public static BundlingEnum.BundlingAdditionalItemMode get(int code) {
             return lookup.get(code);
         }
@@ -141,7 +120,7 @@ public class BundlingEnum {
         KEEP_AS_SEPARATE_DESTINATIONS(1),
         MERGE_INTO_SINGLE_DESTINATION(2);
 
-        private int value;
+        private final int value;
         private static final Map<Integer, BundlingEnum.BundledItemsMode> lookup
                 = new HashMap<>();
 
@@ -160,13 +139,6 @@ public class BundlingEnum {
          */
         public int getValue() {
             return value;
-        }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(int value) {
-            this.value = value;
         }
 
         public static BundlingEnum.BundledItemsMode get(int code) {

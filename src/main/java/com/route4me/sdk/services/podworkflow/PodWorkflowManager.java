@@ -19,11 +19,11 @@ public class PodWorkflowManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -42,7 +42,7 @@ public class PodWorkflowManager extends Manager {
     }
 
     public PodWorkflowResponse getPodWorkflow(String uuid) throws APIException {
-        URIBuilder builder = v5Builder(WORKFLOWS_EP + "/" + uuid);
+        URIBuilder builder = v5Builder(WORKFLOWS_EP, uuid);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, PodWorkflowResponse.class);
     }
 
@@ -52,12 +52,12 @@ public class PodWorkflowManager extends Manager {
     }
 
     public PodWorkflowResponse updatePodWorkflow(String uuid, PodWorkflow workflow) throws APIException {
-        URIBuilder builder = v5Builder(WORKFLOWS_EP + "/" + uuid);
+        URIBuilder builder = v5Builder(WORKFLOWS_EP, uuid);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(workflow), PodWorkflowResponse.class);
     }
 
     public StatusResponse deletePodWorkflow(String uuid) throws APIException {
-        URIBuilder builder = v5Builder(WORKFLOWS_EP + "/" + uuid);
+        URIBuilder builder = v5Builder(WORKFLOWS_EP, uuid);
         return this.makeRequest(RequestMethod.DELETE, builder, "", StatusResponse.class);
     }
 }

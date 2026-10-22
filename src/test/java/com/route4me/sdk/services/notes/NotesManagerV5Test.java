@@ -55,7 +55,7 @@ public class NotesManagerV5Test {
         manager.updateNote("9001", update);
         DeleteNoteResponse deleted = manager.deleteNote("9001");
 
-        http.request(0).assertEndpoint("POST", HOST, NOTES_EP).assertApiKeyInQuery()
+        http.request(0).assertEndpoint("POST", HOST, NOTES_EP).assertApiKeyAsBearer()
                 .assertJson("route_id", "ROUTE-A1")
                 .assertJson("address_id", 5002)
                 .assertJson("strNoteContents", "Left at the door")

@@ -7,6 +7,7 @@ package com.route4me.sdk.services.users;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  *
@@ -17,14 +18,17 @@ public class Registration {
 
     @SerializedName("status")
     private Boolean status;
+    @ToString.Exclude
     @SerializedName("session_id")
     private String sessionID;
+    @ToString.Exclude
     @SerializedName("session_guid")
     private String sessionGUID;
     @SerializedName("member_email")
     private String memberEmail;
     @SerializedName("member_id")
     private Integer memberID;
+    @ToString.Exclude
     @SerializedName("api_key")
     private String apiKey;
     @SerializedName("account_type_id")

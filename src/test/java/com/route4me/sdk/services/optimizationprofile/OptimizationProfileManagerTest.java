@@ -51,7 +51,7 @@ public class OptimizationProfileManagerTest {
 
         OptimizationProfilesResponse profiles = manager.getOptimizationProfiles();
 
-        http.request().assertEndpoint("GET", HOST, PROFILES_EP + "/data-list").assertApiKeyInQuery();
+        http.request().assertEndpoint("GET", HOST, PROFILES_EP + "/data-list").assertApiKeyAsBearer();
         assertEquals("Default", profiles.getItems().get(0).getProfileName());
         assertEquals(55.5, profiles.getItems().get(0).getSpeedCap(), 0.0);
     }

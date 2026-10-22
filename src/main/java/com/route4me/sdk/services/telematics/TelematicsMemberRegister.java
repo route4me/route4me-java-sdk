@@ -7,6 +7,7 @@ package com.route4me.sdk.services.telematics;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  *
@@ -15,6 +16,7 @@ import lombok.Data;
 @Data
 public class TelematicsMemberRegister {
 
+    @ToString.Exclude
     @SerializedName("api_token")
     private String apiToken;
     @SerializedName("created_at")

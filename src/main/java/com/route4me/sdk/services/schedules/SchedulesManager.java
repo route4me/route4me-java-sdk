@@ -28,11 +28,11 @@ public class SchedulesManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint) {
+    private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
+        Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
 
@@ -57,17 +57,17 @@ public class SchedulesManager extends Manager {
     }
 
     public ScheduleList getSchedule(String scheduleUid) throws APIException {
-        URIBuilder builder = v5Builder(SCHEDULES_EP + "/" + scheduleUid);
+        URIBuilder builder = v5Builder(SCHEDULES_EP, scheduleUid);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, ScheduleList.class);
     }
 
     public ScheduleList updateSchedule(String scheduleUid, Schedule schedule) throws APIException {
-        URIBuilder builder = v5Builder(SCHEDULES_EP + "/" + scheduleUid);
+        URIBuilder builder = v5Builder(SCHEDULES_EP, scheduleUid);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(schedule), ScheduleList.class);
     }
 
     public ScheduleList deleteSchedule(String scheduleUid, boolean withRoutes) throws APIException {
-        URIBuilder builder = v5Builder(SCHEDULES_EP + "/" + scheduleUid);
+        URIBuilder builder = v5Builder(SCHEDULES_EP, scheduleUid);
         if (withRoutes) {
             builder.setParameter("with-routes", "1");
         }
@@ -95,34 +95,34 @@ public class SchedulesManager extends Manager {
     }
 
     public RouteScheduleResponse getRouteSchedule(String routeId) throws APIException {
-        URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP + "/" + routeId);
+        URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP, routeId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteScheduleResponse.class);
     }
 
     public RouteScheduleList updateRouteSchedule(String routeId, RouteSchedule routeSchedule) throws APIException {
-        URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP + "/" + routeId);
+        URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP, routeId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(routeSchedule), RouteScheduleList.class);
     }
 
     public StatusResponse deleteRouteSchedule(String routeId) throws APIException {
-        URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP + "/" + routeId);
+        URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP, routeId);
         return this.makeRequest(RequestMethod.DELETE, builder, "", StatusResponse.class);
     }
 
     public StatusResponse deleteRouteScheduleItems(String routeId) throws APIException {
-        URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP + "/" + routeId + "/items");
+        URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP, routeId, "items");
         return this.makeRequest(RequestMethod.DELETE, builder, "", StatusResponse.class);
     }
 
     public RouteSchedulePreview getRouteSchedulePreview(String routeId, String start, String end) throws APIException {
-        URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP + "/" + routeId + "/preview");
+        URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP, routeId, "preview");
         builder.setParameter("start", start);
         builder.setParameter("end", end);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteSchedulePreview.class);
     }
 
     public RouteScheduleResponse replaceRouteSchedule(String routeId, ReplaceRouteScheduleRequest request) throws APIException {
-        URIBuilder builder = v5Builder(REPLACE_ROUTE_SCHEDULES_EP + "/" + routeId);
+        URIBuilder builder = v5Builder(REPLACE_ROUTE_SCHEDULES_EP, routeId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), RouteScheduleResponse.class);
     }
 
@@ -136,7 +136,7 @@ public class SchedulesManager extends Manager {
     // --- Scheduled Routes ---
 
     public StatusResponse isRouteScheduleCopied(String routeId) throws APIException {
-        URIBuilder builder = v5Builder(SCHEDULED_ROUTES_IS_COPY_EP + "/" + routeId);
+        URIBuilder builder = v5Builder(SCHEDULED_ROUTES_IS_COPY_EP, routeId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, StatusResponse.class);
     }
 

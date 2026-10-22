@@ -20,15 +20,20 @@ import java.util.Set;
  *       recorded for the {@link DeprecatedEndpointReport}; or its host is in
  *       {@code allowed_hosts} and its (method, host, path) matches an {@code endpoints}
  *       entry;</li>
- *   <li>the API key appears nowhere except the {@code api_key} query parameter, which is
- *       where the SDK puts it today: not in a header, the path, another query parameter,
- *       or the body.</li>
+ *   <li>the API key appears in one place only. On the V5 API
+ *       ({@code https://wh.route4me.com/modules/api/v5.0/} and {@code v5.1/}) that is the
+ *       {@code Authorization: Bearer} header; everywhere else it is the {@code api_key}
+ *       query parameter. It must not be in another header, the path, another query
+ *       parameter or the body.</li>
  * </ul>
  * Messages never print the key itself.
  */
 public final class RequestGuard {
 
     private static final String API_KEY_PARAMETER = "api_key";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String V5_HOST = "wh.route4me.com";
+    private static final String[] V5_PATH_PREFIXES = {"/modules/api/v5.0", "/modules/api/v5.1"};
 
     private final EndpointRegistry registry;
     private final String apiKey;
@@ -65,7 +70,8 @@ public final class RequestGuard {
     public List<String> check(CapturedRequest request, String testName) {
         List<String> problems = new ArrayList<>();
         String host = request.getHost();
-        String path = request.getPath();
+        // Match on the raw path: an encoded "/" (%2F) inside an ID stays inside its segment.
+        String path = request.getUri().getRawPath();
 
         if (!"https".equals(request.getScheme())) {
             problems.add(request + ": scheme must be https, not " + request.getScheme());
@@ -86,8 +92,9 @@ public final class RequestGuard {
     }
 
     /**
-     * Finds every place where the API key appears in a request, other than the
-     * {@code api_key} query parameter.
+     * Finds every place where the API key appears in a request, other than its expected
+     * place: the {@code Authorization: Bearer} header on the V5 API, the {@code api_key}
+     * query parameter elsewhere.
      *
      * @param request the captured request
      * @return one message per leak; empty when there is none
@@ -97,10 +104,14 @@ public final class RequestGuard {
             return Collections.emptyList();
         }
         List<String> leaks = new ArrayList<>();
+        boolean v5 = isV5(request);
         for (Map.Entry<String, List<String>> header : request.getHeaders().entrySet()) {
             for (String value : header.getValue()) {
-                if (contains(header.getKey()) || contains(value)) {
-                    leaks.add(request + ": the API key appears in header '" + header.getKey() + "'");
+                boolean expectedPlace = v5 && AUTHORIZATION_HEADER.equalsIgnoreCase(header.getKey())
+                        && ("Bearer " + apiKey).equals(value);
+                if (contains(header.getKey()) || (!expectedPlace && contains(value))) {
+                    leaks.add(request + ": the API key appears in header '" + header.getKey() + "'"
+                            + (v5 ? "" : "; outside the V5 API it goes in the api_key query parameter"));
                 }
             }
         }
@@ -108,9 +119,10 @@ public final class RequestGuard {
             leaks.add(request + ": the API key appears in the URL path");
         }
         for (NameValuePair pair : request.getQueryParameters()) {
-            boolean expectedPlace = API_KEY_PARAMETER.equals(pair.getName());
+            boolean expectedPlace = !v5 && API_KEY_PARAMETER.equals(pair.getName());
             if (contains(pair.getName()) || (!expectedPlace && contains(pair.getValue()))) {
-                leaks.add(request + ": the API key appears in query parameter '" + pair.getName() + "'");
+                leaks.add(request + ": the API key appears in query parameter '" + pair.getName() + "'"
+                        + (v5 ? "; the V5 API takes it in the Authorization header" : ""));
             }
         }
         if (contains(request.getUri().getRawFragment())) {
@@ -120,6 +132,25 @@ public final class RequestGuard {
             leaks.add(request + ": the API key appears in the request body");
         }
         return leaks;
+    }
+
+    /**
+     * Tells whether a request goes to the V5 API, which takes the key as a bearer token.
+     *
+     * @param request the captured request
+     * @return {@code true} for {@code https://wh.route4me.com/modules/api/v5.0/...} and {@code v5.1}
+     */
+    public static boolean isV5(CapturedRequest request) {
+        String path = request.getPath();
+        if (!V5_HOST.equalsIgnoreCase(request.getHost()) || path == null) {
+            return false;
+        }
+        for (String prefix : V5_PATH_PREFIXES) {
+            if (path.startsWith(prefix + "/") || path.equals(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

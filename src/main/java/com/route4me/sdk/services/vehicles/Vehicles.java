@@ -40,7 +40,7 @@ public class Vehicles {
         VOLVO("Volvo"),
         WESTERN_STAR("Western Star" );
         
-        private String value;
+        private final String value;
 
         private VehicleMake(String value) {
             this.value = value;
@@ -57,13 +57,6 @@ public class Vehicles {
         public String getValue() {
             return value;
         }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(String value) {
-            this.value = value;
-        }        
         
         
     }

@@ -13,6 +13,7 @@ import com.route4me.sdk.utils.DateTimeUtils;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.ToString;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.util.ArrayList;
@@ -77,16 +78,36 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.GET, builder, parameters, Optimization.class);
     }
 
+    /**
+     * Updates an optimization: {@code PUT /api.v4/optimization_problem.php}. The
+     * optimization ID ({@code optimization_problem_id}) and the {@code reoptimize} and
+     * {@code show_directions} flags go in the query; the parameters and addresses go in the
+     * JSON body.
+     *
+     * @param parameters the optimization, with its problem ID set
+     * @return the updated optimization
+     * @throws APIException if the request fails
+     */
     public DataObject updateOptimization(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
-        return this.makeJSONRequest(RequestMethod.PUT, builder, parameters, DataObject.class);
+        return this.makeJSONRequest(RequestMethod.PUT, builder, parameters, parameters, DataObject.class);
     }
 
+    /**
+     * Re-optimizes an optimization:
+     * {@code PUT /api.v4/optimization_problem.php?optimization_problem_id=...&reoptimize=1}.
+     * Everything goes in the query; the request has no body.
+     *
+     * @param parameters the optimization ID and flags
+     * @return the re-optimized optimization
+     * @throws APIException           if the request fails
+     * @throws IllegalAccessException if the parameters cannot be read
+     */
     public Optimization reOptimizationByOptimizationID(OptimizationParameters parameters) throws APIException, IllegalAccessException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         List<NameValuePair> params = QueryConverter.convertObjectToParameters(parameters);
         builder.addParameters(params);
-        return this.makeJSONRequest(RequestMethod.PUT, builder, "", Optimization.class);
+        return this.makeRequest(RequestMethod.PUT, builder, (HttpEntity) null, Optimization.class);
     }
 
     public Optimization reOptimization(OptimizationParameters parameters, DataObject optimization) throws APIException, IllegalAccessException {
@@ -96,12 +117,20 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, optimization, Optimization.class);
     }
 
+    /**
+     * Lists optimizations: {@code GET /api.v4/optimization_problem.php?limit=...&offset=...}.
+     *
+     * @param limit  the page size
+     * @param offset the number of optimizations to skip
+     * @return the optimizations, or {@code null} when the answer has none
+     * @throws APIException if the request fails
+     */
     public List<DataObject> getOptimizations(int limit, int offset) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         builder.setParameter("limit", Integer.toString(limit));
         builder.setParameter("offset", Integer.toString(offset));
         GetOptimizationsResponse resp = this.makeRequest(RequestMethod.GET, builder, "", GetOptimizationsResponse.class);
-        return resp.getOptimizations();
+        return resp == null ? null : resp.getOptimizations();
     }
 
     public Map<String, Object> deleteOptimization(List<String> optimizationProblemIDs) throws APIException {
@@ -243,14 +272,25 @@ public class RoutingManager extends Manager {
         return updateRoute(route);
     }
 
+    /**
+     * Deletes routes: {@code DELETE /api.v4/route.php?route_id=ID1,ID2,...}.
+     *
+     * @param routeIds the IDs of the routes to delete; at least one
+     * @return the deletion result
+     * @throws IllegalArgumentException if no route ID is given, or one is {@code null} or empty
+     * @throws APIException             if the request fails
+     */
     public RouteDeletedResponse deleteRoutes(String... routeIds) throws APIException {
-        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
-        StringBuilder conc = new StringBuilder();
-        for (String s : routeIds) {
-            conc.append(s).append(',');
+        if (routeIds == null || routeIds.length == 0) {
+            throw new IllegalArgumentException("At least one route ID is required");
         }
-
-        builder.addParameter("route_id", conc.toString());
+        for (String routeId : routeIds) {
+            if (routeId == null || routeId.isEmpty()) {
+                throw new IllegalArgumentException("A route ID must not be null or empty");
+            }
+        }
+        URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
+        builder.addParameter("route_id", String.join(",", routeIds));
 
         return this.makeRequest(RequestMethod.DELETE, builder, "", RouteDeletedResponse.class);
     }
