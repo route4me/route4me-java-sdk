@@ -34,9 +34,9 @@ public class ReplaceRouteScheduleRequest {
     @SerializedName("advance_schedule_interval_days")
     private Integer advanceScheduleIntervalDays;
 
-    /** The dates on which the schedule creates no route ({@code schedule_blacklist}). */
+    /** The periods on which the schedule creates no route ({@code schedule_blacklist}). */
     @SerializedName("schedule_blacklist")
-    private List<String> scheduleBlacklist;
+    private List<ScheduleBlacklistItem> scheduleBlacklist;
 
     /** The time zone of the schedule, such as {@code America/New_York} ({@code timezone}). */
     @SerializedName("timezone")

@@ -42,7 +42,8 @@ public class SchedulesManagerTest {
         schedule.setTimezone("America/New_York");
         schedule.setAdvanceInterval(7);
         schedule.setAdvanceScheduleIntervalDays(14);
-        schedule.setScheduleBlacklist(Collections.singletonList("2026-12-25"));
+        schedule.setScheduleBlacklist(
+                Collections.singletonList(new ScheduleBlacklistItem(true, "2026-12-25", "2026-12-26")));
         schedule.setScheduleData(Collections.singletonMap("mode", "weekly"));
         return schedule;
     }
@@ -99,10 +100,26 @@ public class SchedulesManagerTest {
                 .assertJson("timezone", "America/New_York")
                 .assertJson("advance_interval", 7)
                 .assertJson("advance_schedule_interval_days", 14)
-                .assertJson("schedule_blacklist[0]", "2026-12-25")
+                .assertJson("schedule_blacklist[0].enabled", true)
+                .assertJson("schedule_blacklist[0].start", "2026-12-25")
+                .assertJson("schedule_blacklist[0].end", "2026-12-26")
                 .assertJson("schedule.mode", "weekly");
         http.request(1).assertEndpoint("PUT", HOST, BASE + "/schedules/SCH-1").assertJson("name", "Weekdays");
         assertEquals("SCH-1", created.getData().get(0).getScheduleUid());
+    }
+
+    @Test
+    public void scheduleBlacklistParsesAsPeriods() throws Exception {
+        SchedulesManager manager = manager();
+        http.respond(200, json("{'data':[{'schedule_uid':'SCH-1','schedule_blacklist':"
+                + "[{'enabled':true,'start':'2026-12-24','end':'2026-12-26'}]}]}"));
+
+        ScheduleList schedules = manager.getSchedule("SCH-1");
+
+        ScheduleBlacklistItem period = schedules.getData().get(0).getScheduleBlacklist().get(0);
+        assertTrue(period.getEnabled());
+        assertEquals("2026-12-24", period.getStart());
+        assertEquals("2026-12-26", period.getEnd());
     }
 
     @Test
@@ -204,13 +221,18 @@ public class SchedulesManagerTest {
         request.setName("Weekends");
         request.setMemberId(1001L);
         request.setTimezone("UTC");
+        request.setScheduleBlacklist(
+                Collections.singletonList(new ScheduleBlacklistItem(true, "2026-12-24", "2026-12-26")));
 
         manager.replaceRouteSchedule("ROUTE-A1", request);
 
         http.request().assertEndpoint("PUT", HOST, BASE + "/route-schedules/replace/ROUTE-A1")
                 .assertJson("schedule_uid", "SCH-2")
                 .assertJson("name", "Weekends")
-                .assertJson("member_id", 1001);
+                .assertJson("member_id", 1001)
+                .assertJson("schedule_blacklist[0].enabled", true)
+                .assertJson("schedule_blacklist[0].start", "2026-12-24")
+                .assertJson("schedule_blacklist[0].end", "2026-12-26");
     }
 
     // ------------------------------------------------------------------ master and scheduled routes
@@ -225,13 +247,18 @@ public class SchedulesManagerTest {
         request.setName("Weekdays");
         request.setTimezone("UTC");
         request.setSync(true);
+        request.setScheduleBlacklist(
+                Collections.singletonList(new ScheduleBlacklistItem(false, "2026-11-26", "2026-11-27")));
 
         CreateMasterRouteResponse response = manager.createMasterRoute(request);
 
         http.request().assertEndpoint("POST", HOST, BASE + "/master-routes")
                 .assertJson("route_id", "ROUTE-A1")
                 .assertJson("route_name", "Master run")
-                .assertJson("sync", true);
+                .assertJson("sync", true)
+                .assertJson("schedule_blacklist[0].enabled", false)
+                .assertJson("schedule_blacklist[0].start", "2026-11-26")
+                .assertJson("schedule_blacklist[0].end", "2026-11-27");
         assertEquals("ROUTE-M1", response.getData().getRouteId());
     }
 
