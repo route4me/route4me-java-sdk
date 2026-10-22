@@ -3,6 +3,7 @@ package com.route4me.sdk.services.vehicles;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.queryconverter.QueryConverter;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -85,11 +86,7 @@ public class VehiclesManagerV5 extends Manager {
 
     public VehicleLocationResponse getVehicleLocations(String[] vehicleIds) throws APIException {
         URIBuilder builder = v5Builder(VEHICLES_LOCATION_EP);
-        if (vehicleIds != null) {
-            for (String id : vehicleIds) {
-                builder.addParameter("ids[]", id);
-            }
-        }
+        builder.addParameters(QueryConverter.toBracketedParameters("ids", vehicleIds));
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleLocationResponse.class);
     }
 

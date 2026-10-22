@@ -146,10 +146,12 @@ public class VehiclesManagerV5Test {
 
         VehicleLocationResponse locations = manager.getVehicleLocations(new String[] {"VEH-1", "VEH-2"});
         manager.getVehicleLocations(null);
+        manager.getVehicleLocations(new String[] {"VEH-3"});
 
         http.request(0).assertEndpoint("GET", HOST, VEHICLES_EP + "/location")
                 .assertQueryValues("ids[]", "VEH-1", "VEH-2");
         http.request(1).assertNoQuery("ids[]");
+        http.request(2).assertQueryValues("ids[]", "VEH-3").assertNoQuery("ids");
         assertEquals(40.5, locations.getData().get(0).getLat(), 0.0);
     }
 

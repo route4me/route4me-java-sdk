@@ -29,7 +29,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
@@ -95,6 +97,33 @@ public class ManagerTest {
         Boolean active = Boolean.TRUE;
         @QueryParameter("skipped")
         String skipped;
+    }
+
+    /** V5 query parameters: a list, a one-element array, a nested list, a map and a flag. */
+    static final class ArrayParams {
+        @QueryParameter("ids")
+        List<String> ids = Arrays.asList("1", "2");
+        @QueryParameter("one")
+        String[] one = {"only"};
+        @QueryParameter("order_by")
+        List<List<String>> orderBy = Collections.singletonList(Arrays.asList("name", "asc"));
+        @QueryParameter("filters")
+        Map<String, Object> filters = new LinkedHashMap<>();
+        @QueryParameter("active")
+        Boolean active = Boolean.FALSE;
+        @QueryParameter("page")
+        Integer page = 2;
+
+        ArrayParams() {
+            filters.put("status", Arrays.asList(1, 2));
+            filters.put("search", "x");
+        }
+    }
+
+    /** A list query parameter only. */
+    static final class ListParams {
+        @QueryParameter("ids")
+        List<String> ids = Arrays.asList("1", "2");
     }
 
     /** A request body with one annotated and one plain field. */
@@ -435,6 +464,37 @@ public class ManagerTest {
         for (int i = 0; i < 2; i++) {
             http.request(i).assertMethod("GET").assertQuery("limit", "5").assertQuery("active", "1").assertNoBody();
         }
+    }
+
+    @Test
+    public void v5JsonGetSendsListsAndMapsWithBracketedKeys() throws Exception {
+        TestManager manager = manager();
+        http.respond(200, "{}");
+
+        manager.makeJSONRequest(RequestMethod.GET, wh("/modules/api/v5.0/vehicles"), new ArrayParams(), Reply.class);
+
+        http.request()
+                .assertQueryValues("ids[]", "1", "2")
+                .assertQueryValues("one[]", "only")
+                .assertQueryValues("order_by[0][]", "name", "asc")
+                .assertQueryValues("filters[status][]", "1", "2")
+                .assertQuery("filters[search]", "x")
+                .assertQuery("active", "0")
+                .assertQuery("page", "2")
+                .assertNoQuery("ids")
+                .assertNoQuery("one")
+                .assertNoQuery("order_by")
+                .assertNoQuery("filters");
+    }
+
+    @Test
+    public void v4JsonGetKeepsRepeatedPlainKeys() throws Exception {
+        TestManager manager = manager();
+        http.respond(200, "{}");
+
+        manager.makeJSONRequest(RequestMethod.GET, builder(), new ListParams(), Reply.class);
+
+        http.request().assertQueryValues("ids", "1", "2").assertNoQuery("ids[]");
     }
 
     @Test

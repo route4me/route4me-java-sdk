@@ -9,6 +9,7 @@ import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.queryconverter.QueryConverter;
 import static com.route4me.sdk.queryconverter.QueryConverter.convertObjectToParameters;
 import java.util.ArrayList;
 import java.util.List;
@@ -325,11 +326,7 @@ public class TelematicsManager extends Manager {
             setIfPresent(builder, "search", filters.getSearch());
             setIfPresent(builder, "country", filters.getCountry());
             setIfPresent(builder, "feature", filters.getFeature());
-            if (filters.getFeatures() != null) {
-                for (String feature : filters.getFeatures()) {
-                    builder.addParameter("features[]", feature);
-                }
-            }
+            builder.addParameters(QueryConverter.toBracketedParameters("features", filters.getFeatures()));
             setIfPresent(builder, "size", filters.getSize());
             setIfPresent(builder, "is_integrated", flag(filters.getIsIntegrated()));
             setIfPresent(builder, "display_hidden", flag(filters.getDisplayHidden()));

@@ -253,7 +253,7 @@ public abstract class Manager implements Closeable {
         if (requestParams != null) {
             List<NameValuePair> params;
             try {
-                params = QueryConverter.convertObjectToParameters(requestParams);
+                params = queryParameters(builder, requestParams);
                 builder.addParameters(params);
             } catch (IllegalAccessException ex) {
                 logger.error("Could not convert {} to query parameters: {}",
@@ -267,7 +267,7 @@ public abstract class Manager implements Closeable {
         if (requestParams != null) {
             List<NameValuePair> params;
             try {
-                params = QueryConverter.convertObjectToParameters(requestParams);
+                params = queryParameters(builder, requestParams);
                 builder.addParameters(params);
             } catch (IllegalAccessException ex) {
                 logger.error("Could not convert {} to query parameters: {}",
@@ -280,7 +280,7 @@ public abstract class Manager implements Closeable {
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz) throws APIException {
         if (requestParams != null) {
             try {
-                List<NameValuePair> params = QueryConverter.convertObjectToParameters(requestParams);
+                List<NameValuePair> params = queryParameters(builder, requestParams);
                 if (method == RequestMethod.GET) {
                     builder.addParameters(params);
                 }
@@ -297,7 +297,7 @@ public abstract class Manager implements Closeable {
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type) throws APIException {
         if (requestParams != null) {
             try {
-                List<NameValuePair> params = QueryConverter.convertObjectToParameters(requestParams);
+                List<NameValuePair> params = queryParameters(builder, requestParams);
                 if (method == RequestMethod.GET) {
                     builder.addParameters(params);
                 }
@@ -309,6 +309,27 @@ public abstract class Manager implements Closeable {
             }
         }
         return this.makeRequest(method, builder, (HttpEntity) null, null, type);
+    }
+
+    /**
+     * Converts the {@link com.route4me.sdk.queryconverter.QueryParameter} fields of a request
+     * object to query parameters for {@code builder}. The V5 API (PHP) reads lists and maps
+     * only from bracketed keys, so V5 requests get
+     * {@link QueryConverter#convertObjectToBracketedParameters(Object)} ({@code ids[]=1},
+     * {@code filters[status]=1}); every other request keeps
+     * {@link QueryConverter#convertObjectToParameters(Object)}.
+     *
+     * @param builder       the request URL
+     * @param requestParams the object with the query fields
+     * @return the parameters
+     * @throws IllegalAccessException if a field cannot be read
+     */
+    private static List<NameValuePair> queryParameters(URIBuilder builder, Object requestParams)
+            throws IllegalAccessException {
+        if (sendsKeyAsBearerToken(builder.getHost(), builder.getPath())) {
+            return QueryConverter.convertObjectToBracketedParameters(requestParams);
+        }
+        return QueryConverter.convertObjectToParameters(requestParams);
     }
 
     /**
