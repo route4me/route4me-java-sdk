@@ -5,8 +5,6 @@
  */
 package com.route4me.sdk.examples.advancedconstraints;
 
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.Constants.AlgorithmType;
@@ -21,7 +19,6 @@ import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -36,11 +33,8 @@ public class DriversScheduleswithTerritoriesV1 {
 
     public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2, List<String> zone3, Integer serviceTime) {
         List<Address> addresses = new ArrayList<>();
-        CSVReader csvReader;
         try {
-            csvReader = new CSVReaderBuilder(new FileReader(filename)).withSkipLines(1).build();
-            String[] nextRecord;
-            while ((nextRecord = csvReader.readNext()) != null) {
+            for (String[] nextRecord : CsvRows.read(filename)) {
                 Address address = new Address();
                 address.setAlias(nextRecord[0]);
                 address.setAddress(nextRecord[0]);
@@ -91,13 +85,10 @@ public class DriversScheduleswithTerritoriesV1 {
         List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
 
         Path currentPath = Paths.get(System.getProperty("user.dir"));
-        Path filePath = Paths.get(currentPath.toString(),"src", "main", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "schedules.csv");
+        Path filePath = Paths.get(currentPath.toString(),"src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "schedules.csv");
         
-        CSVReader csvReader;
         try {
-            csvReader = new CSVReaderBuilder(new FileReader(filePath.toString())).withSkipLines(1).build();
-            String[] nextRecord;
-            while ((nextRecord = csvReader.readNext()) != null) {
+            for (String[] nextRecord : CsvRows.read(filePath.toString())) {
                 
             schedule = new AdvancedConstraints();
             int group = Integer.parseInt(nextRecord[2]);
@@ -134,14 +125,12 @@ public class DriversScheduleswithTerritoriesV1 {
         addresses.add(address);
 
         // Stops
-        filePath = Paths.get(currentPath.toString(),"src", "main", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
+        filePath = Paths.get(currentPath.toString(),"src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
 
         Integer serviceTime = 120;       
         
         try {
-            csvReader = new CSVReaderBuilder(new FileReader(filePath.toString())).withSkipLines(1).build();
-            String[] nextRecord;
-            while ((nextRecord = csvReader.readNext()) != null) {
+            for (String[] nextRecord : CsvRows.read(filePath.toString())) {
                 address = new Address();
                 address.setAlias(nextRecord[0]);
                 address.setAddress(nextRecord[0]);

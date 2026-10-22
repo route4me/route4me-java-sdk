@@ -129,10 +129,6 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.4.0</version>
-                <configuration>
-                    <!-- The examples are not API, and the build does not compile them. -->
-                    <excludePackageNames>com.route4me.sdk.examples:com.route4me.sdk.examples.*</excludePackageNames>
-                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -230,6 +226,28 @@
                 </executions>
             </plugin>
             <plugin>
+                <!-- The examples live in src/examples/java. They are compiled with the tests,
+                     so that every build checks them against the API, but they are not part of
+                     the SDK jar, and no test runs them. -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>add-example-sources</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/examples/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.14.0</version>
@@ -237,9 +255,6 @@
                     <compilerArgs>
                         <arg>-Xlint</arg>
                     </compilerArgs>
-                    <excludes>
-                        <exclude>**/examples/**</exclude>
-                    </excludes>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>

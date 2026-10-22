@@ -5,8 +5,6 @@
  */
 package com.route4me.sdk.examples.advancedconstraints;
 
-import com.opencsv.CSVReader;
-import com.opencsv.CSVReaderBuilder;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.Constants.AlgorithmType;
@@ -22,7 +20,6 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
 import com.route4me.sdk.services.routing.override.addresses.OverrideAddresses;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -38,11 +35,8 @@ public class DriversShiftWithTerritoriesAndRetailLocation {
 
     public static List<Address> readAddressesFromCSV(String filename, List<String> territory1, List<String> territory2, List<String> territory3, Integer serviceTime) {
         List<Address> addresses = new ArrayList<>();
-        CSVReader csvReader;
         try {
-            csvReader = new CSVReaderBuilder(new FileReader(filename)).withSkipLines(1).build();
-            String[] nextRecord;
-            while ((nextRecord = csvReader.readNext()) != null) {
+            for (String[] nextRecord : CsvRows.read(filename)) {
                 Address address = new Address();
                 address.setAlias(nextRecord[0]);
                 address.setAddress(nextRecord[0]);
@@ -159,7 +153,7 @@ public class DriversShiftWithTerritoriesAndRetailLocation {
         List<Address> addresses;
         Integer serviceTime = 300;
         Path currentPath = Paths.get(System.getProperty("user.dir"));
-        Path filePath = Paths.get(currentPath.toString(), "src", "main", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
+        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
 
         addresses = readAddressesFromCSV(filePath.toString(), territory1, territory2, territory3, serviceTime);
 

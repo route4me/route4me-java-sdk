@@ -6,9 +6,10 @@
 
 ## AdvancedConstraints Examples Description: 
 
-The examples that read `locations.csv` and `schedules.csv` use
-[OpenCSV](https://opencsv.sourceforge.net/). The SDK no longer depends on it, so add
-`com.opencsv:opencsv` (5.x) to your own project to run them.
+The examples that read `locations.csv` and `schedules.csv` parse them with the small
+`CsvRows` helper in this folder (a header line, then comma-separated values without
+quotes). Run them from the repository root, which is where they look for the files:
+`src/examples/java/com/route4me/sdk/examples/advancedconstraints/`.
 
 ### 1
 
