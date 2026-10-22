@@ -17,7 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author juan
+ * Optimizes routes that bundle stops, where the other stops of a bundle get a custom service time of 0 seconds
+ * (additional-items mode 2), so they add none, with {@link RoutingManager#runOptimization}.
  */
 public class DoNotAddServiceTimeAdditionalItem {
 

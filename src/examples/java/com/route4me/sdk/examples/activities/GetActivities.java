@@ -11,6 +11,10 @@ import com.route4me.sdk.services.routing.RoutingManager;
 
 import java.util.List;
 
+/**
+ * Lists the activities of one route of the account: it finds the route with {@link RoutingManager#getRoutes}
+ * and reads its activities with {@link ActivityManager#getActivities}.
+ */
 public class GetActivities {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

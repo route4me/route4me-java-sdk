@@ -8,7 +8,8 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.List;
 
 /**
- * @author juan
+ * Lists optimizations through an HTTP proxy: a {@link RoutingManager} built with a proxy host and port calls
+ * {@link RoutingManager#getOptimizations}.
  */
 public class GenericExampleUsingProxy {
 

@@ -3,6 +3,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.users.TeamManagementManagerV5;
 import com.route4me.sdk.services.users.TeamMember;
 import com.route4me.sdk.services.users.TeamMemberRequest;
+/** Creates a team member through the V5 API with {@link TeamManagementManagerV5#createTeamMember}. */
 public class CreateTeamMemberV5 {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

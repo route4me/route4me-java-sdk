@@ -9,7 +9,8 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.List;
 
 /**
- * @author juan
+ * Takes a route from {@link RoutingManager#getRoutes} and reads it with its addresses with
+ * {@link RoutingManager#getRoute}.
  */
 public class GetRoute {
 
@@ -30,6 +31,5 @@ public class GetRoute {
             e.printStackTrace();
         }
     }
-
 
 }

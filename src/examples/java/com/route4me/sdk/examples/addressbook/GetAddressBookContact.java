@@ -8,7 +8,8 @@ import com.route4me.sdk.services.addressbook.ContactsRequest;
 import java.util.List;
 
 /**
- * @author juan
+ * Takes a contact from {@link AddressBookManager#getContacts} and reads it again with
+ * {@link AddressBookManager#getContact}.
  */
 public class GetAddressBookContact {
 

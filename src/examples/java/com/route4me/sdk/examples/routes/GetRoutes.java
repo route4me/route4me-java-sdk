@@ -7,6 +7,7 @@ import com.route4me.sdk.services.routing.RoutingManager;
 
 import java.util.List;
 
+/** Lists routes with {@link RoutingManager#getRoutes}. */
 public class GetRoutes {
 
     public static void main(String[] args) {

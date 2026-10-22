@@ -18,7 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author juan
+ * Optimizes routes from several depots for several drivers, with time windows, with {@link
+ * RoutingManager#runOptimization}.
  */
 public class MultipleDepotMultipleDriver {
 

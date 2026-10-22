@@ -5,6 +5,10 @@ import com.route4me.sdk.services.orders.Order;
 import com.route4me.sdk.services.orders.OrdersManager;
 
 
+/**
+ * Reads an order with {@link OrdersManager#getOrder} and changes its scheduled date with
+ * {@link OrdersManager#updateOrder}.
+ */
 public class UpdateOrderScheduleDate {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

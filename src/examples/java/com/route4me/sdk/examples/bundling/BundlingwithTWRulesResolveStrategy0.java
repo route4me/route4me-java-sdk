@@ -15,6 +15,10 @@ import com.route4me.sdk.services.routing.TimeWindowRules;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Optimizes routes that bundle stops and merge their time windows with the min/max strategy
+ * ({@code resolve_strategy} 0), with {@link RoutingManager#runOptimization}.
+ */
 public class BundlingwithTWRulesResolveStrategy0 {
 
     public static void main(String[] args) {

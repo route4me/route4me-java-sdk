@@ -7,9 +7,7 @@ import com.route4me.sdk.services.routing.RoutingManager;
 
 import java.util.List;
 
-/**
- * @author juan
- */
+/** Lists optimizations with {@link RoutingManager#getOptimizations} and prints the addresses of the first one. */
 public class GenericExample {
 
     public static void main(String[] args) {

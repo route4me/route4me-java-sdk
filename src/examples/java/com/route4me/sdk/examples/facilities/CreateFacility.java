@@ -6,6 +6,7 @@ import com.route4me.sdk.services.facilities.FacilityCreateRequest;
 import com.route4me.sdk.services.facilities.FacilityManager;
 import com.route4me.sdk.services.facilities.FacilityResource;
 
+/** Creates a facility with {@link FacilityManager#createFacility}. */
 public class CreateFacility {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

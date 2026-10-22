@@ -9,10 +9,7 @@ import com.route4me.sdk.services.routing.Constants;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author juan
- */
+/** Creates an avoidance zone with {@link TerritoriesManager#addAvoidanceZone}. */
 public class AddAvoidanceZone {
     public static void main(String[] args) throws APIException {
         String apiKey = System.getenv("R4M_API_KEY");
@@ -53,7 +50,6 @@ public class AddAvoidanceZone {
         System.out.println(responseObject.toString());
         System.out.println();
 
-
         List<String> circleTerritoryDataList = new ArrayList<>();
         circleTerritoryDataList.add("37.569752822786455,-77.47833251953125");
         circleTerritoryDataList.add("5000");
@@ -69,8 +65,6 @@ public class AddAvoidanceZone {
         System.out.println("Circle Territory");
         System.out.println(responseObject.toString());
         System.out.println();
-
-
 
     }
 

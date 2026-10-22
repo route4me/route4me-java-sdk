@@ -17,6 +17,7 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Optimizes one round-trip route with {@link RoutingManager#runOptimization}, the example of the README. */
 public class SingleDriverRoundTrip {
 
     public static void main(String[] args) {

@@ -9,6 +9,10 @@ import com.route4me.sdk.services.routing.search.RouteSearchResult;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Searches the routes scheduled in a period, one page at a time, with
+ * {@link RoutingManager#getRoutesbyDateTimeZone} and reads the addresses of each with {@link RoutingManager#getRoute}.
+ */
 public class GetRoutesAndAddressesbyDateTimeZonePageLimit {
 
     public static void main(String[] args) {

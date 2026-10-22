@@ -8,6 +8,10 @@ import com.route4me.sdk.services.routing.RoutingManager;
 
 import java.util.List;
 
+/**
+ * Finds an address of a route ({@link RoutingManager#getRoutes}, {@link RoutingManager#getRoute}) and reads it
+ * with {@link RoutingManager#getAddress}.
+ */
 public class GetAddress {
 
     public static void main(String[] args) {

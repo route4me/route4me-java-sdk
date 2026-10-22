@@ -7,6 +7,7 @@ import com.route4me.sdk.services.orders.StatusResponse;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Deletes several orders through the V5 order platform with {@link OrderManagerV5#batchDeleteOrders}. */
 public class BatchDeleteOrdersV5 {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

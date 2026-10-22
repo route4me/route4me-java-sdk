@@ -7,6 +7,7 @@ import com.route4me.sdk.services.orders.OrdersManager;
 
 import java.util.List;
 
+/** Lists orders with {@link OrdersManager#getOrders}. */
 public class GetOrders {
 
     public static void main(String[] args) {

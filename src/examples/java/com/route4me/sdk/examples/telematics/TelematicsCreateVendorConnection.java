@@ -11,10 +11,7 @@ import com.route4me.sdk.services.telematics.TelematicsManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author Route4Me
- */
+/** Connects a member to a telematics vendor with {@link TelematicsManager#createTelematicsConnection}. */
 public class TelematicsCreateVendorConnection {
 
     public static void main(String[] args) {

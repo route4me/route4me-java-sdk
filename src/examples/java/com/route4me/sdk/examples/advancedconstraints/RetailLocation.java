@@ -24,6 +24,10 @@ import java.util.Iterator;
 import java.util.List;
 
 
+/**
+ * Optimizes routes that each visit a retail location (an advanced constraint with a location sequence pattern),
+ * with {@link RoutingManager#runOptimization}.
+ */
 public class RetailLocation {
 
     public static void main(String[] args) {

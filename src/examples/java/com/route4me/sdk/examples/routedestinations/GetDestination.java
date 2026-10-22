@@ -4,6 +4,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routedestinations.RouteDestinationResource;
 import com.route4me.sdk.services.routedestinations.RouteDestinationsManager;
 
+/** Gets one route destination through the V5 API with {@link RouteDestinationsManager#getDestination}. */
 public class GetDestination {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

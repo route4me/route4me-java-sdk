@@ -16,9 +16,7 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author juan
- */
+/** Optimizes one route of 10 stops with {@link RoutingManager#runOptimization}. */
 public class SingleDriverRoute10Stops {
 
     public static void main(String[] args) {

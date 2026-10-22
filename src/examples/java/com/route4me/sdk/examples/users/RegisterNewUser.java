@@ -14,10 +14,7 @@ import com.route4me.sdk.services.users.UsersManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author Route4Me
- */
+/** Registers a new account with {@link UsersManager#registerUser}, using a manager without an API key. */
 public class RegisterNewUser {
 
     public static void main(String[] args) {

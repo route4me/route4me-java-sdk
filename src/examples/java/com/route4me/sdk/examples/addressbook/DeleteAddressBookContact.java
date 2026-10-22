@@ -7,6 +7,10 @@ import com.route4me.sdk.services.addressbook.Contact;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Creates an address book contact with {@link AddressBookManager#createContact} and deletes it with
+ * {@link AddressBookManager#deleteContact}.
+ */
 public class DeleteAddressBookContact {
 
     public static void main(String[] args) {

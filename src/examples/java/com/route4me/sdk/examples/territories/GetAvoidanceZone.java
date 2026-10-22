@@ -7,8 +7,8 @@ import com.route4me.sdk.services.territories.Territory;
 import java.util.List;
 
 /**
- *
- * @author juan
+ * Takes an avoidance zone from {@link TerritoriesManager#getAvoidanceZones} and reads it with
+ * {@link TerritoriesManager#getAvoidanceZone}.
  */
 public class GetAvoidanceZone {
 

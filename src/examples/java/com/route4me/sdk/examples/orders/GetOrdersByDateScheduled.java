@@ -7,6 +7,10 @@ import com.route4me.sdk.services.orders.OrdersManager;
 
 import java.util.List;
 
+/**
+ * Lists the orders scheduled for a date ({@code OrderRequest.setDateScheduled}) with
+ * {@link OrdersManager#getOrders}.
+ */
 public class GetOrdersByDateScheduled {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

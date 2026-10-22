@@ -7,6 +7,10 @@ import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.services.activities.ActivityRequest;
 import com.route4me.sdk.services.activities.ActivityType;
 
+/**
+ * Lists the destinations moved to another route ({@code ActivityType.MOVE_DESTINATION}) with {@link
+ * ActivityManager#getActivities}.
+ */
 public class GetDestinationMovedActivities {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

@@ -19,7 +19,8 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * @author juan
+ * Optimizes routes that bundle the stops with the same value of a custom field, with {@link
+ * RoutingManager#runOptimization}.
  */
 public class BundlingUsingCustomField {
 
@@ -34,7 +35,6 @@ public class BundlingUsingCustomField {
         parameters.setShareRoute(Boolean.FALSE);
         parameters.setRouteName("Single Depot, Multiple Driver, Bundling Any Custom Field");
         parameters.setTravelMode(TravelMode.DRIVING.toString());
-
 
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
@@ -61,9 +61,7 @@ public class BundlingUsingCustomField {
         addresses.add(address2);
         addresses.add(address3);
 
-
         optParameters.setAddresses(addresses);
-
 
         Bundling bundling = new Bundling();
 
@@ -86,13 +84,7 @@ public class BundlingUsingCustomField {
         bundling.setServiceTimeRules(serviceTimeRules);
         parameters.setBundling(bundling);
 
-
         optParameters.setParameters(parameters);
-
-
-
-
-
 
         try {
             DataObject responseObject = manager.runOptimization(optParameters);

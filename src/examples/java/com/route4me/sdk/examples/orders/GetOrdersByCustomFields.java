@@ -8,6 +8,7 @@ import com.route4me.sdk.services.orders.OrdersManager;
 
 import java.util.List;
 
+/** Lists orders with only some fields ({@code OrderRequest.setFields}) with {@link OrdersManager#getOrders}. */
 public class GetOrdersByCustomFields {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

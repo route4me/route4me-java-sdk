@@ -5,6 +5,7 @@ import com.route4me.sdk.services.routestatus.RouteStatusHistoryData;
 import com.route4me.sdk.services.routestatus.RouteStatusHistoryResponse;
 import com.route4me.sdk.services.routestatus.RouteStatusManager;
 
+/** Lists the status changes of a route with {@link RouteStatusManager#getRouteStatusHistory}. */
 public class GetRouteStatusHistory {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

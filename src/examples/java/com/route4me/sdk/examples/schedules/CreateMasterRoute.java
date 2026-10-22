@@ -5,6 +5,7 @@ import com.route4me.sdk.services.schedules.CreateMasterRouteRequest;
 import com.route4me.sdk.services.schedules.CreateMasterRouteResponse;
 import com.route4me.sdk.services.schedules.SchedulesManager;
 
+/** Makes a route the master route of a new schedule with {@link SchedulesManager#createMasterRoute}. */
 public class CreateMasterRoute {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

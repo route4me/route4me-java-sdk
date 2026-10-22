@@ -8,6 +8,10 @@ import com.route4me.sdk.services.routing.RoutingManager;
 
 import java.util.List;
 
+/**
+ * Finds an address of a route, reads it with {@link RoutingManager#getAddress} and changes it with
+ * {@link RoutingManager#updateAddressAttribute}.
+ */
 public class UpdateAddressAttribute {
 
     public static void main(String[] args) {

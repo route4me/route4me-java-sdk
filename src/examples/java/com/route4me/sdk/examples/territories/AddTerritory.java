@@ -10,10 +10,7 @@ import com.route4me.sdk.services.territories.TerritoryData;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- *
- * @author juan
- */
+/** Creates a territory with {@link TerritoriesManager#addTerritory}. */
 public class AddTerritory {
     public static void main(String[] args) throws APIException {
         String apiKey = System.getenv("R4M_API_KEY");
@@ -54,7 +51,6 @@ public class AddTerritory {
         System.out.println(responseObject.toString());
         System.out.println();
 
-
         List<String> circleTerritoryDataList = new ArrayList<>();
         circleTerritoryDataList.add("37.569752822786455,-77.47833251953125");
         circleTerritoryDataList.add("5000");
@@ -70,8 +66,6 @@ public class AddTerritory {
         System.out.println("Circle Territory");
         System.out.println(responseObject.toString());
         System.out.println();
-
-
 
     }
 

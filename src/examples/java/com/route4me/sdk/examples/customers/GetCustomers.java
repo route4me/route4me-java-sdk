@@ -6,6 +6,7 @@ import com.route4me.sdk.services.customers.CustomerListResource;
 import com.route4me.sdk.services.customers.CustomerListResponse;
 import com.route4me.sdk.services.customers.CustomerManager;
 
+/** Lists customers with {@link CustomerManager#getCustomersList}. */
 public class GetCustomers {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

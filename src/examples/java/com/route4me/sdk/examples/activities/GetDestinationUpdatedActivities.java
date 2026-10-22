@@ -7,6 +7,9 @@ import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.services.activities.ActivityRequest;
 import com.route4me.sdk.services.activities.ActivityType;
 
+/**
+ * Lists the destinations changed ({@code ActivityType.UPDATE_DESTINATIONS}) with {@link ActivityManager#getActivities}.
+ */
 public class GetDestinationUpdatedActivities {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

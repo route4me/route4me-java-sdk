@@ -12,10 +12,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author Route4Me
- */
+/** Lists the telematics connections of a member with {@link TelematicsManager#getTelematicsConnections}. */
 public class TelematicsGetConnections {
 
     public static void main(String[] args) {

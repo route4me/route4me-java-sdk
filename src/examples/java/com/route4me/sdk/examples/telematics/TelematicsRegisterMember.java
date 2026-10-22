@@ -12,8 +12,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author Route4Me
+ * Registers a member for telematics with {@link TelematicsManager#registerMember}, which returns the telematics
+ * API token of the member.
  */
 public class TelematicsRegisterMember {
 

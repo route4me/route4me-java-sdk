@@ -24,6 +24,10 @@ import java.util.Iterator;
 import java.util.List;
 
 
+/**
+ * Optimizes routes for driver groups with tags when some stops have no tag, with {@link
+ * RoutingManager#runOptimization}.
+ */
 public class SomeAddressesWithoutTags {
 
     public static void main(String[] args) {

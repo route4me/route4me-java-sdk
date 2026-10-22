@@ -4,6 +4,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.schedules.ScheduleList;
 import com.route4me.sdk.services.schedules.SchedulesManager;
 
+/** Deletes a schedule with {@link SchedulesManager#deleteSchedule}. */
 public class DeleteSchedule {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

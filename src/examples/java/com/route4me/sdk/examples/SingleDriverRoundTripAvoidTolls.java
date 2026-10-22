@@ -18,6 +18,10 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Optimizes one round-trip route that avoids toll roads ({@code Constants.Avoid.TOLLS}) with {@link
+ * RoutingManager#runOptimization}.
+ */
 public class SingleDriverRoundTripAvoidTolls {
 
     public static void main(String[] args) {

@@ -13,7 +13,8 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.List;
 
 /**
- * @author juan
+ * Adds a note to a destination of a route with {@link NotesManager#addAddressNotes}, after finding the route
+ * with {@link RoutingManager#getRoutes} and {@link RoutingManager#getRoute}.
  */
 public class AddAddressNotes {
 

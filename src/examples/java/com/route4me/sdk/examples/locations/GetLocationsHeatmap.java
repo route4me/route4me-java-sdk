@@ -5,6 +5,7 @@ import com.route4me.sdk.services.locations.LocationHeatmapCollection;
 import com.route4me.sdk.services.locations.LocationHeatmapRequest;
 import com.route4me.sdk.services.locations.LocationManager;
 
+/** Gets a heat map of the address book locations with {@link LocationManager#getLocationsHeatmap}. */
 public class GetLocationsHeatmap {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

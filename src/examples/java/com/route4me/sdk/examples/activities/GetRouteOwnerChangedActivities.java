@@ -7,6 +7,9 @@ import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.services.activities.ActivityRequest;
 import com.route4me.sdk.services.activities.ActivityType;
 
+/**
+ * Lists the route owner changes ({@code ActivityType.ROUTE_OWNER_CHANGED}) with {@link ActivityManager#getActivities}.
+ */
 public class GetRouteOwnerChangedActivities {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

@@ -31,8 +31,24 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Optimizes the stops of {@code locations.csv} for driver shifts in three territories whose routes also visit a
+ * retail location (a location sequence pattern), with {@link RoutingManager#runOptimization}.
+ */
 public class DriversShiftWithTerritoriesAndRetailLocation {
 
+    /**
+     * Reads the stops of a CSV file with {@link CsvRows}: each row gives the address (also its alias), the latitude,
+     * the longitude and a group, 0, 1 or 2, that gives the stop the tags of the first, second or third list. If
+     * the file cannot be read, the error is logged and the stops read so far are returned.
+     *
+     * @param filename the path of the CSV file
+     * @param territory1 the tags of the stops of group 0
+     * @param territory2 the tags of the stops of group 1
+     * @param territory3 the tags of the stops of group 2
+     * @param serviceTime not used
+     * @return the stops
+     */
     public static List<Address> readAddressesFromCSV(String filename, List<String> territory1, List<String> territory2,
             List<String> territory3, Integer serviceTime) {
         List<Address> addresses = new ArrayList<>();

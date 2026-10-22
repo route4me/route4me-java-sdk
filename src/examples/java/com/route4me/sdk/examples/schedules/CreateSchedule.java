@@ -5,6 +5,7 @@ import com.route4me.sdk.services.schedules.Schedule;
 import com.route4me.sdk.services.schedules.ScheduleList;
 import com.route4me.sdk.services.schedules.SchedulesManager;
 
+/** Creates a schedule of recurring routes with {@link SchedulesManager#createSchedule}. */
 public class CreateSchedule {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

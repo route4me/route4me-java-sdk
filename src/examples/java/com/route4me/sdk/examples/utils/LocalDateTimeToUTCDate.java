@@ -26,8 +26,8 @@ package com.route4me.sdk.examples.utils;
 import com.route4me.sdk.utils.DateTimeUtils;
 
 /**
- *
- * @author route4me
+ * Converts a local date and time to the UTC date the route API takes, with
+ * {@link com.route4me.sdk.utils.DateTimeUtils#localDateTimeToUTCParser}. It sends no request.
  */
 public class LocalDateTimeToUTCDate {
 

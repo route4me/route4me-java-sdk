@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author juan
+ * Optimizes one route of 10 stops with a route date and start time computed from a local date and time, with
+ * {@link RoutingManager#runOptimization}.
  */
 public class SingleDriverRoute10StopsRouteDateTime {
 
@@ -46,7 +47,6 @@ public class SingleDriverRoute10StopsRouteDateTime {
 
         OffsetDateTime routeDateInstanceAtOffset = OffsetDateTime.parse(routeDateString, dateTimeFormatter);
         OffsetDateTime routeTimeInstanceAtOffset = OffsetDateTime.parse(routeTimeString, dateTimeFormatter);
-
 
         OffsetDateTime routeDateInstanceAtUTC = routeDateInstanceAtOffset.withOffsetSameInstant(ZoneOffset.UTC);
         OffsetDateTime routeTimeInstanceAtUTC = routeTimeInstanceAtOffset.withOffsetSameInstant(ZoneOffset.UTC);

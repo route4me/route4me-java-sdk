@@ -17,6 +17,11 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Optimizes one round-trip route with {@link RoutingManager#runOptimization}, with a manager that refuses redirects and
+ * gives a
+ * callback URL ({@code optimized_callback_url}) for the API to call when the optimization finishes.
+ */
 public class SingleDriverRoundTripAsyncCallBackURL {
 
     public static void main(String[] args) {

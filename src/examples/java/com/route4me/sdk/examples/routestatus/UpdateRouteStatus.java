@@ -5,6 +5,7 @@ import com.route4me.sdk.services.routestatus.RouteStatusManager;
 import com.route4me.sdk.services.routestatus.RouteStatusRequest;
 import com.route4me.sdk.services.routestatus.RouteStatusResponse;
 
+/** Changes the status of a route with {@link RouteStatusManager#updateRouteStatus}. */
 public class UpdateRouteStatus {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

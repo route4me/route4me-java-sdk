@@ -6,6 +6,7 @@ import com.route4me.sdk.services.routecustomdata.RouteCustomDataManager;
 import java.util.HashMap;
 import java.util.Map;
 
+/** Replaces the custom data of a route with {@link RouteCustomDataManager#updateRouteCustomData}. */
 public class UpdateRouteCustomData {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

@@ -11,10 +11,7 @@ import com.route4me.sdk.services.users.UsersManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author juan
- */
+/** Reads a user with {@link UsersManager#getUser} and changes it with {@link UsersManager#updateUser}. */
 public class UpdateUser {
 
     public static void main(String[] args) {

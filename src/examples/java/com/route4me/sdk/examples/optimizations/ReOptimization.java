@@ -10,7 +10,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * @author route4me
+ * Takes an optimization from {@link RoutingManager#getOptimizations} and re-optimizes it with
+ * {@link RoutingManager#reOptimizationByOptimizationID}.
  */
 public class ReOptimization {
 
@@ -32,6 +33,5 @@ public class ReOptimization {
             Logger.getLogger(ReOptimization.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-
 
 }

@@ -21,7 +21,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * @author route4me
+ * Optimizes one route of 10 stops whose service time depends on their address type
+ * ({@link com.route4me.sdk.utils.ServiceTimeUtils}), with {@link RoutingManager#runOptimization}.
  */
 public class SingleDriverRouteServiceTimeByAddressType {
 

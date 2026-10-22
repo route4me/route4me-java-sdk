@@ -9,7 +9,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * @author juan
+ * Takes a territory from {@link TerritoriesManager#getTerritories} and reads it with its addresses with
+ * {@link TerritoriesManager#getAddressesInTerritory}.
  */
 public class GetAddressesInTerritory {
 

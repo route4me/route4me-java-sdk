@@ -10,8 +10,7 @@ import com.route4me.sdk.services.vehicles.Vehicles;
 import com.route4me.sdk.services.vehicles.VehiclesManager;
 
 /**
- *
- * @author juan
+ * Reads a vehicle with {@link VehiclesManager#getVehicle} and changes it with {@link VehiclesManager#updateVehicle}.
  */
 public class UpdateVehicle {
     public static void main(String[] args) {

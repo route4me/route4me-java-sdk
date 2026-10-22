@@ -31,10 +31,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author route4me
- */
+/** Adds a stop to a route at a chosen sequence number with {@link RoutingManager#addAddressesToRoute}. */
 public class InsertStopAtDesiredPosition {
 
     public static void main(String[] args) {

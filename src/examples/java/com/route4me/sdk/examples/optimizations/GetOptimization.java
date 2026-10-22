@@ -8,7 +8,8 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.List;
 
 /**
- * @author juan
+ * Takes an optimization from {@link RoutingManager#getOptimizations} and reads it with its routes with
+ * {@link RoutingManager#getOptimization}.
  */
 public class GetOptimization {
 
@@ -26,6 +27,5 @@ public class GetOptimization {
             e.printStackTrace();
         }
     }
-
 
 }

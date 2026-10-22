@@ -5,6 +5,7 @@ import com.route4me.sdk.services.podworkflow.PodWorkflow;
 import com.route4me.sdk.services.podworkflow.PodWorkflowManager;
 import com.route4me.sdk.services.podworkflow.PodWorkflowResponse;
 
+/** Creates a proof-of-delivery workflow with {@link PodWorkflowManager#createPodWorkflow}. */
 public class CreatePodWorkflow {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

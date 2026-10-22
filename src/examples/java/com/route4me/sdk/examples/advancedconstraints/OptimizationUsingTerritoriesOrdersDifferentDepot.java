@@ -25,12 +25,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author juan
+ * Reads the orders of three territories with {@link TerritoriesManager#getOrdersInTerritory} and optimizes
+ * routes for one driver group per territory, each from its own depot, with {@link RoutingManager#runOptimization}.
  */
 public class OptimizationUsingTerritoriesOrdersDifferentDepot {
-
-
 
     public static void main(String[] args) {
         try {
@@ -45,7 +43,6 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
 
             TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
 
-
             Parameters parameters = new Parameters();
             parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
             parameters.setStoreRoute(Boolean.FALSE);
@@ -56,14 +53,11 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
             parameters.setTravelMode(TravelMode.DRIVING.toString());
             optParameters.setParameters(parameters);
 
-
             // Territories
             // **********************
             List<String> zone1 = Arrays.asList("477FF1EB618FDE5C1CA85292B2A6DE92");
             List<String> zone2 = Arrays.asList("2A6E027E74A3623762BEA3D6E94B643E");
             List<String> zone3 = Arrays.asList("C8B7DEFFC4C42AB7674EA27CBC607B3F");
-
-
 
             List<Address> addresses = new ArrayList<>();
 
@@ -103,7 +97,6 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
             timeWindowsSchedule1.add(timeWindowSchedule1);
             schedule1.setAvailableTimeWindows(timeWindowsSchedule1);
 
-
             // Schedule 2
             // Time Window Start:  8:00 am EST
             // Time Window End:   12:00 pm EST
@@ -116,7 +109,6 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
             List<Integer> timeWindowSchedule2 = Arrays.asList((8 + 5) * 3600, (12 + 5) * 3600);
             timeWindowsSchedule2.add(timeWindowSchedule2);
             schedule2.setAvailableTimeWindows(timeWindowsSchedule2);
-
 
             // Schedule 3
             // Time Window Start:  8:00 am EST
@@ -131,7 +123,6 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
             List<Integer> timeWindowSchedule3 = Arrays.asList((8 + 5) * 3600, (13 + 5) * 3600);
             timeWindowsSchedule3.add(timeWindowSchedule3);
             schedule3.setAvailableTimeWindows(timeWindowsSchedule3);
-
 
             // Schedules registration
             List<AdvancedConstraints> advancedConstraints = Arrays.asList(schedule1, schedule2, schedule3);

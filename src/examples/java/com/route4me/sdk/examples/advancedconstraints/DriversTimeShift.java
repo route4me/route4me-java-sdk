@@ -25,6 +25,10 @@ import java.util.Iterator;
 import java.util.List;
 
 
+/**
+ * Optimizes routes for drivers on different shifts (advanced constraints with time windows), with {@link
+ * RoutingManager#runOptimization}.
+ */
 public class DriversTimeShift {
 
     //**********************************************************************

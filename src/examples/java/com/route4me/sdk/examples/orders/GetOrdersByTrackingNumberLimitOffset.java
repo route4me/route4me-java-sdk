@@ -9,6 +9,7 @@ import java.util.Arrays;
 
 import java.util.List;
 
+/** Finds orders by tracking number, one page at a time, with {@link OrdersManager#getOrdersByTrackingNumber}. */
 public class GetOrdersByTrackingNumberLimitOffset {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

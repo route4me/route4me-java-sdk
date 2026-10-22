@@ -18,6 +18,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+/**
+ * Optimizes routes with several breaks per driver ({@code Parameters.setBreaks}) with {@link
+ * RoutingManager#runOptimization}.
+ */
 public class MultipleBreaksOptimization {
 
     public static void main(String[] args) {

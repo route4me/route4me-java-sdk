@@ -18,7 +18,8 @@ import java.util.Iterator;
 import java.util.List;
 
 /**
- * @author juan
+ * Optimizes a route of joint pickups and dropoffs ({@code Address.setJoint}) with {@link
+ * RoutingManager#runOptimization}.
  */
 public class PickupDropoffJoint {
 

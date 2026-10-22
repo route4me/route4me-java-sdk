@@ -14,6 +14,7 @@ import java.util.List;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+/** Geocodes a list of addresses in parallel with {@link GeocodingManager#bulkGeocoder}, and logs the time it took. */
 public class ThreadBasedGeocoderExample {
 
     private static final Logger LOGGER = LogManager.getLogger(ThreadBasedGeocoderExample.class);

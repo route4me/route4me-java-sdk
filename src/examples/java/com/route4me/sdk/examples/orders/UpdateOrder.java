@@ -5,6 +5,7 @@ import com.route4me.sdk.services.orders.Order;
 import com.route4me.sdk.services.orders.OrdersManager;
 
 
+/** Reads an order with {@link OrdersManager#getOrder} and changes it with {@link OrdersManager#updateOrder}. */
 public class UpdateOrder {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

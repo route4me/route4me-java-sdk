@@ -5,6 +5,7 @@ import com.route4me.sdk.services.orders.GeoPoint;
 import com.route4me.sdk.services.orders.OrderManagerV5;
 import com.route4me.sdk.services.orders.OrderV5;
 
+/** Creates an order through the V5 order platform with {@link OrderManagerV5#createOrder}. */
 public class CreateOrderV5 {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

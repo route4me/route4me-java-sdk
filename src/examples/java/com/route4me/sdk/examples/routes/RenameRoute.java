@@ -9,10 +9,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.RouteRenamedStatus;
 import com.route4me.sdk.services.routing.RoutingManager;
 
-/**
- *
- * @author Route4Me
- */
+/** Renames a route with {@link RoutingManager#renameRoute}. */
 public class RenameRoute {
 
     public static void main(String[] args) {

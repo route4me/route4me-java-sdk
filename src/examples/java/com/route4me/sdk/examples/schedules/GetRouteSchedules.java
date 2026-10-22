@@ -5,6 +5,7 @@ import com.route4me.sdk.services.schedules.RouteSchedule;
 import com.route4me.sdk.services.schedules.RouteScheduleList;
 import com.route4me.sdk.services.schedules.SchedulesManager;
 
+/** Lists the route schedules with {@link SchedulesManager#getRouteSchedules}. */
 public class GetRouteSchedules {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

@@ -7,6 +7,10 @@ import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.services.activities.ActivityRequest;
 import com.route4me.sdk.services.activities.ActivityType;
 
+/**
+ * Lists the destinations of any route marked as departed ({@code ActivityType.MARK_DESTINATION_DEPARTED}) with {@link
+ * ActivityManager#getActivities}.
+ */
 public class GetDestinationMarkedAsDepartedOfAllRoutesActivities {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

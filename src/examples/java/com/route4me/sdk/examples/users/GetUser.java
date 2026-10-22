@@ -11,10 +11,7 @@ import com.route4me.sdk.services.users.UsersManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author juan
- */
+/** Gets one user with {@link UsersManager#getUser}. */
 public class GetUser {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

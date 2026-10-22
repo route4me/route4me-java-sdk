@@ -4,6 +4,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.vehicles.VehicleV5;
 import com.route4me.sdk.services.vehicles.VehiclesManagerV5;
 
+/** Creates a vehicle through the V5 API with {@link VehiclesManagerV5#createVehicle}. */
 public class CreateVehicleV5 {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

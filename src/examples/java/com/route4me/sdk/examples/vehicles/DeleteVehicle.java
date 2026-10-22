@@ -9,10 +9,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.vehicles.Vehicles;
 import com.route4me.sdk.services.vehicles.VehiclesManager;
 
-/**
- *
- * @author juan
- */
+/** Deletes a vehicle with {@link VehiclesManager#deleteVehicle}. */
 public class DeleteVehicle {
 
     public static void main(String[] args) {
@@ -26,7 +23,5 @@ public class DeleteVehicle {
             e.printStackTrace();
         }
     }
-
-
 
 }

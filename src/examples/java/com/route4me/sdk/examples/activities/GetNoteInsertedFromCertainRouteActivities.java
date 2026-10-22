@@ -7,6 +7,7 @@ import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.services.activities.ActivityRequest;
 import com.route4me.sdk.services.activities.ActivityType;
 
+/** Lists the notes added to one route ({@code ActivityType.NOTE_INSERT}) with {@link ActivityManager#getActivities}. */
 public class GetNoteInsertedFromCertainRouteActivities {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

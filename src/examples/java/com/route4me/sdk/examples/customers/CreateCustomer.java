@@ -8,6 +8,7 @@ import com.route4me.sdk.services.customers.CustomerStoreRequest;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Creates a customer with {@link CustomerManager#createCustomer}. */
 public class CreateCustomer {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

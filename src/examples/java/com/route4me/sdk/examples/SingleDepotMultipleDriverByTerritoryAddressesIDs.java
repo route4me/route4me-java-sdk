@@ -23,12 +23,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author juan
+ * Reads the address book contacts of a territory with {@link TerritoriesManager#getAddressesInTerritory} and
+ * optimizes routes from one depot for several drivers to them, with {@link RoutingManager#runOptimization}.
  */
 public class SingleDepotMultipleDriverByTerritoryAddressesIDs {
-
-
 
     public static void main(String[] args) {
         try {
@@ -37,7 +35,6 @@ public class SingleDepotMultipleDriverByTerritoryAddressesIDs {
             OptimizationParameters optParameters = new OptimizationParameters();
 
             TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
-
 
             Parameters parameters = new Parameters();
             parameters.setAlgorithmType(AlgorithmType.CVRP_TW_SD.getValue());
@@ -49,9 +46,7 @@ public class SingleDepotMultipleDriverByTerritoryAddressesIDs {
             parameters.setTravelMode(TravelMode.DRIVING.toString());
             optParameters.setParameters(parameters);
 
-
             List<Address> addresses = new ArrayList<>();
-
 
             Territory territory = territoriesManager.getAddressesInTerritory("04F6ADD89DB67371E9008A6688B750C0");
             for (Integer contactId:  territory.getAddresses()) {

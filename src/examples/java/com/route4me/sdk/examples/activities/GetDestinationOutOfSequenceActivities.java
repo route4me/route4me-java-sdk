@@ -7,6 +7,10 @@ import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.services.activities.ActivityRequest;
 import com.route4me.sdk.services.activities.ActivityType;
 
+/**
+ * Lists the destinations visited out of sequence ({@code ActivityType.DESTINATION_OUT_SEQUENCE}) with {@link
+ * ActivityManager#getActivities}.
+ */
 public class GetDestinationOutOfSequenceActivities {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

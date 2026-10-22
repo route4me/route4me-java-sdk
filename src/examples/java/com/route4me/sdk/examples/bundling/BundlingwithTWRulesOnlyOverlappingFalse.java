@@ -15,6 +15,10 @@ import com.route4me.sdk.services.routing.TimeWindowRules;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Optimizes routes that bundle stops whatever their time windows ({@code bundle_only_overlapping} false), with
+ * {@link RoutingManager#runOptimization}.
+ */
 public class BundlingwithTWRulesOnlyOverlappingFalse {
 
     public static void main(String[] args) {

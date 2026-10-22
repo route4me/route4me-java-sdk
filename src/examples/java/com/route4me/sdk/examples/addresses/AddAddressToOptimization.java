@@ -12,6 +12,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Optimizes a route with {@link RoutingManager#runOptimization}, then adds addresses to the optimization and
+ * re-optimizes it with
+ * {@link RoutingManager#reOptimization}.
+ */
 public class AddAddressToOptimization {
 
     public static void main(String[] args) {

@@ -9,7 +9,8 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.List;
 
 /**
- * @author juan
+ * Takes several routes from {@link RoutingManager#getRoutes} and deletes them in one request with
+ * {@link RoutingManager#deleteRoutes}.
  */
 public class DeleteRoutes {
 

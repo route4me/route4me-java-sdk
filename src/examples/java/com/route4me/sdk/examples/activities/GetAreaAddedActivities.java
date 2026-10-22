@@ -7,6 +7,7 @@ import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.services.activities.ActivityRequest;
 import com.route4me.sdk.services.activities.ActivityType;
 
+/** Lists the territories added ({@code ActivityType.AREA_ADDED}) with {@link ActivityManager#getActivities}. */
 public class GetAreaAddedActivities {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

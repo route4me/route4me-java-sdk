@@ -8,6 +8,10 @@ import java.util.ArrayList;
 
 import java.util.List;
 
+/**
+ * Lists the routes of a period ({@code RoutesRequest.setStartDate}, {@code setEndDate}) with
+ * {@link RoutingManager#getRoutes}.
+ */
 public class GetRoutesbyDate {
 
     public static void main(String[] args) {

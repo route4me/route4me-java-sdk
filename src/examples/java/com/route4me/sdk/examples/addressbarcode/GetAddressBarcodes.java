@@ -5,6 +5,7 @@ import com.route4me.sdk.services.addressbarcode.AddressBarcodeManager;
 import com.route4me.sdk.services.addressbarcode.BarcodeDataResponse;
 import com.route4me.sdk.services.addressbarcode.GetAddressBarcodesResponse;
 
+/** Lists the barcodes scanned at a route destination with {@link AddressBarcodeManager#getAddressBarcodes}. */
 public class GetAddressBarcodes {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

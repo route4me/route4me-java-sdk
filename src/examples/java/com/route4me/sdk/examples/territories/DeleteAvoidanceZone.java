@@ -9,6 +9,10 @@ import com.route4me.sdk.services.territories.TerritoryData;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Creates an avoidance zone with {@link TerritoriesManager#addAvoidanceZone} and deletes it with
+ * {@link TerritoriesManager#deleteAvoidanceZone}.
+ */
 public class DeleteAvoidanceZone {
 
     public static void main(String[] args) throws APIException {

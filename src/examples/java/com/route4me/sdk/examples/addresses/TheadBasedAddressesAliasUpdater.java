@@ -43,8 +43,8 @@ import java.util.logging.Logger;
 import org.apache.logging.log4j.LogManager;
 
 /**
- *
- * @author route4me
+ * Renames every address of a route in parallel: each task gives an address a random alias with
+ * {@link RoutingManager#updateAddressAttribute}, after the route is read with {@link RoutingManager#getRoute}.
  */
 public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
 
@@ -54,6 +54,13 @@ public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
     protected static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(
             TheadBasedAddressesAliasUpdater.class);
 
+    /**
+     * Creates the task that renames one address.
+     *
+     * @param manager the manager that sends the update
+     * @param routeID the route of the address
+     * @param address the address
+     */
     public TheadBasedAddressesAliasUpdater(RoutingManager manager, String routeID, Address address) {
 
         this.manager = manager;

@@ -6,6 +6,7 @@ import com.route4me.sdk.services.addressbook.BatchCreateContactsRequest;
 import com.route4me.sdk.services.addressbook.StatusResponse;
 import java.util.ArrayList;
 import java.util.List;
+/** Creates several address book contacts at once with {@link AddressBookManagerV5#batchCreateContacts}. */
 public class BatchCreateContactsV5 {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

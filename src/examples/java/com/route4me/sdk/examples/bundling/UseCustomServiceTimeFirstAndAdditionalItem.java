@@ -17,7 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author juan
+ * Optimizes routes that bundle stops with custom service times for the first and the other stops of a bundle,
+ * with {@link RoutingManager#runOptimization}.
  */
 public class UseCustomServiceTimeFirstAndAdditionalItem {
 
@@ -52,10 +53,7 @@ public class UseCustomServiceTimeFirstAndAdditionalItem {
         bundling.setServiceTimeRules(serviceTimeRules);
         parameters.setBundling(bundling);
 
-
         optParameters.setParameters(parameters);
-
-
 
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));

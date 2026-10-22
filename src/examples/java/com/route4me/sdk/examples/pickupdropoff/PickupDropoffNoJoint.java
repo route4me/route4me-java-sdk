@@ -17,9 +17,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 
-/**
- * @author juan
- */
+/** Optimizes a route of pickups and dropoffs that are not joint, with {@link RoutingManager#runOptimization}. */
 public class PickupDropoffNoJoint {
 
     public static void main(String[] args) {

@@ -5,6 +5,7 @@ import com.route4me.sdk.services.optimizationprofile.OptimizationProfile;
 import com.route4me.sdk.services.optimizationprofile.OptimizationProfileManager;
 import com.route4me.sdk.services.optimizationprofile.OptimizationProfilesResponse;
 
+/** Lists the optimization profiles with {@link OptimizationProfileManager#getOptimizationProfiles}. */
 public class GetOptimizationProfiles {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

@@ -6,9 +6,7 @@ import com.route4me.sdk.services.users.UsersManager;
 
 import java.util.List;
 
-/**
- * @author juan
- */
+/** Lists the users of the account with {@link UsersManager#getUsers}. */
 public class GetUsers {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

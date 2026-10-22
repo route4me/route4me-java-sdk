@@ -8,8 +8,8 @@ import com.route4me.sdk.services.territories.Territory;
 import java.util.List;
 
 /**
- *
- * @author juan
+ * Takes a territory from {@link TerritoriesManager#getTerritories} and reads it with
+ * {@link TerritoriesManager#getTerritory}.
  */
 public class GetTerritory {
 

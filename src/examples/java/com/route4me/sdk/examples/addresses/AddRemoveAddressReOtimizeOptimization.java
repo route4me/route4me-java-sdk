@@ -13,6 +13,11 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Optimizes a route, adds addresses and re-optimizes ({@link RoutingManager#reOptimization}), removes an address
+ * ({@link RoutingManager#deleteAddressFromOptimization}), re-optimizes by ID
+ * ({@link RoutingManager#reOptimizationByOptimizationID}) and adds more addresses.
+ */
 public class AddRemoveAddressReOtimizeOptimization {
 
     public static void main(String[] args) {

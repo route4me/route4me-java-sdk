@@ -22,19 +22,15 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
- * @author juan
+ * Optimizes routes that avoid left turns ({@code Constants.LeftTurn.LEFTTURN_FORBID}) with {@link
+ * RoutingManager#runOptimization}.
  */
 public class SingleDepotMultipleDriverLeftTurn {
-
-
 
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey, true);
         OptimizationParameters optParameters = new OptimizationParameters();
-
-
 
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.CVRP_TW_SD.getValue());
@@ -53,8 +49,6 @@ public class SingleDepotMultipleDriverLeftTurn {
         parameters.setLeftTurn(Constants.LeftTurn.LEFTTURN_FORBID.getValue());
         optParameters.setParameters(parameters);
 
-
-
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
         addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215", 38.202496, -85.786514, 300));
@@ -67,10 +61,7 @@ public class SingleDepotMultipleDriverLeftTurn {
         addresses.add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300));
         addresses.add(new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214", 38.162472, -85.792854, 300));
 
-
         optParameters.setAddresses(addresses);
-
-
 
         try {
             DataObject responseObject = manager.runOptimization(optParameters);

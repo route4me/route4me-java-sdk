@@ -5,10 +5,7 @@ import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.routing.Route;
 import com.route4me.sdk.services.routing.RoutingManager;
 
-
-/**
- * @author Route4Me
- */
+/** Renames a route and assigns it a driver in one {@link RoutingManager#updateRoute} call. */
 public class UpdateRouteNameDriver {
 
     public static void main(String[] args) {

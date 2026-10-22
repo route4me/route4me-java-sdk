@@ -8,7 +8,8 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.List;
 
 /**
- * @author juan
+ * Takes a route ({@link RoutingManager#getRoutes}, {@link RoutingManager#getRoute}) and changes it with
+ * {@link RoutingManager#updateRoute}.
  */
 public class UpdateRoute {
 
@@ -28,6 +29,5 @@ public class UpdateRoute {
         }
 
     }
-
 
 }

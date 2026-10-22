@@ -24,6 +24,10 @@ import java.util.Iterator;
 import java.util.List;
 
 
+/**
+ * Optimizes 99 stops in three zones for three driver schedules (advanced constraints with tags and time windows),
+ * with {@link RoutingManager#runOptimization}.
+ */
 public class DriversScheduleswithTerritoriesV4 {
 
     /** The stops: alias, latitude, longitude and zone (1 to 3). */

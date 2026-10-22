@@ -4,6 +4,7 @@ import com.route4me.sdk.services.addressbook.AddressBookContactV5;
 import com.route4me.sdk.services.addressbook.AddressBookContactsBodyRequest;
 import com.route4me.sdk.services.addressbook.AddressBookContactsResponse;
 import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
+/** Lists address book contacts one page at a time with {@link AddressBookManagerV5#getContactsPaginated}. */
 public class GetContactsV5 {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

@@ -12,10 +12,7 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author juan
- */
+/** Lists the address book contacts that are depots with {@link AddressBookManager#getDepotsFromAddressBook}. */
 public class GetDepotsFromAddressBook {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

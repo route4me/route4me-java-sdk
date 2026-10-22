@@ -7,6 +7,10 @@ import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.services.activities.ActivityRequest;
 import com.route4me.sdk.services.activities.ActivityType;
 
+/**
+ * Lists the destinations removed from routes ({@code ActivityType.DELETE_DESTINATION}) with {@link
+ * ActivityManager#getActivities}.
+ */
 public class GetDestinationDeletedActivities {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

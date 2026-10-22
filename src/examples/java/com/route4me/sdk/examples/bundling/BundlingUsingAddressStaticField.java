@@ -17,7 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author juan
+ * Optimizes routes that bundle the stops with the same value of an address field, with {@link
+ * RoutingManager#runOptimization}.
  */
 public class BundlingUsingAddressStaticField {
 
@@ -57,7 +58,6 @@ public class BundlingUsingAddressStaticField {
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ANY_STATIC_ADDRESS_FIELD.getValue());
 
         bundling.setMergeMode(BundlingEnum.BundledItemsMode.KEEP_AS_SEPARATE_DESTINATIONS.getValue());
-
 
         List<String> modeParams = new ArrayList<>();
         modeParams.add("Alias");

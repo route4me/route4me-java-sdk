@@ -6,6 +6,7 @@ import com.route4me.sdk.services.activities.ActivityManager;
 import com.route4me.sdk.services.activities.ActivityRequest;
 import com.route4me.sdk.services.activities.ActivityType;
 
+/** Lists the territories removed ({@code ActivityType.AREA_REMOVED}) with {@link ActivityManager#getActivities}. */
 public class GetAreaRemovedActivities {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

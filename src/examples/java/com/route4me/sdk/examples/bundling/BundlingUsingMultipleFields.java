@@ -40,8 +40,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- *
- * @author route4me
+ * Optimizes routes that bundle the stops with the same values of two custom fields, with {@link
+ * RoutingManager#runOptimization}.
  */
 public class BundlingUsingMultipleFields {
 

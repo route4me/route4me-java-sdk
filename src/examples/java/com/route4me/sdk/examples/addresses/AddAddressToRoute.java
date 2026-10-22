@@ -8,6 +8,10 @@ import com.route4me.sdk.services.routing.RoutingManager;
 
 import java.util.List;
 
+/**
+ * Finds a route ({@link RoutingManager#getRoutes}, {@link RoutingManager#getRoute}) and adds an address to it with
+ * {@link RoutingManager#addAddressesToRoute}.
+ */
 public class AddAddressToRoute {
 
     public static void main(String[] args) {

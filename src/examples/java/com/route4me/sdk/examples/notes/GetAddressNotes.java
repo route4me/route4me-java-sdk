@@ -11,7 +11,8 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.List;
 
 /**
- * @author juan
+ * Reads the notes of a destination of a route with {@link NotesManager#getAddressNotes}, after finding the route
+ * with {@link RoutingManager#getRoutes} and {@link RoutingManager#getRoute}.
  */
 public class GetAddressNotes {
 

@@ -4,6 +4,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routestatus.RouteStatusManager;
 import com.route4me.sdk.services.routestatus.RouteStatusResponse;
 
+/** Gets the status of a route with {@link RouteStatusManager#getRouteStatus}. */
 public class GetRouteStatus {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

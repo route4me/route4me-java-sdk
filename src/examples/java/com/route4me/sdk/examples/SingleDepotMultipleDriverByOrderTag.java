@@ -23,12 +23,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author juan
+ * Finds the orders with a custom data value with {@link OrdersManager#getOrdersByCustomField} and optimizes routes
+ * from one depot for several drivers to them, with {@link RoutingManager#runOptimization}.
  */
 public class SingleDepotMultipleDriverByOrderTag {
-
-
 
     public static void main(String[] args) {
         try {

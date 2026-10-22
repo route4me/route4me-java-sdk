@@ -17,8 +17,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- *
- * @author Route4Me
+ * Predicts how long an optimization of one depot and several drivers will take, with
+ * {@link PredictOptimizationTimeManager#runOptimizationPrediction}.
  */
 public class PredictOptimizationTimeExample1 {
 
@@ -68,7 +68,5 @@ public class PredictOptimizationTimeExample1 {
             e.printStackTrace();
         }
     }
-
-
 
 }

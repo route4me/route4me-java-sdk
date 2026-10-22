@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author route4me
+ * Optimizes routes balanced by the number of destinations ({@code Parameters.setBalance}) with {@link
+ * RoutingManager#runOptimization}.
  */
 public class BalancedRoute {
 

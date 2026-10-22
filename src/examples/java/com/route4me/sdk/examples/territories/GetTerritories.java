@@ -6,9 +6,7 @@ import com.route4me.sdk.services.territories.Territory;
 
 import java.util.List;
 
-/**
- * @author juan
- */
+/** Lists the territories with {@link TerritoriesManager#getTerritories}. */
 public class GetTerritories {
 
     public static void main(String[] args) {

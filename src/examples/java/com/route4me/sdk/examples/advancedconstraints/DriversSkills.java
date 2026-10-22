@@ -24,6 +24,10 @@ import java.util.Iterator;
 import java.util.List;
 
 
+/**
+ * Optimizes routes where stops need driver skills (advanced constraints with tags), with {@link
+ * RoutingManager#runOptimization}.
+ */
 public class DriversSkills {
 
     //**********************************************************************

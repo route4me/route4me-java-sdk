@@ -8,6 +8,10 @@ import com.route4me.sdk.services.routing.RoutingManager;
 
 import java.util.List;
 
+/**
+ * Moves a destination to another route, after a given destination of that route, with
+ * {@link RoutingManager#moveAddresses}.
+ */
 public class MoveAddressesToRouteAfterDestination {
 
     public static void main(String[] args) {

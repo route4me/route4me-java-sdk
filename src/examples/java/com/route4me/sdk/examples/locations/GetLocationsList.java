@@ -6,6 +6,7 @@ import com.route4me.sdk.services.locations.LocationListItem;
 import com.route4me.sdk.services.locations.LocationListResource;
 import com.route4me.sdk.services.locations.LocationManager;
 
+/** Lists the address book locations with {@link LocationManager#getLocationsList}. */
 public class GetLocationsList {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

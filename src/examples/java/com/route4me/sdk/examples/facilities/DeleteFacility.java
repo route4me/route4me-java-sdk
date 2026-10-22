@@ -4,6 +4,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.facilities.FacilityManager;
 import com.route4me.sdk.services.facilities.FacilityResource;
 
+/** Deletes a facility with {@link FacilityManager#deleteFacility}. */
 public class DeleteFacility {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

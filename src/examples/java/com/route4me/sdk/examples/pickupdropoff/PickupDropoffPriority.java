@@ -20,7 +20,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author route4me
+ * Optimizes a route of pickups and dropoffs with priorities and piece counts that avoids left turns, with
+ * {@link RoutingManager#runOptimization}.
  */
 public class PickupDropoffPriority {
 
@@ -111,7 +112,6 @@ public class PickupDropoffPriority {
         pickupAddress.setPieces(1);
         pickupAddress.addCustomField("GOOD_TYPE", "TYPE0007");
         addresses.add(pickupAddress);
-
 
         //Dropoffs
         Address dropoffAddress;

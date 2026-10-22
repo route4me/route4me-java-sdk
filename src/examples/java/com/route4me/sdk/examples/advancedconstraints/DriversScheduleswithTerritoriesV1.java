@@ -29,8 +29,23 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Optimizes the stops of {@code locations.csv} for the driver schedules of {@code schedules.csv} (50 drivers),
+ * with {@link RoutingManager#runOptimization}.
+ */
 public class DriversScheduleswithTerritoriesV1 {
 
+    /**
+     * Reads the stops of a CSV file with {@link CsvRows}: each row gives the address (also its alias), the latitude and
+     * the longitude. If the file cannot be read, the error is logged and the stops read so far are returned.
+     *
+     * @param filename the path of the CSV file
+     * @param zone1 not used
+     * @param zone2 not used
+     * @param zone3 not used
+     * @param serviceTime not used
+     * @return the stops
+     */
     public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2,
             List<String> zone3, Integer serviceTime) {
         List<Address> addresses = new ArrayList<>();

@@ -8,6 +8,10 @@ import com.route4me.sdk.services.routing.RoutingManager;
 
 import java.util.List;
 
+/**
+ * Finds an address of a route ({@link RoutingManager#getRoutes}, {@link RoutingManager#getRoute}) that is not a
+ * depot, and removes it with {@link RoutingManager#deleteAddress}.
+ */
 public class DeleteAddress {
 
     public static void main(String[] args) {

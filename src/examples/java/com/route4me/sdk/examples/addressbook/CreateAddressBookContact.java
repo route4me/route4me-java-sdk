@@ -4,6 +4,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.addressbook.AddressBookManager;
 import com.route4me.sdk.services.addressbook.Contact;
 
+/** Creates an address book contact with {@link AddressBookManager#createContact}. */
 public class CreateAddressBookContact {
 
     public static void main(String[] args) {

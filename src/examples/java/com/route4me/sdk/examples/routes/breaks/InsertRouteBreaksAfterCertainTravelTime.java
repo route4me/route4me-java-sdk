@@ -11,8 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author juan
+ * Adds a break after a given travel time to two routes with
+ * {@link RouteBreaksManager#insertBreakAfterCertainTravelTime}.
  */
 public class InsertRouteBreaksAfterCertainTravelTime {
 

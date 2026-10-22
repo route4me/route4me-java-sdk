@@ -36,8 +36,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author route4me
+ * Finds the routes where a new stop fits at the beginning ({@code InsertMode.BEGINNING_OF_ROUTE}) with
+ * {@link DynamicInsertManager#lookForNewDestination} and adds it to the best one with
+ * {@link RoutingManager#addAddressesToRoute}.
  */
 public class DynamicInsertStopBeginningOfRoute {
 

@@ -9,6 +9,10 @@ import com.route4me.sdk.services.territories.TerritoryData;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Creates a territory with {@link TerritoriesManager#addTerritory} and deletes it with
+ * {@link TerritoriesManager#deleteTerritory}.
+ */
 public class DeleteTerritory {
 
     public static void main(String[] args) throws APIException {

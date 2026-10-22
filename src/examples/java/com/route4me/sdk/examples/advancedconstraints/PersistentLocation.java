@@ -24,6 +24,10 @@ import java.util.Iterator;
 import java.util.List;
 
 
+/**
+ * Optimizes routes that all end at a fixed location (an advanced constraint with a location sequence pattern),
+ * with {@link RoutingManager#runOptimization}.
+ */
 public class PersistentLocation {
 
     public static void main(String[] args) {

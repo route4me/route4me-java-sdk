@@ -9,10 +9,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.vehicles.Vehicles;
 import com.route4me.sdk.services.vehicles.VehiclesManager;
 
-/**
- *
- * @author juan
- */
+/** Creates a vehicle with {@link VehiclesManager#newVehicle}. */
 public class NewVehicle {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

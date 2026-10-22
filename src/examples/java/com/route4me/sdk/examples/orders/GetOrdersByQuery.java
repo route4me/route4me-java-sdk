@@ -8,6 +8,7 @@ import com.route4me.sdk.services.orders.OrdersManager;
 
 import java.util.List;
 
+/** Searches orders by text ({@code OrderRequest.setQuery}) with {@link OrdersManager#getOrders}. */
 public class GetOrdersByQuery {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

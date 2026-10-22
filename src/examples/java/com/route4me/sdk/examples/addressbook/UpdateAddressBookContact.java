@@ -7,6 +7,10 @@ import com.route4me.sdk.services.addressbook.ContactsRequest;
 
 import java.util.List;
 
+/**
+ * Takes a contact from {@link AddressBookManager#getContacts} and changes it with
+ * {@link AddressBookManager#updateContact}.
+ */
 public class UpdateAddressBookContact {
 
     public static void main(String[] args) {

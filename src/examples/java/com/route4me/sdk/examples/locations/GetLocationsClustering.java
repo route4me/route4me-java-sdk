@@ -7,6 +7,7 @@ import com.route4me.sdk.services.locations.LocationClusteringRequest;
 import com.route4me.sdk.services.locations.LocationClusteringResource;
 import com.route4me.sdk.services.locations.LocationManager;
 
+/** Groups the address book locations in clusters with {@link LocationManager#getLocationsClustering}. */
 public class GetLocationsClustering {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

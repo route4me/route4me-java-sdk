@@ -5,9 +5,7 @@ import com.route4me.sdk.services.routing.Constants;
 import com.route4me.sdk.services.tracking.GPSPosition;
 import com.route4me.sdk.services.tracking.TrackingManager;
 
-/**
- * @author juan
- */
+/** Records a GPS position of a route with {@link TrackingManager#setGPS}. */
 public class SetGPSPosition {
 
     public static void main(String[] args) {

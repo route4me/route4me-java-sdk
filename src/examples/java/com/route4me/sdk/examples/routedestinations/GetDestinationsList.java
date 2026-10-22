@@ -7,6 +7,7 @@ import com.route4me.sdk.services.routedestinations.RouteDestinationListResource;
 import com.route4me.sdk.services.routedestinations.RouteDestinationsListResponse;
 import com.route4me.sdk.services.routedestinations.RouteDestinationsManager;
 
+/** Lists route destinations through the V5 API with {@link RouteDestinationsManager#getDestinationsList}. */
 public class GetDestinationsList {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

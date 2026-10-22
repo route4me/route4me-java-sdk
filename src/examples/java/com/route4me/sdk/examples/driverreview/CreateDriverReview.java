@@ -5,6 +5,7 @@ import com.route4me.sdk.services.driverreview.DriverReview;
 import com.route4me.sdk.services.driverreview.DriverReviewManager;
 import com.route4me.sdk.services.driverreview.DriverReviewResponse;
 
+/** Adds a driver review with {@link DriverReviewManager#createDriverReview}. */
 public class CreateDriverReview {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

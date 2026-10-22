@@ -13,6 +13,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Geocodes a batch of addresses over a websocket with {@link GeocodingManager#websocketsGeocoder}, waiting until
+ * every address has arrived.
+ */
 public class WebSocketsGeocoderExample {
 
     public static void main(String[] args) {

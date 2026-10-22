@@ -8,6 +8,7 @@ import com.route4me.sdk.services.orders.OrdersManager;
 
 import java.util.List;
 
+/** Lists the orders added on a date ({@code OrderRequest.setDateInserted}) with {@link OrdersManager#getOrders}. */
 public class GetOrdersByDateCreated {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

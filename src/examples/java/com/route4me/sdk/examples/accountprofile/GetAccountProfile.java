@@ -4,6 +4,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.accountprofile.AccountProfile;
 import com.route4me.sdk.services.accountprofile.AccountProfileManager;
 
+/** Gets the profile of the account with {@link AccountProfileManager#getAccountProfile}. */
 public class GetAccountProfile {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

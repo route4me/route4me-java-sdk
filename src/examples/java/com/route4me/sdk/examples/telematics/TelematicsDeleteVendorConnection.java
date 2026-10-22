@@ -11,10 +11,7 @@ import com.route4me.sdk.services.telematics.TelematicsManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author Route4Me
- */
+/** Deletes a telematics connection with {@link TelematicsManager#deleteTelematicsConnection}. */
 public class TelematicsDeleteVendorConnection {
 
     public static void main(String[] args) {

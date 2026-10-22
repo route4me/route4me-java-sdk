@@ -11,8 +11,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author juan
+ * Adds a break after a given number of stops to two routes with
+ * {@link RouteBreaksManager#insertBreakAfterCertainLocations}.
  */
 public class InsertRouteBreaksAfterCertainLocations {
 

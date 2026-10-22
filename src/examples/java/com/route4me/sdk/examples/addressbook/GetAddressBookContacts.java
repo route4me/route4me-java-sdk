@@ -7,9 +7,7 @@ import com.route4me.sdk.services.addressbook.ContactsRequest;
 
 import java.util.List;
 
-/**
- * @author juan
- */
+/** Lists address book contacts with {@link AddressBookManager#getContacts}. */
 public class GetAddressBookContacts {
 
     public static void main(String[] args) {

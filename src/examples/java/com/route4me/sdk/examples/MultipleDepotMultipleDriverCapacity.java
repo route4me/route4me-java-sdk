@@ -18,7 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author juan
+ * Optimizes routes from several depots for several drivers with capacity, cargo volume and weight limits, with
+ * {@link RoutingManager#runOptimization}; each stop gets a random cube and weight.
  */
 public class MultipleDepotMultipleDriverCapacity {
 

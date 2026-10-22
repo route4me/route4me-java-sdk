@@ -8,6 +8,10 @@ import java.util.Arrays;
 
 import java.util.List;
 
+/**
+ * Finds the orders scheduled for some dates, one page at a time, with
+ * {@link OrdersManager#getOrdersByScheduledDate}.
+ */
 public class GetOrdersByScheduledForYYMMDDLimitOffset {
 
     public static void main(String[] args) {

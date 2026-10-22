@@ -9,6 +9,7 @@ import java.util.ArrayList;
 
 import java.util.List;
 
+/** Finds the orders with some statuses with {@link OrdersManager#getOrdersByStatus}. */
 public class GetOrdersByStatus {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

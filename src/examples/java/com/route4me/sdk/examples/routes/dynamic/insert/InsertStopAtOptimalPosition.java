@@ -32,8 +32,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author route4me
+ * Adds a stop to a route where it fits best ({@code optimal_position}) with
+ * {@link RoutingManager#addAddressesToRoute}.
  */
 public class InsertStopAtOptimalPosition {
 

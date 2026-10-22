@@ -7,6 +7,7 @@ import com.route4me.sdk.services.orders.OrdersManager;
 
 import java.util.List;
 
+/** Finds the orders with a custom field value with {@link OrdersManager#getOrdersByCustomField}. */
 public class GetOrdersByCustomFieldValue {
 
     public static void main(String[] args) {

@@ -23,6 +23,10 @@ import java.util.Iterator;
 import java.util.List;
 
 
+/**
+ * Optimizes routes for drivers with different working hours (advanced constraints with their own time
+ * windows), with {@link RoutingManager#runOptimization}.
+ */
 public class DriversDifferentWorkingTime {
 
     //**********************************************************************

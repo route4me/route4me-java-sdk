@@ -15,7 +15,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * @author juan
+ * Optimizes routes from one depot for several drivers with slower service and travel times
+ * ({@code Parameters.setSlowdowns}), with {@link RoutingManager#runOptimization}.
  */
 public class SingleDepotMultipleDriverSlowDown {
 
@@ -40,7 +41,6 @@ public class SingleDepotMultipleDriverSlowDown {
         slowdowns.setServiceTime(20);
         slowdowns.setTravelTime(30);
         parameters.setSlowdowns(slowdowns);
-
 
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));

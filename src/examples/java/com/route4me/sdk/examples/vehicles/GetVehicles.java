@@ -10,10 +10,7 @@ import com.route4me.sdk.services.vehicles.VehiclesManager;
 import com.route4me.sdk.services.vehicles.Vehicles;
 import java.util.List;
 
-/**
- *
- * @author juan
- */
+/** Lists the vehicles with {@link VehiclesManager#getVehicles}. */
 public class GetVehicles {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

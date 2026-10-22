@@ -9,6 +9,7 @@ import com.route4me.sdk.services.addressbarcode.StatusResponse;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Saves a scanned barcode for a route destination with {@link AddressBarcodeManager#saveAddressBarcodes}. */
 public class SaveAddressBarcodes {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

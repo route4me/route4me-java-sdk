@@ -17,9 +17,7 @@ import com.route4me.sdk.services.routing.RoutingManager;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * @author juan
- */
+/** Optimizes routes from one depot for several drivers with {@link RoutingManager#runOptimization}. */
 public class SingleDepotMultipleDriver {
 
     public static void main(String[] args) {

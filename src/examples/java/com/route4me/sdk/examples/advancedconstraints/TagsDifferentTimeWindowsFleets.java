@@ -24,6 +24,9 @@ import java.util.Iterator;
 import java.util.List;
 
 
+/**
+ * Optimizes routes for driver groups with their own tags and time windows, with {@link RoutingManager#runOptimization}.
+ */
 public class TagsDifferentTimeWindowsFleets {
 
     public static void main(String[] args) {

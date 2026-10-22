@@ -8,6 +8,7 @@ import com.route4me.sdk.services.orders.OrdersManager;
 
 import java.util.List;
 
+/** Takes an order from {@link OrdersManager#getOrders} and deletes it with {@link OrdersManager#deleteOrders}. */
 public class DeleteOrder {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

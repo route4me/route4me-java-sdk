@@ -11,6 +11,10 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Lists the routes of a period given in local time with {@link RoutingManager#getRoutesbyTimeDate} and reads the
+ * addresses of each with {@link RoutingManager#getRoute}.
+ */
 public class GetRoutesAndAddressesbyLocalDateTime {
 
     public static void main(String[] args) {

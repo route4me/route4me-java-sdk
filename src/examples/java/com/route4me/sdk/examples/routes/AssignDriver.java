@@ -9,10 +9,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Route;
 import com.route4me.sdk.services.routing.RoutingManager;
 
-/**
- *
- * @author juan
- */
+/** Assigns a driver to a route with {@link RoutingManager#assignDriver}. */
 public class AssignDriver {
 
     public static void main(String[] args) {

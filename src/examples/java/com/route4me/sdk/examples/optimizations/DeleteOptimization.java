@@ -12,10 +12,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/**
- *
- * @author juan
- */
+/** Deletes an optimization with {@link RoutingManager#deleteOptimization}. */
 public class DeleteOptimization {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");

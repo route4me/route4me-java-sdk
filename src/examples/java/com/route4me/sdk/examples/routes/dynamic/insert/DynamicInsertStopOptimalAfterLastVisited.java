@@ -36,8 +36,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author route4me
+ * Finds the routes where a new stop fits best after the last visited stop
+ * ({@code InsertMode.OPTIMAL_AFTER_LAST_VISITED}) with {@link DynamicInsertManager#lookForNewDestination} and adds it
+ * to the best one with {@link RoutingManager#addAddressesToRoute}.
  */
 public class DynamicInsertStopOptimalAfterLastVisited {
 

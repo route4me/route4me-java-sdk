@@ -25,12 +25,10 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author juan
+ * Reads the orders of three territories with {@link TerritoriesManager#getOrdersInTerritory} and optimizes
+ * routes for one driver group per territory, with {@link RoutingManager#runOptimization}.
  */
 public class OptimizationUsingTerritoriesOrders {
-
-
 
     public static void main(String[] args) {
         try {
@@ -44,7 +42,6 @@ public class OptimizationUsingTerritoriesOrders {
             //**********************************************************************
 
             TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
-
 
             Parameters parameters = new Parameters();
             parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
@@ -61,14 +58,11 @@ public class OptimizationUsingTerritoriesOrders {
             List<Object> depots = Arrays.asList(depot);
             parameters.setDepots(depots);
 
-
             // Territories
             // **********************
             List<String> zone1 = Arrays.asList("584BE87F75599DD8B9F038D81A33F5A8");
             List<String> zone2 = Arrays.asList("A5C1B85BCC069FF6CBDA18A65DC95031");
             List<String> zone3 = Arrays.asList("007AE22B494A149B52A45E3C6D3EC0CA");
-
-
 
             List<Address> addresses = new ArrayList<>();
 
@@ -106,7 +100,6 @@ public class OptimizationUsingTerritoriesOrders {
             timeWindowsSchedule1.add(timeWindowSchedule1);
             schedule1.setAvailableTimeWindows(timeWindowsSchedule1);
 
-
             // Schedule 2
             // Time Window Start:  8:00 am EST
             // Time Window End:   12:00 pm EST
@@ -118,7 +111,6 @@ public class OptimizationUsingTerritoriesOrders {
             timeWindowsSchedule2.add(timeWindowSchedule2);
             schedule2.setAvailableTimeWindows(timeWindowsSchedule2);
 
-
             // Schedule 3
             // Time Window Start:  8:00 am EST
             // Time Window End:    01:00 pm EST
@@ -129,7 +121,6 @@ public class OptimizationUsingTerritoriesOrders {
             List<Integer> timeWindowSchedule3 = Arrays.asList((8 + 5) * 3600, (13 + 5) * 3600);
             timeWindowsSchedule3.add(timeWindowSchedule3);
             schedule3.setAvailableTimeWindows(timeWindowsSchedule3);
-
 
             // Schedules registration
             List<AdvancedConstraints> advancedConstraints = Arrays.asList(schedule1, schedule2, schedule3);
