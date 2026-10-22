@@ -14,10 +14,10 @@ public class BatchDeleteOrdersV5 {
         OrderManagerV5 manager = new OrderManagerV5(apiKey);
         try {
             BatchDeleteOrdersRequest request = new BatchDeleteOrdersRequest();
-            List<String> uuids = new ArrayList<String>();
-            uuids.add("ORDER_UUID_1");
-            uuids.add("ORDER_UUID_2");
-            request.setOrderUuids(uuids);
+            List<String> orderIds = new ArrayList<String>();
+            orderIds.add("ORDER_ID_1");
+            orderIds.add("ORDER_ID_2");
+            request.setOrderIds(orderIds);
             StatusResponse response = manager.batchDeleteOrders(request);
             System.out.println("Deleted: " + response.getStatus());
         } catch (APIException e) {

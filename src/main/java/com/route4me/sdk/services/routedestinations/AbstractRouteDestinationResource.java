@@ -9,9 +9,9 @@ import java.util.Map;
 /** The fields that every route destination of the V5 destination API has, with its planned and actual times. */
 @Data
 public abstract class AbstractRouteDestinationResource {
-    /** Integer ID of the route destination (stop) ({@code route_destination_id}). */
+    /** ID of the route destination (stop) ({@code route_destination_id}). */
     @SerializedName("route_destination_id")
-    private Integer routeDestinationId;
+    private Long routeDestinationId;
 
     /** Human-readable name of the destination ({@code destination_name}). */
     @SerializedName("destination_name")

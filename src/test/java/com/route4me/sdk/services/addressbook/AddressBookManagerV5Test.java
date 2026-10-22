@@ -181,6 +181,23 @@ public class AddressBookManagerV5Test {
     }
 
     @Test
+    public void paginatedListsExposeThePagingFields() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        http.respond(200, json("{'results':[],'total':45,'current_page':2,'last_page':3,'per_page':20,"
+                + "'fields':['address_id','address_1']}"));
+        AddressBookContactsPaginatedQuery query = new AddressBookContactsPaginatedQuery();
+        query.setPage(2);
+
+        AddressBookContactsResponse page = manager.getContactsPaginated(query);
+
+        assertEquals(Integer.valueOf(45), page.getTotal());
+        assertEquals(Integer.valueOf(2), page.getCurrentPage());
+        assertEquals(Integer.valueOf(3), page.getLastPage());
+        assertEquals(Integer.valueOf(20), page.getPerPage());
+        assertEquals(Arrays.asList("address_id", "address_1"), page.getFields());
+    }
+
+    @Test
     public void clusteringByQueryAndByBody() throws Exception {
         AddressBookManagerV5 manager = manager();
         http.respond(200, json("{'clusters':[{'geohash':'dr5ru','lat':40.1,'lng':-74.1,'bbox':[[40.0,-74.2],"

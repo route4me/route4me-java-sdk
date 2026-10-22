@@ -9,9 +9,9 @@ import lombok.Data;
  */
 @Data
 public class SortingFilteringResource {
-    /** Integer ID of the route destination ({@code destination_id}). */
+    /** ID of the route destination ({@code destination_id}). */
     @SerializedName("destination_id")
-    private Integer destinationId;
+    private Long destinationId;
 
     /** UUID of the route destination (32-character hex string) ({@code destination_uuid}). */
     @SerializedName("destination_uuid")
