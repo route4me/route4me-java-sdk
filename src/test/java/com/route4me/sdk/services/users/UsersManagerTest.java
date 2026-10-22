@@ -4,10 +4,13 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import com.route4me.sdk.responses.StatusResponse;
+
 import java.util.List;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -117,6 +120,177 @@ public class UsersManagerTest {
         assertTrue(result.getStatus());
         assertEquals(Integer.valueOf(1001), result.getMemberID());
         assertEquals(Integer.valueOf(10), result.getMaxRoutes());
+    }
+
+    @Test
+    public void userDeleteSendsTheMemberIdInTheQuery() throws Exception {
+        UsersManager manager = manager();
+        http.respond(200, json("{'status':true}"));
+
+        StatusResponse deleted = manager.userDelete("1001");
+
+        http.request().assertEndpoint("DELETE", HOST, USER_EP).assertApiKeyInQuery()
+                .assertQuery("member_id", "1001").assertNoBody();
+        assertTrue(deleted.getStatus());
+    }
+
+    @Test
+    public void userDeleteRejectsAMissingMemberId() {
+        final UsersManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.userDelete(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.userDelete(""));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void getUsersWithoutArgumentsListsTheV4Users() throws Exception {
+        UsersManager manager = manager();
+        http.respond(200, "{\"results\":[" + USER_JSON + "]}");
+
+        UsersResponse users = manager.getUsers();
+
+        http.request().assertEndpoint("GET", HOST, USER_EP).assertApiKeyInQuery()
+                .assertNoQuery("member_id").assertNoBody();
+        assertEquals("alex@example.com", users.getResults().get(0).getMemberEmail());
+    }
+
+    @Test
+    public void userAuthenticationPostsTheCredentialsAsAForm() throws Exception {
+        UsersManager manager = http.install(new UsersManager());
+        http.respond(200, json("{'status':true,'session_id':4321,'session_guid':'SESSION-GUID-1',"
+                + "'member_id':1001,'api_key':'" + MockHttp.API_KEY + "','member_type':'PRIMARY_ACCOUNT',"
+                + "'max_routes':10,'preferred_units':'MI','auto_logout_ts':1761040000}"));
+
+        MemberResponse session = manager.userAuthentication("alex@example.com", "example-password");
+
+        http.request().assertEndpoint("POST", HOST, "/actions/authenticate.php")
+                .assertNoQuery("api_key")
+                .assertNoQuery("strPassword")
+                .assertContentType("application/x-www-form-urlencoded")
+                .assertForm("strEmail", "alex@example.com")
+                .assertForm("strPassword", "example-password")
+                .assertForm("format", "json");
+        assertTrue(session.getStatus());
+        assertEquals(Long.valueOf(1001), session.getMemberId());
+        assertEquals("SESSION-GUID-1", session.getSessionGuid());
+        assertEquals(Integer.valueOf(10), session.getMaxRoutes());
+        assertFalse(session.toString().contains(MockHttp.API_KEY));
+        assertFalse(session.toString().contains("SESSION-GUID-1"));
+        assertFalse(session.toString().contains("4321"));
+    }
+
+    @Test
+    public void userAuthenticationRejectsMissingCredentials() {
+        final UsersManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.userAuthentication(null, "secret"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.userAuthentication("alex@example.com", ""));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void validateSessionSendsTheSessionInTheQuery() throws Exception {
+        UsersManager manager = manager();
+        http.respond(200, json("{'authenticated':true,'member_id':1001}"));
+
+        MemberResponse session = manager.validateSession("SESSION-GUID-1", 1001L);
+
+        http.request().assertEndpoint("GET", HOST, "/datafeed/session/validate_session.php").assertApiKeyInQuery()
+                .assertQuery("session_guid", "SESSION-GUID-1")
+                .assertQuery("member_id", "1001")
+                .assertQuery("format", "json")
+                .assertNoBody();
+        assertTrue(session.getAuthenticated());
+        assertEquals(Long.valueOf(1001), session.getMemberId());
+    }
+
+    @Test
+    public void validateSessionRejectsAMissingSession() {
+        final UsersManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.validateSession("", 1001L));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void getMemberCapabilitiesReadsTheCapabilities() throws Exception {
+        UsersManager manager = manager();
+        http.respond(200, json("{'avoid':['highways'],'avoid_roads':['tolls'],'features':{'territories':true},"
+                + "'travelModes':{'driving':'Driving'},'navigateBy':['address'],'LicensedModules':['ROUTING'],"
+                + "'commercial':true}"));
+
+        MemberCapabilities capabilities = manager.getMemberCapabilities();
+
+        http.request().assertEndpoint("GET", HOST, "/api/member/capabilities.php").assertApiKeyInQuery()
+                .assertNoQuery("ApiKey").assertNoBody();
+        assertEquals("highways", capabilities.getAvoid().get(0));
+        assertEquals("tolls", capabilities.getAvoidRoads().get(0));
+        assertTrue(capabilities.getFeatures().get("territories"));
+        assertEquals("Driving", capabilities.getTravelModes().get("driving"));
+        assertEquals("address", capabilities.getNavigateBy().get(0));
+        assertEquals("ROUTING", capabilities.getLicensedModules().get(0));
+        assertTrue(capabilities.getCommercial());
+    }
+
+    @Test
+    public void purchaseUserLicensePostsTheLicense() throws Exception {
+        UsersManager manager = manager();
+        http.respond(200, json("{'status':true}"));
+        UserLicenseRequest license = new UserLicenseRequest();
+        license.setMemberId(1001L);
+        license.setSessionGuid("SESSION-GUID-1");
+        license.setDeviceId("DEVICE-1");
+        license.setDeviceType("ipad");
+        license.setSubscriptionName("IPAD_MONTHLY");
+        license.setToken("example-token");
+        license.setPayload("example-receipt");
+        license.setFormat("json");
+
+        String answer = manager.purchaseUserLicense(license);
+
+        http.request().assertEndpoint("POST", HOST, "/api/member/user_license.php").assertApiKeyInQuery()
+                .assertQuery("device_id", "DEVICE-1")
+                .assertJson("member_id", 1001)
+                .assertJson("session_guid", "SESSION-GUID-1")
+                .assertJson("device_id", "DEVICE-1")
+                .assertJson("device_type", "ipad")
+                .assertJson("subscription_name", "IPAD_MONTHLY")
+                .assertJson("token", "example-token")
+                .assertJson("payload", "example-receipt")
+                .assertJson("format", "json");
+        assertTrue(answer.contains("true"));
+        assertFalse(license.toString().contains("SESSION-GUID-1"));
+        assertFalse(license.toString().contains("example-token"));
+        assertFalse(license.toString().contains("example-receipt"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.purchaseUserLicense(null));
+    }
+
+    @Test
+    public void registerForWebinarPostsTheRegistration() throws Exception {
+        UsersManager manager = manager();
+        http.respond(200, json("{'status':true}"));
+        WebinarRegistration registration = new WebinarRegistration();
+        registration.setEmailAddress("alex@example.com");
+        registration.setFirstName("Alex");
+        registration.setLastName("Sample");
+        registration.setPhoneNumber("555-0100");
+        registration.setCompanyName("Example Co");
+        registration.setMemberId(1001L);
+        registration.setWebinarDate("2026-11-05 10:00:00");
+
+        manager.registerForWebinar(registration);
+
+        http.request().assertEndpoint("POST", HOST, "/actions/webinar_register.php").assertApiKeyInQuery()
+                .assertContentType("application/json")
+                .assertJson("email_address", "alex@example.com")
+                .assertJson("first_name", "Alex")
+                .assertJson("last_name", "Sample")
+                .assertJson("phone_number", "555-0100")
+                .assertJson("company_name", "Example Co")
+                .assertJson("member_id", 1001)
+                .assertJson("webinar_date", "2026-11-05 10:00:00");
+        http.expectThrows(IllegalArgumentException.class, () -> manager.registerForWebinar(null));
     }
 
     @Test
