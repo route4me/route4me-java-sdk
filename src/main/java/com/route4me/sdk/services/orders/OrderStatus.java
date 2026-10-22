@@ -51,7 +51,7 @@ public enum OrderStatus {
     CANCELLED(14),
     SCHEDULED(15);
 
-    private int value;
+    private final int value;
     private static final Map<Integer, OrderStatus> lookup
             = new HashMap<>();
 
@@ -71,13 +71,6 @@ public enum OrderStatus {
      */
     public int getValue() {
         return value;
-    }
-
-    /**
-     * @param value the value to set
-     */
-    public void setValue(int value) {
-        this.value = value;
     }
 
     public static OrderStatus get(int code) {

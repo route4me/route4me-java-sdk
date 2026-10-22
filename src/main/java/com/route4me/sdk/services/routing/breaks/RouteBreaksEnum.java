@@ -8,7 +8,7 @@ public class RouteBreaksEnum {
         CERTAIN_NUMBER_OF_TRAVEL_TIME("certain_number_of_travel_time"),
         CERTAIN_NUMBER_OF_SERVICE_TIME("certain_number_of_service_time");
 
-        private String value;
+        private final String value;
 
         private RouteBreaksType(String value) {
             this.value = value;
@@ -24,13 +24,6 @@ public class RouteBreaksEnum {
          */
         public String getValue() {
             return value;
-        }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(String value) {
-            this.value = value;
         }
     }
 

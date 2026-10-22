@@ -1,8 +1,10 @@
 package com.route4me.sdk.services;
 
+import com.google.gson.Gson;
 import com.route4me.sdk.services.activities.ActivityType;
 import com.route4me.sdk.services.geocoding.GeocoderOptions;
 import com.route4me.sdk.services.notes.StatusUpdateType;
+import com.route4me.sdk.services.orders.OrderRequest;
 import com.route4me.sdk.services.orders.OrderStatus;
 import com.route4me.sdk.services.routing.BundlingEnum;
 import com.route4me.sdk.services.routing.Constants;
@@ -13,7 +15,6 @@ import com.route4me.sdk.services.routing.dynamic.insert.InsertMode;
 import com.route4me.sdk.services.routing.dynamic.insert.RecommendedBy;
 import com.route4me.sdk.services.users.UsersEnum;
 import com.route4me.sdk.services.vehicles.Vehicles;
-import org.junit.Ignore;
 import org.junit.Test;
 
 import java.lang.reflect.Field;
@@ -68,8 +69,6 @@ public class EnumValuesTest {
         }
     }
 
-    @Ignore("bug (unfiled): Constants.AlgorithmType, TypeofMatrix and DirectionsMethod toString() return the "
-            + "constant name instead of the API value")
     @Test
     public void everyValueEnumReturnsItsApiValueFromToString() throws Exception {
         for (Class<?> type : valueEnums()) {
@@ -124,7 +123,6 @@ public class EnumValuesTest {
         assertTrue("expected enums with a get(int) lookup", checked >= 5);
     }
 
-    @Ignore("bug #40: SourceType is mutable; setValue changes the shared enum constant")
     @Test
     public void sourceTypeIsImmutable() throws Exception {
         Field value = SourceType.class.getDeclaredField("value");
@@ -132,6 +130,36 @@ public class EnumValuesTest {
         for (Method method : SourceType.class.getMethods()) {
             assertFalse("SourceType should not have a public " + method.getName(), "setValue".equals(method.getName()));
         }
+    }
+
+    @Test
+    public void everyValueEnumIsImmutable() {
+        List<Class<?>> enums = valueEnums();
+        enums.add(OrderStatus.class);
+        enums.add(OrderRequest.DisplayType.class);
+        for (Class<?> type : enums) {
+            for (Field field : type.getDeclaredFields()) {
+                if (!field.isEnumConstant() && !field.isSynthetic()) {
+                    assertTrue(type.getSimpleName() + "." + field.getName() + " should be final",
+                            Modifier.isFinal(field.getModifiers()));
+                }
+            }
+            for (Method method : type.getMethods()) {
+                assertFalse(type.getSimpleName() + " should not have a public " + method.getName(),
+                        method.getName().startsWith("set"));
+            }
+        }
+    }
+
+    @Test
+    public void numericStringEnumsSerialiseWithTheirApiValue() {
+        Gson gson = new Gson();
+
+        assertEquals("\"1\"", gson.toJson(Constants.AlgorithmType.TSP));
+        assertEquals("\"6\"", gson.toJson(Constants.TypeofMatrix.TRUCKING));
+        assertEquals("\"3\"", gson.toJson(Constants.DirectionsMethod.TRUCKING));
+        assertSame(Constants.AlgorithmType.ADVANCED_CVRP_TW, gson.fromJson("\"9\"", Constants.AlgorithmType.class));
+        assertEquals("101", Constants.AlgorithmType.ALG_LEGACY_DISTRIBUTED.toString());
     }
 
     /** Asserts that each constant's {@code toString()} equals its String {@code getValue()}. */

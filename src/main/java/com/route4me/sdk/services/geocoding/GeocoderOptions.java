@@ -29,7 +29,7 @@ public class GeocoderOptions {
         SIMPLE("false"),
         DETAILED("true");
 
-        private String value;
+        private final String value;
 
         private GeocoderDetails(String value) {
             this.value = value;
@@ -47,19 +47,12 @@ public class GeocoderOptions {
             return value;
         }
 
-        /**
-         * @param value the value to set
-         */
-        public void setValue(String value) {
-            this.value = value;
-        }
-
     }
 
     public enum GeocoderResponseFormat {
         JSON("json");
 
-        private String value;
+        private final String value;
 
         private GeocoderResponseFormat(String value) {
             this.value = value;
@@ -75,13 +68,6 @@ public class GeocoderOptions {
          */
         public String getValue() {
             return value;
-        }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(String value) {
-            this.value = value;
         }
 
     }

@@ -53,7 +53,7 @@ public class OrderRequest {
         @SerializedName("unrouted")
         UNROUTED("unrouted");
 
-        private String internal;
+        private final String internal;
 
         DisplayType(String internal) {
             this.internal = internal;

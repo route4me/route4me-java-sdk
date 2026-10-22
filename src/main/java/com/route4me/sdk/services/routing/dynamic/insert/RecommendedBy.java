@@ -32,7 +32,7 @@ public enum RecommendedBy {
     DISTANCE("distance"),
     DURATION("duration");
 
-    private String value;
+    private final String value;
 
     private RecommendedBy(String value) {
         this.value = value;
@@ -48,13 +48,6 @@ public enum RecommendedBy {
      */
     public String getValue() {
         return value;
-    }
-
-    /**
-     * @param value the value to set
-     */
-    public void setValue(String value) {
-        this.value = value;
     }
 
 }

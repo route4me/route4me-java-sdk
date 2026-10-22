@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.routing;
 
+import com.google.gson.annotations.SerializedName;
 import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -18,7 +19,7 @@ public class Constants {
         SUB_ACCOUNT_PLANNER("SUB_ACCOUNT_PLANNER"),
         SUB_ACCOUNT_DRIVER("SUB_ACCOUNT_DRIVER");
 
-        private String value;
+        private final String value;
 
         private MemberType(String value) {
             this.value = value;
@@ -36,20 +37,13 @@ public class Constants {
             return value;
         }
 
-        /**
-         * @param value the value to set
-         */
-        public void setValue(String value) {
-            this.value = value;
-        }
-
     }
 
     public enum MemberPropertyValue {
         TRUE("TRUE"),
         FALSE("FALSE");
 
-        private String value;
+        private final String value;
 
         private MemberPropertyValue(String value) {
             this.value = value;
@@ -66,29 +60,32 @@ public class Constants {
         public String getValue() {
             return value;
         }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(String value) {
-            this.value = value;
-        }
     }
 
     public enum AlgorithmType {
 
+        @SerializedName("1")
         TSP("1"),
+        @SerializedName("2")
         VRP("2"),
+        @SerializedName("3")
         CVRP_TW_SD("3"),
+        @SerializedName("4")
         CVRP_TW_MD("4"),
+        @SerializedName("5")
         TSP_TW("5"),
+        @SerializedName("6")
         TSP_TW_CR("6"),
+        @SerializedName("7")
         BBCVRP("7"),
+        @SerializedName("9")
         ADVANCED_CVRP_TW("9"),
+        @SerializedName("101")
         ALG_LEGACY_DISTRIBUTED("101"),
+        @SerializedName("100")
         ALG_NONE("100");
 
-        private String value;
+        private final String value;
 
         private AlgorithmType(String value) {
             this.value = value;
@@ -102,21 +99,25 @@ public class Constants {
         }
 
         /**
-         * @param value the value to set
+         * @return the API value, as {@link #getValue()}
          */
-        public void setValue(String value) {
-            this.value = value;
+        @Override
+        public String toString() {
+            return this.value;
         }
 
     }
 
     public enum TypeofMatrix {
 
+        @SerializedName("1")
         R4M_PROPRIETARY_ROUTING("1"),
+        @SerializedName("3")
         R4M_TRAFFIC_ENGINE("3"),
+        @SerializedName("6")
         TRUCKING("6");
 
-        private String value;
+        private final String value;
 
         private TypeofMatrix(String value) {
             this.value = value;
@@ -130,20 +131,23 @@ public class Constants {
         }
 
         /**
-         * @param value the value to set
+         * @return the API value, as {@link #getValue()}
          */
-        public void setValue(String value) {
-            this.value = value;
+        @Override
+        public String toString() {
+            return this.value;
         }
 
     }
 
     public enum DirectionsMethod {
 
+        @SerializedName("1")
         R4M_PROPRIETARY_INTERNAL_NAVIGATION_SYSTEM("1"),
+        @SerializedName("3")
         TRUCKING("3");
 
-        private String value;
+        private final String value;
 
         private DirectionsMethod(String value) {
             this.value = value;
@@ -157,10 +161,11 @@ public class Constants {
         }
 
         /**
-         * @param value the value to set
+         * @return the API value, as {@link #getValue()}
          */
-        public void setValue(String value) {
-            this.value = value;
+        @Override
+        public String toString() {
+            return this.value;
         }
 
     }
@@ -189,7 +194,7 @@ public class Constants {
         MI("mi"),
         KM("km");
 
-        private String value;
+        private final String value;
 
         private DistanceUnit(String value) {
             this.value = value;
@@ -211,7 +216,7 @@ public class Constants {
         HIGHWAYS_TOLLS("highways,tolls"),
         NONE("");
 
-        private String value;
+        private final String value;
 
         private Avoid(String value) {
             this.value = value;
@@ -229,7 +234,7 @@ public class Constants {
         TIME("Time"),
         TIME_WITH_TRAFFIC("timeWithTraffic");
 
-        private String value;
+        private final String value;
 
         private Optimize(String value) {
             this.value = value;
@@ -249,7 +254,7 @@ public class Constants {
         ROUTE4ME_METRIC_MATRIX(4),
         ROUTE4ME_METRIC_EXACT_2D(5);
 
-        private int value;
+        private final int value;
         private static final Map<Integer, Metric> lookup
                 = new HashMap<>();
 
@@ -270,13 +275,6 @@ public class Constants {
             return value;
         }
 
-        /**
-         * @param value the value to set
-         */
-        public void setValue(int value) {
-            this.value = value;
-        }
-
         public static Metric get(int code) {
             return lookup.get(code);
         }
@@ -291,7 +289,7 @@ public class Constants {
         ANDROID_PHONE("android_phone"),
         ANDROID_TABLET("android_tablet");
 
-        private String value;
+        private final String value;
 
         private DeviceType(String value) {
             this.value = value;
@@ -309,7 +307,7 @@ public class Constants {
         SERIALIZED("serialized"),
         XML("xml");
 
-        private String value;
+        private final String value;
 
         private Format(String value) {
             this.value = value;
@@ -329,7 +327,7 @@ public class Constants {
         OPTIMIZATION_STATE_OPTIMIZED(4),
         OPTIMIZATION_STATE_ERROR(5),
         OPTIMIZATION_STATE_COMPUTING_DIRECTIONS(6);
-        private int value;
+        private final int value;
         private static final Map<Integer, OptimizationState> lookup
                 = new HashMap<>();
 
@@ -350,13 +348,6 @@ public class Constants {
             return value;
         }
 
-        /**
-         * @param value the value to set
-         */
-        public void setValue(int value) {
-            this.value = value;
-        }
-
         public static OptimizationState get(int code) {
             return lookup.get(code);
         }
@@ -368,7 +359,7 @@ public class Constants {
         NONE("None"),
         POINTS("Points");
 
-        private String value;
+        private final String value;
 
         private RoutePathOutput(String value) {
             this.value = value;
@@ -385,7 +376,7 @@ public class Constants {
         UTURN_DEPART_SHORTEST(1),
         UTURN_DEPART_TO_RIGHT(2);
 
-        private int value;
+        private final int value;
         private static final Map<Integer, UTurn> lookup
                 = new HashMap<>();
 
@@ -406,13 +397,6 @@ public class Constants {
             return value;
         }
 
-        /**
-         * @param value the value to set
-         */
-        public void setValue(int value) {
-            this.value = value;
-        }
-
         public static UTurn get(int code) {
             return lookup.get(code);
         }
@@ -425,7 +409,7 @@ public class Constants {
         LEFTTURN_FORBID(2),
         LEFTTURN_MULTIAPPROACH(3);
 
-        private int value;
+        private final int value;
         private static final Map<Integer, LeftTurn> lookup
                 = new HashMap<>();
 
@@ -444,13 +428,6 @@ public class Constants {
          */
         public int getValue() {
             return value;
-        }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(int value) {
-            this.value = value;
         }
 
         public static LeftTurn get(int code) {
@@ -475,7 +452,7 @@ public class Constants {
         OTHER("other"),
         ALLHAZARDOUSGOODS("allHazardousGoods");
 
-        private String value;
+        private final String value;
 
         private TruckHazardousGoods(String value) {
             this.value = value;
@@ -493,7 +470,7 @@ public class Constants {
         POLY("poly"),
         RECT("rect");
 
-        private String value;
+        private final String value;
 
         private TerritoryType(String value) {
             this.value = value;
@@ -511,7 +488,7 @@ public class Constants {
         RIGHTTURN_FORBID(2),
         RIGHTTURN_MULTIAPPROACH(3);
 
-        private int value;
+        private final int value;
         private static final Map<Integer, RightTurn> lookup
                 = new HashMap<>();
 
@@ -532,13 +509,6 @@ public class Constants {
             return value;
         }
 
-        /**
-         * @param value the value to set
-         */
-        public void setValue(int value) {
-            this.value = value;
-        }
-
         public static RightTurn get(int code) {
             return lookup.get(code);
         }
@@ -554,7 +524,7 @@ public class Constants {
         VISIT("VISIT"),
         DRIVEBY("DRIVEBY");
 
-        private String value;
+        private final String value;
 
         private AddressStopType(String value) {
             this.value = value;
@@ -570,13 +540,6 @@ public class Constants {
          */
         public String getValue() {
             return value;
-        }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(String value) {
-            this.value = value;
         }
 
     }
