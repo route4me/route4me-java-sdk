@@ -176,7 +176,7 @@ public class GeocoderWebSockets {
     public void closeGeoCodeSocketIO() {
         if (geocoderWebSocket != null) {
             geocoderWebSocket.off("address");
-            geocoderWebSocket.off("address_bulk");
+            geocoderWebSocket.off("addresses_bulk");
             geocoderWebSocket.emit("disconnect");
             geocoderWebSocket.disconnect();
             geocoderWebSocket.close();
