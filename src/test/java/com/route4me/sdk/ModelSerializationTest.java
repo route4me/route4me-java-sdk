@@ -3,6 +3,7 @@ package com.route4me.sdk;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.route4me.sdk.queryconverter.QueryConverter;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.BundledItem;
 import com.route4me.sdk.services.routing.Route;
@@ -414,5 +415,43 @@ public class ModelSerializationTest {
         assertEquals(12.0, line.getTotalPrice(), 0.0);
         assertEquals("2026-10-21", line.getCreatedAt());
         assertEquals("2026-10-22", line.getUpdatedAt());
+    }
+
+    @Test
+    public void testUnsetFlagsAreNotSent() throws Exception {
+        Route route = new Route();
+        Parameters parameters = new Parameters();
+
+        assertFalse(gson.toJsonTree(route).getAsJsonObject().has("is_unrouted"));
+        assertFalse(gson.toJsonTree(parameters).getAsJsonObject().has("use_mixed_pickup_delivery_demands"));
+        assertTrue(QueryConverter.convertObjectToParameters(parameters).isEmpty());
+        assertFalse(route.isUnrouted());
+        assertNull(route.getUnrouted());
+        assertFalse(parameters.isUseMixedPickupDeliveryDemands());
+        assertNull(parameters.getUseMixedPickupDeliveryDemands());
+    }
+
+    @Test
+    public void testSetFlagsAreSentAndCanBeCleared() {
+        Route route = new Route();
+        Parameters parameters = new Parameters();
+
+        route.setUnrouted(true);
+        parameters.setUseMixedPickupDeliveryDemands(false);
+        JsonObject routeJson = gson.toJsonTree(route).getAsJsonObject();
+        JsonObject parametersJson = gson.toJsonTree(parameters).getAsJsonObject();
+
+        assertTrue(routeJson.get("is_unrouted").getAsBoolean());
+        assertFalse(parametersJson.get("use_mixed_pickup_delivery_demands").getAsBoolean());
+        assertTrue(route.isUnrouted());
+        assertEquals(Boolean.FALSE, parameters.getUseMixedPickupDeliveryDemands());
+
+        parameters.isUseMixedPickupDeliveryDemands(true);
+        assertTrue(parameters.isUseMixedPickupDeliveryDemands());
+        route.setUnrouted((Boolean) null);
+        parameters.setUseMixedPickupDeliveryDemands((Boolean) null);
+        assertFalse(gson.toJsonTree(route).getAsJsonObject().has("is_unrouted"));
+        assertFalse(gson.toJsonTree(parameters).getAsJsonObject().has("use_mixed_pickup_delivery_demands"));
+        assertTrue(gson.fromJson("{\"is_unrouted\":true}", Route.class).isUnrouted());
     }
 }

@@ -3,7 +3,10 @@ package com.route4me.sdk.services.routing;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import com.route4me.sdk.services.notes.Note;
+import lombok.AccessLevel;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -18,8 +21,11 @@ public class Route extends DataObject {
     private Long memberId;
     @SerializedName("member_email")
     private String memberEmail;
+    /** {@code null} (the default) leaves {@code is_unrouted} out of the request. */
     @SerializedName("is_unrouted")
-    private boolean isUnrouted;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Boolean isUnrouted;
     @SerializedName("vehicle_alias")
     private String vehicleAlias;
     @SerializedName("route_cost")
@@ -127,5 +133,34 @@ public class Route extends DataObject {
     /** The IDs of the facilities of the route. */
     @SerializedName("facility_ids")
     private List<String> facilityIds;
+
+    /**
+     * @return whether the route is unrouted; {@code false} when the value is not set
+     */
+    public boolean isUnrouted() {
+        return Boolean.TRUE.equals(this.isUnrouted);
+    }
+
+    /**
+     * @return {@code is_unrouted}, or {@code null} when it is not set and so not sent
+     */
+    public Boolean getUnrouted() {
+        return this.isUnrouted;
+    }
+
+    /**
+     * @param unrouted whether the route is unrouted
+     */
+    public void setUnrouted(boolean unrouted) {
+        this.isUnrouted = unrouted;
+    }
+
+    /**
+     * @param unrouted whether the route is unrouted; {@code null} leaves
+     *                 {@code is_unrouted} out of the request
+     */
+    public void setUnrouted(Boolean unrouted) {
+        this.isUnrouted = unrouted;
+    }
 
 }
