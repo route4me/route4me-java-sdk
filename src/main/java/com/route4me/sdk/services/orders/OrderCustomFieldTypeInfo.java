@@ -27,17 +27,18 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
 @Data
 class OrderCustomFieldTypeInfo {
 
+    /** Short label of the custom field (specified when order_custom_field_type=checkbox) ({@code short_label}). */
     @SerializedName("short_label")
     private String shortLabel;
+    /** Short caption of the custom field (specified when order_custom_field_type=dropdown) ({@code short_caption}). */
     @SerializedName("short_caption")
     private String shortCaption;
+    /**
+     * Allowed values of the custom field (specified when order_custom_field_type=dropdown) ({@code allowed_values}).
+     */
     @SerializedName("allowed_values")
     private List<String> allowedValues;
 

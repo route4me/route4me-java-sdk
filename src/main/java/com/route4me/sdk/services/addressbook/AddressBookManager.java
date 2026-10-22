@@ -14,25 +14,43 @@ import org.apache.http.client.utils.URIBuilder;
 import java.util.List;
 import org.apache.http.HttpEntity;
 
+/**
+ * Manages the address book (contacts) through the V4 API ({@code https://api.route4me.com/api.v4/address_book.php}).
+ * {@link AddressBookManagerV5} covers the V5 address book API.
+ */
 public class AddressBookManager extends Manager {
     private static final String ADDRESS_BOOK_EP = "/api.v4/address_book.php";
-    private static final String ADDRESS_BOOK_DEPOTS = "/modules/api/v5.0/address-book/addresses/depots"; 
+    private static final String ADDRESS_BOOK_DEPOTS = "/modules/api/v5.0/address-book/addresses/depots";
 
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as a bearer token to the V5 API and as the {@code api_key} query
+     *     parameter to the V4 API
+     */
     public AddressBookManager(String apiKey) {
         super(apiKey);
     }
 
-    private URIBuilder getAPIV5URI(String endpoint){
+    private URIBuilder getAPIV5URI(String endpoint) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
         builder.setPath(endpoint);
         return builder;
     }
-    
-    
-    
+
+
+
+    /**
+     * Creates a contact: {@code POST https://api.route4me.com/api.v4/address_book.php}, with the contact as the JSON
+     * body.
+     *
+     * @param contact the contact
+     * @return the created contact
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Contact createContact(Contact contact) throws APIException {
         return this.makeRequest(RequestMethod.POST,
                 Manager.defaultBuilder(ADDRESS_BOOK_EP),
@@ -40,6 +58,14 @@ public class AddressBookManager extends Manager {
                 Contact.class);
     }
 
+    /**
+     * Updates a contact: {@code PUT https://api.route4me.com/api.v4/address_book.php}, with the contact as the JSON
+     * body.
+     *
+     * @param contact the contact, with its address ID
+     * @return the updated contact
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Contact updateContact(Contact contact) throws APIException {
         return this.makeRequest(RequestMethod.PUT,
                 Manager.defaultBuilder(ADDRESS_BOOK_EP),
@@ -94,12 +120,20 @@ public class AddressBookManager extends Manager {
      */
     public boolean deleteContact(List<Number> addressIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
-        DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(new AddressIds(addressIds)), DeleteResponse.class);
+        DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder,
+                this.gson.toJson(new AddressIds(addressIds)), DeleteResponse.class);
         return response != null && response.isDeleted();
     }
-    
-    public List<Contact> getDepotsFromAddressBook() throws APIException{
-         URIBuilder builder = this.getAPIV5URI(ADDRESS_BOOK_DEPOTS);
+
+    /**
+     * Lists the contacts that are depots: {@code GET
+     * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/depots}.
+     *
+     * @return the depots
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public List<Contact> getDepotsFromAddressBook() throws APIException {
+        URIBuilder builder = this.getAPIV5URI(ADDRESS_BOOK_DEPOTS);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Contact>>() {
         }.getType());
     }
@@ -107,8 +141,10 @@ public class AddressBookManager extends Manager {
     @Getter
     static class ContactsResponse {
 
+        /** An array of the Order type objects ({@code results}). */
         @SerializedName("results")
         private List<Contact> results;
+        /** Total number of the returned orders ({@code total}). */
         @SerializedName("total")
         private int total;
     }
@@ -117,6 +153,7 @@ public class AddressBookManager extends Manager {
     @RequiredArgsConstructor
     static class AddressIds {
 
+        /** The IDs of the contacts to delete ({@code address_ids}). */
         @SerializedName("address_ids")
         private final List<Number> addressIds;
     }

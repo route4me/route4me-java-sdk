@@ -9,8 +9,13 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.http.Route4MeRedirectStrategy;
 import com.route4me.sdk.queryconverter.QueryConverter;
+import com.route4me.sdk.utils.LenientBooleanAdapter;
 import com.route4me.sdk.utils.Sanitizer;
-import java.io.*;
+import java.io.Closeable;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
@@ -89,8 +94,12 @@ public abstract class Manager implements Closeable {
      */
     private static final String V5_ACCEPT = "application/json, */*;q=0.8";
 
+    /** The logger of the managers; protected, and named in lower case, since subclasses use it. */
+    @SuppressWarnings("checkstyle:ConstantName") // public API of subclasses: renaming it would break them
     protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(Manager.class);
     private final String apiKey;
+    /** The JSON mapper of the requests and responses; subclasses use it to build bodies. */
+    @SuppressWarnings("checkstyle:VisibilityModifier") // protected API of subclasses
     protected Gson gson;
     private HttpHost proxy;
     private boolean disableRedirects;
@@ -110,25 +119,53 @@ public abstract class Manager implements Closeable {
     /** How many connections the pool may hold, per route and in total. Guarded by {@link #clientLock}. */
     private int maxConnections = DEFAULT_MAX_CONNECTIONS;
 
+    /**
+     * Creates a manager that sends its requests with an API key, as a bearer token to the V5 API and as the
+     * {@code api_key} query parameter to the V4 API. Its JSON mapper serializes every field, and reads
+     * booleans that the API sends as {@code 1}/{@code 0} (see {@link LenientBooleanAdapter}).
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     */
     public Manager(String apiKey) {
         this.apiKey = apiKey;
-        this.gson = new Gson();
+        this.gson = LenientBooleanAdapter.register(new GsonBuilder()).create();
     }
 
+    /**
+     * Creates a manager that may refuse redirects.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     * @param disableRedirects {@code true} to add {@code redirect=0} to every request and not follow redirects
+     */
     public Manager(String apiKey, boolean disableRedirects) {
         this(apiKey);
         this.disableRedirects = disableRedirects;
     }
 
+    /**
+     * Creates a manager that may refuse redirects and asks the API to call a URL when an optimization finishes.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     * @param disableRedirects {@code true} to add {@code redirect=0} to every request and not follow redirects
+     * @param callBackURL the URL, sent as {@code optimized_callback_url} with every request; {@code null} sends none
+     */
     public Manager(String apiKey, boolean disableRedirects, String callBackURL) {
         this(apiKey);
         this.disableRedirects = disableRedirects;
         this.callBackURL = callBackURL;
     }
 
+    /**
+     * Creates a manager with its own JSON mapper. The mapper skips, when it serializes, every field without
+     * {@code @SerializedName}, and reads booleans sent as {@code 1}/{@code 0}.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     * @param builder the builder of the mapper; this constructor adds an exclusion strategy and
+     *     {@link LenientBooleanAdapter} to it
+     */
     public Manager(String apiKey, GsonBuilder builder) {
         this.apiKey = apiKey;
-        this.gson = builder.addSerializationExclusionStrategy(new ExclusionStrategy() {
+        this.gson = LenientBooleanAdapter.register(builder).addSerializationExclusionStrategy(new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes fieldAttributes) {
                 //skip fields without SerializedName
@@ -142,11 +179,28 @@ public abstract class Manager implements Closeable {
         }).create();
     }
 
+    /**
+     * Creates a manager that sends its requests through a proxy.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     * @param proxyHost the proxy host
+     * @param proxyPort the proxy port
+     * @param proxySchema the proxy scheme, such as {@code http}
+     */
     public Manager(String apiKey, String proxyHost, int proxyPort, String proxySchema) {
         this(apiKey);
         this.proxy = new HttpHost(proxyHost, proxyPort, proxySchema);
     }
 
+    /**
+     * Creates a manager that sends its requests through a proxy, and may refuse redirects.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     * @param proxyHost the proxy host
+     * @param proxyPort the proxy port
+     * @param proxySchema the proxy scheme, such as {@code http}
+     * @param disableRedirects {@code true} to add {@code redirect=0} to every request and not follow redirects
+     */
     public Manager(String apiKey, String proxyHost, int proxyPort, String proxySchema, boolean disableRedirects) {
         this(apiKey, proxyHost, proxyPort, proxySchema);
         this.disableRedirects = disableRedirects;
@@ -209,7 +263,8 @@ public abstract class Manager implements Closeable {
      * @throws APIException if the request fails, the server answers with an error status or
      *                      the response cannot be parsed
      */
-    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, List<NameValuePair> body, Class<T> clazz) throws APIException {
+    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, List<NameValuePair> body, Class<T> clazz)
+            throws APIException {
         return this.makeRequest(method, builder, new UrlEncodedFormEntity(body, StandardCharsets.UTF_8), clazz, null);
     }
 
@@ -226,7 +281,8 @@ public abstract class Manager implements Closeable {
      * @throws APIException if the request fails, the server answers with an error status or
      *                      the response cannot be parsed
      */
-    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, String body, Class<T> clazz) throws APIException {
+    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, String body, Class<T> clazz)
+            throws APIException {
         return this.makeRequest(method, builder, !body.isEmpty() ? jsonEntity(body) : (HttpEntity) null, clazz, null);
     }
 
@@ -247,11 +303,13 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, !body.isEmpty() ? jsonEntity(body) : (HttpEntity) null, type);
     }
 
-    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz) throws APIException {
+    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz)
+            throws APIException {
         return this.makeRequest(method, builder, body, clazz, null);
     }
 
-    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Type type) throws APIException {
+    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Type type)
+            throws APIException {
         return this.makeRequest(method, builder, body, null, type);
     }
 
@@ -259,7 +317,8 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, body, String.class, null);
     }
 
-    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams, Class<T> clazz) throws APIException {
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams,
+            Class<T> clazz) throws APIException {
         if (requestParams != null) {
             List<NameValuePair> params;
             try {
@@ -273,7 +332,8 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), clazz, null);
     }
 
-    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams, Type type) throws APIException {
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams,
+            Type type) throws APIException {
         if (requestParams != null) {
             List<NameValuePair> params;
             try {
@@ -287,7 +347,8 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), null, type);
     }
 
-    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz) throws APIException {
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz)
+            throws APIException {
         if (requestParams != null) {
             try {
                 List<NameValuePair> params = queryParameters(builder, requestParams);
@@ -295,7 +356,8 @@ public abstract class Manager implements Closeable {
                     builder.addParameters(params);
                 }
             } catch (IllegalAccessException e) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName() + " to query parameters.", e);
+                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
+                        + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), clazz, null);
@@ -304,7 +366,8 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, (HttpEntity) null, clazz, null);
     }
 
-    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type) throws APIException {
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type)
+            throws APIException {
         if (requestParams != null) {
             try {
                 List<NameValuePair> params = queryParameters(builder, requestParams);
@@ -312,7 +375,8 @@ public abstract class Manager implements Closeable {
                     builder.addParameters(params);
                 }
             } catch (IllegalAccessException e) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName() + " to query parameters.", e);
+                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
+                        + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), null, type);
@@ -353,7 +417,8 @@ public abstract class Manager implements Closeable {
         return new StringEntity(json, ContentType.APPLICATION_JSON);
     }
 
-    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type) throws APIException {
+    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type)
+            throws APIException {
         HttpRequestBase hrb;
         boolean bearer;
         try {
@@ -414,7 +479,7 @@ public abstract class Manager implements Closeable {
                         expected, ex);
             }
             if (clazz == String.class) {
-                return (T) respString;
+                return clazz.cast(respString);
             }
             return null;
         } catch (IOException ex) {
@@ -633,6 +698,8 @@ public abstract class Manager implements Closeable {
     }
 
     /**
+     * Returns how long a request may take to open a connection.
+     *
      * @return the connect timeout in milliseconds; {@link #DEFAULT_CONNECT_TIMEOUT_MS} unless changed
      */
     public int getConnectTimeout() {
@@ -651,6 +718,8 @@ public abstract class Manager implements Closeable {
     }
 
     /**
+     * Returns how long a request may wait for data on an open connection.
+     *
      * @return the socket (read) timeout in milliseconds; {@link #DEFAULT_SOCKET_TIMEOUT_MS} unless changed
      */
     public int getSocketTimeout() {
@@ -669,8 +738,10 @@ public abstract class Manager implements Closeable {
     }
 
     /**
+     * Returns how long a request may wait for a free connection from the pool.
+     *
      * @return the connection-request timeout in milliseconds;
-     * {@link #DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS} unless changed
+     *     {@link #DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS} unless changed
      */
     public int getConnectionRequestTimeout() {
         return connectionRequestTimeout;
@@ -696,14 +767,18 @@ public abstract class Manager implements Closeable {
     }
 
     /**
-     * @return the callBackURL
+     * Returns the URL the API calls when an optimization finishes.
+     *
+     * @return the URL sent as {@code optimized_callback_url}, or {@code null} when none is sent
      */
     public String getCallBackURL() {
         return callBackURL;
     }
 
     /**
-     * @param callBackURL the callBackURL to set
+     * Sets the URL the API calls when an optimization finishes, for the requests sent after the call.
+     *
+     * @param callBackURL the URL, sent as {@code optimized_callback_url}; {@code null} sends none
      */
     public void setCallBackURL(String callBackURL) {
         this.callBackURL = callBackURL;

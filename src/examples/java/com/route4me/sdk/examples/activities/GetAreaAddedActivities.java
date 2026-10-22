@@ -1,0 +1,23 @@
+// codebeat:disable[SIMILARITY]
+package com.route4me.sdk.examples.activities;
+
+import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.services.activities.Activities;
+import com.route4me.sdk.services.activities.ActivityManager;
+import com.route4me.sdk.services.activities.ActivityRequest;
+import com.route4me.sdk.services.activities.ActivityType;
+
+/** Lists the territories added ({@code ActivityType.AREA_ADDED}) with {@link ActivityManager#getActivities}. */
+public class GetAreaAddedActivities {
+    public static void main(String[] args) {
+        String apiKey = System.getenv("R4M_API_KEY");
+        ActivityManager manager = new ActivityManager(apiKey);
+        try {
+            Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.AREA_ADDED));
+            System.out.println(activities.getResults());
+        } catch (APIException e) {
+            e.printStackTrace();
+        }
+    }
+}
+// codebeat:enable[SIMILARITY]

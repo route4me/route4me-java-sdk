@@ -99,7 +99,8 @@ public class EnumValuesTest {
     public void knownApiValues() {
         assertEquals("depots", SourceType.DEPOTS.getValue());
         assertEquals("input_addresses", SourceType.ADDRESSES.toString());
-        assertEquals("certain_number_of_locations", RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_LOCATIONS.getValue());
+        assertEquals("certain_number_of_locations",
+                RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_LOCATIONS.getValue());
         assertEquals("optimal_anywhere", InsertMode.OPTIMAL_ANYWHERE.getValue());
         assertEquals("user_message", ActivityType.USER_MESSAGE.toString());
         assertEquals("dropoff", StatusUpdateType.DROPOFF.toString());
@@ -118,7 +119,8 @@ public class EnumValuesTest {
                 continue;
             }
             for (Object constant : type.getEnumConstants()) {
-                assertSame(type.getSimpleName() + "." + constant, constant, lookup.invoke(null, getValue.invoke(constant)));
+                assertSame(type.getSimpleName() + "." + constant, constant,
+                        lookup.invoke(null, getValue.invoke(constant)));
             }
             checked++;
         }

@@ -6,7 +6,9 @@
 package com.route4me.sdk.services.geocoding;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.utils.LenientBooleanAdapter;
 import com.route4me.sdk.utils.Sanitizer;
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -22,9 +24,14 @@ import java.util.logging.Logger;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+/**
+ * Geocodes a stored batch of addresses over a Socket.IO connection to {@code https://validator.route4me.com} and
+ * collects the results. {@link GeocodingManager#websocketsGeocoder(List)} creates and starts it. Each instance has
+ * its own connection; close it with {@link #closeGeoCodeSocketIO()}.
+ */
 public class GeocoderWebSockets {
 
-    private final static Logger LOG = Logger.getLogger(GeocoderWebSockets.class.getName());
+    private static final Logger LOG = Logger.getLogger(GeocoderWebSockets.class.getName());
 
     /**
      * The connection of this geocoder; {@code null} until {@link #startGeocoding} connects.
@@ -35,7 +42,9 @@ public class GeocoderWebSockets {
     private static final String GEOCODER_URL = "https://validator.route4me.com";
 
     private List<Address> geocodedAddresses;
-    protected Gson gson = new Gson();
+    /** The JSON mapper of the socket messages. */
+    @SuppressWarnings("checkstyle:VisibilityModifier") // protected API: kept for subclasses
+    protected Gson gson = LenientBooleanAdapter.register(new GsonBuilder()).create();
 
     private int addressesCount = 0;
     private int totalAddresses = 0;
@@ -53,6 +62,7 @@ public class GeocoderWebSockets {
     private long chunksLimit;
     private long maxAddressesToBeDownloaded;
 
+    /** Creates a geocoder that has not started; see {@link #startGeocoding(String, int)}. */
     public GeocoderWebSockets() {
         this.geocodedAddresses = null;
     }
@@ -145,7 +155,8 @@ public class GeocoderWebSockets {
                 }).on("addresses_bulk", new Listener() {
                     @Override
                     public void call(Object... arg0) {
-                        WebSocketsAddress[] addressesChunk = gson.fromJson(arg0[0].toString(), WebSocketsAddress[].class);
+                        WebSocketsAddress[] addressesChunk = gson.fromJson(arg0[0].toString(),
+                                WebSocketsAddress[].class);
                         addressesParser(addressesChunk);
                         addressesCount += addressesChunk.length;
                         LOG.log(Level.FINE, "Addresses Received: {0}", addressesChunk.length);
@@ -183,6 +194,7 @@ public class GeocoderWebSockets {
         }
     }
 
+    /** Stops listening for addresses and closes the connection. Calling it before the geocoder started does nothing. */
     public void closeGeoCodeSocketIO() {
         if (geocoderWebSocket != null) {
             geocoderWebSocket.off("address");
@@ -194,7 +206,8 @@ public class GeocoderWebSockets {
     }
 
     private void emitTemporaryAddressesStorageID() {
-        LOG.log(Level.INFO, "Emiting Temporary Addresses StorageID: {0}", Sanitizer.forLog(this.temporaryAddressesStorageID));
+        LOG.log(Level.INFO, "Emiting Temporary Addresses StorageID: {0}",
+                Sanitizer.forLog(this.temporaryAddressesStorageID));
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("temporary_addresses_storage_id", this.temporaryAddressesStorageID);
         try {
@@ -205,15 +218,22 @@ public class GeocoderWebSockets {
         }
     }
 
-    public void startGeocoding(String temporaryAddressesStorageID, int totalAddresses) {
-        this.totalAddresses = totalAddresses;
+    /**
+     * Connects to the websocket geocoder, if this geocoder is not connected yet, and asks it to geocode a stored batch;
+     * the addresses then arrive in the background.
+     *
+     * @param storageId the ID of the stored addresses ({@code temporary_addresses_storage_id})
+     * @param addressCount the number of stored addresses
+     */
+    public void startGeocoding(String storageId, int addressCount) {
+        this.totalAddresses = addressCount;
         // One chunk per hundredth of the job, from 10 to 200 addresses, and as many chunks
         // as fill a stage of 100 addresses (the same rule as the C# SDK). Floating-point
         // division: with integer division the chunk was always 100.
-        this.chunkSize = Math.round(Math.min(MAX_CHUNK_SIZE, Math.max(MIN_CHUNK_SIZE, totalAddresses / 100.0)));
+        this.chunkSize = Math.round(Math.min(MAX_CHUNK_SIZE, Math.max(MIN_CHUNK_SIZE, addressCount / 100.0)));
         this.chunksLimit = (long) Math.ceil(BUFFER_FAIL_SAFE_MAX_ADDRESSES / (double) this.chunkSize);
         this.maxAddressesToBeDownloaded = this.chunkSize * this.chunksLimit;
-        this.temporaryAddressesStorageID = temporaryAddressesStorageID;
+        this.temporaryAddressesStorageID = storageId;
         geocodedAddresses = new ArrayList<>();
         if (geocoderWebSocket == null || !geocoderWebSocket.connected()) {
             connectGeocoder();
@@ -221,30 +241,46 @@ public class GeocoderWebSockets {
 
     }
 
+    /**
+     * Tells whether every address of the batch has arrived.
+     *
+     * @return {@code true} when the number of addresses received equals the size of the batch
+     */
     public Boolean isCompleted() {
         return getTotalAddresses() == getAddressesCount();
     }
 
+    /**
+     * Describes the progress, for display.
+     *
+     * @return a text such as {@code Addresses Processed: 120}
+     */
     public String getProgress() {
         return "Addresses Processed: " + addressesCount;
     }
 
     /**
-     * @return the geocodedAddresses
+     * Returns the addresses received so far.
+     *
+     * @return the geocoded addresses; {@code null} before {@link #startGeocoding(String, int)}
      */
     public List<Address> getAddresses() {
         return geocodedAddresses;
     }
 
     /**
-     * @return the addressesCount
+     * Returns how many addresses have arrived.
+     *
+     * @return the number of geocoded addresses received
      */
     public int getAddressesCount() {
         return addressesCount;
     }
 
     /**
-     * @return the totalAddresses
+     * Returns the size of the batch.
+     *
+     * @return the number of addresses to geocode
      */
     public int getTotalAddresses() {
         return totalAddresses;

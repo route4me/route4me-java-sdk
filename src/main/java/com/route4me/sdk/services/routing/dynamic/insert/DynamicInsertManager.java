@@ -32,13 +32,19 @@ import java.util.List;
 import org.apache.http.client.utils.URIBuilder;
 
 /**
- *
- * @author route4me
+ * Finds the routes where a new destination fits best, through the V5 API
+ * ({@code https://wh.route4me.com/modules/api/v5.0/routes/lookup-for-new-destination}).
  */
 public class DynamicInsertManager extends Manager {
 
+    /** The path of the lookup, on {@code wh.route4me.com}. */
     public static final String ROUTE_DYNAMIC_INSERT = "/modules/api/v5.0/routes/lookup-for-new-destination";
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as a bearer token
+     */
     public DynamicInsertManager(String apiKey) {
         super(apiKey);
     }
@@ -68,7 +74,8 @@ public class DynamicInsertManager extends Manager {
      * @return the matching routes, best first
      * @throws APIException if the request fails
      */
-    public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode, RecommendedBy recommendedBy, Integer limit, List<String> routeIDs) throws APIException {
+    public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode,
+            RecommendedBy recommendedBy, Integer limit, List<String> routeIDs) throws APIException {
         URIBuilder builder = this.getURI(ROUTE_DYNAMIC_INSERT);
         DynamicInsert body = new DynamicInsert();
         body.setRouteInfoServer("v5");
@@ -85,11 +92,39 @@ public class DynamicInsertManager extends Manager {
 
     }
 
-    public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode, RecommendedBy recommendedBy, Integer limit) throws APIException {
+    /**
+     * Finds the routes of a date where a new destination fits best, among all the routes of the account:
+     * {@code POST https://wh.route4me.com/modules/api/v5.0/routes/lookup-for-new-destination}.
+     *
+     * @param scheduledFor  the route date, such as {@code 2026-10-22}; {@code null} leaves it out
+     * @param lat           the latitude of the new destination
+     * @param lng           the longitude of the new destination
+     * @param insertMode    where the destination may go; {@code null} leaves it out and the API uses its default
+     * @param recommendedBy what the ranking minimises; {@code null} leaves it out and the API uses its default
+     * @param limit         the maximum number of routes to return
+     * @return the matching routes, best first
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode,
+            RecommendedBy recommendedBy, Integer limit) throws APIException {
         return this.lookForNewDestination(scheduledFor, lat, lng, insertMode, recommendedBy, limit, null);
     }
 
-    public List<MatchedRoute> lookForNewDestination(Double lat, Double lng, InsertMode insertMode, RecommendedBy recommendedBy, Integer limit, List<String> routeIDs) throws APIException {
+    /**
+     * Finds, among some routes, those where a new destination fits best:
+     * {@code POST https://wh.route4me.com/modules/api/v5.0/routes/lookup-for-new-destination}.
+     *
+     * @param lat           the latitude of the new destination
+     * @param lng           the longitude of the new destination
+     * @param insertMode    where the destination may go; {@code null} leaves it out and the API uses its default
+     * @param recommendedBy what the ranking minimises; {@code null} leaves it out and the API uses its default
+     * @param limit         the maximum number of routes to return
+     * @param routeIDs      the routes to consider
+     * @return the matching routes, best first
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public List<MatchedRoute> lookForNewDestination(Double lat, Double lng, InsertMode insertMode,
+            RecommendedBy recommendedBy, Integer limit, List<String> routeIDs) throws APIException {
         return this.lookForNewDestination(null, lat, lng, insertMode, recommendedBy, limit, routeIDs);
     }
 }

@@ -15,16 +15,23 @@ import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
 /**
- *
- * @author juan
+ * Manages the vehicles of the account through the older vehicle API
+ * ({@code https://wh.route4me.com/modules/api/vehicles}), which takes the API key as the {@code api_key} query
+ * parameter. {@link VehiclesManagerV5} covers the V5 vehicle API.
  */
 public class VehiclesManager extends Manager {
+    /** The path of the vehicles, on {@code wh.route4me.com}. */
     public static final String VEHICLES_EP = "/modules/api/vehicles";
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as the {@code api_key} query parameter
+     */
     public VehiclesManager(String apiKey) {
         super(apiKey);
     }
-    
+
     private URIBuilder getURI(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
@@ -32,33 +39,69 @@ public class VehiclesManager extends Manager {
         Manager.withPathSegments(builder, endpoint, segments);
         return builder;
     }
-    
+
+    /**
+     * Lists the vehicles: {@code GET https://wh.route4me.com/modules/api/vehicles}.
+     *
+     * @return the vehicles
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public List<Vehicles> getVehicles() throws APIException {
         URIBuilder builder = this.getURI(VEHICLES_EP);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Vehicles>>() {
         }.getType());
     }
 
+    /**
+     * Gets one vehicle: {@code GET https://wh.route4me.com/modules/api/vehicles/{vehicleID}}.
+     *
+     * @param vehicleID the vehicle ID
+     * @return the vehicle
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Vehicles getVehicle(String vehicleID) throws APIException {
         URIBuilder builder = this.getURI(VEHICLES_EP, vehicleID);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, Vehicles.class);
     }
-            
+
+    /**
+     * Deletes a vehicle: {@code DELETE https://wh.route4me.com/modules/api/vehicles/{vehicleID}}.
+     *
+     * @param vehicleID the vehicle ID
+     * @return the deleted vehicle
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Vehicles deleteVehicle(String vehicleID) throws APIException {
         URIBuilder builder = this.getURI(VEHICLES_EP, vehicleID);
         return this.makeRequest(RequestMethod.DELETE, builder, (HttpEntity) null, Vehicles.class);
     }
 
+    /**
+     * Creates a vehicle: {@code POST https://wh.route4me.com/modules/api/vehicles}, with the vehicle as the JSON body.
+     *
+     * @param vehicle the vehicle
+     * @return the created vehicle
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Vehicles newVehicle(Vehicles vehicle) throws APIException {
         URIBuilder builder = this.getURI(VEHICLES_EP);
         return this.makeJSONRequest(RequestMethod.POST, builder,  vehicle, Vehicles.class);
     }
 
+    /**
+     * Updates a vehicle: {@code PUT https://wh.route4me.com/modules/api/vehicles/{vehicleId}}, with the vehicle as the
+     * JSON
+     * body.
+     *
+     * @param vehicle the vehicle, with its vehicle ID
+     * @return the updated vehicle
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Vehicles updateVehicle(Vehicles vehicle) throws APIException {
         URIBuilder builder = this.getURI(VEHICLES_EP, vehicle.getVehicleId());
         return this.makeJSONRequest(RequestMethod.PUT, builder, vehicle, Vehicles.class);
     }
-    
-    
-            
+
+
+
 }

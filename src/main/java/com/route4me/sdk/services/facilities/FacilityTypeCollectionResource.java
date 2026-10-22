@@ -4,8 +4,10 @@ import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import java.util.List;
 
+/** The answer of {@link FacilityManager#getFacilityTypes()}. */
 @Data
 public class FacilityTypeCollectionResource {
+    /** Array of facility types ({@code data}). */
     @SerializedName("data")
     private List<FacilityTypeResource> data;
 }

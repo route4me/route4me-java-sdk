@@ -6,6 +6,11 @@ import com.route4me.sdk.exception.APIException;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
+/**
+ * Reads the locations of the address book (its contacts with coordinates), grouped, clustered or by territory, and
+ * manages the location types, through the V5 API ({@code
+ * https://wh.route4me.com/modules/api/v5.0/address-book/locations}).
+ */
 public class LocationManager extends Manager {
 
     private static final String V5_BASE = "/modules/api/v5.0/address-book";
@@ -18,10 +23,21 @@ public class LocationManager extends Manager {
     private static final String LOCATIONS_EXPORT_EP = V5_BASE + "/locations/export";
     private static final String LOCATION_TYPES_EP = V5_BASE + "/locations/types";
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as a bearer token
+     */
     public LocationManager(String apiKey) {
         super(apiKey);
     }
 
+    /**
+     * Creates a manager that sends its requests with an API key, and may refuse redirects.
+     *
+     * @param apiKey the Route4Me API key, sent as a bearer token
+     * @param disableRedirects {@code true} to add {@code redirect=0} to every request and not follow redirects
+     */
     public LocationManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
     }
@@ -34,63 +50,180 @@ public class LocationManager extends Manager {
         return builder;
     }
 
+    /**
+     * Lists locations, with their column configuration: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/list/combined}, with the request as the JSON
+     * body.
+     *
+     * @param request the filters, sort order, page and fields
+     * @return the page of locations and the columns
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public LocationCombinedResource getLocationsCombined(LocationCombinedRequest request) throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_LIST_COMBINED_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationCombinedResource.class);
     }
 
+    /**
+     * Lists locations: {@code POST https://wh.route4me.com/modules/api/v5.0/address-book/locations/list}, with the
+     * request as the JSON body.
+     *
+     * @param request the filters, sort order, page and fields
+     * @return the page of locations
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public LocationListResource getLocationsList(LocationCombinedRequest request) throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_LIST_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationListResource.class);
     }
 
+    /**
+     * Groups locations in clusters for a map zoom level: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/clustering}, with the request as the JSON
+     * body.
+     *
+     * @param request the filters and the zoom level
+     * @return the clusters, and the locations that are not in one
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public LocationClusteringResource getLocationsClustering(LocationClusteringRequest request) throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_CLUSTERING_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationClusteringResource.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                LocationClusteringResource.class);
     }
 
+    /**
+     * Gets a heat map of the locations: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/heatmap}, with the request as the JSON body.
+     *
+     * @param request the filters and the zoom level
+     * @return the heat map
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public LocationHeatmapCollection getLocationsHeatmap(LocationHeatmapRequest request) throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_HEATMAP_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationHeatmapCollection.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                LocationHeatmapCollection.class);
     }
 
-    public LocationTerritoriesCollection getLocationsTerritories(LocationTerritoriesRequest request) throws APIException {
+    /**
+     * Lists territories with the number of locations in each: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/territories}, with the request as the
+     * JSON body.
+     *
+     * @param request the location filters and the territory page
+     * @return the page of territories
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public LocationTerritoriesCollection getLocationsTerritories(LocationTerritoriesRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_TERRITORIES_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationTerritoriesCollection.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                LocationTerritoriesCollection.class);
     }
 
-    public LocationExportColumnsResource[] getLocationsExportColumns(LocationCombinedRequest request) throws APIException {
+    /**
+     * Lists the columns a location export can have: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/export/columns}, with the request as the JSON
+     * body.
+     *
+     * @param request the location filters
+     * @return the columns
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public LocationExportColumnsResource[] getLocationsExportColumns(LocationCombinedRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_EXPORT_COLUMNS_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationExportColumnsResource[].class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                LocationExportColumnsResource[].class);
     }
 
+    /**
+     * Starts an export of locations to a file: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/export}, with the request as the JSON body.
+     *
+     * @param request the locations, the columns, the file name and the format
+     * @return whether the export started
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public StatusResponse exportLocations(LocationExportRequest request) throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_EXPORT_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), StatusResponse.class);
     }
 
+    /**
+     * Lists the location types, one page at a time: {@code GET
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/types}. Every {@code null} argument is left out
+     * of
+     * the query.
+     *
+     * @param page the page number, from 1 ({@code page})
+     * @param perPage the number of types per page
+     *     ({@code per_page})
+     * @return the page of location types
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public LocationTypeCollection getLocationTypes(Integer page, Integer perPage) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP);
-        if (page != null) builder.setParameter("page", String.valueOf(page));
-        if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
+        if (page != null) {
+            builder.setParameter("page", String.valueOf(page));
+        }
+        if (perPage != null) {
+            builder.setParameter("per_page", String.valueOf(perPage));
+        }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, LocationTypeCollection.class);
     }
 
+    /**
+     * Gets one location type: {@code GET
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/types/{locationTypeId}}.
+     *
+     * @param locationTypeId the location type ID
+     * @return the location type
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public LocationTypeResource getLocationTypeById(String locationTypeId) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, LocationTypeResource.class);
     }
 
+    /**
+     * Creates a location type: {@code POST https://wh.route4me.com/modules/api/v5.0/address-book/locations/types}, with
+     * the request as the JSON body.
+     *
+     * @param request the location type
+     * @return the created location type
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public LocationTypeResource createLocationType(StoreLocationTypeRequest request) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationTypeResource.class);
     }
 
-    public LocationTypeResource updateLocationType(String locationTypeId, StoreLocationTypeRequest request) throws APIException {
+    /**
+     * Updates a location type: {@code PUT
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/types/{locationTypeId}}, with the request as the
+     * JSON body.
+     *
+     * @param locationTypeId the location type ID
+     * @param request the new values
+     * @return the updated location type
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public LocationTypeResource updateLocationType(String locationTypeId, StoreLocationTypeRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), LocationTypeResource.class);
     }
 
+    /**
+     * Deletes a location type: {@code DELETE
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/types/{locationTypeId}}.
+     *
+     * @param locationTypeId the location type ID
+     * @return whether it was deleted
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public DeleteLocationTypeResponse deleteLocationType(String locationTypeId) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
         return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteLocationTypeResponse.class);

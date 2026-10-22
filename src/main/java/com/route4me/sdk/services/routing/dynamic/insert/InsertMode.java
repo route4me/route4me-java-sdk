@@ -23,19 +23,20 @@
  */
 package com.route4me.sdk.services.routing.dynamic.insert;
 
-/**
- *
- * @author route4me
- */
+/** Where a new destination may go in a route; {@code toString()} and {@link #getValue()} give the API value. */
 public enum InsertMode {
+    /** Wherever it fits best ({@code optimal_anywhere}). */
     OPTIMAL_ANYWHERE("optimal_anywhere"),
+    /** Wherever it fits best after the last visited stop ({@code optimal_after_last_visited}). */
     OPTIMAL_AFTER_LAST_VISITED("optimal_after_last_visited"),
+    /** At the end of the route ({@code end_of_route}). */
     END_OF_ROUTE("end_of_route"),
+    /** At the beginning of the route ({@code beginning_of_route}). */
     BEGINNING_OF_ROUTE("beginning_of_route");
 
     private final String value;
 
-    private InsertMode(String value) {
+    InsertMode(String value) {
         this.value = value;
     }
 
@@ -45,7 +46,9 @@ public enum InsertMode {
     }
 
     /**
-     * @return the value
+     * Returns the API value of the mode.
+     *
+     * @return the value, such as {@code end_of_route}
      */
     public String getValue() {
         return value;

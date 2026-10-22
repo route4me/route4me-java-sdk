@@ -28,23 +28,23 @@ import com.route4me.sdk.queryconverter.QueryParameter;
 import java.util.List;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
+/** A page of routes, the answer of a route search. */
 @Data
 public class RouteSearchResult {
 
+    /** The routes of this page ({@code data}). */
     @QueryParameter("data")
     @SerializedName("data")
     private List<RouteData> data;
 
+    /** The links to the other pages ({@code links}). */
     @QueryParameter("links")
     @SerializedName("links")
     private RouteSearchLinks links;
 
+    /** The position of this page ({@code meta}). */
     @QueryParameter("meta")
     @SerializedName("meta")
     private RouteSearchMeta meta;
-    
+
 }

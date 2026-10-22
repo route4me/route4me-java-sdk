@@ -129,7 +129,8 @@ public class APIException extends Exception {
      */
     public static APIException forUnparsableResponse(String method, String url, int statusCode, String responseBody,
                                                      String expectedType, Throwable cause) {
-        String message = String.format("Unexpected server response for %s %s (status %d): the body is not valid JSON for %s",
+        String message = String.format(
+                "Unexpected server response for %s %s (status %d): the body is not valid JSON for %s",
                 method, withoutQuery(url), statusCode, expectedType);
         return new APIException(message, cause, method, url, statusCode, responseBody);
     }
@@ -151,6 +152,8 @@ public class APIException extends Exception {
     }
 
     /**
+     * Returns the HTTP status of the response.
+     *
      * @return the HTTP status code of the response, or {@code 0} when there was no response
      */
     public int getStatusCode() {
@@ -158,23 +161,30 @@ public class APIException extends Exception {
     }
 
     /**
-     * @return the response body, cut to {@link #MAX_BODY_LENGTH} characters, or
-     * {@code null} when there was no response
+     * Returns the response body, cut.
+     *
+     * @return the response body, cut to {@link #MAX_BODY_LENGTH} characters, or {@code null} when there was no
+     *     response
      */
     public String getResponseBody() {
         return responseBody;
     }
 
     /**
-     * @return the {@code errors} of a V4 error response ({@code {"errors": [...]}}), in
-     * order, followed by the {@code error} of the body when it is a string (a boolean
-     * {@code error} flag is ignored); empty when the body has neither
+     * Returns the errors of the response.
+     *
+     * @return the {@code errors} of a V4 error response ({@code {"errors": [...]}}), in order, followed by the
+     *     {@code error} of the body when it is a string (a boolean {@code error} flag is ignored); empty when the body
+     * has
+     *     neither
      */
     public List<String> getErrors() {
         return Collections.unmodifiableList(errors);
     }
 
     /**
+     * Returns the code of a V5 error response.
+     *
      * @return the {@code code} of a V5 error response, or {@code null} when the body has none
      */
     public Integer getCode() {
@@ -193,13 +203,17 @@ public class APIException extends Exception {
     }
 
     /**
-     * @return the HTTP method of the request, or {@code null} when it is unknown
+     * Returns the HTTP method of the request.
+     *
+     * @return the HTTP method, such as {@code GET}, or {@code null} when it is unknown
      */
     public String getMethod() {
         return method;
     }
 
     /**
+     * Returns the URL of the request, without credentials.
+     *
      * @return the request URL with credentials redacted, or {@code null} when it is unknown
      */
     public String getUrl() {

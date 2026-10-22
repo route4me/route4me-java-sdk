@@ -189,7 +189,8 @@ public class OrdersManagerTest {
 
         http.request(0).assertJson("filter.statuses[0]", 0).assertJson("filter.statuses[1]", 7);
         http.request(1).assertJson("filter.tracking_numbers[0]", "TRK-1").assertJson("limit", 30);
-        http.request(2).assertJson("filter.tracking_numbers[0]", "TRK-2").assertJson("limit", 1).assertJson("offset", 2);
+        http.request(2).assertJson("filter.tracking_numbers[0]", "TRK-2").assertJson("limit", 1).assertJson("offset",
+                2);
     }
 
     @Test

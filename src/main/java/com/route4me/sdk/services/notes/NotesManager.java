@@ -14,10 +14,18 @@ import org.apache.http.message.BasicNameValuePair;
 import java.util.ArrayList;
 import java.util.List;
 
+/** Reads and adds the notes of route destinations through the V4 API ({@code https://api.route4me.com}). */
 public class NotesManager extends Manager {
+    /** The path that adds a note to a route destination, on {@code api.route4me.com}. */
     public static final String ADD_NOTES_EP = "/actions/addRouteNotes.php";
+    /** The path that reads a route destination with its notes, on {@code api.route4me.com}. */
     public static final String GET_NOTES_EP = "/api.v4/address.php";
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as the {@code api_key} query parameter
+     */
     public NotesManager(String apiKey) {
         super(apiKey);
     }
@@ -49,7 +57,8 @@ public class NotesManager extends Manager {
      * @return the added note
      * @throws APIException if the request fails
      */
-    public AddedNote addAddressNotes(NoteRequest note, String content, StatusUpdateType updateType) throws APIException {
+    public AddedNote addAddressNotes(NoteRequest note, String content, StatusUpdateType updateType)
+            throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADD_NOTES_EP);
         try {
             builder.addParameters(QueryConverter.convertObjectToParameters(note));
@@ -63,14 +72,19 @@ public class NotesManager extends Manager {
         return this.makeRequest(RequestMethod.POST, builder, data, AddedNote.class);
     }
 
+    /** The answer of {@link NotesManager#addAddressNotes(NoteRequest, String, StatusUpdateType)}. */
     @Data
     public static class AddedNote {
+        /** Whether the note was added ({@code status}). */
         @SerializedName("status")
         private Boolean status;
+        /** The ID of the added note ({@code note_id}). */
         @SerializedName("note_id")
         private String noteId;
+        /** The ID of the uploaded file of the note, if any ({@code upload_id}). */
         @SerializedName("upload_id")
         private String uploadId;
+        /** The added note ({@code note}). */
         @SerializedName("note")
         private Note note;
     }

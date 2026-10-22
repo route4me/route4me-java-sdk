@@ -27,17 +27,19 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
-
+/** How an optimization balances the work between its routes ({@code balance}). */
 @Data
 public class Balance {
+    /** The balancing mode; see {@link BalanceMode} ({@code mode}). */
     @QueryParameter("mode")
     @SerializedName("mode")
-    String mode;
+    private String mode;
 
+    /**
+     * Creates a balance setting.
+     *
+     * @param mode the balancing mode, such as {@code destinations_count}; see {@link BalanceMode}
+     */
     public Balance(String mode) {
         this.mode = mode;
     }

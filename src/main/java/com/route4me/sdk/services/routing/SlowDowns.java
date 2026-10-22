@@ -9,20 +9,17 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
-
-/**
- *
- * @author juan
- */
+/** How much the service and travel times are slowed down, in percent ({@code slowdowns}). */
 @Data
 public class SlowDowns {
-    
+
+    /** Service time slowdowon (percent) ({@code service_time}). */
     @SerializedName("service_time")
     @QueryParameter("service_time")
     private Integer serviceTime;
+    /** Travel time slowdowon (percent) ({@code travel_time}). */
     @SerializedName("travel_time")
     @QueryParameter("travel_time")
     private Integer travelTime;
 
-    
 }

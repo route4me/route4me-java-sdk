@@ -9,16 +9,15 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 import lombok.Data;
 
-/**
- *
- * @author Route4Me
- */
+/** The answer of the deprecated vendor methods of {@link TelematicsManager}: one vendor or a list. */
 @Data
 public class TelematicsVendorsInfo {
 
+    /** The vendors, in the answer for a list ({@code vendors}). */
     @SerializedName("vendors")
-    List<TelematicsVendorInfo> vendors;
+    private List<TelematicsVendorInfo> vendors;
+    /** The vendor, in the answer for one vendor ({@code vendor}). */
     @SerializedName("vendor")
-    TelematicsVendorInfo vendor;
+    private TelematicsVendorInfo vendor;
 
 }

@@ -28,25 +28,29 @@ import com.route4me.sdk.queryconverter.QueryParameter;
 import java.util.List;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
+/** The body of a route search on the V5.1 route API. */
 @Data
 public class RouteSearch {
 
+    /** The filters of the search ({@code filters}). */
     @QueryParameter("filters")
     @SerializedName("filters")
     private RouteSearchFilter filters;
+    /**
+     * The sort order, as [field, direction] pairs, such as {@code [["route_created_unix", "desc"]]} ({@code order_by}).
+     */
     @QueryParameter("order_by")
     @SerializedName("order_by")
     private List<List<String>> orderBy;
+    /** The time zone of the dates of the search, such as {@code America/New_York} ({@code timezone}). */
     @QueryParameter("timezone")
     @SerializedName("timezone")
     private String timeZone;
+    /** Page number (1-based). Defaults to 1 ({@code page}). */
     @QueryParameter("page")
     @SerializedName("page")
     private Integer page;
+    /** Number of items per page (1–500) ({@code per_page}). */
     @QueryParameter("per_page")
     @SerializedName("per_page")
     private Integer perPage;

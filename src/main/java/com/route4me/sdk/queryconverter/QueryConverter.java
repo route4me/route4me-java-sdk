@@ -10,13 +10,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/** Converts the {@link QueryParameter} fields of an object to query (or form) parameters. */
 public class QueryConverter {
     /**
-     * Converts a POJO to a list of query string parameters, does not support nesting.
+     * Converts the {@link QueryParameter} fields of an object to parameters, as the V4 API reads them. {@code null}
+     * fields are left out; an array or an iterable gives one parameter per item, under the same name; {@code true}
+     * becomes {@code 1}, and any other value its {@code toString()}, so {@code false} stays {@code false}. Nested
+     * objects are not converted.
      *
-     * @param object to convert to query string parameters
-     * @return A list of NameValuePair each representing a different parameter
-     * @throws IllegalAccessException if SecurityPolicy does not allow getting value using reflection
+     * @param object the object to convert
+     * @return the parameters, in field order
+     * @throws IllegalAccessException if the security policy does not allow reading a field
      */
     public static List<NameValuePair> convertObjectToParameters(Object object) throws IllegalAccessException {
         List<NameValuePair> parameters = new ArrayList<>();
@@ -34,23 +38,32 @@ public class QueryConverter {
                 //if array add multiple parameters
                 if (fieldValue.getClass().isArray()) {
                     for (int i = 0; i < Array.getLength(fieldValue); i++) {
-                        parameters.add(new BasicNameValuePair(annot.value(), Array.get(fieldValue, i).toString()));
+                        parameters.add(new BasicNameValuePair(annot.value(), v4Value(Array.get(fieldValue, i))));
                     }
                 } else if (fieldValue instanceof Iterable) { //or iterable
                     for (Object element : (Iterable) fieldValue) {
-                        parameters.add(new BasicNameValuePair(annot.value(), element.toString()));
+                        parameters.add(new BasicNameValuePair(annot.value(), v4Value(element)));
                     }
                 } else {
-                    //Convert booleans to numbers
-                    if (fieldValue instanceof Boolean && ((Boolean) fieldValue).booleanValue()) {
-                        parameters.add(new BasicNameValuePair(annot.value(), "1"));
-                    } else {
-                        parameters.add(new BasicNameValuePair(annot.value(), fieldValue.toString()));
-                    }
+                    parameters.add(new BasicNameValuePair(annot.value(), v4Value(fieldValue)));
                 }
             }
         }
         return parameters;
+    }
+
+    /**
+     * Returns the text of one V4 query value. A boolean becomes {@code 1} or {@code 0}: PHP
+     * reads any non-empty string, {@code "false"} included, as true.
+     *
+     * @param value the value, not {@code null}
+     * @return the value as sent
+     */
+    private static String v4Value(Object value) {
+        if (value instanceof Boolean) {
+            return ((Boolean) value).booleanValue() ? "1" : "0";
+        }
+        return value.toString();
     }
 
     /**

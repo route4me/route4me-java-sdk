@@ -8,23 +8,31 @@ import java.util.Arrays;
 import java.util.List;
 import org.apache.http.client.utils.URIBuilder;
 
+/** Adds breaks to routes through the V5 API ({@code https://wh.route4me.com/modules/api/v5.0/route-breaks}). */
 public class RouteBreaksManager extends Manager {
-    
+
+    /** The path of the route breaks, on {@code wh.route4me.com}. */
     public static final String ROUTE_BREAKS_EP = "/modules/api/v5.0/route-breaks";
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as a bearer token
+     */
     public RouteBreaksManager(String apiKey) {
         super(apiKey);
     }
 
-    private URIBuilder getURI(String endpoint){
+    private URIBuilder getURI(String endpoint) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
         builder.setPath(endpoint);
         return builder;
     }
-    
-    private Object insertBreak(Integer duration, Integer amount, String type, boolean replaceExisting, String [] routeIDs) throws APIException{
+
+    private Object insertBreak(Integer duration, Integer amount, String type, boolean replaceExisting,
+            String[] routeIDs) throws APIException {
         if (amount == null) {
             throw new IllegalArgumentException("The break amount (" + type + ") must not be null");
         }
@@ -35,18 +43,18 @@ public class RouteBreaksManager extends Manager {
         RouteBreak routeBreak = new RouteBreak();
         routeBreak.setDuration(duration);
         routeBreak.setType(type);
-        int params[] = new int[routeIDs.length];
+        int[] params = new int[routeIDs.length];
         Arrays.fill(params, amount);
         routeBreak.setParams(params);
-        List<RouteBreak> breaks = new ArrayList();
+        List<RouteBreak> breaks = new ArrayList<>();
         breaks.add(routeBreak);
         RouteBreaks routeBreaks = new RouteBreaks();
         routeBreaks.setReplaceExisting(replaceExisting);
         routeBreaks.setBreaks(breaks);
-        routeBreaks.setRouteID(routeIDs);        
+        routeBreaks.setRouteID(routeIDs);
         return this.makeJSONRequest(RequestMethod.POST, builder, routeBreaks, null, Object.class);
     }
-    
+
     /**
      * Inserts a break of {@code duration} seconds after a given travel time:
      * {@code POST /modules/api/v5.0/route-breaks}.
@@ -59,8 +67,10 @@ public class RouteBreaksManager extends Manager {
      * @throws IllegalArgumentException if {@code travelTime} is {@code null} or no route ID is given
      * @throws APIException             if the request fails
      */
-    public Object insertBreakAfterCertainTravelTime(Integer duration, Integer travelTime, boolean replaceExisting, String ... routeIDs) throws APIException {
-        return this.insertBreak(duration, travelTime, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_TRAVEL_TIME.getValue(), replaceExisting, routeIDs);
+    public Object insertBreakAfterCertainTravelTime(Integer duration, Integer travelTime, boolean replaceExisting,
+            String... routeIDs) throws APIException {
+        return this.insertBreak(duration, travelTime,
+                RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_TRAVEL_TIME.getValue(), replaceExisting, routeIDs);
     }
 
     /**
@@ -75,8 +85,10 @@ public class RouteBreaksManager extends Manager {
      * @throws IllegalArgumentException if {@code locationsNumber} is {@code null} or no route ID is given
      * @throws APIException             if the request fails
      */
-    public Object insertBreakAfterCertainLocations(Integer duration, Integer locationsNumber, boolean replaceExisting, String ... routeIDs) throws APIException {
-        return this.insertBreak(duration, locationsNumber, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_LOCATIONS.getValue(), replaceExisting, routeIDs);
+    public Object insertBreakAfterCertainLocations(Integer duration, Integer locationsNumber, boolean replaceExisting,
+            String... routeIDs) throws APIException {
+        return this.insertBreak(duration, locationsNumber,
+                RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_LOCATIONS.getValue(), replaceExisting, routeIDs);
     }
 
     /**
@@ -91,8 +103,10 @@ public class RouteBreaksManager extends Manager {
      * @throws IllegalArgumentException if {@code serviceTime} is {@code null} or no route ID is given
      * @throws APIException             if the request fails
      */
-    public Object insertBreakAfterCertainServiceTime(Integer duration, Integer serviceTime, boolean replaceExisting, String ... routeIDs) throws APIException {
-        return this.insertBreak(duration, serviceTime, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_SERVICE_TIME.getValue(), replaceExisting, routeIDs);
+    public Object insertBreakAfterCertainServiceTime(Integer duration, Integer serviceTime, boolean replaceExisting,
+            String... routeIDs) throws APIException {
+        return this.insertBreak(duration, serviceTime,
+                RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_SERVICE_TIME.getValue(), replaceExisting, routeIDs);
     }
 
     /**
@@ -107,10 +121,13 @@ public class RouteBreaksManager extends Manager {
      * @throws IllegalArgumentException if {@code elapsedTime} is {@code null} or no route ID is given
      * @throws APIException             if the request fails
      */
-    public Object insertBreakAfterCertainElapsed(Integer duration, Integer elapsedTime, boolean replaceExisting, String ... routeIDs) throws APIException {
-        return this.insertBreak(duration, elapsedTime, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_TOTAL_ELAPSED_TIME.getValue(), replaceExisting, routeIDs);
+    public Object insertBreakAfterCertainElapsed(Integer duration, Integer elapsedTime, boolean replaceExisting,
+            String... routeIDs) throws APIException {
+        return this.insertBreak(duration, elapsedTime,
+                RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_TOTAL_ELAPSED_TIME.getValue(), replaceExisting,
+                routeIDs);
     }
 
 
-    
+
 }

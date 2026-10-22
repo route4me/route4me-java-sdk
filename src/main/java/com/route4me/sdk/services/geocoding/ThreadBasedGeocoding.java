@@ -23,6 +23,13 @@ public class ThreadBasedGeocoding implements Callable<Address> {
     private final GeocodingManager manager;
     private final GeocoderOptions options;
 
+    /**
+     * Creates the task that geocodes one address.
+     *
+     * @param manager the manager that sends the request
+     * @param address the address
+     * @param options the format, detail and attempts of the request
+     */
     public ThreadBasedGeocoding(GeocodingManager manager, String address, GeocoderOptions options) {
         this.manager = manager;
         this.address = address;
@@ -79,6 +86,9 @@ public class ThreadBasedGeocoding implements Callable<Address> {
                     geocodedAddress.setLatitude(geocoordinate.getLatitude());
                     geocodedAddress.setLongitude(geocoordinate.getLongitude());
                 }
+                break;
+            default:
+                // GeocoderDetails has no other value.
                 break;
         }
 

@@ -278,7 +278,8 @@ public class RoutingManagerTest {
 
         List<DataObject> optimizations = manager.getOptimizations(10, 20);
 
-        http.request().assertEndpoint("GET", API, OPTIMIZATION_EP).assertQuery("limit", "10").assertQuery("offset", "20");
+        http.request().assertEndpoint("GET", API, OPTIMIZATION_EP).assertQuery("limit", "10").assertQuery("offset",
+                "20");
         assertEquals(1, optimizations.size());
         assertEquals("OPT-1", optimizations.get(0).getOptimizationProblemId());
     }
@@ -398,7 +399,8 @@ public class RoutingManagerTest {
         RoutingManager manager = manager();
         http.respondToAll(200, "[" + Fixtures.read("route.json") + "]");
 
-        List<Route> routes = manager.getRoutesbyTimeDate("2026-10-21T00:00:00:000+00:00", "2026-10-22T23:00:00:000+00:00");
+        List<Route> routes = manager.getRoutesbyTimeDate("2026-10-21T00:00:00:000+00:00",
+                "2026-10-22T23:00:00:000+00:00");
         manager.getRoutesbyTimeDate("2026-10-21T00:00:00:000+00:00", "2026-10-22T23:00:00:000+00:00", 5, 10);
 
         http.request(0).assertEndpoint("GET", API, ROUTE_EP).assertQuery("start_date", "2026-10-21")
@@ -413,7 +415,8 @@ public class RoutingManagerTest {
         RoutingManager manager = manager();
         http.respondWithFixture(200, "route_search.json").respondWithFixture(200, "route_search.json");
 
-        RouteSearchResult result = manager.getRoutesbyDateTimeZone("2026-10-21", "2026-10-22", "America/New_York", 2, 50);
+        RouteSearchResult result = manager.getRoutesbyDateTimeZone("2026-10-21", "2026-10-22", "America/New_York", 2,
+                50);
         manager.getRoutesbyDateTimeZone("2026-10-21", "2026-10-22", "UTC");
 
         http.request(0).assertEndpoint("POST", WH, "/modules/api/v5.1/routes")

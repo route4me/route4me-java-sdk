@@ -26,11 +26,14 @@ package com.route4me.sdk.services.routing;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
+/** The answer of {@link RoutingManager#moveAddresses(Number, String, Number)}. */
 @Data
 public class MovedAddressesResponse {
 
+    /** Whether legs for this vendor were recomputed and persisted ({@code success}). */
     @SerializedName("success")
     private Boolean success;
+    /** Human-readable error message when `success=false` ({@code error}). */
     @SerializedName("error")
     private String error;
 

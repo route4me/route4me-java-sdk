@@ -1,0 +1,29 @@
+package com.route4me.sdk.examples;
+
+import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.services.routing.DataObject;
+import com.route4me.sdk.services.routing.RoutingManager;
+
+import java.util.List;
+
+/** Lists optimizations with {@link RoutingManager#getOptimizations} and prints the addresses of the first one. */
+public class GenericExample {
+
+    public static void main(String[] args) {
+        String apiKey = System.getenv("R4M_API_KEY");
+        RoutingManager manager = new RoutingManager(apiKey);
+        try {
+            List<DataObject> responseObject = manager.getOptimizations(10, 5);
+            DataObject opt = responseObject.get(0);
+            System.out.println("Optimization ID: " + opt.getOptimizationProblemId());
+            for (Address address : opt.getAddresses()) {
+                System.out.println(address);
+            }
+        } catch (APIException e) {
+            //handle exception
+            e.printStackTrace();
+        }
+
+    }
+}

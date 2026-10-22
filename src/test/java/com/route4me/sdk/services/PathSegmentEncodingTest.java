@@ -88,10 +88,12 @@ public class PathSegmentEncodingTest {
         assertEncoded(V5 + "/route-status", "/rollback", () -> status.rollbackRouteStatus(ESCAPE));
         assertEncoded(V5 + "/routes", "/custom-data", () -> customData.getRouteCustomData(ESCAPE));
         assertEncoded(V5 + "/recurring-routes/schedules", "", () -> schedules.getSchedule(ESCAPE));
-        assertEncoded(V5 + "/recurring-routes/route-schedules", "/items", () -> schedules.deleteRouteScheduleItems(ESCAPE));
+        assertEncoded(V5 + "/recurring-routes/route-schedules", "/items",
+                () -> schedules.deleteRouteScheduleItems(ESCAPE));
         assertEncoded(V5 + "/recurring-routes/route-schedules", "/preview",
                 () -> schedules.getRouteSchedulePreview(ESCAPE, "2026-10-01", "2026-10-31"));
-        assertEncoded(V5 + "/recurring-routes/scheduled-routes/is-copy", "", () -> schedules.isRouteScheduleCopied(ESCAPE));
+        assertEncoded(V5 + "/recurring-routes/scheduled-routes/is-copy", "",
+                () -> schedules.isRouteScheduleCopied(ESCAPE));
         assertEncoded(V5 + "/route-destinations", "", () -> destinations.getDestination(ESCAPE));
     }
 

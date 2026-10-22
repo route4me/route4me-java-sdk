@@ -93,10 +93,10 @@ public class TerritoriesManagerTest {
 
         assertEquals(Collections.singletonList(21), plain.getOrders());
         http.request(0).assertEndpoint("GET", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY")
-                .assertQuery("orders", "false").assertQuery("addresses", "false");
-        http.request(1).assertQuery("orders", "true").assertQuery("addresses", "false");
-        http.request(2).assertQuery("orders", "false").assertQuery("addresses", "true");
-        http.request(3).assertQuery("orders", "true").assertQuery("addresses", "true");
+                .assertQuery("orders", "0").assertQuery("addresses", "0");
+        http.request(1).assertQuery("orders", "1").assertQuery("addresses", "0");
+        http.request(2).assertQuery("orders", "0").assertQuery("addresses", "1");
+        http.request(3).assertQuery("orders", "1").assertQuery("addresses", "1");
     }
 
     @Test
@@ -117,7 +117,8 @@ public class TerritoriesManagerTest {
 
         assertTrue(manager.deleteTerritory("T-POLY"));
 
-        http.request().assertEndpoint("DELETE", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY").assertNoBody();
+        http.request().assertEndpoint("DELETE", HOST, TERRITORY_EP).assertQuery("territory_id",
+                "T-POLY").assertNoBody();
     }
 
     @Test

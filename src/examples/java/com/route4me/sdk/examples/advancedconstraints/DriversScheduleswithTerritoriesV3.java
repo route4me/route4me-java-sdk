@@ -1,0 +1,194 @@
+/*
+ * To change this license header, choose License Headers in Project Properties.
+ * To change this template file, choose Tools | Templates
+ * and open the template in the editor.
+ */
+package com.route4me.sdk.examples.advancedconstraints;
+
+import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.services.routing.Constants.AlgorithmType;
+import com.route4me.sdk.services.routing.Constants.DeviceType;
+import com.route4me.sdk.services.routing.Constants.DistanceUnit;
+import com.route4me.sdk.services.routing.Constants.OptimizationState;
+import com.route4me.sdk.services.routing.Constants.Optimize;
+import com.route4me.sdk.services.routing.Constants.TravelMode;
+import com.route4me.sdk.services.routing.DataObject;
+import com.route4me.sdk.services.routing.OptimizationParameters;
+import com.route4me.sdk.services.routing.Parameters;
+import com.route4me.sdk.services.routing.RoutingManager;
+import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Iterator;
+import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
+/**
+ * Optimizes the stops of {@code locations.csv} for driver schedules in three territories, with {@link
+ * RoutingManager#runOptimization}.
+ */
+public class DriversScheduleswithTerritoriesV3 {
+
+    /**
+     * Reads the stops of a CSV file with {@link CsvRows}: each row gives the address (also its alias), the latitude,
+     * the longitude and a group, 0, 1 or 2, that gives the stop the tags of the first, second or third list. If
+     * the file cannot be read, the error is logged and the stops read so far are returned.
+     *
+     * @param filename the path of the CSV file
+     * @param zone1 the tags of the stops of group 0
+     * @param zone2 the tags of the stops of group 1
+     * @param zone3 the tags of the stops of group 2
+     * @param serviceTime not used
+     * @return the stops
+     */
+    public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2,
+            List<String> zone3, Integer serviceTime) {
+        List<Address> addresses = new ArrayList<>();
+        try {
+            for (String[] nextRecord : CsvRows.read(filename)) {
+                Address address = new Address();
+                address.setAlias(nextRecord[0]);
+                address.setAddress(nextRecord[0]);
+                address.setLatitude(Double.parseDouble(nextRecord[1]));
+                address.setLongitude(Double.parseDouble(nextRecord[2]));
+                int group = Integer.parseInt(nextRecord[3]);
+
+                switch (group) {
+                    case 0:
+                        address.setTags(zone1);
+                        break;
+                    case 1:
+                        address.setTags(zone2);
+                        break;
+                    case 2:
+                        address.setTags(zone3);
+                        break;
+                    default:
+                        break;
+                }
+                addresses.add(address);
+            }
+
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(DriversScheduleswithTerritoriesV3.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(DriversScheduleswithTerritoriesV3.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return addresses;
+
+    }
+
+    //**********************************************************************
+    // TEST CASE: Drivers Schedules with Territories
+    // 2000 Stops
+    // 30 Schedules
+    // 3 Territories
+    //**********************************************************************
+    public static void main(String[] args) {
+        String apiKey = System.getenv("R4M_API_KEY");
+        RoutingManager manager = new RoutingManager(apiKey);
+        OptimizationParameters optParameters = new OptimizationParameters();
+
+        // General Route Parameters
+        Parameters parameters = new Parameters();
+        parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
+        parameters.setStoreRoute(Boolean.FALSE);
+        parameters.setShareRoute(Boolean.FALSE);
+        parameters.setRt(Boolean.TRUE);
+        parameters.setParts(30);
+        parameters.setRouteName("Drivers Schedules - 3 Territories");
+        parameters.setOptimize(Optimize.DISTANCE.toString());
+        parameters.setDistanceUnit(DistanceUnit.MI.toString());
+        parameters.setDeviceType(DeviceType.WEB.toString());
+        parameters.setTravelMode(TravelMode.DRIVING.toString());
+
+        // **********************
+        // Territories
+        // **********************
+        List<String> zone1 = Arrays.asList("ZONE 01");
+        List<String> zone2 = Arrays.asList("ZONE 02");
+        List<String> zone3 = Arrays.asList("ZONE 03");
+
+        // **********************
+        // Schedules
+        // **********************
+        AdvancedConstraints schedule;
+        List<String> zone = new ArrayList<>();
+        List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
+
+        for (int i = 0; i < 30; i++) {
+            schedule = new AdvancedConstraints();
+            switch (i % 3) {
+                case 0:
+                    zone = zone1;
+                    break;
+                case 1:
+                    zone = zone2;
+                    break;
+                case 2:
+                    zone = zone3;
+                    break;
+                default:
+                    break;
+            }
+
+            schedule.setTags(zone);
+            schedule.setMembersCount(1);
+            List<List<Integer>> timeWindowsSchedule = new ArrayList<>();
+            List<Integer> timeWindowSchedule = Arrays.asList((8 + 5) * 3600, (11 + 5) * 3600);
+            timeWindowsSchedule.add(timeWindowSchedule);
+            schedule.setAvailableTimeWindows(timeWindowsSchedule);
+            advancedConstraints.add(schedule);
+        }
+
+        // Schedules registration
+        parameters.setAdvancedConstraints(advancedConstraints);
+        optParameters.setParameters(parameters);
+
+        // Addresses
+        List<Address> addresses = new ArrayList<>();
+        // Depot
+
+        Integer serviceTime = 300;
+
+        Path currentPath = Paths.get(System.getProperty("user.dir"));
+        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk",
+                "examples", "advancedconstraints", "locations.csv");
+
+
+        addresses = readAddressesFromCSV(filePath.toString(), zone1, zone2, zone3, serviceTime);
+
+        Address address = new Address("DEPOT", true, 25.723025, -80.452883, 0);
+        addresses.add(address);
+
+        // Stops
+
+
+
+
+        optParameters.setAddresses(addresses);
+
+        try {
+            DataObject responseObject = manager.runOptimization(optParameters);
+            System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
+            System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+            if (responseObject.getAddresses() != null) {
+                for (Iterator<Address> it = responseObject.getAddresses().iterator(); it.hasNext();) {
+                    address = it.next();
+                    System.out.println(address);
+                }
+            }
+        } catch (APIException e) {
+            //handle exception
+            e.printStackTrace();
+        }
+    }
+
+}

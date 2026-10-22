@@ -26,25 +26,31 @@ package com.route4me.sdk.services.orders;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
 @Data
 class OrderCustomUserFields {
 
+    /** Custom order field ID ({@code order_custom_field_id}). */
     @SerializedName("order_custom_field_id")
     private Integer orderCustomFieldID;
+    /** Custom order field name ({@code order_custom_field_name}). */
     @SerializedName("order_custom_field_name")
     private String orderCustomFieldName;
+    /** Custom order field label ({@code order_custom_field_label}). */
     @SerializedName("order_custom_field_label")
     private String orderCustomFieldLabel;
+    /** Order custom field type (default: 'checkbox') ({@code order_custom_field_type}). */
     @SerializedName("order_custom_field_type")
     private String orderCustomFieldType;
+    /**
+     * Order custom field value. If order_custom_field_type='checkbox', valid values are: 'true', 'false' ({@code
+     * order_custom_field_value}).
+     */
     @SerializedName("order_custom_field_value")
     private String orderCustomFieldValue;
+    /** Account owner member ID ({@code root_owner_member_id}). */
     @SerializedName("root_owner_member_id")
     private Integer rootOwnerMemberID;
+    /** Information about an order's custom field ({@code order_custom_field_type_info}). */
     @SerializedName("order_custom_field_type_info")
     private OrderCustomFieldTypeInfo orderCustomFieldTypeInfo;
 

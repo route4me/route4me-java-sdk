@@ -30,12 +30,16 @@ import lombok.Setter;
 import org.apache.http.client.utils.URIBuilder;
 
 /**
- *
- * @author juan
+ * Geocodes addresses through the V4 API ({@code https://api.route4me.com}): one address at a time with {@link
+ * #geocode(String)}, many
+ * in parallel with {@link #bulkGeocoder(List, GeocoderOptions)}, or as an uploaded batch that
+ * {@link GeocoderWebSockets} geocodes over a websocket.
  */
 public class GeocodingManager extends Manager {
 
+    /** The path of the batch geocoder, on {@code api.route4me.com}. */
     public static final String GEOCODING_EP = "/api/geocoder.php";
+    /** The path that geocodes one address, on {@code api.route4me.com}. */
     public static final String GEOCODING_ADDRESS = "/api/address.php";
     private static final String JSON_GEOCODE = "/actions/upload/json-geocode.php";
     /** Time between two attempts of {@link #forwardGeocode(URIBuilder, Class, int)}, in milliseconds. */
@@ -43,10 +47,24 @@ public class GeocodingManager extends Manager {
     /** The retry count of the last {@link #bulkGeocoder} call, used by {@link #forwardGeocode(URIBuilder, Class)}. */
     private volatile int maxRetries = 0;
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as the {@code api_key} query parameter
+     */
     public GeocodingManager(String apiKey) {
         super(apiKey);
     }
 
+    /**
+     * Uploads addresses for the websocket geocoder: {@code POST
+     * https://api.route4me.com/actions/upload/json-geocode.php}, with
+     * {@code {"rows": [...]}} as the JSON body.
+     *
+     * @param addresses the addresses to geocode
+     * @return the ID of the stored addresses and their number
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public GeocoderResponse jsonUploadGeocoder(List<Address> addresses) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(JSON_GEOCODE);
         AddressesJSONBody body = new AddressesJSONBody(addresses);
@@ -54,6 +72,15 @@ public class GeocodingManager extends Manager {
         return makeJSONRequest(RequestMethod.POST, builder, body, null, GeocoderResponse.class);
     }
 
+    /**
+     * Uploads addresses with {@link #jsonUploadGeocoder(List)} and starts geocoding them over a websocket to
+     * {@code https://validator.route4me.com}. The call returns at once; poll {@link GeocoderWebSockets#isCompleted()}
+     * and read {@link GeocoderWebSockets#getAddresses()}. If the upload fails, the error is logged and the geocoder
+     * returned has not started.
+     *
+     * @param addresses the addresses to geocode
+     * @return the geocoder of the job
+     */
     public GeocoderWebSockets websocketsGeocoder(List<Address> addresses) {
         GeocoderWebSockets geocoder = new GeocoderWebSockets();
         try {
@@ -167,6 +194,13 @@ public class GeocodingManager extends Manager {
         return unmatched;
     }
 
+    /**
+     * Geocodes one address: {@code GET https://api.route4me.com/api/address.php?address=...&format=json&detailed=true}.
+     *
+     * @param address the address
+     * @return the matches, best first
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Geocodings[] geocode(String address) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(GEOCODING_ADDRESS);
         builder.setParameter("address", address);
@@ -176,8 +210,9 @@ public class GeocodingManager extends Manager {
     }
 
     /**
-     * Sends one geocoding request, retrying on errors, with the retry count of the last
-     * {@link #bulkGeocoder} call (0 until then, which means one attempt).
+     * Sends one geocoding request, {@code GET} of the given URL (the bulk geocoder uses
+     * {@code https://api.route4me.com/api/address.php?address=...}), retrying on errors, with the retry count of the
+     * last {@link #bulkGeocoder} call (0 until then, which means one attempt).
      *
      * @param builder the request URL; it is not changed, so it can be sent again
      * @param clazz   the response type, such as {@code Geocodings[].class}
@@ -191,21 +226,22 @@ public class GeocodingManager extends Manager {
     }
 
     /**
-     * Sends one geocoding request, retrying on errors.
+     * Sends one geocoding request, {@code GET} of the given URL (the bulk geocoder uses
+     * {@code https://api.route4me.com/api/address.php?address=...}), retrying on errors.
      *
-     * <p>A response that says the address was not found ({@code {"status": ...,
-     * "results": ...}}) ends the attempts at once. Attempts are 200 ms apart. If the thread is interrupted while it waits, it gives up and keeps its
+     * <p>A response that says the address was not found ({@code {"status": ..., "results": ...}}) ends the attempts at
+     * once. Attempts are 200 ms apart. If the thread is interrupted while it waits, it gives up and keeps its
      * interrupt flag set.
      *
      * @param builder    the request URL; it is not changed, so it can be sent again
      * @param clazz      the response type, such as {@code Geocodings[].class}
-     * @param maxRetries the maximum number of attempts; 0 and 1 both mean one attempt
+     * @param maxAttempts the maximum number of attempts; 0 and 1 both mean one attempt
      * @param <T>        the response type
      * @return the parsed response, or {@code null} when the address is not found or every
      * attempt fails
      */
-    public <T> T forwardGeocode(URIBuilder builder, Class<T> clazz, int maxRetries) {
-        int attempts = Math.max(1, maxRetries);
+    public <T> T forwardGeocode(URIBuilder builder, Class<T> clazz, int maxAttempts) {
+        int attempts = Math.max(1, maxAttempts);
         for (int attempt = 1; attempt <= attempts; attempt++) {
             try {
                 return this.makeJSONRequest(RequestMethod.GET, builder, "", clazz);
@@ -215,7 +251,8 @@ public class GeocodingManager extends Manager {
                     return null;
                 }
                 if (attempt == attempts) {
-                    logger.error("Geocoding failed after {} attempt(s): {}", attempts, Sanitizer.forLog(ex.getMessage()));
+                    logger.error("Geocoding failed after {} attempt(s): {}", attempts,
+                            Sanitizer.forLog(ex.getMessage()));
                     return null;
                 }
                 logger.info("Retrying due to error: {}", Sanitizer.forLog(ex.getMessage()));
@@ -246,8 +283,9 @@ public class GeocodingManager extends Manager {
 
     @Getter
     @Setter
-    private static class AddressesJSONBody {
+    private static final class AddressesJSONBody {
 
+        /** The addresses to geocode ({@code rows}). */
         @SerializedName("rows")
         private List<Address> addresses;
 

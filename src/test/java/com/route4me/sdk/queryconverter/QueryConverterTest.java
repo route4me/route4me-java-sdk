@@ -10,36 +10,38 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
 
 public class QueryConverterTest {
 
     static class TestPojo {
         @QueryParameter("name")
-        String name;
+        private String name;
 
         @QueryParameter("active")
-        Boolean active;
+        private Boolean active;
 
         @QueryParameter("inactive")
-        Boolean inactive;
+        private Boolean inactive;
 
         @QueryParameter("count")
-        Integer count;
+        private Integer count;
 
         @QueryParameter("big")
-        Long big;
+        private Long big;
 
         @QueryParameter("tags")
-        String[] tags;
+        private String[] tags;
 
         @QueryParameter("items")
-        List<String> items;
+        private List<String> items;
 
-        String noAnnotation;
+        private String noAnnotation;
 
         @QueryParameter("nullable")
-        String nullable;
+        private String nullable;
     }
 
     @Test
@@ -67,11 +69,13 @@ public class QueryConverterTest {
     }
 
     @Test
-    public void testBooleanFalseConvertsToFalse() throws IllegalAccessException {
+    public void testBooleanFalseConvertsToZero() throws IllegalAccessException {
+        // PHP reads the string "false" as true, so false must be sent as 0.
         TestPojo pojo = new TestPojo();
         pojo.inactive = false;
         List<NameValuePair> params = QueryConverter.convertObjectToParameters(pojo);
-        assertTrue(params.stream().anyMatch(p -> p.getName().equals("inactive") && p.getValue().equals("false")));
+        assertTrue(params.stream().anyMatch(p -> p.getName().equals("inactive") && p.getValue().equals("0")));
+        assertFalse(params.stream().anyMatch(p -> p.getValue().equals("false")));
     }
 
     @Test

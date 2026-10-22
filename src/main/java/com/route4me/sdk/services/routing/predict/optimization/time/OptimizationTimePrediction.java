@@ -9,13 +9,11 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 import lombok.Data;
 
-/**
- *
- * @author Route4Me
- */
+/** The answer of {@link PredictOptimizationTimeManager#runOptimizationPrediction(OptimizationParameters)}. */
 @Data
 public class OptimizationTimePrediction {
 
+    /** The predicted time of each step of the optimization ({@code time-prediction}). */
     @SerializedName("time-prediction")
     private List<TimePredictionModel> timePrediction;
 
