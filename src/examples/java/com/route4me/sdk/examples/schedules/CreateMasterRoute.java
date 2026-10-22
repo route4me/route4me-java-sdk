@@ -16,6 +16,7 @@ public class CreateMasterRoute {
             request.setRouteName("Master Route");
             request.setName("Weekly Schedule");
             request.setTimezone("America/New_York");
+            request.setScheduleData(CreateSchedule.weekdays());
             request.setSync(true);
             CreateMasterRouteResponse result = manager.createMasterRoute(request);
             System.out.println(result);

@@ -45,4 +45,8 @@ public class ReplaceRouteScheduleRequest {
     /** The recurrence rules of the schedule (daily, weekly or monthly), as the API takes them ({@code schedule}). */
     @SerializedName("schedule")
     private Object scheduleData;
+
+    /** Whether to create the routes of the new schedule at once ({@code sync}). */
+    @SerializedName("sync")
+    private Boolean sync;
 }
