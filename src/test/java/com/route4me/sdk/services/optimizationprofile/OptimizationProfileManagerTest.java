@@ -9,6 +9,7 @@ import java.util.Collections;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -51,7 +52,8 @@ public class OptimizationProfileManagerTest {
 
         OptimizationProfilesResponse profiles = manager.getOptimizationProfiles();
 
-        http.request().assertEndpoint("GET", HOST, PROFILES_EP + "/data-list").assertApiKeyAsBearer();
+        http.request().assertEndpoint("GET", HOST, PROFILES_EP + "/data-list").assertApiKeyAsBearer().assertNoBody();
+        assertTrue(http.request().getQueryParameters().isEmpty());
         assertEquals("Default", profiles.getItems().get(0).getProfileName());
         assertEquals(55.5, profiles.getItems().get(0).getSpeedCap(), 0.0);
     }
@@ -126,17 +128,67 @@ public class OptimizationProfileManagerTest {
     }
 
     @Test
-    public void getEntitiesAndTemplate() throws Exception {
+    public void getEntitiesAndTemplatePostAsTheSpecSays() throws Exception {
         OptimizationProfileManager manager = manager();
         http.respondToAll(200, ENTITIES);
 
-        OptimizationProfileSaveEntities entities = manager.getEntities("PROF-1");
+        OptimizationProfileSaveEntities entities = manager.getEntities("PROF-1", "PROF-2");
         manager.getEntitiesTemplate();
 
-        http.request(0).assertEndpoint("GET", HOST, PROFILES_EP + "/get-entities")
-                .assertQuery("optimization_profile_id", "PROF-1");
-        http.request(1).assertEndpoint("GET", HOST, PROFILES_EP + "/get-entities-template");
+        http.request(0).assertEndpoint("POST", HOST, PROFILES_EP + "/get-entities")
+                .assertNoQuery("optimization_profile_id")
+                .assertJson("items[0].id", "PROF-1").assertJson("items[1].id", "PROF-2").assertJsonLacks("items[2]");
+        http.request(1).assertEndpoint("POST", HOST, PROFILES_EP + "/get-entities-template").assertNoBody();
         assertEquals(Boolean.TRUE, entities.getItems().get(0).getParts().get(0).getConfig().get("visible"));
+    }
+
+    @Test
+    public void assignOptimizationProfilePostsTheGroupAndTheProfile() throws Exception {
+        OptimizationProfileManager manager = manager();
+        http.respond(200, json("{'status':true}"));
+
+        OptimizationProfileAssignResponse assigned = manager.assignOptimizationProfile(
+                "C0FFEE00000000000000000000000003", "PROF-1");
+
+        http.request().assertEndpoint("POST", HOST, "/modules/api/v5.0/orders/aggregation/assign-optimization-profile")
+                .assertApiKeyAsBearer().assertNoQuery("group_id")
+                .assertContentType("application/json; charset=UTF-8")
+                .assertJson("group_id", "C0FFEE00000000000000000000000003")
+                .assertJson("optimization_profile_id", "PROF-1");
+        assertTrue(assigned.getStatus());
+    }
+
+    @Test
+    public void assignOptimizationProfileAcceptsAnEmptyReply() throws Exception {
+        OptimizationProfileManager manager = manager();
+        http.respondWithoutBody(204);
+
+        assertNull(manager.assignOptimizationProfile("C0FFEE00000000000000000000000003", "PROF-1"));
+    }
+
+    @Test
+    public void slashInAProfileIdStaysInItsSegment() throws Exception {
+        OptimizationProfileManager manager = manager();
+        http.respond(200, PROFILE).respond(200, json("{'status':true}"));
+
+        manager.updateOptimizationProfile("../secret", createRequest());
+        manager.deleteOptimizationProfile("../secret");
+
+        assertEquals(PROFILES_EP + "/..%2Fsecret", http.request(0).getUri().getRawPath());
+        assertEquals(PROFILES_EP + "/..%2Fsecret", http.request(1).getUri().getRawPath());
+    }
+
+    @Test
+    public void emptyProfileIdsAreRejectedBeforeSending() {
+        final OptimizationProfileManager manager = manager();
+
+        for (final String id : Arrays.asList(null, "")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getOptimizationProfileById(id));
+            http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.updateOptimizationProfile(id, createRequest()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteOptimizationProfile(id));
+        }
+        http.assertNoRequests();
     }
 
     @Test

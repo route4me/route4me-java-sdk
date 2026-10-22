@@ -66,6 +66,21 @@ public class VehicleV5 {
     /** Vehicle profile ID ({@code vehicle_profile_id}). */
     @SerializedName("vehicle_profile_id")
     private Integer vehicleProfileId;
+    /** Vehicle capacity profile ID ({@code vehicle_capacity_profile_id}). */
+    @SerializedName("vehicle_capacity_profile_id")
+    private Integer vehicleCapacityProfileId;
+    /**
+     * The telematics connection the vehicle comes from ({@code r4m_telematics_gateway_connection_id}); used by
+     * {@link VehiclesManagerV5#syncPendingTelematicsData(VehicleV5)}.
+     */
+    @SerializedName("r4m_telematics_gateway_connection_id")
+    private Long r4mTelematicsGatewayConnectionId;
+    /**
+     * The vehicle on the telematics connection ({@code r4m_telematics_gateway_vehicle_id}); used by
+     * {@link VehiclesManagerV5#syncPendingTelematicsData(VehicleV5)}.
+     */
+    @SerializedName("r4m_telematics_gateway_vehicle_id")
+    private Long r4mTelematicsGatewayVehicleId;
     /** Fuel consumption city ({@code fuel_consumption_city}). */
     @SerializedName("fuel_consumption_city")
     private Double fuelConsumptionCity;

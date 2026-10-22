@@ -6,9 +6,13 @@ import com.route4me.sdk.exception.APIException;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Manages optimization profiles, saved sets of optimization settings, through the V5 API ({@code
- * https://wh.route4me.com/modules/api/v5.0/optimization-profiles}).
+ * https://wh.route4me.com/modules/api/v5.0/optimization-profiles}), and assigns them to groups of orders ({@code
+ * https://wh.route4me.com/modules/api/v5.0/orders/aggregation/assign-optimization-profile}).
  */
 public class OptimizationProfileManager extends Manager {
 
@@ -21,6 +25,7 @@ public class OptimizationProfileManager extends Manager {
     private static final String PROFILES_GET_ENTITIES_TEMPLATE_EP = PROFILES_EP + "/get-entities-template";
     private static final String PROFILES_LIST_EP = PROFILES_EP + "/list";
     private static final String PROFILES_LIST_CONFIG_EP = PROFILES_EP + "/list/config";
+    private static final String ASSIGN_TO_ORDERS_GROUP_EP = V5_BASE + "/orders/aggregation/assign-optimization-profile";
 
     /**
      * Creates a manager that sends its requests with an API key.
@@ -147,28 +152,59 @@ public class OptimizationProfileManager extends Manager {
     }
 
     /**
-     * Gets the entities of an optimization profile: {@code GET
-     * https://wh.route4me.com/modules/api/v5.0/optimization-profiles/get-entities?optimization_profile_id=...}.
+     * Gets the entities of optimization profiles: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/optimization-profiles/get-entities}, with {@code {"items": [{"id":
+     * ...}]}} as the JSON body, one item per profile.
      *
-     * @param profileId the profile ID
+     * @param profileIds the profile IDs
      * @return the entities
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public OptimizationProfileSaveEntities getEntities(String profileId) throws APIException {
+    public OptimizationProfileSaveEntities getEntities(String... profileIds) throws APIException {
+        List<OptimizationProfileDeleteEntitiesRequestItem> items = new ArrayList<>();
+        if (profileIds != null) {
+            for (String profileId : profileIds) {
+                OptimizationProfileDeleteEntitiesRequestItem item = new OptimizationProfileDeleteEntitiesRequestItem();
+                item.setId(profileId);
+                items.add(item);
+            }
+        }
+        OptimizationProfileDeleteEntitiesRequest request = new OptimizationProfileDeleteEntitiesRequest();
+        request.setItems(items);
         URIBuilder builder = v5Builder(PROFILES_GET_ENTITIES_EP);
-        builder.setParameter("optimization_profile_id", profileId);
-        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, OptimizationProfileSaveEntities.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                OptimizationProfileSaveEntities.class);
     }
 
     /**
-     * Gets the template of the optimization profile entities: {@code GET
-     * https://wh.route4me.com/modules/api/v5.0/optimization-profiles/get-entities-template}.
+     * Gets the template of the optimization profile entities: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/optimization-profiles/get-entities-template}, with no body.
      *
      * @return the template
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfileSaveEntities getEntitiesTemplate() throws APIException {
         URIBuilder builder = v5Builder(PROFILES_GET_ENTITIES_TEMPLATE_EP);
-        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, OptimizationProfileSaveEntities.class);
+        return this.makeRequest(RequestMethod.POST, builder, (HttpEntity) null, OptimizationProfileSaveEntities.class);
+    }
+
+    /**
+     * Assigns an optimization profile to a group of orders: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/orders/aggregation/assign-optimization-profile}, with {@code
+     * {"group_id": ..., "optimization_profile_id": ...}} as the JSON body.
+     *
+     * @param groupId the ID of the group of orders
+     * @param optimizationProfileId the ID of the optimization profile, from {@link #getOptimizationProfiles()}
+     * @return the answer of the API
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public OptimizationProfileAssignResponse assignOptimizationProfile(String groupId, String optimizationProfileId)
+            throws APIException {
+        OptimizationProfileAssignRequest request = new OptimizationProfileAssignRequest();
+        request.setGroupId(groupId);
+        request.setOptimizationProfileId(optimizationProfileId);
+        URIBuilder builder = v5Builder(ASSIGN_TO_ORDERS_GROUP_EP);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                OptimizationProfileAssignResponse.class);
     }
 }
