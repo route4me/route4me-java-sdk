@@ -19,7 +19,9 @@ import org.apache.http.client.utils.URIBuilder;
  * Manages telematics integrations: the member registration and the vendor connections through the V4 API
  * ({@code https://api.route4me.com/api.v4/telematics}), and the vendor catalog through the V5 API ({@code
  * https://wh.route4me.com/modules/api/v5.0/telematics/vendors}).
- * The methods of the retired {@code telematics.route4me.com} host are deprecated.
+ * The methods of the retired {@code telematics.route4me.com} host are deprecated: they throw an
+ * {@link APIException} without sending a request, since the API key goes only to {@code api.route4me.com} and
+ * {@code wh.route4me.com}.
  */
 public class TelematicsManager extends Manager {
 
@@ -52,13 +54,21 @@ public class TelematicsManager extends Manager {
         super(apiKey);
     }
 
-    /** Returns a builder for the retired vendors endpoint of {@code telematics.route4me.com}. */
-    private URIBuilder getTelemaricsVendorURI() {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("telematics.route4me.com");
-        builder.setPath(TELEMATICS_VENDORS_V4);
-        return builder;
+    /**
+     * The message of the {@link APIException} that the methods of the retired
+     * {@code telematics.route4me.com} host throw.
+     */
+    static final String RETIRED_HOST_MESSAGE = "telematics.route4me.com is retired, so no request was sent: use the"
+            + " V5 vendor methods getTelematicsVendorsV5(TelematicsVendorsV5Request) and getTelematicsVendorV5(long)";
+
+    /**
+     * Returns the exception that the methods of the retired {@code telematics.route4me.com} host throw instead of
+     * sending a request, with the API key, to a host that is no longer Route4Me's API.
+     *
+     * @return the exception to throw
+     */
+    private static APIException retiredHost() {
+        return new APIException(RETIRED_HOST_MESSAGE);
     }
 
     /**
@@ -93,74 +103,47 @@ public class TelematicsManager extends Manager {
     /**
      * Lists the telematics vendors on {@code telematics.route4me.com}.
      *
-     * @return the vendors
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
     public TelematicsVendorsInfo getTelematicsVendorsInfo() throws APIException {
-        URIBuilder builder = getTelemaricsVendorURI();
-        return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorsInfo.class);
-
+        throw retiredHost();
     }
 
     /**
      * Gets one telematics vendor on {@code telematics.route4me.com}.
      *
      * @param vendorID the vendor ID
-     * @return the vendor
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use {@link #getTelematicsVendorV5(long)}.
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use {@link #getTelematicsVendorV5(long)}.
      */
     @Deprecated
     public TelematicsVendorsInfo getTelematicsVendorInfo(String vendorID) throws APIException {
-        URIBuilder builder = getTelemaricsVendorURI();
-        builder.setParameter("vendor_id", vendorID);
-        return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorsInfo.class);
-
-    }
-
-    private TelematicsVendorsInfo searchVendor(String country, String size, String keyWord, String feature,
-            String page, String perPage) throws APIException {
-        URIBuilder builder = getTelemaricsVendorURI();
-        if (country != null) {
-            builder.setParameter("country", country);
-        }
-        if (size != null) {
-            builder.setParameter("size", size);
-        }
-        if (keyWord != null) {
-            builder.setParameter("s", keyWord);
-        }
-        if (perPage != null) {
-            builder.setParameter("per_page", perPage);
-        }
-        if (page != null) {
-            builder.setParameter("page", page);
-        }
-        if (feature != null) {
-            builder.setParameter("feature", feature);
-        }
-        return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorsInfo.class);
-
+        throw retiredHost();
     }
 
     /**
      * Searches the telematics vendors on {@code telematics.route4me.com} by a country code.
      *
      * @param country a country code
-     * @return the matching vendors
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
     public TelematicsVendorsInfo searchVendorByCountry(String country) throws APIException {
-        return searchVendorByCountry(country, null, null);
+        throw retiredHost();
     }
 
     /**
@@ -170,31 +153,33 @@ public class TelematicsManager extends Manager {
      * @param country a country code
      * @param page    the page number, or {@code null}
      * @param perPage the page size, or {@code null}
-     * @return the matching vendors
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
     public TelematicsVendorsInfo searchVendorByCountry(String country, String page, String perPage)
             throws APIException {
-        return searchVendor(country, null, null, null, page, perPage);
+        throw retiredHost();
     }
 
     /**
      * Searches the telematics vendors on {@code telematics.route4me.com} by a vendor size.
      *
      * @param size a vendor size
-     * @return the matching vendors
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
     public TelematicsVendorsInfo searchVendorBySize(String size) throws APIException {
-        return searchVendorBySize(size, null, null);
+        throw retiredHost();
     }
 
     /**
@@ -204,30 +189,32 @@ public class TelematicsManager extends Manager {
      * @param size a vendor size
      * @param page    the page number, or {@code null}
      * @param perPage the page size, or {@code null}
-     * @return the matching vendors
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
     public TelematicsVendorsInfo searchVendorBySize(String size, String page, String perPage) throws APIException {
-        return searchVendor(null, size, null, null, page, perPage);
+        throw retiredHost();
     }
 
     /**
      * Searches the telematics vendors on {@code telematics.route4me.com} by a keyword.
      *
      * @param keyWord a keyword
-     * @return the matching vendors
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
     public TelematicsVendorsInfo searchVendorByKeyWord(String keyWord) throws APIException {
-        return searchVendorByKeyWord(keyWord, null, null);
+        throw retiredHost();
     }
 
     /**
@@ -237,31 +224,33 @@ public class TelematicsManager extends Manager {
      * @param keyWord a keyword
      * @param page    the page number, or {@code null}
      * @param perPage the page size, or {@code null}
-     * @return the matching vendors
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
     public TelematicsVendorsInfo searchVendorByKeyWord(String keyWord, String page, String perPage)
             throws APIException {
-        return searchVendor(null, null, keyWord, null, page, perPage);
+        throw retiredHost();
     }
 
     /**
      * Searches the telematics vendors on {@code telematics.route4me.com} by a feature.
      *
      * @param feature a feature
-     * @return the matching vendors
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
     public TelematicsVendorsInfo searchVendorByFeature(String feature) throws APIException {
-        return searchVendorByFeature(feature, null, null);
+        throw retiredHost();
     }
 
     /**
@@ -271,16 +260,17 @@ public class TelematicsManager extends Manager {
      * @param feature a feature
      * @param page    the page number, or {@code null}
      * @param perPage the page size, or {@code null}
-     * @return the matching vendors
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
     public TelematicsVendorsInfo searchVendorByFeature(String feature, String page, String perPage)
             throws APIException {
-        return searchVendor(null, null, null, feature, page, perPage);
+        throw retiredHost();
     }
 
     /**
@@ -455,48 +445,20 @@ public class TelematicsManager extends Manager {
         return value == null ? null : (value ? "1" : "0");
     }
 
-    private List<TelematicsVendorComparison> parseVendorFeaturesComparison(TelematicsVendorsInfo vendors) {
-        List<TelematicsVendorComparison> comparison = new ArrayList<>();
-        if (vendors == null || vendors.getVendors() == null) {
-            return comparison;
-        }
-        for (TelematicsVendorInfo vendor : vendors.getVendors()) {
-            if (vendor == null) {
-                continue;
-            }
-            TelematicsVendorComparison c = new TelematicsVendorComparison();
-            c.setId(vendor.getVendorID());
-            c.setName(vendor.getName());
-            List<String> features = new ArrayList<>();
-            if (vendor.getFeatures() != null) {
-                for (TelematicsVendorFeatures f : vendor.getFeatures()) {
-                    if (f != null) {
-                        features.add(f.getName());
-                    }
-                }
-            }
-            c.setFeatures(String.join(",", features));
-            comparison.add(c);
-        }
-        return comparison;
-    }
-
     /**
      * Compares the features of telematics vendors on {@code telematics.route4me.com}.
      *
      * @param vendorIDs the vendor IDs, separated by commas
-     * @return one comparison per vendor
-     * @throws APIException if the request fails
+     * @return never returns: the method always throws
+     * @throws APIException always, without sending a request: the host is retired
      * @deprecated {@code telematics.route4me.com} is retired and redirects to the Route4Me
-     *             website, so this call cannot succeed. Use
+     *             website, so this method throws without sending a request (it would have sent
+     *             the API key to that host). Use
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
     public List<TelematicsVendorComparison> compareTelematicsVendors(String vendorIDs) throws APIException {
-        URIBuilder builder = getTelemaricsVendorURI();
-        builder.setParameter("vendors", vendorIDs);
-        TelematicsVendorsInfo vendors = makeRequest(RequestMethod.GET, builder, "", TelematicsVendorsInfo.class);
-        return parseVendorFeaturesComparison(vendors);
+        throw retiredHost();
     }
 
 }

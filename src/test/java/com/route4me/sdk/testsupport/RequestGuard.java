@@ -3,9 +3,12 @@ package com.route4me.sdk.testsupport;
 import org.apache.http.NameValuePair;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,11 +18,13 @@ import java.util.Set;
  *
  * <p>A request passes when:
  * <ul>
- *   <li>its scheme is {@code https};</li>
+ *   <li>its scheme is {@code https}, on the default port;</li>
  *   <li>its (host, path) is on the registry's {@code deprecated} list, which is allowed but
  *       recorded for the {@link DeprecatedEndpointReport}; or its host is in
  *       {@code allowed_hosts} and its (method, host, path) matches an {@code endpoints}
  *       entry;</li>
+ *   <li>the API key goes only to {@code api.route4me.com} and {@code wh.route4me.com}, deprecated
+ *       entries included: a request to any other host must not carry it anywhere;</li>
  *   <li>the API key appears in one place only. On the V5 API
  *       ({@code https://wh.route4me.com/modules/api/v5.0/} and {@code v5.1/}) that is the
  *       {@code Authorization: Bearer} header; everywhere else it is the {@code api_key}
@@ -34,6 +39,10 @@ public final class RequestGuard {
     private static final String AUTHORIZATION_HEADER = "Authorization";
     private static final String V5_HOST = "wh.route4me.com";
     private static final String[] V5_PATH_PREFIXES = {"/modules/api/v5.0", "/modules/api/v5.1"};
+    /** The only hosts that may receive the API key. */
+    private static final Set<String> KEY_HOSTS =
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList("api.route4me.com", "wh.route4me.com")));
+    private static final int HTTPS_PORT = 443;
 
     private final EndpointRegistry registry;
     private final String apiKey;
@@ -76,6 +85,10 @@ public final class RequestGuard {
         if (!"https".equals(request.getScheme())) {
             problems.add(request + ": scheme must be https, not " + request.getScheme());
         }
+        int port = request.getUri().getPort();
+        if (port != -1 && port != HTTPS_PORT) {
+            problems.add(request + ": port must be the https default (443), not " + port);
+        }
         EndpointRegistry.Entry deprecated = registry.findDeprecated(host, path);
         if (deprecated != null) {
             deprecatedHits.record(request.getMethod(), host, path, deprecated.getReason(), testName);
@@ -94,7 +107,8 @@ public final class RequestGuard {
     /**
      * Finds every place where the API key appears in a request, other than its expected
      * place: the {@code Authorization: Bearer} header on the V5 API, the {@code api_key}
-     * query parameter elsewhere.
+     * query parameter elsewhere on {@code api.route4me.com} and {@code wh.route4me.com}. On
+     * any other host the key has no expected place.
      *
      * @param request the captured request
      * @return one message per leak; empty when there is none
@@ -104,6 +118,12 @@ public final class RequestGuard {
             return Collections.emptyList();
         }
         List<String> leaks = new ArrayList<>();
+        String host = request.getHost() == null ? "" : request.getHost().toLowerCase(Locale.ROOT);
+        if (!KEY_HOSTS.contains(host) && carriesKey(request)) {
+            leaks.add(request + ": the API key was sent to '" + request.getHost() + "'; only " + KEY_HOSTS
+                    + " may receive it");
+            return leaks;
+        }
         boolean v5 = isV5(request);
         for (Map.Entry<String, List<String>> header : request.getHeaders().entrySet()) {
             for (String value : header.getValue()) {
@@ -132,6 +152,24 @@ public final class RequestGuard {
             leaks.add(request + ": the API key appears in the request body");
         }
         return leaks;
+    }
+
+    /** Returns whether the key appears anywhere in a request: URL, headers or body. */
+    private boolean carriesKey(CapturedRequest request) {
+        if (contains(request.getUri().toString()) || contains(request.getBody())) {
+            return true;
+        }
+        for (Map.Entry<String, List<String>> header : request.getHeaders().entrySet()) {
+            if (contains(header.getKey())) {
+                return true;
+            }
+            for (String value : header.getValue()) {
+                if (contains(value)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     /**

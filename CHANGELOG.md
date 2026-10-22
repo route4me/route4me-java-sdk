@@ -24,7 +24,7 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - **`Manager` implements `Closeable`** and keeps one pooled HTTP client per instance. Reuse managers and `close()` them; a manager used after `close()` builds a new client. The pool grows to the thread count of a bulk geocode.
 - **API V5 requests send the key as `Authorization: Bearer <key>`** instead of the `api_key` query parameter, so the key no longer appears in URLs, proxy logs or server logs. V4 requests are unchanged.
 - **API V5 requests send `Accept: application/json, */*;q=0.8`.** Without it, API V5 answered errors with an HTML page, so their messages were lost. File exports still work.
-- **Redirects are followed only over https to the Route4Me API hosts.** Any other redirect fails with an `APIException` caused by a `RedirectException` (new class `http.Route4MeRedirectStrategy`).
+- **Redirects are followed only over https to the Route4Me API hosts**, `api.route4me.com` and `wh.route4me.com`. Any other redirect fails with an `APIException` caused by a `RedirectException` (new class `http.Route4MeRedirectStrategy`).
 - **Query booleans are sent as `1` and `0`.** `false` was sent as the text `"false"`, which PHP reads as true; `getTerritory` sent its `orders` and `addresses` flags the same way.
 - **API V5 list and map query values use bracketed keys**, for example `ids[]=1&ids[]=2` and `filters[status]=1` (`QueryConverter.toBracketedParameters`). PHP keeps only the last value of a repeated plain key.
 - IDs in URL paths are percent-encoded. A `null`, empty, `.` or `..` ID throws `IllegalArgumentException` before any request.
@@ -52,6 +52,10 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - **Booleans that the API sends as `1`/`0` are read correctly** (`LenientBooleanAdapter`, on every manager's JSON mapper). Gson rejected them, so a whole reply failed to parse, for example the vehicle profiles.
 
 ### Security
+- **The API key goes only to `api.route4me.com` and `wh.route4me.com`.** V4 requests send it as the `api_key` query parameter, V5 requests (`/modules/api/v5.0` and `v5.1`) as a bearer token. A request to any other host carries no key.
+- The 11 deprecated `TelematicsManager` methods of the retired `telematics.route4me.com` host throw an `APIException` without sending a request. In 1.16.1 they sent the API key to that host.
+- Redirects are followed only to `api.route4me.com` and `wh.route4me.com`. `rapid.route4me.com` and `validator.route4me.com` are no longer allowed: no SDK call goes there over HTTP, and Apache HttpClient copies the `Authorization` header onto a redirect.
+- The unit-test request guard fails any request that carries the API key to another host, deprecated endpoints included, or that uses a port other than 443.
 - No credentials in `toString()`: `User`, `AccountProfile`, `TelematicsConnection`, `Registration`, `UserRegistration`, `TeamMemberRequest`, `TelematicsMemberRegister` and `LocationCombinedDataItem` no longer print API keys, passwords, session IDs, activation keys or connection tokens. A test checks every model.
 - `APIException` and the logs redact credential query parameters by name (`api_key`, and any name ending in `api_key`, `apikey`, `_token`, `_secret` or `password`, such as `organization_api_key`). New utility class `utils.Sanitizer`.
 - Dependencies: opencsv is removed (it brought old `commons-beanutils`); `log4j-api` 2.25.5, `gson` 2.14.0; `okhttp` 4.12.0 and `org.json` 20260814 are pinned under `socket.io-client` 1.0.2. osv-scanner reports no known vulnerability; one advisory for socket.io-client is ignored until 2027-04-30, with the reason in `osv-scanner.toml` (2.x cannot connect to `validator.route4me.com`). Gradle users: see `SECURITY.md` for the constraints Gradle does not apply.
@@ -69,7 +73,7 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - `forwardGeocode(builder, clazz, maxRetries)`.
 
 ### Deprecated
-- The 11 `TelematicsManager` methods on `telematics.route4me.com`, which is retired (it answers 301 to the marketing site), and `TELEMATICS_VENDORS_V4`. Use the V5 vendor methods. Removal comes in the next major version.
+- The 11 `TelematicsManager` methods on `telematics.route4me.com`, which is retired (it answers 301 to the marketing site), and `TELEMATICS_VENDORS_V4`. They throw an `APIException` without sending a request. Use the V5 vendor methods. Removal comes in the next major version.
 - `RoutingManager.resequenceReoptimizeRoute` (`/api.v3/route/reoptimize_2.php`, `[Obsolete]` in C#): use `updateRoute(Route, RouteUpdateParameters)` with `reoptimize`.
 - Not added, with the reason in the issue comments: the rapid street-data service (404), the retired hosts `oa.route4me.com`, `telematics.route4me.com` and `apps.route4me.com/depots`, the obsolete route fallback endpoints (404), web-session calls, and endpoints that are not Route4Me's (Chamberlain MyQ, an OCR service over plain HTTP).
 

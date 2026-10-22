@@ -25,7 +25,7 @@ Every manager takes your API key (Route4Me.com, Settings, API). The SDK sends it
 ### Managers, timeouts and closing
 Each area of the API has a manager, for example `RoutingManager`, `AddressBookManagerV5` or `VehiclesManagerV5`. A manager keeps one pooled HTTP client: reuse it, and `close()` it when you are done (it implements `Closeable`).
 
-Requests time out by default: 6,050 ms to connect and 30,000 ms to read (`Manager.DEFAULT_CONNECT_TIMEOUT_MS`, `DEFAULT_SOCKET_TIMEOUT_MS`); change them with `setConnectTimeout` and `setSocketTimeout`. Redirects are followed only over https to the Route4Me API hosts.
+Requests time out by default: 6,050 ms to connect and 30,000 ms to read (`Manager.DEFAULT_CONNECT_TIMEOUT_MS`, `DEFAULT_SOCKET_TIMEOUT_MS`); change them with `setConnectTimeout` and `setSocketTimeout`. Redirects are followed only over https to the Route4Me API hosts, `api.route4me.com` and `wh.route4me.com`, the only hosts that receive the API key.
 
 ```java
 try (VehiclesManagerV5 vehicles = new VehiclesManagerV5(System.getenv("R4M_API_KEY"))) {

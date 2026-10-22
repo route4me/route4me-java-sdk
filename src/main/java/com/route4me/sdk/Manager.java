@@ -56,10 +56,12 @@ import org.apache.logging.log4j.LogManager;
  * }
  * }</pre>
  *
- * <p>The API key goes in an {@code Authorization: Bearer} header on requests to the V5 API
- * ({@code https://wh.route4me.com/modules/api/v5.0/} and {@code v5.1/}), so it stays out of
- * URLs and server logs. Every other request sends it as the {@code api_key} query
- * parameter, which the V4 API requires.
+ * <p>The API key goes only to the Route4Me API hosts, {@code api.route4me.com} and
+ * {@code wh.route4me.com}. Requests to the V5 API
+ * ({@code https://wh.route4me.com/modules/api/v5.0/} and {@code v5.1/}) send it in an
+ * {@code Authorization: Bearer} header, so it stays out of URLs and server logs. The other
+ * requests to those two hosts send it as the {@code api_key} query parameter, which the V4
+ * API requires. A request to any other host carries no key at all.
  *
  * <p>Requests to the V5 API also send {@code Accept: application/json, *}{@code /*;q=0.8}, so
  * that its errors come back as JSON rather than as an HTML page. Other requests send no
@@ -83,6 +85,8 @@ public abstract class Manager implements Closeable {
 
     /** The default number of pooled connections of a manager, per route and in total. */
     private static final int DEFAULT_MAX_CONNECTIONS = 10;
+    /** The host of the V4 API, which takes the API key as the {@code api_key} query parameter. */
+    private static final String V4_HOST = "api.route4me.com";
     /** The host of the V5 API, which takes the API key as a bearer token. */
     private static final String V5_HOST = "wh.route4me.com";
     /** The path prefixes of the V5 API on {@link #V5_HOST}. */
@@ -500,7 +504,7 @@ public abstract class Manager implements Closeable {
                 target.addParameter("optimized_callback_url", this.callBackURL);
             }
             bearer = sendsKeyAsBearerToken(target.getHost(), target.getPath());
-            if (this.apiKey != null && !bearer) {
+            if (this.apiKey != null && !bearer && isApiKeyHost(target.getHost())) {
                 target.addParameter("api_key", this.apiKey);
             }
             hrb = method.create(target.build());
@@ -578,6 +582,18 @@ public abstract class Manager implements Closeable {
             }
         }
         return false;
+    }
+
+    /**
+     * Tells whether a host may receive the API key: only the Route4Me API hosts
+     * {@code api.route4me.com} and {@code wh.route4me.com} do. A request to any other host is
+     * sent without the key, neither as a bearer token nor as the {@code api_key} parameter.
+     *
+     * @param host the request host
+     * @return {@code true} for {@code api.route4me.com} and {@code wh.route4me.com}
+     */
+    static boolean isApiKeyHost(String host) {
+        return V4_HOST.equalsIgnoreCase(host) || V5_HOST.equalsIgnoreCase(host);
     }
 
     /** Removes the API key of this manager from a text, for exceptions and logs. */

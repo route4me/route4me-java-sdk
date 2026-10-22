@@ -262,19 +262,42 @@ public class ManagerTest {
     }
 
     @Test
-    public void otherRequestsKeepTheKeyInTheQuery() throws Exception {
+    public void otherRequestsToTheApiHostsKeepTheKeyInTheQuery() throws Exception {
         TestManager manager = manager();
         http.respondToAll(200, "{}");
-        URIBuilder rapid = new URIBuilder().setScheme("https").setHost("rapid.route4me.com").setPath("/timezone");
 
         manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
         manager.makeRequest(RequestMethod.GET, wh("/modules/api/vehicles"), "", Reply.class);
         manager.makeRequest(RequestMethod.GET, wh("/api.v4/note_custom_types.php"), "", Reply.class);
-        manager.makeRequest(RequestMethod.GET, rapid, "", Reply.class);
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 3; i++) {
             http.request(i).assertApiKeyInQuery();
         }
+    }
+
+    @Test
+    public void requestsToOtherHostsCarryNoKey() throws Exception {
+        TestManager manager = manager();
+        http.respondToAll(200, "{}");
+        URIBuilder rapid = new URIBuilder().setScheme("https").setHost("rapid.route4me.com").setPath("/timezone");
+
+        manager.makeRequest(RequestMethod.GET, rapid, "", Reply.class);
+        manager.makeRequest(RequestMethod.POST, rapid, "{}", Reply.class);
+
+        for (int i = 0; i < 2; i++) {
+            http.request(i).assertNoQuery("api_key");
+            assertNull(http.request(i).header("Authorization"));
+        }
+    }
+
+    @Test
+    public void onlyTheRoute4MeApiHostsReceiveTheKey() {
+        assertTrue(Manager.isApiKeyHost("api.route4me.com"));
+        assertTrue(Manager.isApiKeyHost("WH.route4me.com"));
+        assertFalse(Manager.isApiKeyHost("telematics.route4me.com"));
+        assertFalse(Manager.isApiKeyHost("rapid.route4me.com"));
+        assertFalse(Manager.isApiKeyHost("api.route4me.com.example.com"));
+        assertFalse(Manager.isApiKeyHost(null));
     }
 
     @Test
