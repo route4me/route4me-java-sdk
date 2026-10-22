@@ -5,8 +5,13 @@ import com.route4me.sdk.services.facilities.FacilityCoordinates;
 import com.route4me.sdk.services.facilities.FacilityCreateRequest;
 import com.route4me.sdk.services.facilities.FacilityManager;
 import com.route4me.sdk.services.facilities.FacilityResource;
+import com.route4me.sdk.services.facilities.FacilityTypeAssignment;
+import java.util.Collections;
 
-/** Creates a facility with {@link FacilityManager#createFacility}. */
+/**
+ * Creates a facility with {@link FacilityManager#createFacility}; the alias, address, coordinates and types are
+ * required. {@link GetFacilityTypes} lists the type IDs.
+ */
 public class CreateFacility {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");
@@ -19,6 +24,10 @@ public class CreateFacility {
             coords.setLat(40.7128);
             coords.setLng(-74.0060);
             request.setCoordinates(coords);
+            FacilityTypeAssignment type = new FacilityTypeAssignment();
+            type.setFacilityTypeId(1);
+            type.setIsDefault(true);
+            request.setFacilityTypes(Collections.singletonList(type));
             request.setStatus(1);
             FacilityResource result = manager.createFacility(request);
             System.out.println("Created facility: " + result.getFacilityAlias());
