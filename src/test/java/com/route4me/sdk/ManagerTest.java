@@ -15,7 +15,6 @@ import org.apache.http.client.config.RequestConfig;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -314,6 +313,20 @@ public class ManagerTest {
                 .assertContentType("application/x-www-form-urlencoded")
                 .assertForm("route_name", "Morning run")
                 .assertForm("to", "none");
+    }
+
+    @Test
+    public void formBodyIsEncodedAsUtf8() throws Exception {
+        TestManager manager = manager();
+        http.respond(200, "{}");
+        List<NameValuePair> form = Arrays.<NameValuePair>asList(
+                new BasicNameValuePair("strNoteContents", "Caf\u00e9 \u2713 \u6771\u4eac"));
+
+        manager.makeRequest(RequestMethod.POST, builder(), form, Reply.class);
+
+        http.request().assertContentType("application/x-www-form-urlencoded; charset=UTF-8")
+                .assertForm("strNoteContents", "Caf\u00e9 \u2713 \u6771\u4eac");
+        assertTrue(http.request().getBody(), http.request().getBody().contains("Caf%C3%A9+%E2%9C%93"));
     }
 
     @Test

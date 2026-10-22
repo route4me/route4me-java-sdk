@@ -176,12 +176,21 @@ public abstract class Manager implements Closeable {
         return builder.setPathSegments(parts);
     }
 
+    /**
+     * Sends a request with a form body ({@code application/x-www-form-urlencoded}, UTF-8)
+     * and parses the response.
+     *
+     * @param method  the HTTP method
+     * @param builder the request URL; it is not changed
+     * @param body    the form fields
+     * @param clazz   the response type
+     * @param <T>     the response type
+     * @return the parsed response, or {@code null} when the response has no content
+     * @throws APIException if the request fails, the server answers with an error status or
+     *                      the response cannot be parsed
+     */
     protected <T> T makeRequest(RequestMethod method, URIBuilder builder, List<NameValuePair> body, Class<T> clazz) throws APIException {
-        try {
-            return this.makeRequest(method, builder, new UrlEncodedFormEntity(body), clazz, null);
-        } catch (UnsupportedEncodingException ex) {
-            throw new APIException(ex);
-        }
+        return this.makeRequest(method, builder, new UrlEncodedFormEntity(body, StandardCharsets.UTF_8), clazz, null);
     }
 
     /**
