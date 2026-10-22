@@ -99,6 +99,7 @@ public class VehiclesManagerV5Test {
         assertTrue(unfiltered.getQueryParameters().isEmpty());
         assertEquals("Van 1", vehicles[0].getVehicleAlias());
         assertEquals(18.5, vehicles[0].getMpgCity(), 0.0);
+        assertEquals(Integer.valueOf(4), vehicles[0].getVehicleCapacityProfileId());
     }
 
     @Test
@@ -112,6 +113,34 @@ public class VehiclesManagerV5Test {
                 .assertQuery("show", "pending");
         assertEquals(1, request.getQueryParameters().size());
         assertEquals(0, vehicles.length);
+    }
+
+    @Test
+    public void getPaginatedVehiclesListSendsPagingAndReadsThePage() throws Exception {
+        VehiclesManagerV5 manager = manager();
+        http.respondToAll(200, "{\"data\":[" + VEHICLE + "],\"total\":6,\"error\":[],"
+                + json("'meta':{'current_page':2,'from':2,'last_page':6,'per_page':1,'to':2,'total':6}}"));
+        VehiclePaginateRequest request = new VehiclePaginateRequest().setPage(2).setPerPage(1)
+                .setOrderBy(Collections.singletonList(Arrays.asList("vehicle_alias", "desc")))
+                .setShow("all").setIsOperational(false)
+                .setFields(Arrays.asList("vehicle_alias", "vehicle_make"));
+
+        VehiclesPaginatedResponse page = manager.getPaginatedVehiclesList(request);
+        manager.getPaginatedVehiclesList(null);
+
+        http.request(0).assertEndpoint("GET", HOST, VEHICLES_EP + "/paginate").assertApiKeyAsBearer().assertNoBody()
+                .assertQuery("page", "2").assertQuery("per_page", "1")
+                .assertQueryValues("order_by[0][]", "vehicle_alias", "desc")
+                .assertQuery("show", "all").assertQuery("is_operational", "0")
+                .assertQueryValues("fields[]", "vehicle_alias", "vehicle_make")
+                .assertNoQuery("search_query");
+        assertTrue(http.request(1).assertEndpoint("GET", HOST, VEHICLES_EP + "/paginate")
+                .getQueryParameters().isEmpty());
+        assertEquals(VEHICLE_ID, page.getData().get(0).getVehicleId());
+        assertEquals(Integer.valueOf(6), page.getTotal());
+        assertTrue(page.getError().isEmpty());
+        assertEquals(Integer.valueOf(2), page.getMeta().getCurrentPage());
+        assertEquals(Integer.valueOf(6), page.getMeta().getLastPage());
     }
 
     @Test
@@ -172,6 +201,27 @@ public class VehiclesManagerV5Test {
                 .assertContentType("application/json; charset=UTF-8")
                 .assertJson("vehicle_alias", "Van 2").assertJsonLacks("vehicle_make", "vehicle_id");
         assertEquals(VEHICLE_ID, updated.getVehicleId());
+    }
+
+    @Test
+    public void getVehicleTrackPutsTheIdBeforeTrack() throws Exception {
+        VehiclesManagerV5 manager = manager();
+        http.respondToAll(200, json("{'data':[{'route_id':'C0FFEE00000000000000000000000002','member_id':1001,"
+                + "'lat':'40.5','lng':'-74.25','altitude':12.5,'speed':40,'timestamp':1792614850}]}"));
+
+        VehicleTrackResponse track = manager.getVehicleTrack(VEHICLE_ID, "2026-10-01", "2026-10-02");
+        manager.getVehicleTrack(VEHICLE_ID, null, null);
+
+        http.request(0).assertEndpoint("GET", HOST, VEHICLES_EP + "/" + VEHICLE_ID + "/track").assertNoBody()
+                .assertQuery("start", "2026-10-01").assertQuery("end", "2026-10-02");
+        http.request(1).assertEndpoint("GET", HOST, VEHICLES_EP + "/" + VEHICLE_ID + "/track")
+                .assertNoQuery("start").assertNoQuery("end");
+        VehicleTrackPoint point = track.getData().get(0);
+        assertEquals("C0FFEE00000000000000000000000002", point.getRouteId());
+        assertEquals(40.5, point.getLat(), 0.0);
+        assertEquals(-74.25, point.getLng(), 0.0);
+        assertEquals(40.0, point.getSpeed(), 0.0);
+        assertEquals(Long.valueOf(1792614850L), point.getTimestamp());
     }
 
     @Test
@@ -247,6 +297,87 @@ public class VehiclesManagerV5Test {
         assertEquals(40.5, locations.getData().get(0).getLat(), 0.0);
     }
 
+    @Test
+    public void createTemporaryVehiclePostsTheAssignment() throws Exception {
+        VehiclesManagerV5 manager = manager();
+        http.respond(200, json("{'data':[{'vehicle_id':'" + VEHICLE_ID + "','expires_at':'2026-10-23 10:00:00',"
+                + "'assigned_member_id':42}]}"));
+        VehicleTemporaryRequest request = new VehicleTemporaryRequest().setVehicleId(VEHICLE_ID)
+                .setVehicleLicensePlate("EX-123").setAssignedMemberId(42L).setExpiresAt(1792700000L)
+                .setAcceptingNewTasks(true).setForceAssignment(true);
+
+        AssignedVehiclesResponse assigned = manager.createTemporaryVehicle(request);
+
+        http.request().assertEndpoint("POST", HOST, VEHICLES_EP + "/assign").assertNoQuery("vehicle_id")
+                .assertJson("vehicle_id", VEHICLE_ID).assertJson("vehicle_license_plate", "EX-123")
+                .assertJson("assigned_member_id", 42).assertJson("expires_at", 1792700000L)
+                .assertJson("accepting_new_tasks", true).assertJson("force-assignment", true);
+        assertEquals(Long.valueOf(42), assigned.getData().get(0).getAssignedMemberId());
+        assertEquals("2026-10-23 10:00:00", assigned.getData().get(0).getExpiresAt());
+    }
+
+    @Test
+    public void createTemporaryVehicleRequiresTheIdTheMemberAndTheExpiry() {
+        final VehiclesManagerV5 manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createTemporaryVehicle(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createTemporaryVehicle(
+                new VehicleTemporaryRequest().setAssignedMemberId(42L).setExpiresAt(1L)));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createTemporaryVehicle(
+                new VehicleTemporaryRequest().setVehicleId("").setAssignedMemberId(42L).setExpiresAt(1L)));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createTemporaryVehicle(
+                new VehicleTemporaryRequest().setVehicleId(VEHICLE_ID).setExpiresAt(1L)));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createTemporaryVehicle(
+                new VehicleTemporaryRequest().setVehicleId(VEHICLE_ID).setAssignedMemberId(42L)));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void executeVehicleOrderPostsTheVehicleAndTheLocation() throws Exception {
+        VehiclesManagerV5 manager = manager();
+        http.respond(200, json("{'vehicle_id':'" + VEHICLE_ID + "','order_id':7001}"));
+
+        VehicleOrderResponse order = manager.executeVehicleOrder(
+                new VehicleOrderRequest().setVehicleId(VEHICLE_ID).setLat(40.5).setLng(-74.5));
+
+        http.request().assertEndpoint("POST", HOST, VEHICLES_EP + "/execute").assertNoQuery("lat")
+                .assertJson("vehicle_id", VEHICLE_ID).assertJson("lat", 40.5).assertJson("lng", -74.5);
+        assertEquals(VEHICLE_ID, order.getVehicleId());
+        assertEquals(Long.valueOf(7001), order.getOrderId());
+    }
+
+    @Test
+    public void executeVehicleOrderRequiresEveryField() {
+        final VehiclesManagerV5 manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.executeVehicleOrder(null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.executeVehicleOrder(new VehicleOrderRequest().setLat(1.0).setLng(2.0)));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.executeVehicleOrder(new VehicleOrderRequest().setVehicleId(VEHICLE_ID).setLng(2.0)));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.executeVehicleOrder(new VehicleOrderRequest().setVehicleId(VEHICLE_ID).setLat(1.0)));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void syncPendingTelematicsDataPostsTheVehicle() throws Exception {
+        VehiclesManagerV5 manager = manager();
+        http.respond(200, VEHICLE);
+        VehicleV5 pending = new VehicleV5();
+        pending.setVehicleAlias("Van 1");
+        pending.setR4mTelematicsGatewayConnectionId(77L);
+        pending.setR4mTelematicsGatewayVehicleId(88L);
+
+        VehicleV5 synced = manager.syncPendingTelematicsData(pending);
+
+        http.request().assertEndpoint("POST", HOST, VEHICLES_EP + "/sync/pending")
+                .assertJson("vehicle_alias", "Van 1")
+                .assertJson("r4m_telematics_gateway_connection_id", 77)
+                .assertJson("r4m_telematics_gateway_vehicle_id", 88);
+        assertEquals(VEHICLE_ID, synced.getVehicleId());
+    }
+
     // ------------------------------------------------------------------ bulk operations and jobs
 
     @Test
@@ -275,7 +406,8 @@ public class VehiclesManagerV5Test {
         String[] ids = {VEHICLE_ID};
 
         VehicleJobResponse[] jobs = {manager.activateVehicles(ids), manager.deactivateVehicles(ids),
-            manager.deleteVehicles(ids), manager.restoreVehicles(ids)};
+            manager.deleteVehicles(ids), manager.restoreVehicles(ids),
+            manager.updateVehicles(Collections.singletonList(withId(VEHICLE_ID)))};
 
         for (VehicleJobResponse job : jobs) {
             assertEquals("JOB-1", job.getJobId());
@@ -291,6 +423,45 @@ public class VehiclesManagerV5Test {
         http.expectThrows(IllegalArgumentException.class, () -> manager.deactivateVehicles(null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.deleteVehicles(null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.restoreVehicles(null));
+        http.assertNoRequests();
+    }
+
+    /** Builds a vehicle change with an ID and a new alias. */
+    private static VehicleV5 withId(String vehicleId) {
+        VehicleV5 vehicle = new VehicleV5();
+        vehicle.setVehicleId(vehicleId);
+        vehicle.setVehicleAlias("Van " + vehicleId.substring(vehicleId.length() - 1));
+        return vehicle;
+    }
+
+    @Test
+    public void updateVehiclesPostsTheVehicles() throws Exception {
+        VehiclesManagerV5 manager = manager();
+        http.respondWithoutBody(202);
+
+        assertNull(manager.updateVehicles(Arrays.asList(withId(VEHICLE_ID), withId(OTHER_VEHICLE_ID))));
+
+        http.request().assertEndpoint("POST", HOST, VEHICLES_EP + "/bulk/update")
+                .assertJson("vehicles[0].vehicle_id", VEHICLE_ID).assertJson("vehicles[0].vehicle_alias", "Van 9")
+                .assertJson("vehicles[1].vehicle_id", OTHER_VEHICLE_ID)
+                .assertJson("vehicles[1].vehicle_alias", "Van 0")
+                .assertJsonLacks("vehicles[0].vehicle_make");
+    }
+
+    @Test
+    public void updateVehiclesRequiresEveryVehicleId() {
+        final VehiclesManagerV5 manager = manager();
+        final VehicleV5 noId = vehicle();
+        final VehicleV5 emptyId = vehicle();
+        emptyId.setVehicleId("");
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateVehicles(null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateVehicles(Collections.<VehicleV5>singletonList(null)));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateVehicles(Arrays.asList(withId(VEHICLE_ID), noId)));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateVehicles(Collections.singletonList(emptyId)));
         http.assertNoRequests();
     }
 
@@ -436,6 +607,7 @@ public class VehiclesManagerV5Test {
         final VehicleV5 change = vehicle();
 
         for (final String id : Arrays.asList(null, "")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getVehicleTrack(id, null, null));
             http.expectThrows(IllegalArgumentException.class, () -> manager.updateVehicle(id, change));
             http.expectThrows(IllegalArgumentException.class, () -> manager.updateVehicleProfile(id, profile()));
             http.expectThrows(IllegalArgumentException.class,
@@ -449,17 +621,20 @@ public class VehiclesManagerV5Test {
     @Test
     public void slashInAnIdStaysInItsSegment() throws Exception {
         VehiclesManagerV5 manager = manager();
-        http.respond(200, VEHICLE).respond(200, PROFILE).respond(200, CAPACITY).respond(200, json("{'status':true}"));
+        http.respond(200, json("{'data':[]}")).respond(200, VEHICLE).respond(200, PROFILE).respond(200, CAPACITY)
+                .respond(200, json("{'status':true}"));
 
+        manager.getVehicleTrack("../secret", null, null);
         manager.updateVehicle("../secret", vehicle());
         manager.updateVehicleProfile("../secret", profile());
         manager.updateVehicleCapacityProfile("../secret", capacity());
         manager.getVehicleJobResult("../secret");
 
-        assertEquals(VEHICLES_EP + "/..%2Fsecret", http.request(0).getUri().getRawPath());
-        assertEquals(PROFILES_EP + "/..%2Fsecret", http.request(1).getUri().getRawPath());
-        assertEquals(CAPACITY_EP + "/..%2Fsecret", http.request(2).getUri().getRawPath());
-        assertEquals(VEHICLES_EP + "/job-tracker/result/..%2Fsecret", http.request(3).getUri().getRawPath());
+        assertEquals(VEHICLES_EP + "/..%2Fsecret/track", http.request(0).getUri().getRawPath());
+        assertEquals(VEHICLES_EP + "/..%2Fsecret", http.request(1).getUri().getRawPath());
+        assertEquals(PROFILES_EP + "/..%2Fsecret", http.request(2).getUri().getRawPath());
+        assertEquals(CAPACITY_EP + "/..%2Fsecret", http.request(3).getUri().getRawPath());
+        assertEquals(VEHICLES_EP + "/job-tracker/result/..%2Fsecret", http.request(4).getUri().getRawPath());
     }
 
     // ------------------------------------------------------------------ manager behaviour
