@@ -170,6 +170,33 @@ public class Address {
     @SerializedName("tags")
     @QueryParameter("tags")
     private List<String> tags;
+    /** The skills a driver needs to serve this stop, matched against the drivers' skills. */
+    @SerializedName("required_skills")
+    private List<String> requiredSkills;
+    /** The additional status of the stop. */
+    @SerializedName("additional_status")
+    private String additionalStatus;
+    /** How many stops are bundled into this one. Read-only. */
+    @SerializedName("bundle_count")
+    private Integer bundleCount;
+    /** The bundles of this stop. Read-only. */
+    @SerializedName("bundle_items")
+    private List<BundledItem> bundleItems;
+    /** The custom field configuration of the stop. */
+    @SerializedName("custom_fields_config")
+    private List<String> customFieldsConfig;
+    /** The custom field configuration, as a JSON string. */
+    @SerializedName("custom_fields_config_str_json")
+    private String customFieldsConfigStrJson;
+    /** The custom fields, as a JSON string. */
+    @SerializedName("custom_fields_str_json")
+    private String customFieldsStrJson;
+    /** The inventory lines of the order behind the stop. */
+    @SerializedName("order_inventory")
+    private List<OrderInventory> orderInventory;
+    /** The name of the route the stop belongs to. */
+    @SerializedName("route_name")
+    private String routeName;
 
     public Address() {
     }

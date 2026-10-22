@@ -7,6 +7,7 @@ import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.BundledItem;
 import com.route4me.sdk.services.routing.Route;
 import com.route4me.sdk.services.routing.OptimizationParameters;
+import com.route4me.sdk.services.routing.OrderInventory;
 import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.orders.OrderV5;
 import com.route4me.sdk.services.vehicles.VehicleV5;
@@ -362,5 +363,56 @@ public class ModelSerializationTest {
         assertFalse(obj.get("approved_for_execution").getAsBoolean());
         assertEquals("F1", obj.getAsJsonArray("facility_ids").get(0).getAsString());
         assertFalse("unset fields are not sent", obj.has("dispatched_timestamp"));
+    }
+
+    @Test
+    public void testAddressRequiredSkillsAndOrderFieldsRoundTrip() {
+        Address address = new Address("100 Example St", 40.1, -74.1);
+        address.setRequiredSkills(Arrays.asList("forklift", "hazmat"));
+        address.setAdditionalStatus("left_at_door");
+        address.setCustomFieldsConfig(Collections.singletonList("color"));
+        address.setCustomFieldsConfigStrJson("[\"color\"]");
+        address.setCustomFieldsStrJson("{\"color\":\"red\"}");
+        address.setRouteName("Morning run");
+
+        JsonObject obj = gson.toJsonTree(address).getAsJsonObject();
+
+        assertEquals("forklift", obj.getAsJsonArray("required_skills").get(0).getAsString());
+        assertEquals("hazmat", obj.getAsJsonArray("required_skills").get(1).getAsString());
+        assertEquals("left_at_door", obj.get("additional_status").getAsString());
+        assertEquals("color", obj.getAsJsonArray("custom_fields_config").get(0).getAsString());
+        assertEquals("[\"color\"]", obj.get("custom_fields_config_str_json").getAsString());
+        assertEquals("{\"color\":\"red\"}", obj.get("custom_fields_str_json").getAsString());
+        assertEquals("Morning run", obj.get("route_name").getAsString());
+        assertFalse("unset fields are not sent", obj.has("bundle_count") || obj.has("order_inventory"));
+
+        Address copy = gson.fromJson(gson.toJson(address), Address.class);
+        assertEquals(Arrays.asList("forklift", "hazmat"), copy.getRequiredSkills());
+        assertEquals("Morning run", copy.getRouteName());
+    }
+
+    @Test
+    public void testAddressReadsBundlesAndOrderInventory() {
+        String json = "{\"address\":\"100 Example St\",\"bundle_count\":2,"
+                + "\"bundle_items\":[{\"pieces\":2,\"addresses_id\":[5001,5002]}],"
+                + "\"order_inventory\":[{\"inventory_id\":7,\"order_id\":7001,\"name\":\"Box\",\"quantity\":3,"
+                + "\"total_weight\":4.5,\"total_volume\":0.5,\"total_cost\":9.0,\"total_price\":12.0,"
+                + "\"created_at\":\"2026-10-21\",\"updated_at\":\"2026-10-22\"}]}";
+
+        Address address = gson.fromJson(json, Address.class);
+
+        assertEquals(Integer.valueOf(2), address.getBundleCount());
+        assertEquals(Arrays.asList(5001L, 5002L), address.getBundleItems().get(0).getAddressesId());
+        OrderInventory line = address.getOrderInventory().get(0);
+        assertEquals(Long.valueOf(7), line.getInventoryId());
+        assertEquals(Long.valueOf(7001), line.getOrderId());
+        assertEquals("Box", line.getName());
+        assertEquals(Integer.valueOf(3), line.getQuantity());
+        assertEquals(4.5, line.getTotalWeight(), 0.0);
+        assertEquals(0.5, line.getTotalVolume(), 0.0);
+        assertEquals(9.0, line.getTotalCost(), 0.0);
+        assertEquals(12.0, line.getTotalPrice(), 0.0);
+        assertEquals("2026-10-21", line.getCreatedAt());
+        assertEquals("2026-10-22", line.getUpdatedAt());
     }
 }
