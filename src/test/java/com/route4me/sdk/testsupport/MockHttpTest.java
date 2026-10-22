@@ -1,6 +1,7 @@
 package com.route4me.sdk.testsupport;
 
 import com.google.gson.JsonObject;
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
@@ -39,6 +40,10 @@ public class MockHttpTest {
 
         JsonObject postJson(String path, Object body) throws APIException {
             return makeJSONRequest(RequestMethod.POST, defaultBuilder(path), body, JsonObject.class);
+        }
+
+        AsyncJob startJob(String path) throws APIException {
+            return makeJobRequest(RequestMethod.POST, defaultBuilder(path), "{}");
         }
     }
 
@@ -86,6 +91,32 @@ public class MockHttpTest {
         assertEquals("\"any\"", manager.get("/api.v4/route.php"));
         assertEquals(3, http.requestCount());
         assertNull(http.request(1).getBody());
+    }
+
+    @Test
+    public void answersWithResponseHeaders() throws Exception {
+        ProbeManager manager = http.install(new ProbeManager());
+        http.respondWithHeaders(202, null, "X-Job-Id", "JOB-1",
+                "Location", "https://wh.route4me.com/modules/api/v5.0/vehicles/job-tracker/status/JOB-1")
+                .respondWithHeaders(200, MockHttp.json("{'status':true}"));
+
+        AsyncJob queued = manager.startJob("/api.v4/route.php");
+        AsyncJob done = manager.startJob("/api.v4/route.php");
+
+        assertEquals(202, queued.getStatusCode());
+        assertEquals("JOB-1", queued.getJobId());
+        assertEquals("https://wh.route4me.com/modules/api/v5.0/vehicles/job-tracker/status/JOB-1",
+                queued.getLocation());
+        assertEquals("", queued.getBody());
+        assertEquals(200, done.getStatusCode());
+        assertNull(done.getJobId());
+        assertNull(done.getLocation());
+        assertEquals("{\"status\":true}", done.getBody());
+    }
+
+    @Test
+    public void responseHeadersComeInPairs() {
+        http.expectThrows(IllegalArgumentException.class, () -> http.respondWithHeaders(202, null, "X-Job-Id"));
     }
 
     @Test

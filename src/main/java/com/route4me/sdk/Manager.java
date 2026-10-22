@@ -23,6 +23,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.List;
+import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.NameValuePair;
@@ -417,8 +418,72 @@ public abstract class Manager implements Closeable {
         return new StringEntity(json, ContentType.APPLICATION_JSON);
     }
 
+    /**
+     * Sends a request that starts a background job, with a JSON text body, and returns the accepted job.
+     *
+     * @param method  the HTTP method
+     * @param builder the request URL; it is not changed
+     * @param body    the JSON text, sent as {@code application/json; charset=UTF-8}; an empty string sends no body
+     * @return the accepted job: its ID, status URL and reply body
+     * @throws APIException if the request fails or the server answers with an error status
+     * @see #makeJobRequest(RequestMethod, URIBuilder, HttpEntity)
+     */
+    protected AsyncJob makeJobRequest(RequestMethod method, URIBuilder builder, String body) throws APIException {
+        return this.makeJobRequest(method, builder, !body.isEmpty() ? jsonEntity(body) : (HttpEntity) null);
+    }
+
+    /**
+     * Sends a request that starts a background job and returns the accepted job: the status code, the job ID and
+     * the job status URL of the reply's {@code X-Job-Id} and {@code Location} headers, and the reply body, unparsed
+     * (see {@link AsyncJob}).
+     *
+     * <p>The request is built and sent as the {@code makeRequest} methods send theirs: same URL, API key (bearer
+     * token or {@code api_key}), {@code Accept} header, timeouts and redirect rules. A status outside 200 to 303
+     * throws, as there.
+     *
+     * @param method  the HTTP method
+     * @param builder the request URL; it is not changed
+     * @param body    the request body, or {@code null} for none
+     * @return the accepted job: its ID, status URL and reply body
+     * @throws APIException if the request fails or the server answers with an error status
+     */
+    protected AsyncJob makeJobRequest(RequestMethod method, URIBuilder builder, HttpEntity body) throws APIException {
+        RawResponse response = this.send(method, builder, body);
+        return AsyncJob.fromReply(response.status, response.headers, response.body);
+    }
+
     private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type)
             throws APIException {
+        RawResponse response = this.send(method, builder, body);
+        String respString = response.body;
+        //deserialize json into an object
+        try {
+            if (clazz != null && clazz != String.class) {
+                return this.gson.fromJson(respString, clazz);
+            } else if (type != null) {
+                return this.gson.fromJson(respString, type);
+            }
+        } catch (JsonParseException | IllegalStateException ex) {
+            String expected = clazz != null ? clazz.getSimpleName() : type.getTypeName();
+            throw APIException.forUnparsableResponse(method.name(), response.safeUrl, response.status,
+                    this.redact(respString), expected, ex);
+        }
+        if (clazz == String.class) {
+            return clazz.cast(respString);
+        }
+        return null;
+    }
+
+    /**
+     * Builds a request, sends it and reads the whole reply. Every request method of this class goes through here.
+     *
+     * @param method  the HTTP method
+     * @param builder the request URL; it is not changed
+     * @param body    the request body, or {@code null} for none
+     * @return the status, headers and body of the reply
+     * @throws APIException if the request fails or the server answers with a status outside 200 to 303
+     */
+    private RawResponse send(RequestMethod method, URIBuilder builder, HttpEntity body) throws APIException {
         HttpRequestBase hrb;
         boolean bearer;
         try {
@@ -466,24 +531,28 @@ public abstract class Manager implements Closeable {
                 throw APIException.forErrorStatus(method.name(), safeUrl, status,
                         respString.isEmpty() ? null : this.redact(respString));
             }
-            //deserialize json into an object
-            try {
-                if (clazz != null && clazz != String.class) {
-                    return this.gson.fromJson(respString, clazz);
-                } else if (type != null) {
-                    return this.gson.fromJson(respString, type);
-                }
-            } catch (JsonParseException | IllegalStateException ex) {
-                String expected = clazz != null ? clazz.getSimpleName() : type.getTypeName();
-                throw APIException.forUnparsableResponse(method.name(), safeUrl, status, this.redact(respString),
-                        expected, ex);
-            }
-            if (clazz == String.class) {
-                return clazz.cast(respString);
-            }
-            return null;
+            return new RawResponse(safeUrl, status, resp.getAllHeaders(), respString);
         } catch (IOException ex) {
             throw APIException.forIOException(method.name(), safeUrl, ex);
+        }
+    }
+
+    /** A reply with a success status, read in full by {@link #send}. */
+    private static final class RawResponse {
+        /** The request URL, without credentials, for exception messages. */
+        private final String safeUrl;
+        /** The HTTP status code. */
+        private final int status;
+        /** The response headers. */
+        private final Header[] headers;
+        /** The body; empty when the reply has none. */
+        private final String body;
+
+        RawResponse(String safeUrl, int status, Header[] headers, String body) {
+            this.safeUrl = safeUrl;
+            this.status = status;
+            this.headers = headers;
+            this.body = body;
         }
     }
 

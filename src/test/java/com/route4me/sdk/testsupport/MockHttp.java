@@ -201,6 +201,25 @@ public final class MockHttp implements TestRule {
     }
 
     /**
+     * Queues a JSON response with response headers for the next request, such as the
+     * {@code X-Job-Id} and {@code Location} headers of a {@code 202 Accepted} job.
+     *
+     * @param status  the HTTP status code
+     * @param body    the response body, or {@code null} for a response without an entity
+     * @param headers the header names and values, in pairs:
+     *                {@code "X-Job-Id", "JOB-1", "Location", "https://..."}
+     * @return this rule
+     * @throws IllegalArgumentException if {@code headers} does not hold name and value pairs
+     */
+    public MockHttp respondWithHeaders(int status, String body, String... headers) {
+        if (headers.length % 2 != 0) {
+            throw new IllegalArgumentException("Give the headers as name and value pairs");
+        }
+        steps.add(new CannedResponse(status, body, body == null ? null : "application/json", headers.clone()));
+        return this;
+    }
+
+    /**
      * Sets the JSON response used whenever no queued response is left, for code that sends
      * many requests.
      *
@@ -422,18 +441,27 @@ public final class MockHttp implements TestRule {
         return message.toString();
     }
 
-    /** A status code and optional body; each request gets a fresh response object. */
+    /** A status code, optional body and headers; each request gets a fresh response object. */
     private static final class CannedResponse {
+        private static final String[] NO_HEADERS = {};
+
         private final int status;
         private final String body;
         private final byte[] bytes;
         private final String contentType;
+        /** Header names and values, in pairs. */
+        private final String[] headers;
 
         CannedResponse(int status, String body, String contentType) {
+            this(status, body, contentType, NO_HEADERS);
+        }
+
+        CannedResponse(int status, String body, String contentType, String[] headers) {
             this.status = status;
             this.body = body;
             this.bytes = null;
             this.contentType = contentType;
+            this.headers = headers;
         }
 
         CannedResponse(int status, byte[] bytes, String contentType) {
@@ -441,11 +469,15 @@ public final class MockHttp implements TestRule {
             this.body = null;
             this.bytes = bytes;
             this.contentType = contentType;
+            this.headers = NO_HEADERS;
         }
 
         CloseableHttpResponse toHttpResponse() {
             String reason = EnglishReasonPhraseCatalog.INSTANCE.getReason(status, Locale.ENGLISH);
             ClosableResponse response = new ClosableResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, status, reason));
+            for (int i = 0; i < headers.length; i += 2) {
+                response.addHeader(headers[i], headers[i + 1]);
+            }
             if (body != null) {
                 response.setEntity(new StringEntity(body, ContentType.create(contentType, StandardCharsets.UTF_8)));
             } else if (bytes != null) {
