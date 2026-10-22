@@ -40,7 +40,7 @@ public class NotesManager extends Manager {
     }
 
     /**
-     * Gets the notes of a route destination: {@code GET /api.v4/address.php?notes=1}.
+     * Gets the notes of a route destination: {@code GET https://api.route4me.com/api.v4/address.php?notes=1}.
      *
      * @param routeId            the route ID
      * @param routeDestinationId the destination ID
@@ -57,7 +57,7 @@ public class NotesManager extends Manager {
     }
 
     /**
-     * Adds a note to a route destination: {@code POST /actions/addRouteNotes.php}, with the
+     * Adds a note to a route destination: {@code POST https://api.route4me.com/actions/addRouteNotes.php}, with the
      * location in the query and the note as a form.
      *
      * @param note       the route, destination and device location
