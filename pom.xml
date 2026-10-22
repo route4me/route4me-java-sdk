@@ -11,6 +11,12 @@
         <log4j.version>2.25.5</log4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <!-- Every javac lint check, with -Werror, for the library, the tests and the examples,
+             except `processing`: Lombok runs as an annotation processor and claims only its own
+             annotations, so javac would report Gson's @SerializedName and the SDK's
+             @QueryParameter (runtime annotations, read by reflection) as unclaimed, and no source
+             change can claim them. The java20+ profile also turns off `options`. -->
+        <compiler.lint>-Xlint:all,-processing</compiler.lint>
     </properties>
     <name>route4me-java-sdk</name>
     <licenses>
@@ -38,6 +44,33 @@
         <name>Route4Me</name>
         <url>https://www.route4me.com</url>
     </organization>
+
+    <profiles>
+        <profile>
+            <!-- JDK 9 and later compile against the Java 8 API with release 8, instead of
+                 source and target 1.8 (which would warn that no Java 8 boot class path is set). -->
+            <id>java9+</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.release>8</maven.compiler.release>
+            </properties>
+        </profile>
+        <profile>
+            <!-- JDK 20 and later warn that release 8 is obsolete ("[options] source value 8 is
+                 obsolete and will be removed in a future release"). The SDK targets Java 8 on
+                 purpose, so that one option warning is turned off there; every other lint
+                 check stays on. -->
+            <id>java20+</id>
+            <activation>
+                <jdk>[20,)</jdk>
+            </activation>
+            <properties>
+                <compiler.lint>-Xlint:all,-processing,-options</compiler.lint>
+            </properties>
+        </profile>
+    </profiles>
 
     <dependencies>
         <dependency>
@@ -290,7 +323,8 @@
                 <version>3.14.0</version>
                 <configuration>
                     <compilerArgs>
-                        <arg>-Xlint</arg>
+                        <arg>${compiler.lint}</arg>
+                        <arg>-Werror</arg>
                     </compilerArgs>
                     <annotationProcessorPaths>
                         <path>
