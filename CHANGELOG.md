@@ -4,9 +4,9 @@ This is the history of changes of the Route4Me Java SDK (`io.github.route4me:rou
 
 > Please follow this [guide](https://keepachangelog.com/en/1.0.0/).
 
-## [1.17.0] - Unreleased
+## [2.0.0] - Unreleased
 
-The SDK still targets **Java 8**: the jar is built with `--release 8` and runs unchanged on Java 11, 17, 21 and later. CI tests it on JDK 8, 11, 17 and 21.
+This is a major release: it removes and changes public API (see **Breaking changes**). The SDK still targets **Java 8**: the jar is built with `--release 8` and runs unchanged on Java 11, 17, 21 and later. CI tests it on JDK 8, 11, 17 and 21.
 
 This release fixes every open bug report (#16–#19, #31–#41), adds 27 managers and 243 API methods for the operations the coverage issues list (#42–#104), and hardens how the SDK handles the API key. It also adds an offline test suite of 716 tests behind a request guard, and Javadoc for the whole public API. Several fixes change behaviour that code may rely on, so read **Breaking changes** before upgrading.
 
