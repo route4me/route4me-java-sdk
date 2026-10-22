@@ -1,10 +1,9 @@
 name: AI Code Risk & Compatibility Analysis (Gemini)
 
+# Every pull request, whatever its base branch: a stacked pull request is reviewed against
+# its own base.
 on:
   pull_request:
-    branches:
-      - master
-      - main
 
 permissions:
   contents: read
@@ -23,6 +22,9 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
         with:
           fetch-depth: 0
+          # Keep the job token out of .git/config: later steps run third-party code on
+          # text from the pull request. The repository is public, so fetching needs none.
+          persist-credentials: false
 
       # 2. Get changed Java files and generate diff
       - name: Get changed files and diff
@@ -96,11 +98,20 @@ jobs:
             fi
           fi
 
-      # 3. Install Gemini CLI
-      # TODO: pin an exact version (@google/gemini-cli@x.y.z). No pinned version is used
-      # anywhere in this repository or its history to copy from.
+      # 3. Install Gemini CLI, at an exact version and without install scripts.
       - name: Install Gemini CLI
-        run: npm install -g @google/gemini-cli
+        env:
+          # PLACEHOLDER, to be replaced before this workflow is used: the exact
+          # @google/gemini-cli release to install, such as 1.2.3. It could not be looked up
+          # when this pin was added. Until it is set, this step fails on purpose rather than
+          # install an unpinned release.
+          GEMINI_CLI_VERSION: PIN-GEMINI-CLI-VERSION
+        run: |
+          if ! printf '%s' "$GEMINI_CLI_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+            echo "::error::Set GEMINI_CLI_VERSION in ai-risks-analysis.yaml to an exact @google/gemini-cli version"
+            exit 1
+          fi
+          npm install -g --ignore-scripts "@google/gemini-cli@${GEMINI_CLI_VERSION}"
 
       # 4. Run Gemini AI
       - name: Run Gemini Analysis
@@ -142,10 +153,13 @@ jobs:
             echo "\`\`\`"
           } > gemini_prompt.txt
 
-          # Pass prompt file to Gemini (read from stdin or file if supported)
-          # If Gemini CLI doesn't support file input, we'll use the file content
-          gemini "$(cat gemini_prompt.txt)" > gemini_output.txt 2>&1
+          # Feed the prompt and the diff on stdin: a diff passed as one argument fails above
+          # the 128 KiB limit of a single argument. `set +e` keeps the step running when
+          # Gemini fails, so that its exit code and the error details are reported.
+          set +e
+          gemini -p "Follow the instructions at the top of the input." < gemini_prompt.txt > gemini_output.txt 2>&1
           GEMINI_EXIT_CODE=$?
+          set -e
 
           echo "Gemini CLI exit code: $GEMINI_EXIT_CODE"
 
