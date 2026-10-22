@@ -4,6 +4,7 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
@@ -317,6 +318,48 @@ public class SchedulesManagerTest {
         assertEquals(Integer.valueOf(3), calendar.getAddressBook().get("2026-10-22"));
         assertEquals(Integer.valueOf(5), calendar.getOrders().get("2026-10-22"));
         assertEquals(Integer.valueOf(2), calendar.getRoutesCount().get("2026-10-22"));
+    }
+
+    @Test
+    public void emptyPathIdsAreRejectedBeforeSending() {
+        final SchedulesManager manager = manager();
+
+        for (final String id : Arrays.asList(null, "")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getSchedule(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateSchedule(id, schedule()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteSchedule(id, false));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteSchedule(id));
+            http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.updateRouteSchedule(id, routeSchedule()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRouteSchedule(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRouteScheduleItems(id));
+            http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.getRouteSchedulePreview(id, "2026-10-01", "2026-10-31"));
+            http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.replaceRouteSchedule(id, new ReplaceRouteScheduleRequest()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.isRouteScheduleCopied(id));
+        }
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void pathIdsWithASlashStayInOneSegment() throws Exception {
+        SchedulesManager manager = manager();
+        http.respondToAll(200, STATUS_TRUE);
+
+        manager.updateSchedule("../secret", schedule());
+        manager.deleteSchedule("../secret", false);
+        manager.getRouteSchedule("../secret");
+        manager.updateRouteSchedule("../secret", routeSchedule());
+        manager.deleteRouteSchedule("../secret");
+        manager.replaceRouteSchedule("../secret", new ReplaceRouteScheduleRequest());
+
+        assertEquals(BASE + "/schedules/..%2Fsecret", http.request(0).getUri().getRawPath());
+        assertEquals(BASE + "/schedules/..%2Fsecret", http.request(1).getUri().getRawPath());
+        assertEquals(BASE + "/route-schedules/..%2Fsecret", http.request(2).getUri().getRawPath());
+        assertEquals(BASE + "/route-schedules/..%2Fsecret", http.request(3).getUri().getRawPath());
+        assertEquals(BASE + "/route-schedules/..%2Fsecret", http.request(4).getUri().getRawPath());
+        assertEquals(BASE + "/route-schedules/replace/..%2Fsecret", http.request(5).getUri().getRawPath());
     }
 
     @Test

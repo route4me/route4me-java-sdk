@@ -68,7 +68,26 @@ public class RouteStatusManager extends Manager {
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteStatusResponse updateRouteStatus(String routeId, RouteStatusRequest request) throws APIException {
+        return this.updateRouteStatus(routeId, request, null);
+    }
+
+    /**
+     * Changes the status of a route, from a device: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/route-status/{routeId}?device_id=...}, with the request as the JSON
+     * body. See {@link #updateRouteStatus(String, RouteStatusRequest)}.
+     *
+     * @param routeId the route ID
+     * @param request the new status, and where and when it changed
+     * @param deviceId the device that reports the change ({@code device_id}); {@code null} leaves it out
+     * @return the status of the route after the change
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public RouteStatusResponse updateRouteStatus(String routeId, RouteStatusRequest request, String deviceId)
+            throws APIException {
         URIBuilder builder = v5Builder(ROUTE_STATUS_EP, routeId);
+        if (deviceId != null) {
+            builder.setParameter("device_id", deviceId);
+        }
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), RouteStatusResponse.class);
     }
 
@@ -116,11 +135,15 @@ public class RouteStatusManager extends Manager {
      * Marks routes as planned: {@code POST https://wh.route4me.com/modules/api/v5.0/route-status/planned}, with {@code
      * {"route_ids": [...]}} as the JSON body.
      *
-     * @param routeIds the route IDs
+     * @param routeIds the route IDs; at least one
      * @return the new status of each route
+     * @throws IllegalArgumentException if no route ID is given: the API requires {@code route_ids}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public UpdateRouteStatusAsPlannedResponse updateRouteStatusAsPlanned(String[] routeIds) throws APIException {
+        if (routeIds == null || routeIds.length == 0) {
+            throw new IllegalArgumentException("At least one route ID is required");
+        }
         URIBuilder builder = v5Builder(ROUTE_STATUS_EP + "/planned");
         UpdateRouteStatusAsPlannedRequest request = new UpdateRouteStatusAsPlannedRequest();
         request.setRouteIds(routeIds);
@@ -133,12 +156,19 @@ public class RouteStatusManager extends Manager {
      * with the destination IDs and the
      * status as the JSON body.
      *
-     * @param destinationIds the route destination IDs
+     * @param destinationIds the route destination IDs; at least one
      * @param status the status; one the account allows
      * @return whether the status was set
+     * @throws IllegalArgumentException if no destination ID or no status is given: the API requires both
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public StatusResponse setRouteStopStatus(long[] destinationIds, String status) throws APIException {
+        if (destinationIds == null || destinationIds.length == 0) {
+            throw new IllegalArgumentException("At least one route destination ID is required");
+        }
+        if (status == null || status.isEmpty()) {
+            throw new IllegalArgumentException("The status is required");
+        }
         URIBuilder builder = v5Builder(ROUTE_STOP_STATUS_EP);
         SetRouteStopStatusRequest request = new SetRouteStopStatusRequest();
         request.setDestinationIds(destinationIds);
