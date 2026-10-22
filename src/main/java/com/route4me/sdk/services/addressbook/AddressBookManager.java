@@ -47,10 +47,21 @@ public class AddressBookManager extends Manager {
                 Contact.class);
     }
 
+    /**
+     * Gets one address book contact: {@code GET /api.v4/address_book.php?address_id=...}.
+     *
+     * @param addressID the contact's address ID
+     * @return the contact, or {@code null} when the address book has no contact with that ID
+     * @throws APIException if the request fails
+     */
     public Contact getContact(Number addressID) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
-        builder.setParameter("address_id", "'" + addressID.toString() + "'");
-        return this.makeRequest(RequestMethod.GET, builder, "", ContactsResponse.class).getResults().get(0);
+        builder.setParameter("address_id", addressID.toString());
+        ContactsResponse response = this.makeRequest(RequestMethod.GET, builder, "", ContactsResponse.class);
+        if (response == null || response.getResults() == null || response.getResults().isEmpty()) {
+            return null;
+        }
+        return response.getResults().get(0);
     }
 
     public List<Contact> getContacts(ContactsRequest request) throws APIException {
