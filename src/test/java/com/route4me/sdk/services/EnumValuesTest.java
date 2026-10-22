@@ -102,6 +102,7 @@ public class EnumValuesTest {
         assertEquals("optimal_anywhere", InsertMode.OPTIMAL_ANYWHERE.getValue());
         assertEquals("user_message", ActivityType.USER_MESSAGE.toString());
         assertEquals("dropoff", StatusUpdateType.DROPOFF.toString());
+        assertEquals("Bicycling", Constants.TravelMode.BICYCLING.toString());
     }
 
     @Test

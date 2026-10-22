@@ -174,6 +174,8 @@ public class Constants {
 
         DRIVING("Driving"),
         WALKING("Walking"),
+        /** Bicycle routes; one of the travel modes amp-route-optimization.yaml lists. */
+        BICYCLING("Bicycling"),
         TRUCKING("Trucking");
 
         private final String value;
