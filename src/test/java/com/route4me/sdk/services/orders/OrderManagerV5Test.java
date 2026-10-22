@@ -27,7 +27,7 @@ public class OrderManagerV5Test {
     private static final String CUSTOM_FIELDS_V5_EP = "/modules/api/v5.0/orders/custom-fields";
     private static final String ORDER = json("{'order_uuid':'ORDER-UUID-1','order_id':'7001','member_id':1001,"
             + "'address_1':'100 Example St','address_geo':{'lat':40.1,'lng':-74.1},'first_name':'Alex',"
-            + "'weight':12.5,'day_scheduled_for_YYYYMMDD':'2026-10-22','custom_data':{'gate':'A1'}}");
+            + "'weight':12.5,'day_scheduled_for_YYMMDD':'2026-10-22','custom_data':{'gate':'A1'}}");
     private static final String FIELD = json("{'data':{'order_custom_field_uuid':'FIELD-1',"
             + "'order_custom_field_name':'gate','order_custom_field_label':'Gate','order_custom_field_type':'text'}}");
     private static final String ASYNC = json("{'status':true,'async':true}");
@@ -51,7 +51,7 @@ public class OrderManagerV5Test {
         order.setAddress1("100 Example St");
         order.setAddressGeo(geo);
         order.setFirstName("Alex");
-        order.setDayScheduledFor("2026-10-22");
+        order.setDateScheduledFor("2026-10-22");
         order.setCustomData(Collections.<String, Object>singletonMap("gate", "A1"));
         return order;
     }
@@ -246,7 +246,8 @@ public class OrderManagerV5Test {
         http.request().assertEndpoint("POST", HOST, PLATFORM_EP + "/create")
                 .assertJson("address_1", "100 Example St")
                 .assertJson("address_geo.lng", -74.1)
-                .assertJson("day_scheduled_for_YYYYMMDD", "2026-10-22")
+                .assertJson("date_scheduled_for", "2026-10-22")
+                .assertJsonLacks("day_scheduled_for_YYYYMMDD")
                 .assertJson("custom_data.gate", "A1");
         assertEquals("ORDER-UUID-1", created.getOrderUuid());
     }
@@ -263,6 +264,7 @@ public class OrderManagerV5Test {
         http.request(1).assertEndpoint("PUT", HOST, PLATFORM_EP + "/ORDER-UUID-1").assertJson("first_name", "Alex");
         http.request(2).assertEndpoint("DELETE", HOST, PLATFORM_EP + "/ORDER-UUID-1").assertNoBody();
         assertEquals(12.5, fetched.getWeight(), 0.0);
+        assertEquals("2026-10-22", fetched.getDayScheduledFor());
         assertTrue(deleted.getStatus());
     }
     @Test
