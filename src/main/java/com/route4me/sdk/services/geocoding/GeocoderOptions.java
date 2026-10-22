@@ -7,11 +7,14 @@ package com.route4me.sdk.services.geocoding;
 
 public class GeocoderOptions {
 
+    /** The default of {@link #getMaxTimeout()}, in milliseconds; the read timeout of a request. */
+    public static final long DEFAULT_MAX_TIMEOUT_MS = 30000L;
+
     private GeocoderResponseFormat responseFormat = GeocoderResponseFormat.JSON;
     private GeocoderDetails detailed = GeocoderDetails.DETAILED;
     private int maxThreads = Runtime.getRuntime().availableProcessors() + 1;
     private int maxRetries = 0;
-    private long maxTimeout = 500l;
+    private long maxTimeout = DEFAULT_MAX_TIMEOUT_MS;
 
     public GeocoderOptions() {
 
@@ -126,28 +129,34 @@ public class GeocoderOptions {
     }
 
     /**
-     * @return the maxRetries
+     * @return the maximum number of attempts per address; 0 (the default) and 1 both mean
+     * one attempt
      */
     public int getMaxRetries() {
         return maxRetries;
     }
 
     /**
-     * @param maxRetries the maxRetries to set
+     * @param maxRetries the maximum number of attempts per address; 0 and 1 both mean one
+     *                   attempt
      */
     public void setMaxRetries(int maxRetries) {
         this.maxRetries = maxRetries;
     }
 
     /**
-     * @param maxTimeout the maxTimeout to set
+     * Sets how long {@link GeocodingManager#bulkGeocoder} waits for each round of
+     * {@link #getMaxThreads()} addresses before it cancels the rest.
+     *
+     * @param maxTimeout the time in milliseconds; 0 or less waits until every address is done
      */
     public void setMaxTimeout(long maxTimeout) {
         this.maxTimeout = maxTimeout;
     }
 
     /**
-     * @return the maxTimeout
+     * @return how long {@link GeocodingManager#bulkGeocoder} waits for each round of
+     * addresses, in milliseconds; {@link #DEFAULT_MAX_TIMEOUT_MS} unless changed
      */
     public long getMaxTimeout() {
         return maxTimeout;

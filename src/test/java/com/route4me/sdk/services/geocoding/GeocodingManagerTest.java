@@ -6,7 +6,6 @@ import com.route4me.sdk.services.routing.Geocodings;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Assume;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -125,7 +124,6 @@ public class GeocodingManagerTest {
         http.request(1).assertApiKeyInQuery();
     }
 
-    @Ignore("bug (unfiled): with the default maxRetries of 0, forwardGeocode never sends a request")
     @Test
     public void forwardGeocodeWithDefaultOptionsSendsOneRequest() {
         GeocodingManager manager = manager();
@@ -135,6 +133,41 @@ public class GeocodingManagerTest {
 
         assertEquals(1, http.requestCount());
         assertNotNull(matches);
+    }
+
+    @Test
+    public void forwardGeocodeStopsAtAnAddressNotFoundAnswer() {
+        GeocodingManager manager = manager();
+        http.respond(200, json("{'status':'Not found','resutls':0}"))
+                .respond(200, json("{'status':'Not found','results':0}"));
+
+        assertNull(manager.forwardGeocode(addressBuilder("1 Nowhere Rd"), Geocodings[].class, 3));
+        assertNull(manager.forwardGeocode(addressBuilder("2 Nowhere Rd"), Geocodings[].class, 3));
+
+        assertEquals("no retry after a not-found answer", 2, http.requestCount());
+    }
+
+    @Test
+    public void forwardGeocodeGivesUpWhenInterrupted() {
+        GeocodingManager manager = manager();
+        http.respondToAll(500, json("{'errors':['temporary failure']}"));
+
+        Thread.currentThread().interrupt();
+        try {
+            assertNull(manager.forwardGeocode(addressBuilder("100 Example St"), Geocodings[].class, 5));
+            assertTrue("the interrupt flag is kept", Thread.currentThread().isInterrupted());
+        } finally {
+            Thread.interrupted();
+        }
+        assertEquals("one attempt, then the interrupted wait ends the retries", 1, http.requestCount());
+    }
+
+    @Test
+    public void addressNotFoundAcceptsBothSpellings() {
+        com.google.gson.Gson gson = new com.google.gson.Gson();
+
+        assertEquals(Integer.valueOf(0), gson.fromJson("{\"resutls\":0}", GeocoderAddressNotFound.class).getResults());
+        assertEquals(Integer.valueOf(2), gson.fromJson("{\"results\":2}", GeocoderAddressNotFound.class).getResults());
     }
 
     // ------------------------------------------------------------------ bulk geocoding
@@ -192,7 +225,6 @@ public class GeocodingManagerTest {
         assertEquals("invalid", results.get(0).getGeocodings().get(0).getType());
     }
 
-    @Ignore("bug (unfiled): bulkGeocoder drops an address when the geocoder returns no match")
     @Test
     public void bulkGeocoderReturnsOneResultPerAddress() {
         GeocodingManager manager = manager();
@@ -205,7 +237,6 @@ public class GeocodingManagerTest {
         assertEquals(1, results.size());
     }
 
-    @Ignore("bug (unfiled): with the default GeocoderOptions (maxRetries 0), bulkGeocoder never sends a request")
     @Test
     public void bulkGeocoderWithDefaultOptionsGeocodes() {
         GeocodingManager manager = manager();
@@ -217,7 +248,6 @@ public class GeocodingManagerTest {
         assertEquals(40.1, results.get(0).getLatitude(), 0.0);
     }
 
-    @Ignore("bug #32: bulkGeocoder busy-waits for its worker threads and burns a CPU core")
     @Test
     public void bulkGeocoderWaitsWithoutSpinning() {
         ThreadMXBean threads = ManagementFactory.getThreadMXBean();
@@ -236,6 +266,81 @@ public class GeocodingManagerTest {
 
         assertTrue("the calling thread used " + cpu / 1_000_000 + " ms of CPU in " + wall / 1_000_000
                 + " ms; it should block, not spin", cpu < wall / 4);
+    }
+
+    @Test
+    public void bulkGeocoderKeepsTheInputOrder() {
+        GeocodingManager manager = manager();
+        http.respondToAll(200, DETAILED_RESULT);
+        GeocoderOptions options = new GeocoderOptions(3);
+
+        List<Address> results = manager.bulkGeocoder(Arrays.asList("x", "100 Example St", null, "200 Sample Ave"), options);
+
+        assertEquals(4, results.size());
+        assertEquals("x", results.get(0).getAddress());
+        assertEquals("100 Example St", results.get(1).getAddress());
+        assertNull(results.get(2).getAddress());
+        assertEquals("200 Sample Ave", results.get(3).getAddress());
+        assertEquals(40.1, results.get(3).getLatitude(), 0.0);
+    }
+
+    @Test
+    public void bulkGeocoderReturnsTimedOutAddressesUnmatched() {
+        GeocodingManager manager = manager();
+        http.respondToAll(200, DETAILED_RESULT).delayResponses(2000);
+        GeocoderOptions options = new GeocoderOptions(1);
+        options.setMaxTimeout(100);
+
+        long start = System.nanoTime();
+        List<Address> results = manager.bulkGeocoder(Collections.singletonList("100 Example St"), options);
+        long elapsedMillis = (System.nanoTime() - start) / 1_000_000;
+
+        assertTrue("waited " + elapsedMillis + " ms", elapsedMillis < 1500);
+        assertEquals(1, results.size());
+        assertEquals("invalid", results.get(0).getGeocodings().get(0).getType());
+        assertEquals(0.0, results.get(0).getLatitude(), 0.0);
+    }
+
+    @Test
+    public void bulkGeocoderStopsWaitingWhenInterrupted() {
+        GeocodingManager manager = manager();
+        http.respondToAll(200, DETAILED_RESULT).delayResponses(2000);
+
+        Thread.currentThread().interrupt();
+        List<Address> results;
+        try {
+            results = manager.bulkGeocoder(Arrays.asList("100 Example St", "200 Sample Ave"), new GeocoderOptions(1));
+            assertTrue("the interrupt flag is kept", Thread.currentThread().isInterrupted());
+        } finally {
+            Thread.interrupted();
+        }
+        assertEquals(2, results.size());
+        assertEquals("invalid", results.get(0).getGeocodings().get(0).getType());
+        assertEquals("200 Sample Ave", results.get(1).getAddress());
+    }
+
+    @Test
+    public void bulkGeocoderWorksWithNoThreadLimitOrTimeout() {
+        GeocodingManager manager = manager();
+        http.respondToAll(200, DETAILED_RESULT);
+        GeocoderOptions options = new GeocoderOptions(0);
+        options.setMaxTimeout(0);
+
+        List<Address> results = manager.bulkGeocoder(Collections.singletonList("100 Example St"), options);
+
+        assertEquals(40.1, results.get(0).getLatitude(), 0.0);
+        assertEquals(GeocoderOptions.DEFAULT_MAX_TIMEOUT_MS, new GeocoderOptions().getMaxTimeout());
+    }
+
+    @Test
+    public void nullMatchesDoNotFailTheAddress() {
+        GeocodingManager manager = manager();
+        http.respondToAll(200, "[null]");
+
+        List<Address> results = manager.bulkGeocoder(Collections.singletonList("100 Example St"), new GeocoderOptions(1));
+
+        assertEquals(1, results.size());
+        assertEquals("invalid", results.get(0).getGeocodings().get(0).getType());
     }
 
     // ------------------------------------------------------------------ JSON upload / websockets
