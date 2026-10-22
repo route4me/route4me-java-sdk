@@ -10,6 +10,7 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.http.Route4MeRedirectStrategy;
 import com.route4me.sdk.queryconverter.QueryConverter;
 import com.route4me.sdk.utils.LenientBooleanAdapter;
+import com.route4me.sdk.utils.LenientMapAdapterFactory;
 import com.route4me.sdk.utils.Sanitizer;
 import java.io.Closeable;
 import java.io.IOException;
@@ -128,14 +129,26 @@ public abstract class Manager implements Closeable {
 
     /**
      * Creates a manager that sends its requests with an API key, as a bearer token to the V5 API and as the
-     * {@code api_key} query parameter to the V4 API. Its JSON mapper serializes every field, and reads
-     * booleans that the API sends as {@code 1}/{@code 0} (see {@link LenientBooleanAdapter}).
+     * {@code api_key} query parameter to the V4 API. Its JSON mapper serializes every field, reads
+     * booleans that the API sends as {@code 1}/{@code 0} (see {@link LenientBooleanAdapter}), and reads an
+     * empty JSON array as an empty map (see {@link LenientMapAdapterFactory}).
      *
      * @param apiKey the Route4Me API key; {@code null} sends no key
      */
     public Manager(String apiKey) {
         this.apiKey = apiKey;
-        this.gson = LenientBooleanAdapter.register(new GsonBuilder()).create();
+        this.gson = lenient(new GsonBuilder()).create();
+    }
+
+    /**
+     * Adds the SDK's lenient readers to a Gson builder: {@link LenientBooleanAdapter} and
+     * {@link LenientMapAdapterFactory}.
+     *
+     * @param builder the builder to change
+     * @return the same builder
+     */
+    private static GsonBuilder lenient(GsonBuilder builder) {
+        return LenientMapAdapterFactory.register(LenientBooleanAdapter.register(builder));
     }
 
     /**
@@ -164,15 +177,16 @@ public abstract class Manager implements Closeable {
 
     /**
      * Creates a manager with its own JSON mapper. The mapper skips, when it serializes, every field without
-     * {@code @SerializedName}, and reads booleans sent as {@code 1}/{@code 0}.
+     * {@code @SerializedName}, reads booleans sent as {@code 1}/{@code 0}, and reads an empty JSON array as an
+     * empty map.
      *
      * @param apiKey the Route4Me API key; {@code null} sends no key
-     * @param builder the builder of the mapper; this constructor adds an exclusion strategy and
-     *     {@link LenientBooleanAdapter} to it
+     * @param builder the builder of the mapper; this constructor adds an exclusion strategy,
+     *     {@link LenientBooleanAdapter} and {@link LenientMapAdapterFactory} to it
      */
     public Manager(String apiKey, GsonBuilder builder) {
         this.apiKey = apiKey;
-        this.gson = LenientBooleanAdapter.register(builder).addSerializationExclusionStrategy(new ExclusionStrategy() {
+        this.gson = lenient(builder).addSerializationExclusionStrategy(new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes fieldAttributes) {
                 //skip fields without SerializedName

@@ -8,6 +8,8 @@ import org.apache.http.Header;
 import org.apache.http.message.BasicHeader;
 import org.junit.Test;
 
+import java.util.Map;
+
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -29,6 +31,8 @@ public class AsyncJobTest {
         private Boolean status;
         @SerializedName("job_id")
         private String jobId;
+        @SerializedName("data")
+        private Map<String, Object> data;
     }
 
     private static Header[] headers(String... namesAndValues) {
@@ -115,6 +119,13 @@ public class AsyncJobTest {
         assertTrue(reply.status);
         assertEquals("JOB-4", reply.jobId);
         assertNull("the body is not a source of the job ID", job.getJobId());
+    }
+
+    @Test
+    public void bodyReadsAnEmptyArrayAsAnEmptyMap() {
+        AsyncJob job = new AsyncJob(202, null, null, json("{'status':true,'data':[]}"));
+
+        assertTrue(job.getBodyAs(Reply.class).data.isEmpty());
     }
 
     @Test

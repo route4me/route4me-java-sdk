@@ -44,15 +44,32 @@ public class LenientBooleanAdapterTest {
     }
 
     @Test
-    public void nullAndAnEmptyStringLeaveTheFieldUnset() {
+    public void nullLeavesTheFieldUnset() {
         assertNull(GSON.fromJson("{\"is_predefined\":null}", Flags.class).predefined);
-        assertNull(GSON.fromJson("{\"is_predefined\":\"\"}", Flags.class).predefined);
         assertFalse(GSON.fromJson("{\"is_default\":null}", Flags.class).isDefault);
     }
 
+    @Test
+    public void anEmptyStringAndAnyOtherTextAreFalseAsIn1161() {
+        for (String text : new String[] {"", " ", "0", "false", "FALSE", "no", "yes", "t", "null", "2", "maybe"}) {
+            String json = "{\"is_predefined\":\"" + text + "\",\"is_default\":\"" + text + "\"}";
+            Flags flags = GSON.fromJson(json, Flags.class);
+            assertEquals(text, Boolean.FALSE, flags.predefined);
+            assertFalse(text, flags.isDefault);
+        }
+        assertTrue(GSON.fromJson("{\"is_predefined\":\" True \"}", Flags.class).predefined);
+    }
+
+    @Test
+    public void numbersOtherThanZeroAreTrue() {
+        assertTrue(GSON.fromJson("{\"is_predefined\":2}", Flags.class).predefined);
+        assertTrue(GSON.fromJson("{\"is_predefined\":-1}", Flags.class).predefined);
+        assertFalse(GSON.fromJson("{\"is_predefined\":0.0}", Flags.class).predefined);
+    }
+
     @Test(expected = JsonSyntaxException.class)
-    public void otherStringsAreRejected() {
-        GSON.fromJson("{\"is_predefined\":\"maybe\"}", Flags.class);
+    public void objectsAreRejected() {
+        GSON.fromJson("{\"is_predefined\":{}}", Flags.class);
     }
 
     @Test

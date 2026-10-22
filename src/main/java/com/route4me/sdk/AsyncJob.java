@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonParseException;
 import com.route4me.sdk.utils.LenientBooleanAdapter;
+import com.route4me.sdk.utils.LenientMapAdapterFactory;
 import com.route4me.sdk.utils.Sanitizer;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
@@ -34,7 +35,8 @@ public final class AsyncJob {
     /** The path parts after which the job ID ends a job tracker URL. */
     private static final String[] JOB_TRACKER_PATHS = {"/job-tracker/status/", "/job-tracker/result/"};
     /** The JSON mapper of {@link #getBodyAs(Class)}; it reads booleans sent as {@code 1}/{@code 0}. */
-    private static final Gson GSON = LenientBooleanAdapter.register(new GsonBuilder()).create();
+    private static final Gson GSON =
+            LenientMapAdapterFactory.register(LenientBooleanAdapter.register(new GsonBuilder())).create();
 
     private final int statusCode;
     private final String jobId;
@@ -114,7 +116,7 @@ public final class AsyncJob {
 
     /**
      * Parses the body of the reply as JSON. Booleans sent as {@code 1}/{@code 0} are read as well (see
-     * {@link LenientBooleanAdapter}).
+     * {@link LenientBooleanAdapter}), and an empty JSON array as an empty map (see {@link LenientMapAdapterFactory}).
      *
      * @param type the class to read the body into, such as a response class of the manager that started the job
      * @param <T> the type of the result
