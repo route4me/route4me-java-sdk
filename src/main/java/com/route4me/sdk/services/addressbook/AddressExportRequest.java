@@ -1,16 +1,29 @@
 package com.route4me.sdk.services.addressbook;
+
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+
 import java.util.List;
-/** The body of {@link AddressBookManagerV5#exportAddresses(AddressExportRequest)}. */
+
+/**
+ * The body of {@link AddressBookManagerV5#exportAddresses(AddressExportRequest)}: the contacts to export and the
+ * file to make. Fields left {@code null} are not sent.
+ */
 @Data
 public class AddressExportRequest {
-    /** The filters of the contacts to export ({@code filters}). */
-    @SerializedName("filters") private AddressBookFilters filters;
-    /** Array of column field names to include in export ({@code columns}). */
-    @SerializedName("columns") private List<String> columns;
-    /** Output filename (without extension) ({@code filename}). */
-    @SerializedName("filename") private String filename;
-    /** Export format: "csv", "xls", or "xlsx" ({@code format}). */
-    @SerializedName("format") private String format;
+    /** The IDs of the contacts to export ({@code ids}). */
+    @SerializedName("ids")
+    private List<Long> ids;
+
+    /** The name of the file ({@code filename}). */
+    @SerializedName("filename")
+    private String filename;
+
+    /** The kind of file: {@code csv} (the default), {@code xls} or {@code xlsx} ({@code extension}). */
+    @SerializedName("extension")
+    private String extension;
+
+    /** The time zone of the dates in the file, such as {@code America/New_York} ({@code tz}). */
+    @SerializedName("tz")
+    private String timezone;
 }

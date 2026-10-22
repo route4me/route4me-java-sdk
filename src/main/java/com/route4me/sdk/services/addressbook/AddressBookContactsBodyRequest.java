@@ -1,21 +1,42 @@
 package com.route4me.sdk.services.addressbook;
+
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+
 import java.util.List;
-/** The body of the contact list methods of {@link AddressBookManagerV5}. */
+
+/**
+ * The body of {@link AddressBookManagerV5#getContacts(AddressBookContactsBodyRequest)}: a search text, filters,
+ * a sort order, the fields to return and a range. Fields left {@code null} are not sent.
+ */
 @Data
 public class AddressBookContactsBodyRequest {
-    /** Routes filters ({@code filters}). */
-    @SerializedName("filters") private AddressBookFilters filters;
-    /** You can sort the results using the specified fields ({@code order_by}). */
-    @SerializedName("order_by") private List<String[]> orderBy;
-    /** Pagination page number ({@code page}). */
-    @SerializedName("page") private Integer page;
-    /** Items per page ({@code per_page}). */
-    @SerializedName("per_page") private Integer perPage;
+    /** Text to search for in the contacts ({@code query}). */
+    @SerializedName("query")
+    private String query;
+
+    /** The fields to return for each contact; all of them when empty or {@code null} ({@code fields}). */
+    @SerializedName("fields")
+    private List<String> fields;
+
+    /** The filters ({@code filter}). */
+    @SerializedName("filter")
+    private AddressBookContactsFilter filter;
+
     /**
-     * Response fields to return. Supports one level of nesting with a wildcard, e.g. "route_data.is_depot" or
-     * "route_data.*". Empty/omitted returns all fields; unknown fields are ignored ({@code fields}).
+     * The sort order, as {@code [field, direction]} pairs, such as {@code [["address_alias", "asc"]]}. The API
+     * sorts by {@code address_1}, {@code address_alias}, {@code first_name}, {@code last_name},
+     * {@code address_phone_number}, {@code address_email}, {@code address_group}, {@code in_route_count},
+     * {@code visited_count}, {@code last_visited_timestamp} and {@code last_routed_timestamp} ({@code order_by}).
      */
-    @SerializedName("fields") private List<String> fields;
+    @SerializedName("order_by")
+    private List<String[]> orderBy;
+
+    /** The number of contacts to return, up to 10000, the default ({@code limit}). */
+    @SerializedName("limit")
+    private Integer limit;
+
+    /** The number of contacts to skip ({@code offset}). */
+    @SerializedName("offset")
+    private Integer offset;
 }
