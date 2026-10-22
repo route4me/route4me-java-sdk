@@ -616,6 +616,22 @@ public class ManagerTest {
     }
 
     @Test
+    public void exceptionUrlHidesCredentialParametersByName() {
+        final TestManager manager = manager();
+        http.respond(403, json("{'status':false,'error':'Forbidden'}"));
+        final URIBuilder target = wh("/modules/api/v5.0/vehicles")
+                .addParameter("organization_api_key", "org-credential-1234")
+                .addParameter("page", "2");
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, target, "", Reply.class));
+
+        assertEquals("https://wh.route4me.com/modules/api/v5.0/vehicles?organization_api_key=REDACTED&page=2",
+                error.getUrl());
+        assertFalse(error.toString().contains("org-credential-1234"));
+    }
+
+    @Test
     public void errorMessageNeverShowsTheRawBody() {
         final TestManager manager = manager();
         StringBuilder body = new StringBuilder("<html><body>");

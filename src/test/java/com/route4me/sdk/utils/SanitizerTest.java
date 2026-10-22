@@ -18,10 +18,49 @@ public class SanitizerTest {
                 Sanitizer.redactUrl("https://api.route4me.com/api.v4/route.php?route_id=R1&api_key=" + KEY));
         assertEquals("https://x/?API_KEY=REDACTED&api_token=REDACTED&member_password=REDACTED&strPassword_1=REDACTED#f",
                 Sanitizer.redactUrl("https://x/?API_KEY=a&api_token=b&member_password=c&strPassword_1=d#f"));
-        assertEquals("https://x/?token=REDACTED&tokens=kept&my_api_key=kept",
-                Sanitizer.redactUrl("https://x/?token=t&tokens=kept&my_api_key=kept"));
+        assertEquals("https://x/?token=REDACTED&tokens=kept&token_type=kept&api_keys=kept",
+                Sanitizer.redactUrl("https://x/?token=t&tokens=kept&token_type=kept&api_keys=kept"));
         assertEquals("https://x/?api_key[]=REDACTED", Sanitizer.redactUrl("https://x/?api_key[]=a"));
         assertNull(Sanitizer.redactUrl(null));
+    }
+
+    @Test
+    public void redactUrlHidesParametersWhoseNameEndsLikeACredential() {
+        assertEquals("https://wh.route4me.com/modules/api/v5.0/x?organization_api_key=REDACTED&page=2",
+                Sanitizer.redactUrl("https://wh.route4me.com/modules/api/v5.0/x?organization_api_key=" + KEY
+                        + "&page=2"));
+        assertEquals("https://x/?ORGANIZATION_API_KEY=REDACTED&my_apikey=REDACTED&device_token=REDACTED"
+                        + "&Client_Secret=REDACTED&new_password=REDACTED&NewPassword=REDACTED",
+                Sanitizer.redactUrl("https://x/?ORGANIZATION_API_KEY=a&my_apikey=b&device_token=c"
+                        + "&Client_Secret=d&new_password=e&NewPassword=f"));
+        assertEquals("https://x/?route_id=R1&my_api_key=REDACTED#frag",
+                Sanitizer.redactUrl("https://x/?route_id=R1&my_api_key=k#frag"));
+    }
+
+    @Test
+    public void redactUrlHidesBracketedAndEncodedCredentialNames() {
+        assertEquals("https://x/?organization_api_key[]=REDACTED&organization_api_key%5B%5D=REDACTED",
+                Sanitizer.redactUrl("https://x/?organization_api_key[]=a&organization_api_key%5B%5D=b"));
+        assertEquals("https://x/?filters[organization_api_key]=REDACTED&filters%5Bdevice_token%5D=REDACTED"
+                        + "&filters[status]=1",
+                Sanitizer.redactUrl("https://x/?filters[organization_api_key]=a&filters%5Bdevice_token%5D=b"
+                        + "&filters[status]=1"));
+        assertEquals("https://x/?organization%5Fapi%5Fkey=REDACTED",
+                Sanitizer.redactUrl("https://x/?organization%5Fapi%5Fkey=a"));
+        assertEquals("a malformed escape keeps the raw name", "https://x/?bad%zz_token=REDACTED",
+                Sanitizer.redactUrl("https://x/?bad%zz_token=a"));
+    }
+
+    @Test
+    public void redactUrlFindsACredentialInsideAnotherValue() {
+        assertEquals("https://x/?next=https://y/?organization_api_key=REDACTED&b=2",
+                Sanitizer.redactUrl("https://x/?next=https://y/?organization_api_key=k&b=2"));
+    }
+
+    @Test
+    public void forLogHidesCredentialNamesToo() {
+        assertEquals("GET https://x/?organization_api_key=REDACTED",
+                Sanitizer.forLog("GET https://x/?organization_api_key=" + KEY));
     }
 
     @Test
