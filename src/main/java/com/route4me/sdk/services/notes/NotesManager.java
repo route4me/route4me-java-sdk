@@ -27,7 +27,8 @@ public class NotesManager extends Manager {
         builder.setParameter("route_id", routeId);
         builder.setParameter("route_destination_id", routeDestinationId);
         builder.setParameter("notes", "1");
-        return this.makeRequest(RequestMethod.GET, builder, "", Address.class).getNotes();
+        Address address = this.makeRequest(RequestMethod.GET, builder, "", Address.class);
+        return address == null ? null : address.getNotes();
     }
 
     public AddedNote addAddressNotes(NoteRequest note, String content, StatusUpdateType updateType) throws APIException {

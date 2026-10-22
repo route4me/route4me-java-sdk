@@ -2,7 +2,6 @@ package com.route4me.sdk.services.activities;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -83,7 +82,6 @@ public class ActivityManagerTest {
         http.expectApiException(() -> manager.getActivities(new ActivityRequest()));
     }
 
-    @Ignore("bug #35: logActivity throws NullPointerException when the response has no status")
     @Test
     public void logActivityTreatsAMissingStatusAsFailure() {
         final ActivityManager manager = manager();
@@ -92,7 +90,6 @@ public class ActivityManagerTest {
         http.expectApiException(() -> manager.logActivity("hello", "ROUTE-A1"));
     }
 
-    @Ignore("bug #35: logActivity throws NullPointerException when the response body is empty")
     @Test
     public void logActivityTreatsAnEmptyResponseAsFailure() {
         final ActivityManager manager = manager();

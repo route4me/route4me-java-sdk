@@ -25,6 +25,12 @@ public class RouteBreaksManager extends Manager {
     }
     
     private Object insertBreak(Integer duration, Integer amount, String type, boolean replaceExisting, String [] routeIDs) throws APIException{
+        if (amount == null) {
+            throw new IllegalArgumentException("The break amount (" + type + ") must not be null");
+        }
+        if (routeIDs == null || routeIDs.length == 0) {
+            throw new IllegalArgumentException("At least one route ID is required");
+        }
         URIBuilder builder = this.getURI(ROUTE_BREAKS_EP);
         RouteBreak routeBreak = new RouteBreak();
         routeBreak.setDuration(duration);

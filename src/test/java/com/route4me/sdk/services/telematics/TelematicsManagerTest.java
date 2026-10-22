@@ -252,6 +252,19 @@ public class TelematicsManagerTest {
     }
 
     @Test
+    public void compareTelematicsVendorsSkipsMissingData() throws Exception {
+        TelematicsManager manager = manager();
+        http.respond(200, json("{'vendors':[null,{'id':'57','name':'No Features'}]}")).respondWithoutBody(200);
+
+        List<TelematicsVendorComparison> partial = manager.compareTelematicsVendors("57");
+        List<TelematicsVendorComparison> empty = manager.compareTelematicsVendors("58");
+
+        assertEquals(1, partial.size());
+        assertEquals("", partial.get(0).getFeatures());
+        assertTrue(empty.isEmpty());
+    }
+
+    @Test
     public void vendorErrorBecomesApiException() {
         final TelematicsManager manager = manager();
         http.respond(500, json("{'errors':['unavailable']}"));

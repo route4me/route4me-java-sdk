@@ -74,12 +74,13 @@ public class AddressBookManager extends Manager {
             builder.setParameter("address_id", addresses.substring(0, addresses.length() - 1));
         }
         ContactsResponse cr = this.makeJSONRequest(RequestMethod.GET, builder, request, ContactsResponse.class);
-        return cr.getResults();
+        return cr == null ? null : cr.getResults();
     }
 
     public boolean deleteContact(List<Number> addressIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
-        return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(new AddressIds(addressIds)), DeleteResponse.class).isDeleted();
+        DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(new AddressIds(addressIds)), DeleteResponse.class);
+        return response != null && response.isDeleted();
     }
     
     public List<Contact> getDepotsFromAddressBook() throws APIException{

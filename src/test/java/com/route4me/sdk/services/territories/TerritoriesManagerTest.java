@@ -168,6 +168,15 @@ public class TerritoriesManagerTest {
     }
 
     @Test
+    public void deletesWithAnEmptyResponseReportFalse() throws Exception {
+        TerritoriesManager manager = manager();
+        http.respondWithoutBody(200).respondWithoutBody(200);
+
+        assertFalse(manager.deleteTerritory("T-POLY"));
+        assertFalse(manager.deleteAvoidanceZone("T-POLY"));
+    }
+
+    @Test
     public void territoryErrorBecomesApiException() {
         final TerritoriesManager manager = manager();
         http.respondWithFixture(400, "error_400.json");

@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.util.List;
 
+import static org.junit.Assert.assertNull;
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -42,6 +43,14 @@ public class NotesManagerTest {
         assertEquals(1, notes.size());
         assertEquals("Left at the door", notes.get(0).getContent());
         assertEquals(9001, notes.get(0).getNoteId().intValue());
+    }
+
+    @Test
+    public void getAddressNotesOfAnEmptyResponseIsNull() throws Exception {
+        NotesManager manager = manager();
+        http.respondWithoutBody(200);
+
+        assertNull(manager.getAddressNotes("ROUTE-A1", "5002"));
     }
 
     @Test

@@ -88,7 +88,8 @@ public class TerritoriesManager extends Manager {
     public boolean deleteAvoidanceZone(String territoryId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(AVOIDANCE_EP);
         builder.setParameter("territory_id", territoryId);
-        return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteResponse.class).isDeleted();
+        DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder, "", DeleteResponse.class);
+        return response != null && response.isDeleted();
     }
 
     /**
@@ -127,7 +128,8 @@ public class TerritoriesManager extends Manager {
     public boolean deleteTerritory(String territoryId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TERRITORY_EP);
         builder.setParameter("territory_id", territoryId);
-        return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteResponse.class).isDeleted();
+        DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder, "", DeleteResponse.class);
+        return response != null && response.isDeleted();
     }
 
     /**

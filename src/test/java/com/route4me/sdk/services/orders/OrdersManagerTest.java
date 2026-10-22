@@ -139,6 +139,15 @@ public class OrdersManagerTest {
     }
 
     @Test
+    public void ordersOfAnEmptyResponseAreNull() throws Exception {
+        OrdersManager manager = manager();
+        http.respondWithoutBody(200).respondWithoutBody(200);
+
+        assertNull(manager.getOrders(new OrderRequest()));
+        assertNull(manager.getOrdersByStatus(Collections.singletonList(OrderStatus.NEW.getValue())));
+    }
+
+    @Test
     public void getOrdersByScheduledDatePostsAFilter() throws Exception {
         OrdersManager manager = manager();
         http.respondToAll(200, ordersPage());

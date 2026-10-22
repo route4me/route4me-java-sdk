@@ -269,6 +269,14 @@ public class RoutingManagerTest {
     }
 
     @Test
+    public void getOptimizationsOfAnEmptyResponseIsNull() throws Exception {
+        RoutingManager manager = manager();
+        http.respondWithoutBody(200);
+
+        assertNull(manager.getOptimizations(10, 0));
+    }
+
+    @Test
     public void deleteOptimizationSendsTheIdsInTheBody() throws Exception {
         RoutingManager manager = manager();
         http.respond(200, json("{'status':true,'removed':2}"));

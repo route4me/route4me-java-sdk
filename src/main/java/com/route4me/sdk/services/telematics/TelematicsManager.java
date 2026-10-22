@@ -157,13 +157,23 @@ public class TelematicsManager extends Manager {
 
     private List<TelematicsVendorComparison> parseVendorFeaturesComparison(TelematicsVendorsInfo vendors) {
         List<TelematicsVendorComparison> comparison = new ArrayList<>();
+        if (vendors == null || vendors.getVendors() == null) {
+            return comparison;
+        }
         for (TelematicsVendorInfo vendor : vendors.getVendors()) {
+            if (vendor == null) {
+                continue;
+            }
             TelematicsVendorComparison c = new TelematicsVendorComparison();
             c.setId(vendor.getVendorID());
             c.setName(vendor.getName());
             List<String> features = new ArrayList<>();
-            for (TelematicsVendorFeatures f : vendor.getFeatures()) {
-                features.add(f.getName());
+            if (vendor.getFeatures() != null) {
+                for (TelematicsVendorFeatures f : vendor.getFeatures()) {
+                    if (f != null) {
+                        features.add(f.getName());
+                    }
+                }
             }
             c.setFeatures(String.join(",", features));
             comparison.add(c);

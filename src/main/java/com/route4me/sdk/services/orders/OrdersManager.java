@@ -45,7 +45,8 @@ public class OrdersManager extends Manager {
     public List<Order> getOrders(OrderRequest request) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
         RequestMethod method = request.getFilter() != null ? RequestMethod.POST : RequestMethod.GET;
-        return this.makeJSONRequest(method, builder, request, GetOrdersResponse.class).getResults();
+        GetOrdersResponse response = this.makeJSONRequest(method, builder, request, GetOrdersResponse.class);
+        return response == null ? null : response.getResults();
     }
 
     public List<Order> getOrdersByScheduledDate(List<String> scheduledForYYMMDD) throws APIException {
@@ -89,7 +90,8 @@ public class OrdersManager extends Manager {
         request.setLimit(limit);
         request.setOffset(offset);
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
-        return this.makeJSONRequest(RequestMethod.POST, builder, request, GetOrdersResponse.class).getResults();
+        GetOrdersResponse response = this.makeJSONRequest(RequestMethod.POST, builder, request, GetOrdersResponse.class);
+        return response == null ? null : response.getResults();
     }
 
 

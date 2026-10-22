@@ -111,7 +111,7 @@ public class RoutingManager extends Manager {
         builder.setParameter("limit", Integer.toString(limit));
         builder.setParameter("offset", Integer.toString(offset));
         GetOptimizationsResponse resp = this.makeRequest(RequestMethod.GET, builder, "", GetOptimizationsResponse.class);
-        return resp.getOptimizations();
+        return resp == null ? null : resp.getOptimizations();
     }
 
     public Map<String, Object> deleteOptimization(List<String> optimizationProblemIDs) throws APIException {

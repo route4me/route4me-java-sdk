@@ -25,7 +25,8 @@ public class ActivityManager extends Manager {
         activity.setMessage(message);
         activity.setType(ActivityType.USER_MESSAGE);
         StatusResponse resp = this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(activity), StatusResponse.class);
-        if (!resp.getStatus()) {
+        // An empty body or a missing status counts as a failure, like an explicit false.
+        if (resp == null || !Boolean.TRUE.equals(resp.getStatus())) {
             throw new APIException("Operation has not succeeded with an unknown error");
         }
     }
