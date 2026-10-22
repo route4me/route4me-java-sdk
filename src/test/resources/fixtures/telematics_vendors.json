@@ -1,0 +1,13 @@
+[
+  {
+    "id": "55",
+    "name": "example-fleet",
+    "title": "Example Fleet",
+    "is_enabled": 1,
+    "is_readonly": 0,
+    "credentials": [
+      {"name": "username", "is_enabled": true},
+      {"name": "password", "is_enabled": true}
+    ]
+  }
+]

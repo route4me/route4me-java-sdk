@@ -1,0 +1,32 @@
+[
+  {
+    "territory_id": "T-POLY",
+    "territory_name": "Downtown",
+    "territory_color": "ff0000",
+    "member_id": "1001",
+    "addresses": [11, 12],
+    "orders": [],
+    "territory": {
+      "type": "poly",
+      "data": ["40.0,-75.0", "40.0,-74.0", "41.0,-74.0", "41.0,-75.0"]
+    }
+  },
+  {
+    "territory_id": "T-CIRCLE",
+    "territory_name": "Airport",
+    "territory_color": "00ff00",
+    "territory": {
+      "type": "circle",
+      "data": ["40.5,-74.5", "5000"]
+    }
+  },
+  {
+    "territory_id": "T-RECT",
+    "territory_name": "Harbor",
+    "territory_color": "0000ff",
+    "territory": {
+      "type": "rect",
+      "data": ["40.0,-75.0", "41.0,-74.0"]
+    }
+  }
+]

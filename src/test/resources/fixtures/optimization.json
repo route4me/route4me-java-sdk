@@ -1,0 +1,40 @@
+{
+  "optimization_problem_id": "OPT-1",
+  "state": 4,
+  "sent_to_background": false,
+  "parameters": {
+    "route_name": "Morning run",
+    "algorithm_type": "1",
+    "member_id": "1001",
+    "optimize": "Distance",
+    "travel_mode": "Driving"
+  },
+  "addresses": [
+    {
+      "route_destination_id": 5001,
+      "alias": "Depot",
+      "address": "100 Example St, Springfield",
+      "is_depot": true,
+      "lat": 40.10,
+      "lng": -74.10,
+      "sequence_no": 0,
+      "route_id": "ROUTE-A1"
+    },
+    {
+      "route_destination_id": 5002,
+      "alias": "Customer",
+      "address": "200 Sample Ave, Springfield",
+      "is_depot": false,
+      "lat": 40.20,
+      "lng": -74.20,
+      "sequence_no": 1,
+      "route_id": "ROUTE-A1",
+      "time": 300
+    }
+  ],
+  "links": {
+    "route": "https://api.route4me.com/api.v4/route.php?route_id=ROUTE-A1",
+    "view": "https://api.route4me.com/route/ROUTE-A1",
+    "optimization_problem": "https://api.route4me.com/api.v4/optimization_problem.php?optimization_problem_id=OPT-1"
+  }
+}
