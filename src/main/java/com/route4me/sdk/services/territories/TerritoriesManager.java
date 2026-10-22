@@ -51,6 +51,9 @@ public class TerritoriesManager extends Manager {
                         break;
                     case "rect":
                         break;
+                    default:
+                        // Other territory types have no polygon.
+                        break;
                 }
             }
 

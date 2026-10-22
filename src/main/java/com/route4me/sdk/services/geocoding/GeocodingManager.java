@@ -200,13 +200,13 @@ public class GeocodingManager extends Manager {
      *
      * @param builder    the request URL; it is not changed, so it can be sent again
      * @param clazz      the response type, such as {@code Geocodings[].class}
-     * @param maxRetries the maximum number of attempts; 0 and 1 both mean one attempt
+     * @param maxAttempts the maximum number of attempts; 0 and 1 both mean one attempt
      * @param <T>        the response type
      * @return the parsed response, or {@code null} when the address is not found or every
      * attempt fails
      */
-    public <T> T forwardGeocode(URIBuilder builder, Class<T> clazz, int maxRetries) {
-        int attempts = Math.max(1, maxRetries);
+    public <T> T forwardGeocode(URIBuilder builder, Class<T> clazz, int maxAttempts) {
+        int attempts = Math.max(1, maxAttempts);
         for (int attempt = 1; attempt <= attempts; attempt++) {
             try {
                 return this.makeJSONRequest(RequestMethod.GET, builder, "", clazz);
@@ -248,7 +248,7 @@ public class GeocodingManager extends Manager {
 
     @Getter
     @Setter
-    private static class AddressesJSONBody {
+    private static final class AddressesJSONBody {
 
         @SerializedName("rows")
         private List<Address> addresses;

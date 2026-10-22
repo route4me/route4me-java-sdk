@@ -72,6 +72,6 @@ public class TelematicsConnection {
     @SerializedName("metadata")
     private Map<String, Object> metadata;
     @QueryParameter("validate_remote_credentials")
-    String validateRemoteCredentials;
+    private String validateRemoteCredentials;
 
 }

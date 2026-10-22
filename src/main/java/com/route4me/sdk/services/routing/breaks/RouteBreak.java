@@ -18,12 +18,15 @@ public class RouteBreak {
 
     @SerializedName("type")
     @QueryParameter("type")
+    @SuppressWarnings("checkstyle:VisibilityModifier") // public field, kept for compatibility
     public String type;
     @SerializedName("duration")
     @QueryParameter("duration")
+    @SuppressWarnings("checkstyle:VisibilityModifier") // public field, kept for compatibility
     public Integer duration;
     @SerializedName("params")
     @QueryParameter("params")
+    @SuppressWarnings("checkstyle:VisibilityModifier") // public field, kept for compatibility
     public int[] params;
 
 }

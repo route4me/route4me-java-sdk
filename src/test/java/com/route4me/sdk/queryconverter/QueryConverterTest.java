@@ -17,30 +17,30 @@ public class QueryConverterTest {
 
     static class TestPojo {
         @QueryParameter("name")
-        String name;
+        private String name;
 
         @QueryParameter("active")
-        Boolean active;
+        private Boolean active;
 
         @QueryParameter("inactive")
-        Boolean inactive;
+        private Boolean inactive;
 
         @QueryParameter("count")
-        Integer count;
+        private Integer count;
 
         @QueryParameter("big")
-        Long big;
+        private Long big;
 
         @QueryParameter("tags")
-        String[] tags;
+        private String[] tags;
 
         @QueryParameter("items")
-        List<String> items;
+        private List<String> items;
 
-        String noAnnotation;
+        private String noAnnotation;
 
         @QueryParameter("nullable")
-        String nullable;
+        private String nullable;
     }
 
     @Test

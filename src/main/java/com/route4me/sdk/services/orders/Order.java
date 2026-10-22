@@ -46,7 +46,7 @@ public class Order {
     @SerializedName("EXT_FIELD_pieces")
     private Integer pieces;
     @SerializedName("EXT_FIELD_custom_data")
-    private Object CustomData;
+    private Object customData;
     @SerializedName("address_city")
     private String city;
     @SerializedName("address_state_id")

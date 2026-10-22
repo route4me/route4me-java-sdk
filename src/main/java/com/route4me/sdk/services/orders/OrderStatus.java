@@ -52,13 +52,13 @@ public enum OrderStatus {
     SCHEDULED(15);
 
     private final int value;
-    private static final Map<Integer, OrderStatus> lookup
+    private static final Map<Integer, OrderStatus> LOOKUP
             = new HashMap<>();
 
     static {
         for (Iterator<OrderStatus> it = EnumSet.allOf(OrderStatus.class).iterator(); it.hasNext();) {
             OrderStatus s = it.next();
-            lookup.put(s.getValue(), s);
+            LOOKUP.put(s.getValue(), s);
         }
     }
 
@@ -74,7 +74,7 @@ public enum OrderStatus {
     }
 
     public static OrderStatus get(int code) {
-        return lookup.get(code);
+        return LOOKUP.get(code);
     }
 
 }

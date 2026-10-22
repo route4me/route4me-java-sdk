@@ -35,6 +35,8 @@ public class GeocoderWebSockets {
     private static final String GEOCODER_URL = "https://validator.route4me.com";
 
     private List<Address> geocodedAddresses;
+    /** The JSON mapper of the socket messages. */
+    @SuppressWarnings("checkstyle:VisibilityModifier") // protected API: kept for subclasses
     protected Gson gson = new Gson();
 
     private int addressesCount = 0;
@@ -207,15 +209,15 @@ public class GeocoderWebSockets {
         }
     }
 
-    public void startGeocoding(String temporaryAddressesStorageID, int totalAddresses) {
-        this.totalAddresses = totalAddresses;
+    public void startGeocoding(String storageId, int addressCount) {
+        this.totalAddresses = addressCount;
         // One chunk per hundredth of the job, from 10 to 200 addresses, and as many chunks
         // as fill a stage of 100 addresses (the same rule as the C# SDK). Floating-point
         // division: with integer division the chunk was always 100.
-        this.chunkSize = Math.round(Math.min(MAX_CHUNK_SIZE, Math.max(MIN_CHUNK_SIZE, totalAddresses / 100.0)));
+        this.chunkSize = Math.round(Math.min(MAX_CHUNK_SIZE, Math.max(MIN_CHUNK_SIZE, addressCount / 100.0)));
         this.chunksLimit = (long) Math.ceil(BUFFER_FAIL_SAFE_MAX_ADDRESSES / (double) this.chunkSize);
         this.maxAddressesToBeDownloaded = this.chunkSize * this.chunksLimit;
-        this.temporaryAddressesStorageID = temporaryAddressesStorageID;
+        this.temporaryAddressesStorageID = storageId;
         geocodedAddresses = new ArrayList<>();
         if (geocoderWebSocket == null || !geocoderWebSocket.connected()) {
             connectGeocoder();

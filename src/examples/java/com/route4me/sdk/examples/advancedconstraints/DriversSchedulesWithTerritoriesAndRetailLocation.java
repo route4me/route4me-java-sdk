@@ -53,6 +53,8 @@ public class DriversSchedulesWithTerritoriesAndRetailLocation {
                     case 2:
                         address.setTags(zone3);
                         break;
+                    default:
+                        break;
                 }
                 addresses.add(address);
             }
@@ -126,6 +128,8 @@ public class DriversSchedulesWithTerritoriesAndRetailLocation {
                     break;
                 case 2:
                     zone = zone3;
+                    break;
+                default:
                     break;
             }
 

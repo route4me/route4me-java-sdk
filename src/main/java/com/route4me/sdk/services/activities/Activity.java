@@ -8,7 +8,7 @@ import lombok.Data;
 public class Activity {
 
     @SerializedName("activity_id")
-    private String Id;
+    private String id;
     @SerializedName("activity_type")
     private ActivityType type;
     @SerializedName("activity_timestamp")

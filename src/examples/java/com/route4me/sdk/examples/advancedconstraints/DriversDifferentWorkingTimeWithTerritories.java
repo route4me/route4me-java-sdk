@@ -50,6 +50,8 @@ public class DriversDifferentWorkingTimeWithTerritories {
                     case 2:
                         address.setTags(territory3);
                         break;
+                    default:
+                        break;
                 }
                 addresses.add(address);
             }
@@ -116,6 +118,8 @@ public class DriversDifferentWorkingTimeWithTerritories {
                 case 2:
                     territory = territory3;
                     break;
+                default:
+                    break;
             }
 
             for (int j = 0; j < 2; j++) {
@@ -127,6 +131,8 @@ public class DriversDifferentWorkingTimeWithTerritories {
                     case 1:
                         memberCount = parameters.getParts().intValue();
                         timeWindowEnd = (15 + 5) * 3600; //Full Time
+                        break;
+                    default:
                         break;
                 }
                 schedule = new AdvancedConstraints();

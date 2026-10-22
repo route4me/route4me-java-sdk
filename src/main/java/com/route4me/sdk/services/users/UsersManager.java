@@ -36,9 +36,9 @@ public class UsersManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, user, User.class);
     }
 
-    public User getUser(String MemberID) throws APIException {
+    public User getUser(String memberId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(USER_EP);
-        builder.setParameter("member_id", MemberID);
+        builder.setParameter("member_id", memberId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, User.class);
     }
 

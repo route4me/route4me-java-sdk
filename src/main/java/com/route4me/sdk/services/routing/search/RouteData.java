@@ -118,6 +118,7 @@ public class RouteData {
     private Integer algorithmType;
     @QueryParameter("organization_id")
     @SerializedName("organization_id")
+    @SuppressWarnings("checkstyle:MemberName") // the name of the Lombok accessors, public API
     private Integer organization_id;
     @QueryParameter("master_route_id")
     @SerializedName("master_route_id")

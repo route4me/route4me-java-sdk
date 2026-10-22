@@ -23,12 +23,12 @@ public class BundlingEnum {
         BUNDLING_BY_MULTIPLE_FIELDS(5);
 
         private final int value;
-        private static final Map<Integer, BundlingEnum.BundlingMode> lookup
+        private static final Map<Integer, BundlingEnum.BundlingMode> LOOKUP
                 = new HashMap<>();
 
         static {
             for (BundlingEnum.BundlingMode s : EnumSet.allOf(BundlingEnum.BundlingMode.class)) {
-                lookup.put(s.getValue(), s);
+                LOOKUP.put(s.getValue(), s);
             }
         }
 
@@ -44,7 +44,7 @@ public class BundlingEnum {
         }
 
         public static BundlingEnum.BundlingMode get(int code) {
-            return lookup.get(code);
+            return LOOKUP.get(code);
         }
 
     }
@@ -56,12 +56,12 @@ public class BundlingEnum {
         USE_CUSTOM_SERVICE_TIME(2);
 
         private final int value;
-        private static final Map<Integer, BundlingEnum.BundlingFirstItemMode> lookup
+        private static final Map<Integer, BundlingEnum.BundlingFirstItemMode> LOOKUP
                 = new HashMap<>();
 
         static {
             for (BundlingEnum.BundlingFirstItemMode s : EnumSet.allOf(BundlingEnum.BundlingFirstItemMode.class)) {
-                lookup.put(s.getValue(), s);
+                LOOKUP.put(s.getValue(), s);
             }
         }
 
@@ -77,7 +77,7 @@ public class BundlingEnum {
         }
 
         public static BundlingEnum.BundlingFirstItemMode get(int code) {
-            return lookup.get(code);
+            return LOOKUP.get(code);
         }
 
     }
@@ -89,13 +89,13 @@ public class BundlingEnum {
         DO_NOT_ADD_SERVICE_TIME_FOR_ADDITIONAL_ITEM(3);
 
         private final int value;
-        private static final Map<Integer, BundlingEnum.BundlingAdditionalItemMode> lookup
+        private static final Map<Integer, BundlingEnum.BundlingAdditionalItemMode> LOOKUP
                 = new HashMap<>();
 
         static {
             for (BundlingEnum.BundlingAdditionalItemMode s
                     : EnumSet.allOf(BundlingEnum.BundlingAdditionalItemMode.class)) {
-                lookup.put(s.getValue(), s);
+                LOOKUP.put(s.getValue(), s);
             }
         }
 
@@ -111,7 +111,7 @@ public class BundlingEnum {
         }
 
         public static BundlingEnum.BundlingAdditionalItemMode get(int code) {
-            return lookup.get(code);
+            return LOOKUP.get(code);
         }
 
     }
@@ -122,12 +122,12 @@ public class BundlingEnum {
         MERGE_INTO_SINGLE_DESTINATION(2);
 
         private final int value;
-        private static final Map<Integer, BundlingEnum.BundledItemsMode> lookup
+        private static final Map<Integer, BundlingEnum.BundledItemsMode> LOOKUP
                 = new HashMap<>();
 
         static {
             for (BundlingEnum.BundledItemsMode s : EnumSet.allOf(BundlingEnum.BundledItemsMode.class)) {
-                lookup.put(s.getValue(), s);
+                LOOKUP.put(s.getValue(), s);
             }
         }
 
@@ -143,7 +143,7 @@ public class BundlingEnum {
         }
 
         public static BundlingEnum.BundledItemsMode get(int code) {
-            return lookup.get(code);
+            return LOOKUP.get(code);
         }
 
 

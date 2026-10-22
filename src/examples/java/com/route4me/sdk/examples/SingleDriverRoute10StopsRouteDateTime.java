@@ -39,13 +39,13 @@ public class SingleDriverRoute10StopsRouteDateTime {
         parameters.setDistanceUnit(DistanceUnit.MI.toString());
         parameters.setDeviceType(DeviceType.WEB.toString());
 
-        DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("dd/MM/uuuu'T'HH:mm:ss:SSSXXXXX");
+        DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern("dd/MM/uuuu'T'HH:mm:ss:SSSXXXXX");
 
         String routeDateString = "09/12/2021T00:00:00:000-05:00";
         String routeTimeString = "01/01/1970T08:00:00:000-05:00";
 
-        OffsetDateTime routeDateInstanceAtOffset = OffsetDateTime.parse(routeDateString, DATE_TIME_FORMATTER);
-        OffsetDateTime routeTimeInstanceAtOffset = OffsetDateTime.parse(routeTimeString, DATE_TIME_FORMATTER);
+        OffsetDateTime routeDateInstanceAtOffset = OffsetDateTime.parse(routeDateString, dateTimeFormatter);
+        OffsetDateTime routeTimeInstanceAtOffset = OffsetDateTime.parse(routeTimeString, dateTimeFormatter);
 
 
         OffsetDateTime routeDateInstanceAtUTC = routeDateInstanceAtOffset.withOffsetSameInstant(ZoneOffset.UTC);

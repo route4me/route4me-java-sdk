@@ -77,7 +77,7 @@ public class OrdersManager extends Manager {
             throws APIException {
         OrderFilter filter = new OrderFilter();
         filter.setScheduledForYYMMDD(scheduledForYYMMDD);
-        return this.OrderByFilter(filter, limit, offset);
+        return this.orderByFilter(filter, limit, offset);
     }
 
     /**
@@ -94,7 +94,7 @@ public class OrdersManager extends Manager {
         Map<String, Object> terms = new HashMap<>();
         terms.put("custom_data." + customFieldKey, customFieldValue);
         filter.setTerms(terms);
-        return this.OrderByFilter(filter);
+        return this.orderByFilter(filter);
     }
 
     /**
@@ -107,7 +107,7 @@ public class OrdersManager extends Manager {
     public List<Order> getOrdersByStatus(List<Integer> orderStatus) throws APIException {
         OrderFilter filter = new OrderFilter();
         filter.setStatuses(orderStatus);
-        return this.OrderByFilter(filter);
+        return this.orderByFilter(filter);
     }
 
     /**
@@ -134,10 +134,10 @@ public class OrdersManager extends Manager {
             throws APIException {
         OrderFilter filter = new OrderFilter();
         filter.setTrackingNumbers(trackingNumbers);
-        return this.OrderByFilter(filter, limit, offset);
+        return this.orderByFilter(filter, limit, offset);
     }
 
-    private List<Order> OrderByFilter(OrderFilter filter, Integer limit, Integer offset) throws APIException {
+    private List<Order> orderByFilter(OrderFilter filter, Integer limit, Integer offset) throws APIException {
         OrderRequest request = new OrderRequest();
         request.setFilter(filter);
         request.setLimit(limit);
@@ -150,8 +150,8 @@ public class OrdersManager extends Manager {
 
 
 
-    private List<Order> OrderByFilter(OrderFilter filter) throws APIException {
-        return this.OrderByFilter(filter, 30, 0);
+    private List<Order> orderByFilter(OrderFilter filter) throws APIException {
+        return this.orderByFilter(filter, 30, 0);
     }
 
     public Order updateOrder(Order order) throws APIException {

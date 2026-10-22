@@ -34,9 +34,11 @@ public class UserRegistration {
     private String industry;
     @ToString.Exclude
     @QueryParameter("strPassword_1")
+    @SuppressWarnings("checkstyle:MemberName") // the name of the Lombok accessors, public API
     private String strPassword_1;
     @ToString.Exclude
     @QueryParameter("strPassword_2")
+    @SuppressWarnings("checkstyle:MemberName") // the name of the Lombok accessors, public API
     private String strPassword_2;
     @QueryParameter("chkTerms")
     private String chkTerms;

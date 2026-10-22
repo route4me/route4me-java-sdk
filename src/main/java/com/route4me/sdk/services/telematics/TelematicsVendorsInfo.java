@@ -17,8 +17,8 @@ import lombok.Data;
 public class TelematicsVendorsInfo {
 
     @SerializedName("vendors")
-    List<TelematicsVendorInfo> vendors;
+    private List<TelematicsVendorInfo> vendors;
     @SerializedName("vendor")
-    TelematicsVendorInfo vendor;
+    private TelematicsVendorInfo vendor;
 
 }

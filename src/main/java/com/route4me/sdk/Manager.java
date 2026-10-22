@@ -93,8 +93,12 @@ public abstract class Manager implements Closeable {
      */
     private static final String V5_ACCEPT = "application/json, */*;q=0.8";
 
+    /** The logger of the managers; protected, and named in lower case, since subclasses use it. */
+    @SuppressWarnings("checkstyle:ConstantName") // public API of subclasses: renaming it would break them
     protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(Manager.class);
     private final String apiKey;
+    /** The JSON mapper of the requests and responses; subclasses use it to build bodies. */
+    @SuppressWarnings("checkstyle:VisibilityModifier") // protected API of subclasses
     protected Gson gson;
     private HttpHost proxy;
     private boolean disableRedirects;

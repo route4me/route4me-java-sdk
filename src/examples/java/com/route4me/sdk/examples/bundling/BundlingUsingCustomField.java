@@ -50,12 +50,12 @@ public class BundlingUsingCustomField {
         Address address2 = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
         Address address3 = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
 
-        Map<String, Object> custom_fields = new HashMap<>();
-        custom_fields.put("BUNDLING_KEY", "ZONE001");
-        custom_fields.put("CUSTOM_MESSAGE", "Bundled Zones");
+        Map<String, Object> customFields = new HashMap<>();
+        customFields.put("BUNDLING_KEY", "ZONE001");
+        customFields.put("CUSTOM_MESSAGE", "Bundled Zones");
 
-        address1.setCustom_fields(custom_fields);
-        address2.setCustom_fields(custom_fields);
+        address1.setCustom_fields(customFields);
+        address2.setCustom_fields(customFields);
 
         addresses.add(address1);
         addresses.add(address2);

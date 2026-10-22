@@ -93,13 +93,13 @@ public class Vehicles {
     @SerializedName("vehicle_cost_new")
     private Long vehicleCostNew;
     @SerializedName("purchased_new")
-    Integer purshasedNew;
+    private Integer purshasedNew;
     @SerializedName("license_start_date")
     private String licenseStartDate;
     @SerializedName("license_end_date")
     private String licenseEndDate;
     @SerializedName("is_operational")
-    boolean isOperational;
+    private boolean isOperational;
     @SerializedName("fuel_type")
     private String fuelType;
     @SerializedName("external_telematics_vehicle_id")

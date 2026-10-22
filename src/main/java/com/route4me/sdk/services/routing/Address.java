@@ -61,6 +61,7 @@ public class Address {
     @SerializedName("notes")
     private List<Note> notes;
     @SerializedName("custom_fields")
+    @SuppressWarnings("checkstyle:MemberName") // the name of the Lombok accessors, public API
     private Map<String, Object> custom_fields;
     @SerializedName("manifest")
     private Map<String, Object> manifest;

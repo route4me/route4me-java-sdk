@@ -165,10 +165,10 @@ public class Parameters {
      * Sets {@code use_mixed_pickup_delivery_demands}; the same as
      * {@link #setUseMixedPickupDeliveryDemands(boolean)}.
      *
-     * @param useMixedPickupDeliveryDemands whether pickup and delivery demands may mix
+     * @param value whether pickup and delivery demands may mix
      */
-    public void isUseMixedPickupDeliveryDemands(boolean useMixedPickupDeliveryDemands) {
-        this.useMixedPickupDeliveryDemands = useMixedPickupDeliveryDemands;
+    public void isUseMixedPickupDeliveryDemands(boolean value) {
+        this.useMixedPickupDeliveryDemands = value;
     }
 
     /**

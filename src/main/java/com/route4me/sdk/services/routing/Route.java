@@ -35,6 +35,7 @@ public class Route extends DataObject {
     @SerializedName("net_revenue_per_distance_unit")
     private Double netRevenuePerDistanceUnit;
     @SerializedName("created_timestamp")
+    @SuppressWarnings("checkstyle:MemberName") // the name of the Lombok accessors, public API
     private Long created_timestamp;
     @SerializedName("mpg")
     private Double mpg;
@@ -83,7 +84,7 @@ public class Route extends DataObject {
     @SerializedName("directions")
     private List<Direction> routeDirections;
     @SerializedName("notes")
-    List<Note> notes;
+    private List<Note> notes;
     @SerializedName("path")
     private List<GeoCoordinates> path;
     @SerializedName("unique_destination_count")

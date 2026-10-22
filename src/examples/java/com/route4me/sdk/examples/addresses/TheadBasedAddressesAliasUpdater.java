@@ -51,7 +51,7 @@ public class TheadBasedAddressesAliasUpdater implements Callable {
     private final Address address;
     private final String routeID;
     private final RoutingManager manager;
-    protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(
+    protected static final org.apache.logging.log4j.Logger LOGGER = LogManager.getLogger(
             TheadBasedAddressesAliasUpdater.class);
 
     public TheadBasedAddressesAliasUpdater(RoutingManager manager, String routeID, Address address) {
@@ -68,7 +68,7 @@ public class TheadBasedAddressesAliasUpdater implements Callable {
         try {
             updatedAddress = manager.updateAddressAttribute(routeID, address.getRouteDestinationId(), address);
         } catch (APIException ex) {
-            logger.error(ex);
+            LOGGER.error(ex);
         }
         return updatedAddress;
     }
@@ -109,7 +109,7 @@ public class TheadBasedAddressesAliasUpdater implements Callable {
                     System.out.println("Updated Alias: " + updatedAddress.getAlias() + " Route Destination ID: "
                             + updatedAddress.getRouteDestinationId());
                 } catch (InterruptedException | ExecutionException | TimeoutException ex) {
-                    logger.error("Thread Execution Exception. " + ex);
+                    LOGGER.error("Thread Execution Exception. " + ex);
                 }
             }
         } catch (APIException ex) {

@@ -80,6 +80,9 @@ public class ThreadBasedGeocoding implements Callable<Address> {
                     geocodedAddress.setLongitude(geocoordinate.getLongitude());
                 }
                 break;
+            default:
+                // GeocoderDetails has no other value.
+                break;
         }
 
         return geocodedAddress;

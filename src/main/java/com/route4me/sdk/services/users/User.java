@@ -67,7 +67,7 @@ public class User {
     @SerializedName("member_picture")
     private String memberPicture;
     @SerializedName("level")
-    int level;
+    private int level;
     @SerializedName("custom_data")
     private Map<String, Object> customData;
 

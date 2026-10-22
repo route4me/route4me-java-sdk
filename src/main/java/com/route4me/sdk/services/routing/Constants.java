@@ -257,12 +257,12 @@ public class Constants {
         ROUTE4ME_METRIC_EXACT_2D(5);
 
         private final int value;
-        private static final Map<Integer, Metric> lookup
+        private static final Map<Integer, Metric> LOOKUP
                 = new HashMap<>();
 
         static {
             for (Metric s : EnumSet.allOf(Metric.class)) {
-                lookup.put(s.getValue(), s);
+                LOOKUP.put(s.getValue(), s);
             }
         }
 
@@ -278,7 +278,7 @@ public class Constants {
         }
 
         public static Metric get(int code) {
-            return lookup.get(code);
+            return LOOKUP.get(code);
         }
 
     }
@@ -335,12 +335,12 @@ public class Constants {
         OPTIMIZATION_STATE_ERROR(5),
         OPTIMIZATION_STATE_COMPUTING_DIRECTIONS(6);
         private final int value;
-        private static final Map<Integer, OptimizationState> lookup
+        private static final Map<Integer, OptimizationState> LOOKUP
                 = new HashMap<>();
 
         static {
             for (OptimizationState s : EnumSet.allOf(OptimizationState.class)) {
-                lookup.put(s.getValue(), s);
+                LOOKUP.put(s.getValue(), s);
             }
         }
 
@@ -356,7 +356,7 @@ public class Constants {
         }
 
         public static OptimizationState get(int code) {
-            return lookup.get(code);
+            return LOOKUP.get(code);
         }
 
     }
@@ -384,12 +384,12 @@ public class Constants {
         UTURN_DEPART_TO_RIGHT(2);
 
         private final int value;
-        private static final Map<Integer, UTurn> lookup
+        private static final Map<Integer, UTurn> LOOKUP
                 = new HashMap<>();
 
         static {
             for (UTurn s : EnumSet.allOf(UTurn.class)) {
-                lookup.put(s.getValue(), s);
+                LOOKUP.put(s.getValue(), s);
             }
         }
 
@@ -405,7 +405,7 @@ public class Constants {
         }
 
         public static UTurn get(int code) {
-            return lookup.get(code);
+            return LOOKUP.get(code);
         }
 
     }
@@ -417,12 +417,12 @@ public class Constants {
         LEFTTURN_MULTIAPPROACH(3);
 
         private final int value;
-        private static final Map<Integer, LeftTurn> lookup
+        private static final Map<Integer, LeftTurn> LOOKUP
                 = new HashMap<>();
 
         static {
             for (LeftTurn s : EnumSet.allOf(LeftTurn.class)) {
-                lookup.put(s.getValue(), s);
+                LOOKUP.put(s.getValue(), s);
             }
         }
 
@@ -438,7 +438,7 @@ public class Constants {
         }
 
         public static LeftTurn get(int code) {
-            return lookup.get(code);
+            return LOOKUP.get(code);
         }
 
     }
@@ -496,12 +496,12 @@ public class Constants {
         RIGHTTURN_MULTIAPPROACH(3);
 
         private final int value;
-        private static final Map<Integer, RightTurn> lookup
+        private static final Map<Integer, RightTurn> LOOKUP
                 = new HashMap<>();
 
         static {
             for (RightTurn s : EnumSet.allOf(RightTurn.class)) {
-                lookup.put(s.getValue(), s);
+                LOOKUP.put(s.getValue(), s);
             }
         }
 
@@ -517,7 +517,7 @@ public class Constants {
         }
 
         public static RightTurn get(int code) {
-            return lookup.get(code);
+            return LOOKUP.get(code);
         }
 
     }

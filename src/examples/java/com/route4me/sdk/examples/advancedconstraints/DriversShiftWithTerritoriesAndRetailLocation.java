@@ -55,6 +55,8 @@ public class DriversShiftWithTerritoriesAndRetailLocation {
                     case 2:
                         address.setTags(territory3);
                         break;
+                    default:
+                        break;
                 }
                 addresses.add(address);
             }

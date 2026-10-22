@@ -53,6 +53,8 @@ public class DriversScheduleswithTerritoriesV2 {
                     case 2:
                         address.setTags(zone3);
                         break;
+                    default:
+                        break;
                 }
                 addresses.add(address);
             }
@@ -134,6 +136,8 @@ public class DriversScheduleswithTerritoriesV2 {
                     case 4:
                         schedule.setTags(zone5);
                         break;
+                    default:
+                        break;
                 }
 
                 Integer timeStart = Integer.parseInt(nextRecord[0]);
@@ -200,6 +204,8 @@ public class DriversScheduleswithTerritoriesV2 {
                         break;
                     case 4:
                         address.setTags(zone5);
+                        break;
+                    default:
                         break;
                 }
                 addresses.add(address);

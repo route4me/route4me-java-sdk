@@ -16,7 +16,7 @@ import org.apache.logging.log4j.Logger;
 
 public class ThreadBasedGeocoderExample {
 
-    private static final Logger logger = LogManager.getLogger(ThreadBasedGeocoderExample.class);
+    private static final Logger LOGGER = LogManager.getLogger(ThreadBasedGeocoderExample.class);
 
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");
@@ -81,21 +81,21 @@ public class ThreadBasedGeocoderExample {
         options.setMaxRetries(10);
         options.setMaxTimeout(500L);
 
-        logger.debug("Running Geocoder with " + options.getMaxThreads() + " Threads.");
+        LOGGER.debug("Running Geocoder with " + options.getMaxThreads() + " Threads.");
         long startTime = System.currentTimeMillis();
 
         List<Address> geocodedAddresses = manager.bulkGeocoder(addresses, options);
 
-        logger.debug("Processed " + addresses.size() + " - Elapsed Time (seconds): "
+        LOGGER.debug("Processed " + addresses.size() + " - Elapsed Time (seconds): "
                 + (System.currentTimeMillis() - startTime) / 1000f);
-        logger.debug("All Threads Finished ");
+        LOGGER.debug("All Threads Finished ");
 
-        logger.debug("Addresses Geocoded: " + geocodedAddresses.size());
+        LOGGER.debug("Addresses Geocoded: " + geocodedAddresses.size());
 
         int i = 0;
         for (Address geocodedAddress : geocodedAddresses) {
             i++;
-            logger.debug("ADDRESS: (" + i + ")\t" + geocodedAddress.getAddress() + "\t" + geocodedAddress.getLatitude()
+            LOGGER.debug("ADDRESS: (" + i + ")\t" + geocodedAddress.getAddress() + "\t" + geocodedAddress.getLatitude()
                     + "\t" + geocodedAddress.getLongitude() + "\tGEOCODINGS:\t"
                     + geocodedAddress.getGeocodings().get(0).getType() + "\t"
                     + geocodedAddress.getGeocodings().get(0).getLatitude() + "\t"

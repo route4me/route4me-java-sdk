@@ -92,27 +92,27 @@ public class ManagerTest {
     /** Query parameters, converted by {@code QueryConverter}. */
     static final class Params {
         @QueryParameter("limit")
-        Integer limit = 5;
+        private Integer limit = 5;
         @QueryParameter("active")
-        Boolean active = Boolean.TRUE;
+        private Boolean active = Boolean.TRUE;
         @QueryParameter("skipped")
-        String skipped;
+        private String skipped;
     }
 
     /** V5 query parameters: a list, a one-element array, a nested list, a map and a flag. */
     static final class ArrayParams {
         @QueryParameter("ids")
-        List<String> ids = Arrays.asList("1", "2");
+        private List<String> ids = Arrays.asList("1", "2");
         @QueryParameter("one")
-        String[] one = {"only"};
+        private String[] one = {"only"};
         @QueryParameter("order_by")
-        List<List<String>> orderBy = Collections.singletonList(Arrays.asList("name", "asc"));
+        private List<List<String>> orderBy = Collections.singletonList(Arrays.asList("name", "asc"));
         @QueryParameter("filters")
-        Map<String, Object> filters = new LinkedHashMap<>();
+        private Map<String, Object> filters = new LinkedHashMap<>();
         @QueryParameter("active")
-        Boolean active = Boolean.FALSE;
+        private Boolean active = Boolean.FALSE;
         @QueryParameter("page")
-        Integer page = 2;
+        private Integer page = 2;
 
         ArrayParams() {
             filters.put("status", Arrays.asList(1, 2));
@@ -123,22 +123,22 @@ public class ManagerTest {
     /** A list query parameter only. */
     static final class ListParams {
         @QueryParameter("ids")
-        List<String> ids = Arrays.asList("1", "2");
+        private List<String> ids = Arrays.asList("1", "2");
     }
 
     /** A request body with one annotated and one plain field. */
     static final class Body {
         @SerializedName("route_name")
-        String routeName = "Morning";
-        String internalNote = "plain field";
+        private String routeName = "Morning";
+        private String internalNote = "plain field";
     }
 
     /** A response type. */
     static final class Reply {
         @SerializedName("route_id")
-        String routeId;
+        private String routeId;
         @SerializedName("count")
-        int count;
+        private int count;
     }
 
     /** Returns a builder for {@link #PATH} on the V4 API host. */

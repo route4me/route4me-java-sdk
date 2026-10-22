@@ -19,12 +19,15 @@ public class RouteBreaks {
 
     @SerializedName("route_id")
     @QueryParameter("route_id")
+    @SuppressWarnings("checkstyle:VisibilityModifier") // public field, kept for compatibility
     public String[] routeID;
     @SerializedName("breaks")
     @QueryParameter("breaks")
+    @SuppressWarnings("checkstyle:VisibilityModifier") // public field, kept for compatibility
     public List<RouteBreak> breaks;
     @SerializedName("replace_existing_breaks")
     @QueryParameter("replace_existing_breaks")
+    @SuppressWarnings("checkstyle:VisibilityModifier") // public field, kept for compatibility
     public boolean replaceExisting;
 
 }

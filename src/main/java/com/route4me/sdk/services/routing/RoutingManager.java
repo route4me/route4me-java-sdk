@@ -33,7 +33,7 @@ public class RoutingManager extends Manager {
     private static final String DUPLICATE_ROUTE_EP = "/actions/duplicate_route.php";
     private static final String RENAME_ROUTE_EP = "/actions/route/rename_route.php";
     private static final String MOVE_ADDRESS = "/actions/route/move_route_destination.php";
-    private static final String ROUTE_SEARCH_v5_1 = "/modules/api/v5.1/routes";
+    private static final String ROUTE_SEARCH_V5_1 = "/modules/api/v5.1/routes";
 
     private URIBuilder getRouteSearchURI(String endpoint) {
         URIBuilder builder = new URIBuilder();
@@ -232,7 +232,7 @@ public class RoutingManager extends Manager {
     public RouteSearchResult getRoutesbyDateTimeZone(String scheduledForStart, String scheduledForEnd, String timeZone,
             Integer page, Integer perPage) throws APIException {
 
-        URIBuilder builder = this.getRouteSearchURI(ROUTE_SEARCH_v5_1);
+        URIBuilder builder = this.getRouteSearchURI(ROUTE_SEARCH_V5_1);
 
         RouteSearch request = new RouteSearch();
         request.setTimeZone(timeZone);
@@ -276,9 +276,9 @@ public class RoutingManager extends Manager {
         return updateRoute(route);
     }
 
-    public Route assignVehicle(String routeId, String vehicle_id) throws APIException {
+    public Route assignVehicle(String routeId, String vehicleId) throws APIException {
         Parameters params = new Parameters();
-        params.setVehicleId(vehicle_id);
+        params.setVehicleId(vehicleId);
 
         Route route = new Route();
         route.setId(routeId);

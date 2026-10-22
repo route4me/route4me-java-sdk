@@ -36,7 +36,7 @@ import lombok.Data;
 public class Balance {
     @QueryParameter("mode")
     @SerializedName("mode")
-    String mode;
+    private String mode;
 
     public Balance(String mode) {
         this.mode = mode;
