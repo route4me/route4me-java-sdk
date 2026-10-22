@@ -46,11 +46,13 @@ public class NotesManagerV5 extends Manager {
     /**
      * Adds a note: {@code POST https://wh.route4me.com/modules/api/v5.0/notes}, with the request as the JSON body.
      *
-     * @param request the route, destination and text
+     * @param request the route, destination and text; the spec requires {@code route_id} and {@code strNoteContents}
      * @return the added note
+     * @throws IllegalArgumentException if {@code request} is {@code null} or a required field is missing
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteNoteResource createNote(NoteStoreRequest request) throws APIException {
+        requireNote(request, "The note");
         return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_EP), this.gson.toJson(request),
                 RouteNoteResource.class);
     }
@@ -74,9 +76,13 @@ public class NotesManagerV5 extends Manager {
      * @param noteId the note ID
      * @param request the new text or attachment
      * @return the updated note
+     * @throws IllegalArgumentException if {@code noteId} is {@code null} or empty, or {@code request} is {@code null}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteNoteResource updateNote(String noteId, NoteUpdateRequest request) throws APIException {
+        if (request == null) {
+            throw new IllegalArgumentException("The note update must not be null");
+        }
         return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_EP, noteId), this.gson.toJson(request),
                 RouteNoteResource.class);
     }
@@ -152,11 +158,17 @@ public class NotesManagerV5 extends Manager {
      * Creates a custom note type: {@code POST https://wh.route4me.com/modules/api/v5.0/notes/custom-types}, with the
      * request as the JSON body.
      *
-     * @param request the type and its values
+     * @param request the type and its values; the spec requires {@code note_custom_type} and
+     *     {@code note_custom_type_values}
      * @return the custom note types
+     * @throws IllegalArgumentException if {@code request} is {@code null} or has no type or no values
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public NoteCustomTypeCollection createNoteCustomType(NoteCustomTypeStoreRequest request) throws APIException {
+        if (request == null || isEmpty(request.getNoteCustomType()) || request.getNoteCustomTypeValues() == null
+                || request.getNoteCustomTypeValues().isEmpty()) {
+            throw new IllegalArgumentException("A custom note type needs note_custom_type and note_custom_type_values");
+        }
         return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_CUSTOM_TYPES_EP), this.gson.toJson(request),
                 NoteCustomTypeCollection.class);
     }
@@ -165,12 +177,33 @@ public class NotesManagerV5 extends Manager {
      * Adds several notes: {@code POST https://wh.route4me.com/modules/api/v5.0/notes/bulk-create}, with the request as
      * the JSON body.
      *
-     * @param request the notes
+     * @param request the notes; the spec requires at least one, each with {@code route_id} and
+     *     {@code strNoteContents}
      * @return whether the notes were accepted, and whether a background job creates them
+     * @throws IllegalArgumentException if {@code request} is {@code null}, has no notes or a note misses a required
+     *     field
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public BulkNotesResponse bulkCreateNotes(NoteStoreBulkRequest request) throws APIException {
+        if (request == null || request.getNotes() == null || request.getNotes().isEmpty()) {
+            throw new IllegalArgumentException("A bulk create needs at least one note");
+        }
+        for (int i = 0; i < request.getNotes().size(); i++) {
+            requireNote(request.getNotes().get(i), "The note at index " + i);
+        }
         return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_BULK_CREATE_EP), this.gson.toJson(request),
                 BulkNotesResponse.class);
+    }
+
+    /** Rejects a note without the fields the spec requires, before any request is sent. */
+    private static void requireNote(NoteStoreRequest note, String what) {
+        if (note == null || isEmpty(note.getRouteId()) || isEmpty(note.getNoteContents())) {
+            throw new IllegalArgumentException(what + " needs route_id and strNoteContents");
+        }
+    }
+
+    /** Tells whether a text is {@code null} or empty. */
+    private static boolean isEmpty(String text) {
+        return text == null || text.isEmpty();
     }
 }
