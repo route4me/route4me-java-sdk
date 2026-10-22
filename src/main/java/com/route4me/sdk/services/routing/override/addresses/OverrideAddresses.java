@@ -27,11 +27,6 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
-
 /** Values that replace those of every address of an optimization ({@code override_addresses}). */
 @Data
 public class OverrideAddresses {
@@ -51,8 +46,5 @@ public class OverrideAddresses {
     @QueryParameter("group")
     @SerializedName("group")
     private String group;
-
-
-
 
 }

@@ -10,13 +10,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+/** Converts the {@link QueryParameter} fields of an object to query (or form) parameters. */
 public class QueryConverter {
     /**
-     * Converts a POJO to a list of query string parameters, does not support nesting.
+     * Converts the {@link QueryParameter} fields of an object to parameters, as the V4 API reads them. {@code null}
+     * fields are left out; an array or an iterable gives one parameter per item, under the same name; {@code true}
+     * becomes {@code 1}, and any other value its {@code toString()}, so {@code false} stays {@code false}. Nested
+     * objects are not converted.
      *
-     * @param object to convert to query string parameters
-     * @return A list of NameValuePair each representing a different parameter
-     * @throws IllegalAccessException if SecurityPolicy does not allow getting value using reflection
+     * @param object the object to convert
+     * @return the parameters, in field order
+     * @throws IllegalAccessException if the security policy does not allow reading a field
      */
     public static List<NameValuePair> convertObjectToParameters(Object object) throws IllegalAccessException {
         List<NameValuePair> parameters = new ArrayList<>();

@@ -27,11 +27,6 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
-
 /** The position of a page of a {@link RouteSearchResult}. */
 @Data
 public class RouteSearchMeta {
@@ -64,7 +59,5 @@ public class RouteSearchMeta {
     @QueryParameter("total")
     @SerializedName("total")
     private Integer total;
-
-
 
 }

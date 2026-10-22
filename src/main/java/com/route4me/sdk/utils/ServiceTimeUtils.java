@@ -25,12 +25,16 @@ package com.route4me.sdk.utils;
 
 import java.util.Map;
 
-/**
- *
- * @author route4me
- */
+/** Helpers for service times. */
 public class ServiceTimeUtils {
 
+    /**
+     * Looks up the service time of an address type.
+     *
+     * @param key the address type
+     * @param serviceTimeMap the service time of each address type, in seconds
+     * @return the service time, or {@code null} when the map has none for the type
+     */
     public static Long getServiceTimeByAddressType(String key, Map<String, Integer> serviceTimeMap) {
         Integer value  = serviceTimeMap.get(key);
         return value != null ? value.longValue() : null;

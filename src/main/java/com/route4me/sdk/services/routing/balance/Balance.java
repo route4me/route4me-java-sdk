@@ -27,11 +27,6 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
-
 /** How an optimization balances the work between its routes ({@code balance}). */
 @Data
 public class Balance {

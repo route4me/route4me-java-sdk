@@ -28,11 +28,6 @@ import com.route4me.sdk.queryconverter.QueryParameter;
 import java.util.List;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
-
 /** The filters of a {@link RouteSearch}. */
 @Data
 public class RouteSearchFilter {
@@ -56,8 +51,5 @@ public class RouteSearchFilter {
         this.query = "";
         this.scheduleDate = scheduleDate;
     }
-
-
-
 
 }

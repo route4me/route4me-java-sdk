@@ -27,11 +27,6 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
-
 /** A route where a new destination fits, with what it costs the route. */
 @Data
 public class MatchedRoute {

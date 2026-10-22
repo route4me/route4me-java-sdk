@@ -57,7 +57,9 @@ public class GeocoderOptions {
         }
 
         /**
-         * @return the value
+         * Returns the value of the {@code detailed} parameter.
+         *
+         * @return {@code true} or {@code false}
          */
         public String getValue() {
             return value;
@@ -82,7 +84,9 @@ public class GeocoderOptions {
         }
 
         /**
-         * @return the value
+         * Returns the value of the {@code format} parameter.
+         *
+         * @return {@code json}
          */
         public String getValue() {
             return value;

@@ -118,22 +118,48 @@ public abstract class Manager implements Closeable {
     /** How many connections the pool may hold, per route and in total. Guarded by {@link #clientLock}. */
     private int maxConnections = DEFAULT_MAX_CONNECTIONS;
 
+    /**
+     * Creates a manager that sends its requests with an API key, as a bearer token to the V5 API and as the
+     * {@code api_key} query parameter to the V4 API. Its JSON mapper serializes every field.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     */
     public Manager(String apiKey) {
         this.apiKey = apiKey;
         this.gson = new Gson();
     }
 
+    /**
+     * Creates a manager that may refuse redirects.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     * @param disableRedirects {@code true} to add {@code redirect=0} to every request and not follow redirects
+     */
     public Manager(String apiKey, boolean disableRedirects) {
         this(apiKey);
         this.disableRedirects = disableRedirects;
     }
 
+    /**
+     * Creates a manager that may refuse redirects and asks the API to call a URL when an optimization finishes.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     * @param disableRedirects {@code true} to add {@code redirect=0} to every request and not follow redirects
+     * @param callBackURL the URL, sent as {@code optimized_callback_url} with every request; {@code null} sends none
+     */
     public Manager(String apiKey, boolean disableRedirects, String callBackURL) {
         this(apiKey);
         this.disableRedirects = disableRedirects;
         this.callBackURL = callBackURL;
     }
 
+    /**
+     * Creates a manager with its own JSON mapper. The mapper skips, when it serializes, every field without
+     * {@code @SerializedName}.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     * @param builder the builder of the mapper; this constructor adds an exclusion strategy to it
+     */
     public Manager(String apiKey, GsonBuilder builder) {
         this.apiKey = apiKey;
         this.gson = builder.addSerializationExclusionStrategy(new ExclusionStrategy() {
@@ -150,11 +176,28 @@ public abstract class Manager implements Closeable {
         }).create();
     }
 
+    /**
+     * Creates a manager that sends its requests through a proxy.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     * @param proxyHost the proxy host
+     * @param proxyPort the proxy port
+     * @param proxySchema the proxy scheme, such as {@code http}
+     */
     public Manager(String apiKey, String proxyHost, int proxyPort, String proxySchema) {
         this(apiKey);
         this.proxy = new HttpHost(proxyHost, proxyPort, proxySchema);
     }
 
+    /**
+     * Creates a manager that sends its requests through a proxy, and may refuse redirects.
+     *
+     * @param apiKey the Route4Me API key; {@code null} sends no key
+     * @param proxyHost the proxy host
+     * @param proxyPort the proxy port
+     * @param proxySchema the proxy scheme, such as {@code http}
+     * @param disableRedirects {@code true} to add {@code redirect=0} to every request and not follow redirects
+     */
     public Manager(String apiKey, String proxyHost, int proxyPort, String proxySchema, boolean disableRedirects) {
         this(apiKey, proxyHost, proxyPort, proxySchema);
         this.disableRedirects = disableRedirects;
@@ -652,6 +695,8 @@ public abstract class Manager implements Closeable {
     }
 
     /**
+     * Returns how long a request may take to open a connection.
+     *
      * @return the connect timeout in milliseconds; {@link #DEFAULT_CONNECT_TIMEOUT_MS} unless changed
      */
     public int getConnectTimeout() {
@@ -670,6 +715,8 @@ public abstract class Manager implements Closeable {
     }
 
     /**
+     * Returns how long a request may wait for data on an open connection.
+     *
      * @return the socket (read) timeout in milliseconds; {@link #DEFAULT_SOCKET_TIMEOUT_MS} unless changed
      */
     public int getSocketTimeout() {
@@ -688,8 +735,10 @@ public abstract class Manager implements Closeable {
     }
 
     /**
+     * Returns how long a request may wait for a free connection from the pool.
+     *
      * @return the connection-request timeout in milliseconds;
-     * {@link #DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS} unless changed
+     *     {@link #DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS} unless changed
      */
     public int getConnectionRequestTimeout() {
         return connectionRequestTimeout;
@@ -715,14 +764,18 @@ public abstract class Manager implements Closeable {
     }
 
     /**
-     * @return the callBackURL
+     * Returns the URL the API calls when an optimization finishes.
+     *
+     * @return the URL sent as {@code optimized_callback_url}, or {@code null} when none is sent
      */
     public String getCallBackURL() {
         return callBackURL;
     }
 
     /**
-     * @param callBackURL the callBackURL to set
+     * Sets the URL the API calls when an optimization finishes, for the requests sent after the call.
+     *
+     * @param callBackURL the URL, sent as {@code optimized_callback_url}; {@code null} sends none
      */
     public void setCallBackURL(String callBackURL) {
         this.callBackURL = callBackURL;

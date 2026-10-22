@@ -27,11 +27,6 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
-/**
- *
- * @author route4me
- */
-
 /** The links to the other pages of a {@link RouteSearchResult}. */
 @Data
 public class RouteSearchLinks {
@@ -52,7 +47,5 @@ public class RouteSearchLinks {
     @QueryParameter("next")
     @SerializedName("next")
     private String next;
-
-
 
 }

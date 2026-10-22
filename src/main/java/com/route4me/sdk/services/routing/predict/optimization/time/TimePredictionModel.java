@@ -8,11 +8,6 @@ package com.route4me.sdk.services.routing.predict.optimization.time;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
-/**
- *
- * @author Route4Me
- */
-
 /** The predicted time of one step of an optimization. */
 @Data
 public class TimePredictionModel {
