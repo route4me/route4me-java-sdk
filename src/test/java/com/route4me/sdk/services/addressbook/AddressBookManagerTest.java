@@ -124,8 +124,9 @@ public class AddressBookManagerTest {
         List<Contact> contacts = manager.getContacts(byIds);
         manager.getContacts(search);
 
-        http.request(0).assertEndpoint("GET", HOST, ADDRESS_BOOK_EP).assertQuery("address_id", "12345,12346");
-        http.request(1).assertNoQuery("address_id")
+        http.request(0).assertEndpoint("GET", HOST, ADDRESS_BOOK_EP).assertApiKeyInQuery().assertNoBody()
+                .assertQuery("address_id", "12345,12346");
+        http.request(1).assertNoBody().assertNoQuery("address_id")
                 .assertQuery("query", "Bakery")
                 .assertQuery("limit", "10")
                 .assertQuery("offset", "20")
