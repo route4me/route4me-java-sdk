@@ -203,7 +203,6 @@ public class TelematicsManagerTest {
         assertEquals(2, bySize.getVendors().size());
     }
 
-    @Ignore("bug #38: searchVendorBySize(size) delegates to searchVendorByCountry")
     @Test
     public void searchVendorBySizeSendsTheSize() throws Exception {
         TelematicsManager manager = manager();
@@ -214,7 +213,6 @@ public class TelematicsManagerTest {
         http.request().assertQuery("size", "global").assertNoQuery("country");
     }
 
-    @Ignore("bug #38: searchVendorByKeyWord(keyWord) delegates to searchVendorByCountry")
     @Test
     public void searchVendorByKeyWordSendsTheKeyword() throws Exception {
         TelematicsManager manager = manager();
@@ -225,7 +223,6 @@ public class TelematicsManagerTest {
         http.request().assertQuery("s", "fleet").assertNoQuery("country");
     }
 
-    @Ignore("bug #38: searchVendorByFeature(feature) delegates to searchVendorByCountry")
     @Test
     public void searchVendorByFeatureSendsTheFeature() throws Exception {
         TelematicsManager manager = manager();

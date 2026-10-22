@@ -95,7 +95,7 @@ public class TelematicsManager extends Manager {
     }
 
     public TelematicsVendorsInfo searchVendorBySize(String size) throws APIException {
-        return searchVendorByCountry(size, null, null);
+        return searchVendorBySize(size, null, null);
     }
 
     public TelematicsVendorsInfo searchVendorBySize(String size, String page, String perPage) throws APIException {
@@ -103,7 +103,7 @@ public class TelematicsManager extends Manager {
     }
 
     public TelematicsVendorsInfo searchVendorByKeyWord(String keyWord) throws APIException {
-        return searchVendorByCountry(keyWord, null, null);
+        return searchVendorByKeyWord(keyWord, null, null);
     }
 
     public TelematicsVendorsInfo searchVendorByKeyWord(String keyWord, String page, String perPage) throws APIException {
@@ -111,7 +111,7 @@ public class TelematicsManager extends Manager {
     }
 
     public TelematicsVendorsInfo searchVendorByFeature(String feature) throws APIException {
-        return searchVendorByCountry(feature, null, null);
+        return searchVendorByFeature(feature, null, null);
     }
 
     public TelematicsVendorsInfo searchVendorByFeature(String feature, String page, String perPage) throws APIException {
