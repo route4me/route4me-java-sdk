@@ -82,10 +82,13 @@ public class WebSocketsGeocoderExample {
                 Thread.sleep(100);
             } catch (InterruptedException ex) {
                 Logger.getLogger(GeocoderWebSockets.class.getName()).log(Level.SEVERE, null, ex);
+                Thread.currentThread().interrupt();
+                job.closeGeoCodeSocketIO();
+                return;
             }
         }
         addresses = job.getAddresses();
-        System.out.println("Addresses Geocoded: " + addresses.size());
+        System.out.println("Addresses Geocoded: " + (addresses == null ? 0 : addresses.size()));
         System.out.println("Elapsed Time (seconds): " + (System.currentTimeMillis() - startTime) / 1000f);
 
 

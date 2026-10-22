@@ -19,7 +19,6 @@ import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
 import com.route4me.sdk.services.routing.override.addresses.OverrideAddresses;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -77,8 +76,6 @@ public class DriversShiftWithTerritoriesAndRetailLocation {
                 addresses.add(address);
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversShiftWithTerritoriesAndRetailLocation.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DriversShiftWithTerritoriesAndRetailLocation.class.getName()).log(Level.SEVERE, null, ex);
         }

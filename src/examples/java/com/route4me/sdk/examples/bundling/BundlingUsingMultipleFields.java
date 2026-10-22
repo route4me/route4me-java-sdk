@@ -142,9 +142,6 @@ public class BundlingUsingMultipleFields {
             {"BUNDLING_KEY", "ZONE001"},
             {"LOCATION_ID", "FLOOR003"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
         addresses.add(address);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "FLOOR001"},
-            {"LOCATION_ID", "Doe"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
         address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
         address.setCustom_fields(Stream.of(new String[][]{
             {"BUNDLING_KEY", "ZONE002"},

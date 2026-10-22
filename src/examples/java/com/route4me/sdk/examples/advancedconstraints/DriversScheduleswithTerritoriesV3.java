@@ -18,7 +18,6 @@ import com.route4me.sdk.services.routing.OptimizationParameters;
 import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -75,8 +74,6 @@ public class DriversScheduleswithTerritoriesV3 {
                 addresses.add(address);
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV3.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DriversScheduleswithTerritoriesV3.class.getName()).log(Level.SEVERE, null, ex);
         }

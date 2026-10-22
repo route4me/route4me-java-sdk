@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Optimizes 24 stops with time windows from several depots for several drivers, with {@link
- * RoutingManager#runOptimization}.
+ * Optimizes 48 stops with time windows from two depots for several drivers, with {@link
+ * RoutingManager#runOptimization}. (The class name keeps its old "24 stops".)
  */
 public class MultipleDepotMultipleDriverWith24StopsTimeWindow {
 

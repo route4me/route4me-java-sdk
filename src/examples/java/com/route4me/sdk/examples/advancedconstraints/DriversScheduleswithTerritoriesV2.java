@@ -18,7 +18,6 @@ import com.route4me.sdk.services.routing.OptimizationParameters;
 import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,8 +29,9 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Optimizes the stops of {@code locations.csv} in five zones for the 50 driver schedules of {@code schedules.csv},
- * with {@link RoutingManager#runOptimization}.
+ * Optimizes the stops of {@code locations.csv} for the 60 driver schedules of {@code schedules.csv} (at most 50
+ * routes), with {@link RoutingManager#runOptimization}. The schedules cover five zones, but the stops use only the
+ * first three, so the drivers of zones 4 and 5 get no stops.
  */
 public class DriversScheduleswithTerritoriesV2 {
 
@@ -75,8 +75,6 @@ public class DriversScheduleswithTerritoriesV2 {
                 addresses.add(address);
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV2.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DriversScheduleswithTerritoriesV2.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -181,8 +179,6 @@ public class DriversScheduleswithTerritoriesV2 {
                 addresses.add(address);
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV2.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DriversScheduleswithTerritoriesV2.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -224,7 +220,6 @@ public class DriversScheduleswithTerritoriesV2 {
     private static List<AdvancedConstraints> readSchedules(Path filePath, List<String> zone1, List<String> zone2,
             List<String> zone3, List<String> zone4, List<String> zone5) {
         AdvancedConstraints schedule;
-        List<String> zone = new ArrayList<>();
         List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
 
 
@@ -266,8 +261,6 @@ public class DriversScheduleswithTerritoriesV2 {
 
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV2.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DriversScheduleswithTerritoriesV2.class.getName()).log(Level.SEVERE, null, ex);
         }

@@ -15,7 +15,6 @@ import com.route4me.sdk.services.routing.OptimizationParameters;
 import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -72,8 +71,6 @@ public class DriversDifferentWorkingTimeWithTerritories {
                 addresses.add(address);
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversDifferentWorkingTimeWithTerritories.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DriversDifferentWorkingTimeWithTerritories.class.getName()).log(Level.SEVERE, null, ex);
         }

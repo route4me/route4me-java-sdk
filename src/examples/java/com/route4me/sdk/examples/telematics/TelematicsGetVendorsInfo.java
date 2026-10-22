@@ -19,6 +19,10 @@ public class TelematicsGetVendorsInfo {
 
         try {
             TelematicsVendorsV5Response vendors = manager.getTelematicsVendorsV5();
+            if (vendors == null || vendors.getData() == null) {
+                System.out.println("No vendors");
+                return;
+            }
             for (TelematicsVendorInfo vendor : vendors.getData()) {
                 System.out.println(vendor);
             }

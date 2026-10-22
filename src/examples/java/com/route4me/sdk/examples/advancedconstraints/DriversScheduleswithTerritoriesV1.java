@@ -18,7 +18,6 @@ import com.route4me.sdk.services.routing.OptimizationParameters;
 import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,8 +29,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Optimizes the stops of {@code locations.csv} for the driver schedules of {@code schedules.csv} (50 drivers),
- * with {@link RoutingManager#runOptimization}.
+ * Optimizes the stops of {@code locations.csv} for the 60 driver schedules of {@code schedules.csv} (at most 50
+ * routes), with {@link RoutingManager#runOptimization}.
  */
 public class DriversScheduleswithTerritoriesV1 {
 
@@ -59,8 +58,6 @@ public class DriversScheduleswithTerritoriesV1 {
                 addresses.add(address);
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -97,7 +94,6 @@ public class DriversScheduleswithTerritoriesV1 {
         // Schedules
         // **********************
         AdvancedConstraints schedule;
-        List<String> zone = new ArrayList<>();
         List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
 
         Path currentPath = Paths.get(System.getProperty("user.dir"));
@@ -121,8 +117,6 @@ public class DriversScheduleswithTerritoriesV1 {
 
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -158,8 +152,6 @@ public class DriversScheduleswithTerritoriesV1 {
                 addresses.add(address);
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
             Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         }
