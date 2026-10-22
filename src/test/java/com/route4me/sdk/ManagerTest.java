@@ -294,12 +294,21 @@ public class ManagerTest {
 
     @Test
     public void onlyTheRoute4MeApiHostsReceiveTheKey() {
-        assertTrue(Manager.isApiKeyHost("api.route4me.com"));
-        assertTrue(Manager.isApiKeyHost("WH.route4me.com"));
-        assertFalse(Manager.isApiKeyHost("telematics.route4me.com"));
-        assertFalse(Manager.isApiKeyHost("rapid.route4me.com"));
-        assertFalse(Manager.isApiKeyHost("api.route4me.com.example.com"));
-        assertFalse(Manager.isApiKeyHost(null));
+        assertTrue(Manager.takesApiKey("https", "api.route4me.com", -1));
+        assertTrue(Manager.takesApiKey("https", "WH.route4me.com", 443));
+        assertFalse(Manager.takesApiKey("https", "telematics.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("https", "rapid.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("https", "api.route4me.com.example.com", -1));
+        assertFalse(Manager.takesApiKey("https", null, -1));
+    }
+
+    @Test
+    public void theKeyIsNeverSentWithoutTlsOrOnAnotherPort() {
+        assertFalse(Manager.takesApiKey("http", "api.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("http", "wh.route4me.com", 80));
+        assertFalse(Manager.takesApiKey(null, "api.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("https", "api.route4me.com", 8443));
+        assertFalse(Manager.takesApiKey("https", "wh.route4me.com", 80));
     }
 
     @Test

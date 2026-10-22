@@ -8,7 +8,7 @@ This is the history of changes of the Route4Me Java SDK (`io.github.route4me:rou
 
 This is a major release: it removes and changes public API (see **Breaking changes**). The SDK still targets **Java 8**: the jar is built with `--release 8` and runs unchanged on Java 11, 17, 21 and later. CI tests it on JDK 8, 11, 17 and 21.
 
-This release fixes every open bug report (#16–#19, #31–#41), adds 27 managers and 245 API methods for the operations the coverage issues list (#42–#104), and hardens how the SDK handles the API key. It also adds an offline test suite of 755 tests behind a request guard, and Javadoc for the whole public API. Several fixes change behaviour that code may rely on, so read **Breaking changes** before upgrading.
+This release fixes every open bug report (#16–#19, #31–#41), adds 27 managers and 245 API methods for the operations the coverage issues list (#42–#104), and hardens how the SDK handles the API key. It also adds an offline test suite of 756 tests behind a request guard, and Javadoc for the whole public API. Several fixes change behaviour that code may rely on, so read **Breaking changes** before upgrading.
 
 ### Breaking changes
 
@@ -59,7 +59,7 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - **`Map` fields read an empty JSON array as an empty map** (`LenientMapAdapterFactory`, on every manager's JSON mapper, in `AsyncJob.getBodyAs` and in `GeocoderWebSockets`). PHP sends an empty map as `[]`, for example `"EXT_FIELD_custom_data": []` on an order without custom data. `null` stays `null`, objects read as before, and a non-empty array now fails instead of being read as Gson's list of key and value pairs.
 
 ### Security
-- **The API key goes only to `api.route4me.com` and `wh.route4me.com`.** V4 requests send it as the `api_key` query parameter, V5 requests (`/modules/api/v5.0` and `v5.1`) as a bearer token. A request to any other host carries no key.
+- **The API key goes only to `api.route4me.com` and `wh.route4me.com`, over https on port 443.** V4 requests send it as the `api_key` query parameter, V5 requests (`/modules/api/v5.0` and `v5.1`) as a bearer token. A request to any other host, or over another scheme or port, carries no key.
 - The 11 deprecated `TelematicsManager` methods of the retired `telematics.route4me.com` host throw an `APIException` without sending a request. In 1.16.1 they sent the API key to that host.
 - Redirects are followed only to `api.route4me.com` and `wh.route4me.com`. `rapid.route4me.com` and `validator.route4me.com` are no longer allowed: no SDK call goes there over HTTP, and Apache HttpClient copies the `Authorization` header onto a redirect.
 - The unit-test request guard fails any request that carries the API key to another host, deprecated endpoints included, or that uses a port other than 443.
@@ -104,7 +104,7 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - 370 runnable examples, one for each new method, plus the `CsvRows` helper; the example issues (#105–#109) each get theirs. The examples of deprecated methods whose V5 replacement had no example now show the replacement (`DeleteUser`, `CreateAddressBookContact`, `UpdateAddressBookContact`, `GetVehicle`, `DeleteVehicle`); the others still show the deprecated method and name the V5 example to use.
 
 ### Internal
-- 755 offline unit tests (there were none in the repo): every request is checked against an endpoint registry built from the Route4Me OpenAPI specs, with the host, the scheme and the key placement. Where an endpoint has method-specific entries, only those methods pass: an any-method entry no longer hides a wrong method. JaCoCo enforces a coverage floor.
+- 756 offline unit tests (there were none in the repo): every request is checked against an endpoint registry built from the Route4Me OpenAPI specs, with the host, the scheme and the key placement. Where an endpoint has method-specific entries, only those methods pass: an any-method entry no longer hides a wrong method. JaCoCo enforces a coverage floor.
 - The unit tests fail closed: a connection to any host but the loopback address fails the test (a default `ProxySelector` that the surefire listener and `MockHttp` install), so a manager a test forgot to mock, or the WebSocket geocoder, cannot reach the network. The key check also reads the SDK's Log4j 2 events at every level and its `java.util.logging` records down to `FINE`, `MockHttp` accepts only managers built with its placeholder key, and a guard failure is reported even when the test is then skipped.
 - Checkstyle 9.3 with zero violations, `javac -Xlint:all -Werror`, and Javadoc doclint on every build. Every public type, method and field has Javadoc.
 - CI: JDK 8, 11, 17 and 21; Actions pinned to commit SHAs; `permissions: contents: read`; a gitleaks job. The Travis config is removed.
