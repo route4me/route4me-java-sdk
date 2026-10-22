@@ -9,6 +9,7 @@ import java.util.Collections;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -139,6 +140,30 @@ public class OptimizationProfileManagerTest {
                 .assertJson("items[0].id", "PROF-1").assertJson("items[1].id", "PROF-2").assertJsonLacks("items[2]");
         http.request(1).assertEndpoint("POST", HOST, PROFILES_EP + "/get-entities-template").assertNoBody();
         assertEquals(Boolean.TRUE, entities.getItems().get(0).getParts().get(0).getConfig().get("visible"));
+    }
+
+    @Test
+    public void assignOptimizationProfilePostsTheGroupAndTheProfile() throws Exception {
+        OptimizationProfileManager manager = manager();
+        http.respond(200, json("{'status':true}"));
+
+        OptimizationProfileAssignResponse assigned = manager.assignOptimizationProfile(
+                "C0FFEE00000000000000000000000003", "PROF-1");
+
+        http.request().assertEndpoint("POST", HOST, "/modules/api/v5.0/orders/aggregation/assign-optimization-profile")
+                .assertApiKeyAsBearer().assertNoQuery("group_id")
+                .assertContentType("application/json; charset=UTF-8")
+                .assertJson("group_id", "C0FFEE00000000000000000000000003")
+                .assertJson("optimization_profile_id", "PROF-1");
+        assertTrue(assigned.getStatus());
+    }
+
+    @Test
+    public void assignOptimizationProfileAcceptsAnEmptyReply() throws Exception {
+        OptimizationProfileManager manager = manager();
+        http.respondWithoutBody(204);
+
+        assertNull(manager.assignOptimizationProfile("C0FFEE00000000000000000000000003", "PROF-1"));
     }
 
     @Test
