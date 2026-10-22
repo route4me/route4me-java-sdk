@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.geocoding;
 
+import com.route4me.sdk.ManagerTestAccess;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.GeoCoordinates;
 import com.route4me.sdk.services.routing.Geocodings;
@@ -194,6 +195,25 @@ public class GeocodingManagerTest {
         assertEquals(-74.1, geocoded.getLongitude(), 0.0);
         assertEquals("street", geocoded.getGeocodings().get(0).getType());
         assertEquals("invalid", findByAddress(results, "ab").getGeocodings().get(0).getType());
+    }
+
+    @Test
+    public void bulkGeocoderGrowsTheConnectionPoolToItsThreadCount() {
+        GeocodingManager manager = manager();
+        http.respondToAll(200, DETAILED_RESULT);
+        List<String> addresses = new ArrayList<>();
+        for (int i = 0; i < 16; i++) {
+            addresses.add(i + " Example St");
+        }
+
+        manager.bulkGeocoder(addresses.subList(0, 3), new GeocoderOptions(8));
+        assertEquals("three addresses need three threads, within the default pool", 10,
+                ManagerTestAccess.maxConnections(manager));
+
+        List<Address> results = manager.bulkGeocoder(addresses, new GeocoderOptions(16));
+
+        assertEquals(16, results.size());
+        assertEquals("each of the 16 threads gets a connection", 16, ManagerTestAccess.maxConnections(manager));
     }
 
     @Test

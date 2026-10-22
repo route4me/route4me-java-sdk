@@ -904,6 +904,30 @@ public class ManagerTest {
     }
 
     @Test
+    public void connectionPoolGrowsToTheConnectionsAManagerNeeds() throws Exception {
+        TestManager manager = new TestManager(MockHttp.API_KEY);
+        try {
+            manager.httpClient();
+            assertEquals(10, manager.maxConnections());
+            assertEquals(10, manager.connectionPool().getDefaultMaxPerRoute());
+            assertEquals(10, manager.connectionPool().getMaxTotal());
+
+            manager.ensureMaxConnections(25);
+            manager.ensureMaxConnections(5);
+
+            assertEquals("the pool never shrinks", 25, manager.maxConnections());
+            assertEquals("the live pool grows", 25, manager.connectionPool().getDefaultMaxPerRoute());
+            assertEquals(25, manager.connectionPool().getMaxTotal());
+            manager.close();
+            manager.httpClient();
+            assertEquals("a new client keeps the size", 25, manager.connectionPool().getDefaultMaxPerRoute());
+        } finally {
+            manager.close();
+        }
+        assertNull("a closed manager has no pool", manager.connectionPool());
+    }
+
+    @Test
     public void concurrentFirstRequestsGetTheSameClient() throws Exception {
         final TestManager manager = new TestManager(MockHttp.API_KEY);
         final int threads = 8;

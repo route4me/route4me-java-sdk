@@ -75,7 +75,8 @@ public class GeocodingManager extends Manager {
      * geocoding fails, times out or is interrupted comes back unmatched: latitude and
      * longitude 0 and a single geocoding of type {@code "invalid"}.
      *
-     * <p>Up to {@link GeocoderOptions#getMaxThreads()} requests run at once. The call waits
+     * <p>Up to {@link GeocoderOptions#getMaxThreads()} requests run at once; the connection
+     * pool of this manager grows to that many connections if it is smaller. The call waits
      * at most {@link GeocoderOptions#getMaxTimeout()} milliseconds for each round of that
      * many addresses, then cancels what is still running. Each address gets up to
      * {@link GeocoderOptions#getMaxRetries()} attempts (at least one). If the calling
@@ -106,6 +107,8 @@ public class GeocodingManager extends Manager {
         }
         if (!tasks.isEmpty()) {
             int threads = Math.max(1, Math.min(options.getMaxThreads(), tasks.size()));
+            // One connection per thread, or the extra threads wait for a free one.
+            this.ensureMaxConnections(threads);
             ExecutorService executor = Executors.newFixedThreadPool(threads);
             try {
                 List<Future<Address>> futures;

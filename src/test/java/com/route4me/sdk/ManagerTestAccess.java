@@ -26,6 +26,16 @@ public final class ManagerTestAccess {
     }
 
     /**
+     * Returns how many connections the pool of {@code manager} may hold.
+     *
+     * @param manager the manager under test
+     * @return the per-route and total maximum of its connection pool
+     */
+    public static int maxConnections(Manager manager) {
+        return manager.maxConnections();
+    }
+
+    /**
      * Makes {@code manager} create its own HTTP client again on the next request.
      *
      * @param manager the manager under test

@@ -38,10 +38,12 @@ import org.apache.logging.log4j.LogManager;
 /**
  * Base class of the SDK managers: it builds the requests, sends them and parses the responses.
  *
- * <p>Each manager owns one HTTP client with a small connection pool. The client is created
- * on the first request and shared by every later request of the same manager, also when
- * several threads use the manager at once. Reuse a manager instead of creating one per
- * call, and close it when you no longer need it, to release its connections:
+ * <p>Each manager owns one HTTP client with a pool of 10 connections, which
+ * {@link com.route4me.sdk.services.geocoding.GeocodingManager#bulkGeocoder} grows to its
+ * thread count. The client is created on the first request and shared by every later
+ * request of the same manager, also when several threads use the manager at once. Reuse
+ * a manager instead of creating one per call, and close it when you no longer need it, to
+ * release its connections:
  * <pre>{@code
  * try (RoutingManager manager = new RoutingManager(apiKey)) {
  *     DataObject optimization = manager.runOptimization(parameters);
@@ -73,7 +75,8 @@ public abstract class Manager implements Closeable {
     /** Default time to wait for a free connection from the pool, in milliseconds. */
     public static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS = 6050;
 
-    private static final int MAX_CONNECTIONS = 10;
+    /** The default number of pooled connections of a manager, per route and in total. */
+    private static final int DEFAULT_MAX_CONNECTIONS = 10;
     /** The host of the V5 API, which takes the API key as a bearer token. */
     private static final String V5_HOST = "wh.route4me.com";
     /** The path prefixes of the V5 API on {@link #V5_HOST}. */
@@ -99,6 +102,13 @@ public abstract class Manager implements Closeable {
     private final Object clientLock = new Object();
     /** The client of this manager; {@code null} until the first request or after {@link #close()}. */
     private volatile CloseableHttpClient httpClient;
+    /**
+     * The connection pool of {@link #httpClient} when this class created the client;
+     * {@code null} otherwise. Guarded by {@link #clientLock}.
+     */
+    private PoolingHttpClientConnectionManager connectionPool;
+    /** How many connections the pool may hold, per route and in total. Guarded by {@link #clientLock}. */
+    private int maxConnections = DEFAULT_MAX_CONNECTIONS;
 
     public Manager(String apiKey) {
         this.apiKey = apiKey;
@@ -516,11 +526,12 @@ public abstract class Manager implements Closeable {
         return client;
     }
 
-    /** Creates the pooled client that this manager uses for all its requests. */
+    /** Creates the pooled client that this manager uses for all its requests; called under {@link #clientLock}. */
     private CloseableHttpClient buildHttpClient() {
         PoolingHttpClientConnectionManager pool = new PoolingHttpClientConnectionManager();
-        pool.setMaxTotal(MAX_CONNECTIONS);
-        pool.setDefaultMaxPerRoute(MAX_CONNECTIONS);
+        pool.setMaxTotal(this.maxConnections);
+        pool.setDefaultMaxPerRoute(this.maxConnections);
+        this.connectionPool = pool;
         return HttpClients.custom()
                 .setConnectionManager(pool)
                 .setDefaultRequestConfig(this.requestConfig())
@@ -543,6 +554,7 @@ public abstract class Manager implements Closeable {
         synchronized (this.clientLock) {
             client = this.httpClient;
             this.httpClient = null;
+            this.connectionPool = null;
         }
         if (client != null) {
             client.close();
@@ -565,6 +577,58 @@ public abstract class Manager implements Closeable {
     void setHttpClient(CloseableHttpClient client) {
         synchronized (this.clientLock) {
             this.httpClient = client;
+            this.connectionPool = null;
+        }
+    }
+
+    /**
+     * Makes the connection pool of this manager hold at least {@code connections}
+     * connections, per route and in total, so that as many threads can send requests at
+     * once without waiting for a free connection (see
+     * {@link #setConnectionRequestTimeout(int)}). The pool never shrinks: a smaller number
+     * changes nothing. The new size applies to the current pool and to any pool created
+     * after {@link #close()}.
+     *
+     * <p>{@link com.route4me.sdk.services.geocoding.GeocodingManager#bulkGeocoder} calls it
+     * with its thread count.
+     *
+     * @param connections the number of requests that may run at once
+     */
+    protected void ensureMaxConnections(int connections) {
+        synchronized (this.clientLock) {
+            if (connections <= this.maxConnections) {
+                return;
+            }
+            this.maxConnections = connections;
+            if (this.connectionPool != null) {
+                this.connectionPool.setMaxTotal(connections);
+                this.connectionPool.setDefaultMaxPerRoute(connections);
+            }
+        }
+    }
+
+    /**
+     * Returns how many connections the pool of this manager may hold, per route and in
+     * total. Package-private, for the unit tests.
+     *
+     * @return the pool size; {@code 10} unless {@link #ensureMaxConnections(int)} raised it
+     */
+    int maxConnections() {
+        synchronized (this.clientLock) {
+            return this.maxConnections;
+        }
+    }
+
+    /**
+     * Returns the connection pool of the client this class created. Package-private, for
+     * the unit tests.
+     *
+     * @return the pool, or {@code null} before the first request, after {@link #close()} or
+     *         when a test installed its own client
+     */
+    PoolingHttpClientConnectionManager connectionPool() {
+        synchronized (this.clientLock) {
+            return this.connectionPool;
         }
     }
 
