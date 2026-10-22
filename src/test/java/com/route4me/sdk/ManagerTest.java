@@ -325,7 +325,7 @@ public class ManagerTest {
         manager.makeRequest(RequestMethod.DELETE, builder(), "", Reply.class);
 
         assertEquals("{\"a\":1}", http.request(0).getBody());
-        http.request(0).assertMethod("PUT");
+        http.request(0).assertMethod("PUT").assertContentType("application/json; charset=UTF-8");
         http.request(1).assertMethod("DELETE").assertNoBody();
     }
 
@@ -365,7 +365,7 @@ public class ManagerTest {
                     .assertQuery("limit", "5")
                     .assertQuery("active", "1")
                     .assertNoQuery("skipped")
-                    .assertHeader("Content-type", "application/json")
+                    .assertContentType("application/json; charset=UTF-8")
                     .assertJson("route_name", "Morning");
         }
     }
@@ -421,8 +421,9 @@ public class ManagerTest {
         manager.makeJSONRequest(RequestMethod.POST, builder(), (Object) null, Reply.class);
         manager.makeJSONRequest(RequestMethod.POST, builder(), (Object) null, listOfReplies);
 
-        http.request(0).assertNoBody().assertHeader("Content-type", "application/json");
+        http.request(0).assertNoBody();
         http.request(1).assertNoBody();
+        assertNull("a request without a body has no content type", http.request(0).header("Content-Type"));
     }
 
     @Test

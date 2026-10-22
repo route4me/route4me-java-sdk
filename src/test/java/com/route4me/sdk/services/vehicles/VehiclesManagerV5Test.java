@@ -1,7 +1,6 @@
 package com.route4me.sdk.services.vehicles;
 
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -105,7 +104,6 @@ public class VehiclesManagerV5Test {
         assertEquals(Long.valueOf(1001), created.getMemberId());
     }
 
-    @Ignore("bug (unfiled): V5 JSON bodies are sent as text/plain, without Content-Type application/json")
     @Test
     public void createVehicleSendsJsonContentType() throws Exception {
         VehiclesManagerV5 manager = manager();
@@ -113,7 +111,7 @@ public class VehiclesManagerV5Test {
 
         manager.createVehicle(vehicle());
 
-        http.request().assertContentType("application/json");
+        http.request().assertContentType("application/json; charset=UTF-8");
     }
     @Test
     public void updateVehiclePutsTheVehicle() throws Exception {

@@ -184,12 +184,38 @@ public abstract class Manager implements Closeable {
         }
     }
 
+    /**
+     * Sends a request with a JSON text body and parses the response.
+     *
+     * @param method  the HTTP method
+     * @param builder the request URL; it is not changed
+     * @param body    the JSON text, sent as {@code application/json; charset=UTF-8}; an
+     *                empty string sends no body
+     * @param clazz   the response type; {@code String.class} returns the body as text
+     * @param <T>     the response type
+     * @return the parsed response, or {@code null} when the response has no content
+     * @throws APIException if the request fails, the server answers with an error status or
+     *                      the response cannot be parsed
+     */
     protected <T> T makeRequest(RequestMethod method, URIBuilder builder, String body, Class<T> clazz) throws APIException {
-        return this.makeRequest(method, builder, !body.isEmpty() ? new StringEntity(body, "UTF-8") : (HttpEntity) null, clazz, null);
+        return this.makeRequest(method, builder, !body.isEmpty() ? jsonEntity(body) : (HttpEntity) null, clazz, null);
     }
 
+    /**
+     * Sends a request with a JSON text body and parses the response into a generic type.
+     *
+     * @param method  the HTTP method
+     * @param builder the request URL; it is not changed
+     * @param body    the JSON text, sent as {@code application/json; charset=UTF-8}; an
+     *                empty string sends no body
+     * @param type    the response type, such as a {@code TypeToken} type
+     * @param <T>     the response type
+     * @return the parsed response, or {@code null} when the response has no content
+     * @throws APIException if the request fails, the server answers with an error status or
+     *                      the response cannot be parsed
+     */
     protected <T> T makeRequest(RequestMethod method, URIBuilder builder, String body, Type type) throws APIException {
-        return this.makeRequest(method, builder, !body.isEmpty() ? new StringEntity(body, "UTF-8") : (HttpEntity) null, type);
+        return this.makeRequest(method, builder, !body.isEmpty() ? jsonEntity(body) : (HttpEntity) null, type);
     }
 
     protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz) throws APIException {
@@ -215,7 +241,7 @@ public abstract class Manager implements Closeable {
                         requestParams.getClass().getSimpleName(), Sanitizer.forLog(ex.getMessage()));
             }
         }
-        return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(body), "UTF-8"), clazz, null, "application/json");
+        return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), clazz, null);
     }
 
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams, Type type) throws APIException {
@@ -229,7 +255,7 @@ public abstract class Manager implements Closeable {
                         requestParams.getClass().getSimpleName(), Sanitizer.forLog(ex.getMessage()));
             }
         }
-        return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(body), "UTF-8"), null, type, "application/json");
+        return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), null, type);
     }
 
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz) throws APIException {
@@ -243,10 +269,10 @@ public abstract class Manager implements Closeable {
                 throw new APIException("Could not convert " + requestParams.getClass().getSimpleName() + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
-                return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams), "UTF-8"), clazz, null, "application/json");
+                return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), clazz, null);
             }
         }
-        return this.makeRequest(method, builder, (HttpEntity) null, clazz, null, "application/json");
+        return this.makeRequest(method, builder, (HttpEntity) null, clazz, null);
     }
 
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type) throws APIException {
@@ -260,17 +286,24 @@ public abstract class Manager implements Closeable {
                 throw new APIException("Could not convert " + requestParams.getClass().getSimpleName() + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
-                return this.makeRequest(method, builder, new StringEntity(this.gson.toJson(requestParams), "UTF-8"), null, type, "application/json");
+                return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), null, type);
             }
         }
-        return this.makeRequest(method, builder, (HttpEntity) null, null, type, "application/json");
+        return this.makeRequest(method, builder, (HttpEntity) null, null, type);
+    }
+
+    /**
+     * Wraps a JSON text as a request body. Its {@code Content-Type} is
+     * {@code application/json; charset=UTF-8}.
+     *
+     * @param json the JSON text
+     * @return the entity
+     */
+    private static HttpEntity jsonEntity(String json) {
+        return new StringEntity(json, ContentType.APPLICATION_JSON);
     }
 
     private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type) throws APIException {
-        return this.makeRequest(method, builder, body, clazz, type, null);
-    }
-
-    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type, String requestContentType) throws APIException {
         HttpRequestBase hrb;
         boolean bearer;
         try {
@@ -298,9 +331,6 @@ public abstract class Manager implements Closeable {
         // Adding User-Agent
         hrb.setHeader("User-Agent", USER_AGENT);
 
-        if (requestContentType != null) {
-            hrb.setHeader("Content-type", requestContentType);
-        }
         // Timeouts, proxy and redirect handling of this manager.
         hrb.setConfig(this.requestConfig());
         //if there's any entity to be attached to the body and request supports it, do it.
