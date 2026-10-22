@@ -442,6 +442,24 @@ public class GeocodingManagerTest {
     }
 
     @Test
+    public void websocketsGeocoderReturnsAnIdleGeocoderWhenTheUploadReplyIsIncomplete() throws Exception {
+        GeocodingManager manager = manager();
+        http.respondWithoutBody(200).respond(200, json("{'optimization_problem_id':'P1','address_count':2}"))
+                .respond(200, json("{'temporary_addresses_storage_id':'S1'}"));
+        Field socket = GeocoderWebSockets.class.getDeclaredField("geocoderWebSocket");
+        socket.setAccessible(true);
+
+        for (int i = 0; i < 3; i++) {
+            GeocoderWebSockets geocoder = manager.websocketsGeocoder(new ArrayList<Address>());
+
+            assertNull("no socket may be opened in a unit test", socket.get(geocoder));
+            assertNull(geocoder.getAddresses());
+            geocoder.closeGeoCodeSocketIO();
+        }
+        assertEquals(3, http.requestCount());
+    }
+
+    @Test
     public void websocketsGeocoderReturnsAnIdleGeocoderWhenTheUploadFails() throws Exception {
         GeocodingManager manager = manager();
         http.respondWithFixture(400, "error_400.json");

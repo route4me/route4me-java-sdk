@@ -201,6 +201,19 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    public void searchesAndNewGroupsRejectMissingInputBeforeSending() {
+        final AddressBookManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.searchAddressBookContactsByFilter(null, 0, 10));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.searchAddressBookContactsByFilter(new AddressBookFilterSearchRequest(), 0, 10));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.searchAddressBookLocation(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.addAddressBookGroup(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.addAddressBookGroup(new AddressBookGroup()));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void searchAddressBookContactsByFilterPostsTheFilter() throws Exception {
         AddressBookManager manager = manager();
         http.respondToAll(200, json("{'results':[[12345,'100 Example St']],'total':1,"

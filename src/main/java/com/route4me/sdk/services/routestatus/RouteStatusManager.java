@@ -63,9 +63,11 @@ public class RouteStatusManager extends Manager {
      * forward (planned, then started or paused, then completed); repeating the current status changes nothing.
      *
      * @param routeId the route ID
-     * @param request the new status, and where and when it changed
+     * @param request the new status, and where and when it changed; required
      * @return the status of the route after the change
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code routeId} is {@code null} or empty, or {@code request} is
+     *     {@code null}; nothing is sent
      */
     public RouteStatusResponse updateRouteStatus(String routeId, RouteStatusRequest request) throws APIException {
         return this.updateRouteStatus(routeId, request, null);
@@ -77,13 +79,18 @@ public class RouteStatusManager extends Manager {
      * body. See {@link #updateRouteStatus(String, RouteStatusRequest)}.
      *
      * @param routeId the route ID
-     * @param request the new status, and where and when it changed
+     * @param request the new status, and where and when it changed; required
      * @param deviceId the device that reports the change ({@code device_id}); {@code null} leaves it out
      * @return the status of the route after the change
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code routeId} is {@code null} or empty, or {@code request} is
+     *     {@code null}; nothing is sent
      */
     public RouteStatusResponse updateRouteStatus(String routeId, RouteStatusRequest request, String deviceId)
             throws APIException {
+        if (request == null) {
+            throw new IllegalArgumentException("The status change (request) is required");
+        }
         URIBuilder builder = v5Builder(ROUTE_STATUS_EP, routeId);
         if (deviceId != null) {
             builder.setParameter("device_id", deviceId);

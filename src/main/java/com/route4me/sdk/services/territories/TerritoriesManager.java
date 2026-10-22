@@ -40,7 +40,8 @@ public class TerritoriesManager extends Manager {
     /**
      * Reads the territories with {@link #getTerritories()} and turns each polygon territory into a
      * {@link java.awt.Polygon} of its coordinates (multiplied by 1,000,000 and truncated to integers). Circle and
-     * rectangle territories are skipped. If the request fails, the error is logged and the list is empty.
+     * rectangle territories are skipped, and so are territories without a shape, a type or polygon points. If the
+     * request fails, or the reply is empty, the error is logged and the list is empty.
      *
      * @return the polygon of each polygon territory
      */
@@ -48,10 +49,20 @@ public class TerritoriesManager extends Manager {
         List<TerritoryPolygon> territoryPolygons = new ArrayList<>();
         try {
             List<Territory> territories = this.getTerritories();
+            if (territories == null) {
+                return territoryPolygons;
+            }
             for (Territory territory : territories) {
-                switch (territory.getTerritory().getType()) {
+                TerritoryData data = territory == null ? null : territory.getTerritory();
+                if (data == null || data.getType() == null) {
+                    continue;
+                }
+                switch (data.getType()) {
                     case "poly":
-                        List<String> coordinates = territory.getTerritory().getData();
+                        List<String> coordinates = data.getData();
+                        if (coordinates == null) {
+                            break;
+                        }
                         int[] pointsX = new int[coordinates.size()];
                         int[] pointsY = new int[coordinates.size()];
                         int i = 0;

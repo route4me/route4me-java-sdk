@@ -543,6 +543,7 @@ public class RoutingManager extends Manager {
      * @param route the route, with its ID
      * @return the updated route
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code route} or its ID is {@code null} or empty; nothing is sent
      */
     public Route updateRoute(Route route) throws APIException {
         return this.updateRoute(route, null);
@@ -562,8 +563,12 @@ public class RoutingManager extends Manager {
      * @param parameters the query flags; {@code null} sends none
      * @return the updated route
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code route} or its ID is {@code null} or empty; nothing is sent
      */
     public Route updateRoute(Route route, RouteUpdateParameters parameters) throws APIException {
+        if (route == null || route.getId() == null || route.getId().isEmpty()) {
+            throw new IllegalArgumentException("The route and its ID are required");
+        }
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         builder.setParameter("route_id", route.getId());
         return this.makeJSONRequest(RequestMethod.PUT, builder, route, parameters, Route.class);
@@ -576,6 +581,7 @@ public class RoutingManager extends Manager {
      * @param memberID the member ID of the driver
      * @return the updated route
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code routeId} is {@code null} or empty; nothing is sent
      */
     public Route assignDriver(String routeId, String memberID) throws APIException {
         Parameters params = new Parameters();
@@ -594,6 +600,7 @@ public class RoutingManager extends Manager {
      * @param vehicleId the vehicle ID
      * @return the updated route
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code routeId} is {@code null} or empty; nothing is sent
      */
     public Route assignVehicle(String routeId, String vehicleId) throws APIException {
         Parameters params = new Parameters();
@@ -706,12 +713,17 @@ public class RoutingManager extends Manager {
      * https://api.route4me.com/actions/route/share_route.php?route_id=...&response_format=json}, with
      * {@code recipient_email} as a form.
      *
-     * @param routeId the route ID ({@code route_id})
-     * @param recipientEmail the e-mail address to send the route to ({@code recipient_email})
+     * @param routeId the route ID ({@code route_id}); required
+     * @param recipientEmail the e-mail address to send the route to ({@code recipient_email}); required
      * @return whether the route was shared
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code routeId} or {@code recipientEmail} is {@code null} or empty; nothing
+     *     is sent
      */
     public StatusResponse routeSharing(String routeId, String recipientEmail) throws APIException {
+        if (routeId == null || routeId.isEmpty() || recipientEmail == null || recipientEmail.isEmpty()) {
+            throw new IllegalArgumentException("The route ID and the recipient email are required");
+        }
         URIBuilder builder = Manager.defaultBuilder(SHARE_ROUTE_EP);
         addParameter(builder, "route_id", routeId);
         builder.setParameter("response_format", "json");

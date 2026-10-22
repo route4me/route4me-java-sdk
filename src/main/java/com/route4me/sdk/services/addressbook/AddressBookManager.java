@@ -120,8 +120,12 @@ public class AddressBookManager extends Manager {
      *     {@code address_id,address_1}
      * @return the rows (or contacts) and their total
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public AddressBookSearchResponse searchAddressBookLocation(ContactsRequest request) throws APIException {
+        if (request == null) {
+            throw new IllegalArgumentException("The search (request) is required");
+        }
         URIBuilder builder = contactsQuery(request);
         return this.makeJSONRequest(RequestMethod.GET, builder, request, AddressBookSearchResponse.class);
     }
@@ -131,14 +135,19 @@ public class AddressBookManager extends Manager {
      * range in the query ({@code offset}, {@code limit}) and the request as the JSON body. The {@code filter} of the
      * body tells this search apart from {@link #createContact(Contact)}, which uses the same endpoint.
      *
-     * @param request the filter and the fields to return
+     * @param request the filter and the fields to return; the filter is required
      * @param offset the number of contacts to skip; {@code null} leaves {@code offset} out
      * @param limit the number of contacts to return; {@code null} leaves {@code limit} out
      * @return the contacts that match, as rows of values when the request names the fields
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} or its {@code filter} is {@code null}; nothing is sent
+     *     (without the filter, the same POST would be a {@link #createContact(Contact)} attempt)
      */
     public AddressBookSearchResponse searchAddressBookContactsByFilter(AddressBookFilterSearchRequest request,
             Integer offset, Integer limit) throws APIException {
+        if (request == null || request.getFilter() == null) {
+            throw new IllegalArgumentException("The filter is required");
+        }
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
         if (offset != null) {
             builder.setParameter("offset", String.valueOf(offset));
@@ -193,11 +202,13 @@ public class AddressBookManager extends Manager {
      * Creates an address book group: {@code POST https://api.route4me.com/api.v4/address_book_group.php}, with the
      * group as the JSON body.
      *
-     * @param group the group: its name, color, icon and the rules ({@code filter}) its contacts match
+     * @param group the group: its name (required), color, icon and the rules ({@code filter}) its contacts match
      * @return the created group, with its ID
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code group} is {@code null} or has no {@code group_name}; nothing is sent
      */
     public AddressBookGroup addAddressBookGroup(AddressBookGroup group) throws APIException {
+        requireText(group == null ? null : group.getGroupName(), "group_name");
         return this.makeRequest(RequestMethod.POST, Manager.defaultBuilder(ADDRESS_BOOK_GROUP_EP),
                 this.gson.toJson(group), AddressBookGroup.class);
     }

@@ -374,6 +374,14 @@ public class OrderManagerV5Test {
     }
 
     @Test
+    public void updateOrderCustomFieldRequiresTheRequest() {
+        final OrderManagerV5 manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateOrderCustomField(42L, null));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void createUpdateAndDeleteOrderCustomField() throws Exception {
         OrderManagerV5 manager = manager();
         String resource = json("{'status':true,'code':200,'data':{'order_custom_field_id':42,"

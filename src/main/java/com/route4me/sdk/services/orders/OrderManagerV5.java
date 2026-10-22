@@ -373,12 +373,14 @@ public class OrderManagerV5 extends Manager {
      * JSON body.
      *
      * @param orderCustomFieldId the field ID
-     * @param request the new label, type or type info
+     * @param request the new label, type or type info; required
      * @return the updated field
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public OrderCustomFieldResource updateOrderCustomField(long orderCustomFieldId,
             UpdateCustomUserFieldRequest request) throws APIException {
+        requireFields(request);
         URIBuilder builder = v5Builder(ORDER_CUSTOM_FIELDS_EP, orderCustomFieldId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request),
                 OrderCustomFieldResource.class);

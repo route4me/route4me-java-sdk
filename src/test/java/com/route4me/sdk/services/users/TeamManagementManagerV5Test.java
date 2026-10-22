@@ -183,6 +183,30 @@ public class TeamManagementManagerV5Test {
     }
 
     @Test
+    public void bulkCreateTeamMembersRequiresAnOwnerForEachMember() throws Exception {
+        final TeamManagementManagerV5 manager = manager();
+        final TeamMemberRequest noOwner = member();
+        noOwner.setOwnerMemberId(null);
+        final TeamMemberRequest emptyEmail = member();
+        emptyEmail.setOwnerMemberId(null);
+        emptyEmail.setOwnerEmail("");
+        TeamMemberRequest byEmail = member();
+        byEmail.setOwnerMemberId(null);
+        byEmail.setOwnerEmail("owner@example.com");
+        http.respondWithHeaders(202, null, "X-Job-Id", JOB_ID);
+
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member(), noOwner}, "skip"));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.bulkCreateTeamMembers(new TeamMemberRequest[] {emptyEmail}, "skip"));
+        http.assertNoRequests();
+        manager.bulkCreateTeamMembers(new TeamMemberRequest[] {byEmail}, "skip");
+
+        http.request().assertJson("users[0].owner_email", "owner@example.com")
+                .assertJsonLacks("users[0].OWNER_MEMBER_ID");
+    }
+
+    @Test
     public void updateTeamMemberPatchesTheChanges() throws Exception {
         TeamManagementManagerV5 manager = manager();
         http.respond(200, MEMBER);

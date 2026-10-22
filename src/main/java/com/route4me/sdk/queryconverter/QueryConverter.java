@@ -14,7 +14,8 @@ import java.util.Map;
 public class QueryConverter {
     /**
      * Converts the {@link QueryParameter} fields of an object to parameters, as the V4 API reads them. {@code null}
-     * fields are left out; an array or an iterable gives one parameter per item, under the same name; a boolean, also
+     * fields, and {@code null} items of arrays and iterables, are left out; an array or an iterable gives one
+     * parameter per item, under the same name; a boolean, also
      * inside an array or an iterable, becomes {@code 1} or {@code 0} (PHP reads any non-empty string, {@code "false"}
      * included, as true), and any other value its {@code toString()}. Nested objects are not converted.
      *
@@ -38,11 +39,16 @@ public class QueryConverter {
                 //if array add multiple parameters
                 if (fieldValue.getClass().isArray()) {
                     for (int i = 0; i < Array.getLength(fieldValue); i++) {
-                        parameters.add(new BasicNameValuePair(annot.value(), v4Value(Array.get(fieldValue, i))));
+                        Object item = Array.get(fieldValue, i);
+                        if (item != null) {
+                            parameters.add(new BasicNameValuePair(annot.value(), v4Value(item)));
+                        }
                     }
                 } else if (fieldValue instanceof Iterable) { //or iterable
-                    for (Object element : (Iterable) fieldValue) {
-                        parameters.add(new BasicNameValuePair(annot.value(), v4Value(element)));
+                    for (Object element : (Iterable<?>) fieldValue) {
+                        if (element != null) {
+                            parameters.add(new BasicNameValuePair(annot.value(), v4Value(element)));
+                        }
                     }
                 } else {
                     parameters.add(new BasicNameValuePair(annot.value(), v4Value(fieldValue)));

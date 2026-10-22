@@ -205,6 +205,18 @@ public class VehiclesManagerV5Test {
     }
 
     @Test
+    public void updatesAndThePendingSyncRequireABody() {
+        final VehiclesManagerV5 manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateVehicle("C0FFEE00000000000000000000000001", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateVehicleProfile("7", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateVehicleCapacityProfile("7", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.syncPendingTelematicsData(null));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void updateVehiclePatchesTheVehicle() throws Exception {
         VehiclesManagerV5 manager = manager();
         http.respond(200, VEHICLE);

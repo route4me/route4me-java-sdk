@@ -145,8 +145,8 @@ public class TeamManagementManagerV5 extends Manager {
      * @param conflictStrategy what to do with a member whose email address already exists: {@code fail},
      *     {@code overwrite} or {@code skip} ({@code conflicts}); {@code null} leaves it to the API
      * @return the accepted job: its ID, status URL and reply body
-     * @throws IllegalArgumentException if {@code members} is {@code null}, empty, holds a {@code null} member or holds
-     *     more than 100 members
+     * @throws IllegalArgumentException if {@code members} is {@code null}, empty, holds a {@code null} member, a member
+     *     with neither {@code OWNER_MEMBER_ID} nor {@code owner_email}, or more than 100 members; nothing is sent
      * @throws APIException if the request fails or the server answers with an error status
      */
     public AsyncJob bulkCreateTeamMembers(TeamMemberRequest[] members, String conflictStrategy) throws APIException {
@@ -155,6 +155,10 @@ public class TeamManagementManagerV5 extends Manager {
         }
         for (TeamMemberRequest member : members) {
             requireMember(member);
+            if (member.getOwnerMemberId() == null
+                    && (member.getOwnerEmail() == null || member.getOwnerEmail().isEmpty())) {
+                throw new IllegalArgumentException("Each member needs OWNER_MEMBER_ID or owner_email");
+            }
         }
         BulkMembersRequest request = new BulkMembersRequest();
         request.setUsers(members);

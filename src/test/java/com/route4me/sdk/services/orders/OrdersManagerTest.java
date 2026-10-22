@@ -289,6 +289,17 @@ public class OrdersManagerTest {
     }
 
     @Test
+    public void customUserFieldWritesRequireTheField() {
+        final OrdersManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createOrderCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateOrderCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateOrderCustomUserField(new OrderCustomUserField()));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void updateOrderCustomUserFieldPutsTheField() throws Exception {
         OrdersManager manager = manager();
         http.respond(200, "{\"result\":\"OK\",\"affected\":1,\"data\":" + CUSTOM_FIELD + "}");

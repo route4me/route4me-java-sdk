@@ -596,6 +596,33 @@ public class RoutingManagerTest {
     // ------------------------------------------------------------------ route updates with query flags
 
     @Test
+    public void updateRouteRejectsAMissingRouteOrIdBeforeSending() {
+        final RoutingManager manager = manager();
+        final Route noId = new Route();
+        final Route emptyId = new Route();
+        emptyId.setId("");
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRoute(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRoute(noId));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRoute(emptyId, null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateRoute(null, new RouteUpdateParameters().setReoptimize(true)));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.assignDriver(null, "1"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.assignVehicle("", "V1"));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void routeSharingRequiresTheRouteAndTheRecipient() {
+        final RoutingManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.routeSharing(null, "dispatcher@example.com"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.routeSharing("ROUTE-A1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.routeSharing("ROUTE-A1", ""));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void updateRouteWithParametersSendsTheFlagsInTheQuery() throws Exception {
         RoutingManager manager = manager();
         http.respondToAll(200, Fixtures.read("route.json"));

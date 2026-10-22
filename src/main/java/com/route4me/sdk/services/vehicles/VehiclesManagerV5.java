@@ -155,13 +155,15 @@ public class VehiclesManagerV5 extends Manager {
      * vehicle as the JSON body. Only the fields that are set are sent, so the others keep their value.
      *
      * @param vehicleId the vehicle ID
-     * @param vehicle the new values
+     * @param vehicle the new values; required
      * @return the updated vehicle
-     * @throws IllegalArgumentException if {@code vehicleId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code vehicleId} is {@code null} or empty, or {@code vehicle} is
+     *     {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 updateVehicle(String vehicleId, VehicleV5 vehicle) throws APIException {
         URIBuilder builder = v5Builder(VEHICLES_EP, vehicleId);
+        require(vehicle, "vehicle");
         return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(vehicle), VehicleV5.class);
     }
 
@@ -294,11 +296,13 @@ public class VehiclesManagerV5 extends Manager {
      * identifies the vehicle by its {@code vehicle_alias}, {@code r4m_telematics_gateway_connection_id} and
      * {@code r4m_telematics_gateway_vehicle_id}.
      *
-     * @param vehicle the vehicle
+     * @param vehicle the vehicle; required
      * @return the synced vehicle
+     * @throws IllegalArgumentException if {@code vehicle} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 syncPendingTelematicsData(VehicleV5 vehicle) throws APIException {
+        require(vehicle, "vehicle");
         URIBuilder builder = v5Builder(VEHICLES_SYNC_PENDING_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(vehicle), VehicleV5.class);
     }
@@ -484,13 +488,15 @@ public class VehiclesManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/vehicle-profiles/{profileId}}, with the profile as the JSON body.
      *
      * @param profileId the profile ID
-     * @param profile the new values
+     * @param profile the new values; required
      * @return the updated profile
-     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty, or {@code profile} is
+     *     {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleProfile updateVehicleProfile(String profileId, VehicleProfile profile) throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP, profileId);
+        require(profile, "profile");
         return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(profile), VehicleProfile.class);
     }
 
@@ -566,14 +572,16 @@ public class VehiclesManagerV5 extends Manager {
      * body.
      *
      * @param profileId the profile ID
-     * @param profile the new values
+     * @param profile the new values; required
      * @return the updated profile
-     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty, or {@code profile} is
+     *     {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleCapacityProfileResponse updateVehicleCapacityProfile(String profileId, VehicleCapacityProfile profile)
             throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP, profileId);
+        require(profile, "profile");
         return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(profile),
                 VehicleCapacityProfileResponse.class);
     }
