@@ -2,7 +2,6 @@ package com.route4me.sdk.services.telematics;
 
 import com.route4me.sdk.testsupport.Fixtures;
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -76,7 +75,6 @@ public class TelematicsManagerTest {
         assertEquals(1, connections.size());
     }
 
-    @Ignore("bug (unfiled): getTelematicsConnections returns Gson maps, not TelematicsConnection objects")
     @Test
     public void getTelematicsConnectionsReturnsConnections() throws Exception {
         TelematicsManager manager = manager();
@@ -86,6 +84,7 @@ public class TelematicsManagerTest {
 
         Object first = connections.get(0);
         assertTrue("got " + first.getClass().getName(), first instanceof TelematicsConnection);
+        assertEquals("CONNECTION-1", connections.get(0).getConnectionToken());
     }
 
     @Test

@@ -5,6 +5,7 @@
  */
 package com.route4me.sdk.services.telematics;
 
+import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
@@ -42,11 +43,19 @@ public class TelematicsManager extends Manager {
         return makeRequest(RequestMethod.GET, builder, "", TelematicsMemberRegister.class);
     }
 
+    /**
+     * Lists the telematics connections of a member:
+     * {@code GET /api.v4/telematics/connections.php?api_token=...}.
+     *
+     * @param apiToken the member's telematics API token
+     * @return the connections
+     * @throws APIException if the request fails
+     */
     public List<TelematicsConnection> getTelematicsConnections(String apiToken) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_CONNECTIONS_V4);
         builder.setParameter("api_token", apiToken);
-        return makeRequest(RequestMethod.GET, builder, "", List.class);
-
+        return makeRequest(RequestMethod.GET, builder, "", new TypeToken<ArrayList<TelematicsConnection>>() {
+        }.getType());
     }
 
     public TelematicsVendorsInfo getTelematicsVendorsInfo() throws APIException {
