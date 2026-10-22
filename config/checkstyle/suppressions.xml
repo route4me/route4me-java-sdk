@@ -7,7 +7,4 @@
   -->
   <suppress files="[\\/]src[\\/]test[\\/]java[\\/]"
             checks="JavadocPackage|JavadocMethod|JavadocType|JavadocVariable|JavadocStyle|MissingJavadocType|MissingJavadocMethod|InvalidJavadocPosition"/>
-  <!-- TEMPORARY: removed by the commit that completes the Javadoc of the library and the examples. -->
-  <suppress files="[\\/]src[\\/](main|examples)[\\/]java[\\/]"
-            checks="JavadocPackage|JavadocVariable|MissingJavadocType|MissingJavadocMethod|InvalidJavadocPosition"/>
 </suppressions>
