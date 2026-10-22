@@ -46,5 +46,5 @@ public class RouteSearchResult {
     @QueryParameter("meta")
     @SerializedName("meta")
     private RouteSearchMeta meta;
-    
+
 }

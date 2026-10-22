@@ -25,9 +25,9 @@ public class UseCustomServiceTimeFirstAndAdditionalItem {
         parameters.setTravelMode(TravelMode.DRIVING.toString());
 
         Bundling bundling = new Bundling();
-       
+
         bundling.setMergeMode(BundlingEnum.BundledItemsMode.KEEP_AS_SEPARATE_DESTINATIONS.getValue());
-        
+
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ADDRESS.getValue());
         ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
         serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingFirstItemMode.USE_CUSTOM_SERVICE_TIME.getValue());
@@ -41,11 +41,11 @@ public class UseCustomServiceTimeFirstAndAdditionalItem {
         bundling.setServiceTimeRules(serviceTimeRules);
         parameters.setBundling(bundling);
 
-        
+
         optParameters.setParameters(parameters);
 
 
-        
+
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
         addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215", 38.202496, -85.786514, 300));

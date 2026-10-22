@@ -38,7 +38,7 @@ public class CreateUser {
             Logger.getLogger(CreateUser.class.getName()).log(Level.SEVERE, null, ex);
         }
         System.out.println(user);
-        
+
     }
-    
+
 }

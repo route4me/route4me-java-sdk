@@ -30,5 +30,5 @@ public enum SourceType {
         public String getValue() {
             return value;
         }
-    
+
 }

@@ -34,7 +34,7 @@ public class SingleDepotMultipleDriverSlowDown {
         slowdowns.setTravelTime(30);
         parameters.setSlowdowns(slowdowns);
 
-        
+
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
         addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215", 38.202496, -85.786514, 300));

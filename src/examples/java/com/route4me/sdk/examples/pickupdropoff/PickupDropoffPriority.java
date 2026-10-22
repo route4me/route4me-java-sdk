@@ -42,61 +42,61 @@ public class PickupDropoffPriority {
         // Depot
         Address depotAddress = new Address("455 S 4th St, Louisville, KY 40202", true, "DEPOT", 38.251698, -85.757308, 0);
         addresses.add(depotAddress);
-        
+
         // Pickups
-        
+
         Address pickupAddress;
-        
-        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 840 * 7); 
+
+        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 840 * 7);
         pickupAddress.setPickUp("PDA001");
         pickupAddress.setAddressStopType(AddressStopType.PICKUP.toString());
         pickupAddress.setPriority(1);
         pickupAddress.setPieces(1);
         pickupAddress.addCustomField("GOOD_TYPE", "TYPE0001");
         addresses.add(pickupAddress);
-        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0); 
+        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0);
         pickupAddress.setPickUp("PDA002");
         pickupAddress.setAddressStopType(AddressStopType.PICKUP.toString());
         pickupAddress.setPriority(1);
         pickupAddress.setPieces(1);
         pickupAddress.addCustomField("GOOD_TYPE", "TYPE0002");
         addresses.add(pickupAddress);
-        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0); 
+        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0);
         pickupAddress.setPickUp("PDA003");
         pickupAddress.setAddressStopType(AddressStopType.PICKUP.toString());
         pickupAddress.setPriority(1);
         pickupAddress.setPieces(1);
         pickupAddress.addCustomField("GOOD_TYPE", "TYPE0003");
         addresses.add(pickupAddress);
-        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0); 
+        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0);
         pickupAddress.setPickUp("PDA004");
         pickupAddress.setAddressStopType(AddressStopType.PICKUP.toString());
         pickupAddress.setPriority(1);
         pickupAddress.setPieces(1);
         pickupAddress.addCustomField("GOOD_TYPE", "TYPE0004");
         addresses.add(pickupAddress);
-        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0); 
+        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0);
         pickupAddress.setPickUp("PDA005");
         pickupAddress.setAddressStopType(AddressStopType.PICKUP.toString());
         pickupAddress.setPriority(1);
         pickupAddress.setPieces(1);
         pickupAddress.addCustomField("GOOD_TYPE", "TYPE0005");
         addresses.add(pickupAddress);
-        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0); 
+        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0);
         pickupAddress.setPickUp("PDA006");
         pickupAddress.setAddressStopType(AddressStopType.PICKUP.toString());
         pickupAddress.setPriority(1);
         pickupAddress.setPieces(1);
         pickupAddress.addCustomField("GOOD_TYPE", "TYPE0006");
         addresses.add(pickupAddress);
-        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0); 
+        pickupAddress = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", "STORAGE FACILITY", 38.141598, -85.793846, 0);
         pickupAddress.setPickUp("PDA007");
         pickupAddress.setAddressStopType(AddressStopType.PICKUP.toString());
         pickupAddress.setPriority(1);
         pickupAddress.setPieces(1);
         pickupAddress.addCustomField("GOOD_TYPE", "TYPE0007");
         addresses.add(pickupAddress);
-        
+
 
         //Dropoffs
         Address dropoffAddress;

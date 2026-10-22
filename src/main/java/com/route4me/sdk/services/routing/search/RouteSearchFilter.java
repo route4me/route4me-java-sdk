@@ -40,7 +40,7 @@ public class RouteSearchFilter {
     @SerializedName("query")
     private String query;
 
-    @QueryParameter("schedule_date")   
+    @QueryParameter("schedule_date")
     @SerializedName("schedule_date")
     private List<String> scheduleDate;
 
@@ -48,8 +48,8 @@ public class RouteSearchFilter {
         this.query = "";
         this.scheduleDate = scheduleDate;
     }
-    
-    
 
-    
+
+
+
 }

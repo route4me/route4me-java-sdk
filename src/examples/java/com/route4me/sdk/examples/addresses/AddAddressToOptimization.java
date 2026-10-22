@@ -41,10 +41,10 @@ public class AddAddressToOptimization {
         optParameters.setAddresses(addresses);
 
         // Creating Optimization
-        
+
         DataObject optimizationResponse = new DataObject();
-        
-        
+
+
         try {
             optimizationResponse = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + optimizationResponse.getOptimizationProblemId());
@@ -58,11 +58,11 @@ public class AddAddressToOptimization {
             //handle exception
             e.printStackTrace();
         }
-        
-        
+
+
         // Adding More Addresses to Optimization
         System.out.println("\nAdding More Stops and Reoptimizing");
-        
+
         optimizationResponse.getAddresses().add(new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300));
         optimizationResponse.getAddresses().add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300));
         optimizationResponse.getAddresses().add(new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214", 38.162472, -85.792854, 300));
@@ -70,7 +70,7 @@ public class AddAddressToOptimization {
         optParameters = new OptimizationParameters();
         optParameters.setProblemId(optimizationResponse.getOptimizationProblemId());
         optParameters.setReoptimize(true);
-        
+
         try {
             DataObject optimizationUpdated = manager.reOptimization(optParameters, optimizationResponse);
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());

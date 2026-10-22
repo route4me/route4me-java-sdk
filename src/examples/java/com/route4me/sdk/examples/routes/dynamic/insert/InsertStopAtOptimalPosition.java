@@ -43,7 +43,7 @@ public class InsertStopAtOptimalPosition {
         RoutingManager routeManager = new RoutingManager(apiKey);
 
         Address address = new Address("Ascension St. Vincent Hospital - Indianapolis", 39.921478, -86.175649);
-        
+
         try {
             List<Address> addresses = Arrays.asList(address);
             routeManager.addAddressesToRoute("5B705E1F9DE8A9CE58A8D735CA07FB9D", addresses, true);

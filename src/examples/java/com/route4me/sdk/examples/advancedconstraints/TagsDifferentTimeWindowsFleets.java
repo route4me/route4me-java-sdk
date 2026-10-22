@@ -35,7 +35,7 @@ public class TagsDifferentTimeWindowsFleets {
         // TEST CASE: Tags and Different Time Windows Fleets
         //**********************************************************************
 
-        
+
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
@@ -77,9 +77,9 @@ public class TagsDifferentTimeWindowsFleets {
 
 
         List<AdvancedConstraints> advancedConstraints = Arrays.asList(advancedConstraint1, advancedConstraint2);
-        
+
         parameters.setAdvancedConstraints(advancedConstraints);
-        
+
         optParameters.setParameters(parameters);
 
         List<Address> addresses = new ArrayList<>();
@@ -133,5 +133,5 @@ public class TagsDifferentTimeWindowsFleets {
     }
 
 
-    
+
 }

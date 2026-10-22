@@ -16,5 +16,5 @@ public class Optimization extends DataObject{
     @QueryParameter("routes")
     private List<Route> routes;
 
-    
+
 }

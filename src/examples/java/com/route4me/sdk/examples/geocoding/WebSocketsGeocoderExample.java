@@ -26,7 +26,7 @@ public class WebSocketsGeocoderExample {
         addresses.add(new Address("82 HOPE ST. W., TAVISTOCK, N0B 2R0"));
         addresses.add(new Address("70 HOPE ST. W., TAVISTOCK, N0B 2R0"));
         addresses.add(new Address("485 WOODLAWN RD. W., GUELPH, N1H 7P7"));
-        addresses.add(new Address("183 SILVERCREEK PKWY N, GUELPH, N1H 3T2	"));
+        addresses.add(new Address("183 SILVERCREEK PKWY N, GUELPH, N1H 3T2\t"));
         addresses.add(new Address("183 SILVERCREEK PARKWAY N., GUELPH, N4G 3S9"));
         addresses.add(new Address("183 SILVERCREEK PARKWAY N., GUELPH, N1H 3T2"));
         addresses.add(new Address("130 SILVERCREEK PKY. N., GUELPH, N1H 7Y5"));

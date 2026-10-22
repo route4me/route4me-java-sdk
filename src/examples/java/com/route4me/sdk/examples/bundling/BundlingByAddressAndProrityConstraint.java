@@ -95,7 +95,7 @@ public class BundlingByAddressAndProrityConstraint {
         addresses.add(address);
         address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
         address.setPriority(6);
-        
+
 
         address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
         address.setPriority(4);

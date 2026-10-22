@@ -32,11 +32,11 @@ import com.route4me.sdk.utils.DateTimeUtils;
 public class LocalDateTimeToUTCDate {
 
     public static void main(String[] args) {
-        
+
         // Converting Local Time Zone to String UTC Date
 
         String dateString = "2022-04-22T23:00:00:000-05:00";
-        
+
         System.out.println("Local Date Time: " + dateString);
 
         String utcStrigDate = DateTimeUtils.localDateTimeToUTCParser(dateString);

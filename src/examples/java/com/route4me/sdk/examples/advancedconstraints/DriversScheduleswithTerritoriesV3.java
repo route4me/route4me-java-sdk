@@ -140,15 +140,15 @@ public class DriversScheduleswithTerritoriesV3 {
         Path currentPath = Paths.get(System.getProperty("user.dir"));
         Path filePath = Paths.get(currentPath.toString(),"src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
 
-        
+
         addresses = readAddressesFromCSV(filePath.toString(), zone1, zone2, zone3, serviceTime);
-        
+
         Address address = new Address("DEPOT", true, 25.723025, -80.452883, 0);
         addresses.add(address);
 
         // Stops
-        
-        
+
+
 
 
         optParameters.setAddresses(addresses);

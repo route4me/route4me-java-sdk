@@ -23,5 +23,5 @@ public class GeocoderResponse {
     private Integer addressCount;
     @SerializedName("status")
     @QueryParameter("status")
-    private Boolean status;   
+    private Boolean status;
 }

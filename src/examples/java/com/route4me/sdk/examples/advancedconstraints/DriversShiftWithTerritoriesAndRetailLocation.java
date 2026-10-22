@@ -72,8 +72,8 @@ public class DriversShiftWithTerritoriesAndRetailLocation {
     // TEST CASE: Drivers Schedules with Territories and Retail Location
     // 2000 Stops
     // 2 Driver Shifts:
-    //    Full Time 8h 
-    //    Part Time 4h 
+    //    Full Time 8h
+    //    Part Time 4h
     // 3 Territories
     // Retail Location
     //**********************************************************************

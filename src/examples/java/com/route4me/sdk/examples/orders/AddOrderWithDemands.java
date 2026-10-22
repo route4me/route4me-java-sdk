@@ -18,8 +18,8 @@ public class AddOrderWithDemands {
             order.setRevenue(1500.0);
             order.setCube(2500.0);
             order.setPieces(1500);
-            
-            order = manager.addOrder(order);           
+
+            order = manager.addOrder(order);
             System.out.println(order);
         } catch (APIException e) {
             //handle exception

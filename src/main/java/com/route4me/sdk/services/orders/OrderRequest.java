@@ -43,7 +43,7 @@ public class OrderRequest {
     /** Sent only in the JSON body: a query string cannot carry it. */
     @SerializedName("filter")
     private OrderFilter filter;
-    
+
 
     public enum DisplayType {
         @SerializedName("all")

@@ -30,7 +30,7 @@ import java.util.logging.Logger;
  */
 public class OptimizationUsingTerritoriesOrders {
 
- 
+
 
     public static void main(String[] args) {
         try {
@@ -42,10 +42,10 @@ public class OptimizationUsingTerritoriesOrders {
             // TEST CASE: Optimization using Territories Orders
             // 3 Territories
             //**********************************************************************
-            
+
             TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
-            
-            
+
+
             Parameters parameters = new Parameters();
             parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
             parameters.setStoreRoute(Boolean.FALSE);
@@ -60,20 +60,20 @@ public class OptimizationUsingTerritoriesOrders {
             Address depot = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", 38.141598, -85.793846);
             List<Object> depots = Arrays.asList(depot);
             parameters.setDepots(depots);
-        
-        
+
+
             // Territories
             // **********************
             List<String> zone1 = Arrays.asList("584BE87F75599DD8B9F038D81A33F5A8");
             List<String> zone2 = Arrays.asList("A5C1B85BCC069FF6CBDA18A65DC95031");
             List<String> zone3 = Arrays.asList("007AE22B494A149B52A45E3C6D3EC0CA");
 
-            
-            
+
+
             List<Address> addresses = new ArrayList<>();
 
             Address address;
-            
+
             Territory territory = territoriesManager.getOrdersInTerritory(zone1.get(0));
             for (Integer orderId:  territory.getOrders()){
                 address = new Address();
@@ -132,11 +132,11 @@ public class OptimizationUsingTerritoriesOrders {
 
 
             // Schedules registration
-            List<AdvancedConstraints> advancedConstraints = Arrays.asList(schedule1, schedule2, schedule3);       
+            List<AdvancedConstraints> advancedConstraints = Arrays.asList(schedule1, schedule2, schedule3);
             parameters.setAdvancedConstraints(advancedConstraints);
-            
+
             optParameters.setAddresses(addresses);
-            
+
             try {
                 DataObject responseObject = manager.runOptimization(optParameters);
                 System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());

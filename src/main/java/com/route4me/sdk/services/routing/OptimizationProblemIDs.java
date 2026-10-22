@@ -18,6 +18,6 @@ import lombok.Data;
 public class OptimizationProblemIDs {
     @SerializedName("optimization_problem_ids")
     private List<String> optimizationProblemIDs;
-    
-    
+
+
 }

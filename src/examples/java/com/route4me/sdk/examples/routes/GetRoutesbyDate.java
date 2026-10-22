@@ -18,7 +18,7 @@ public class GetRoutesbyDate {
         routeRequest.setStartDate("2022-04-05");
         routeRequest.setEndDate("2022-04-05");
         routeRequest.setLimit(2);
-        
+
         try {
             routes = routeManager.getRoutes(routeRequest);
         } catch (APIException e) {

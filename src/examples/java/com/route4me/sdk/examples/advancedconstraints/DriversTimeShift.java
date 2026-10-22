@@ -28,14 +28,14 @@ import java.util.List;
 public class DriversTimeShift {
 
     //**********************************************************************
-    // TEST CASE: Driver's Time Shift 
+    // TEST CASE: Driver's Time Shift
     //**********************************************************************
 
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
-        
+
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
@@ -80,9 +80,9 @@ public class DriversTimeShift {
 
 
         List<AdvancedConstraints> advancedConstraints = Arrays.asList(advancedConstraint1, advancedConstraint2);
-        
+
         parameters.setAdvancedConstraints(advancedConstraints);
-        
+
         optParameters.setParameters(parameters);
 
         List<Address> addresses = new ArrayList<>();
@@ -125,8 +125,8 @@ public class DriversTimeShift {
         address = new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211", 38.251923, -85.800034, 300, 62000, 85000);
         address.setTags(tags2);
         addresses.add(address);
-        
-        
+
+
         optParameters.setAddresses(addresses);
 
         try {
@@ -146,5 +146,5 @@ public class DriversTimeShift {
     }
 
 
-    
+
 }

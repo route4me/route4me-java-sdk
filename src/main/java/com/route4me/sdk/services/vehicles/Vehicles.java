@@ -13,10 +13,10 @@ import lombok.Data;
  */
 @Data
 public class Vehicles {
-    
+
 
     public enum VehicleMake {
- 
+
         AMERICAN_COLEMAN("American Coleman"),
         BMW("BMW"),
         CHEVROLET("Chevrolet"),
@@ -39,7 +39,7 @@ public class Vehicles {
         TOYOTA("Toyota"),
         VOLVO("Volvo"),
         WESTERN_STAR("Western Star" );
-        
+
         private final String value;
 
         private VehicleMake(String value) {
@@ -57,8 +57,8 @@ public class Vehicles {
         public String getValue() {
             return value;
         }
-        
-        
+
+
     }
 
     @SerializedName("vehicle_id")
@@ -95,35 +95,35 @@ public class Vehicles {
     @SerializedName("purchased_new")
     Integer purshasedNew;
     @SerializedName("license_start_date")
-    private String licenseStartDate; 
+    private String licenseStartDate;
     @SerializedName("license_end_date")
-    private String licenseEndDate; 
+    private String licenseEndDate;
     @SerializedName("is_operational")
     boolean isOperational;
     @SerializedName("fuel_type")
-    private String fuelType; 
+    private String fuelType;
     @SerializedName("external_telematics_vehicle_id")
-    private String externalTelematicsVehicleId; 
+    private String externalTelematicsVehicleId;
     @SerializedName("timestamp_removed")
-    private String timestampRemoved; 
+    private String timestampRemoved;
     @SerializedName("vehicle_profile_id")
-    private String vehicleProfileId; 
+    private String vehicleProfileId;
     @SerializedName("fuel_consumption_city")
-    private String fuelConsumptionCity; 
+    private String fuelConsumptionCity;
     @SerializedName("fuel_consumption_highway")
-    private String fuelConsumptionHighway; 
+    private String fuelConsumptionHighway;
     @SerializedName("fuel_consumption_city_unit")
-    private String fuelConsumptionCityUnit; 
+    private String fuelConsumptionCityUnit;
     @SerializedName("fuel_consumption_highway_unit")
-    private String fuelConsumptionHighwayUnit; 
+    private String fuelConsumptionHighwayUnit;
     @SerializedName("mpg_city")
-    private String mpgCity; 
+    private String mpgCity;
     @SerializedName("mpg_highway")
-    private String mpgHighway; 
+    private String mpgHighway;
     @SerializedName("fuel_consumption_city_uf_value")
-    private String fuelConsumptionCityUFValue; 
+    private String fuelConsumptionCityUFValue;
     @SerializedName("fuel_consumption_highway_uf_value")
-    private String fuelConsumptionHighwayUFValue; 
+    private String fuelConsumptionHighwayUFValue;
 
-    
+
 }

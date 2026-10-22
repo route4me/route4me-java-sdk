@@ -28,17 +28,17 @@ import java.util.logging.Logger;
  */
 public class SingleDepotMultipleDriverByTerritoryAddressesIDs {
 
- 
+
 
     public static void main(String[] args) {
         try {
             String apiKey = System.getenv("R4M_API_KEY");
             RoutingManager manager = new RoutingManager(apiKey, true);
             OptimizationParameters optParameters = new OptimizationParameters();
-            
+
             TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
-            
-            
+
+
             Parameters parameters = new Parameters();
             parameters.setAlgorithmType(AlgorithmType.CVRP_TW_SD.getValue());
             parameters.setStoreRoute(Boolean.FALSE);
@@ -52,16 +52,16 @@ public class SingleDepotMultipleDriverByTerritoryAddressesIDs {
 
             List<Address> addresses = new ArrayList<>();
 
-            
+
             Territory territory = territoriesManager.getAddressesInTerritory("04F6ADD89DB67371E9008A6688B750C0");
             for (Integer contactId:  territory.getAddresses()){
                 Address address = new Address();
                 address.setContactId(contactId);
                 addresses.add(address);
             }
-            
+
             optParameters.setAddresses(addresses);
-            
+
             try {
                 DataObject responseObject = manager.runOptimization(optParameters);
                 System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());

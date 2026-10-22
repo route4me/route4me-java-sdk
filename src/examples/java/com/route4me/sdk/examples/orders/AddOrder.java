@@ -14,7 +14,7 @@ public class AddOrder {
             order.setCachedLatitude(48.335991);
             order.setCachedLongitude(31.18287);
 
-            order = manager.addOrder(order);           
+            order = manager.addOrder(order);
             System.out.println(order);
 
         } catch (APIException e) {

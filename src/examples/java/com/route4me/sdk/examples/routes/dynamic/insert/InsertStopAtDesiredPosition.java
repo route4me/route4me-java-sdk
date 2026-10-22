@@ -43,7 +43,7 @@ public class InsertStopAtDesiredPosition {
         RoutingManager routeManager = new RoutingManager(apiKey);
 
         Address address = new Address("Ascension St. Vincent Hospital - Indianapolis", 39.921478, -86.175649);
-        
+
         try {
             address.setSequenceNo(8L);
 

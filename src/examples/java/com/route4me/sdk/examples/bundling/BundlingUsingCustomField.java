@@ -26,7 +26,7 @@ public class BundlingUsingCustomField {
         parameters.setRouteName("Single Depot, Multiple Driver, Bundling Any Custom Field");
         parameters.setTravelMode(TravelMode.DRIVING.toString());
 
-        
+
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
         addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215", 38.202496, -85.786514, 300));
@@ -36,7 +36,7 @@ public class BundlingUsingCustomField {
         addresses.add(new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300));
         addresses.add(new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300));
         addresses.add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300));
-        
+
         Address address1 = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
         Address address2 = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
         Address address3 = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
@@ -51,10 +51,10 @@ public class BundlingUsingCustomField {
         addresses.add(address1);
         addresses.add(address2);
         addresses.add(address3);
-        
-        
+
+
         optParameters.setAddresses(addresses);
-        
+
 
         Bundling bundling = new Bundling();
 
@@ -76,13 +76,13 @@ public class BundlingUsingCustomField {
         bundling.setServiceTimeRules(serviceTimeRules);
         parameters.setBundling(bundling);
 
-        
+
         optParameters.setParameters(parameters);
 
 
-        
-        
-        
+
+
+
 
         try {
             DataObject responseObject = manager.runOptimization(optParameters);

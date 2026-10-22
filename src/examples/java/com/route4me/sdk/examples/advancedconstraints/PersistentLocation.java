@@ -34,9 +34,9 @@ public class PersistentLocation {
         //**********************************************************************
         // TEST CASE: Persistent Location
         //**********************************************************************
-        
 
-        
+
+
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
@@ -48,7 +48,7 @@ public class PersistentLocation {
         parameters.setDistanceUnit(DistanceUnit.MI.toString());
         parameters.setDeviceType(DeviceType.WEB.toString());
         parameters.setTravelMode(TravelMode.DRIVING.toString());
-        
+
         List<Address> addresses = new ArrayList<>();
         // Depot
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
@@ -62,7 +62,7 @@ public class PersistentLocation {
         address = new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211", 38.251923, -85.800034, 300);
         addresses.add(address);
         address = new Address("4629 HILLSIDE DRIVE, Louisville, KY, 40216", 38.176067, -85.824638, 300);
-        addresses.add(address);       
+        addresses.add(address);
         address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
         addresses.add(address);
         address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
@@ -71,16 +71,16 @@ public class PersistentLocation {
         addresses.add(address);
 
         optParameters.setAddresses(addresses);
-        
+
         // ADVANCED CONSTRAINT
 
-         //Persistent Location: "4738 BELLEVUE AVE, Louisville, KY, 40215" 
+         //Persistent Location: "4738 BELLEVUE AVE, Louisville, KY, 40215"
 
         Address persistentLocationAddress = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", "DEPOT END LOCATION",  38.179806, -85.775558, 300);
-         
+
          List <Object> locationsSequence = Arrays.asList("", persistentLocationAddress);
 
-                
+
         // AdvancedConstraints 1
         AdvancedConstraints advancedConstraint1 = new AdvancedConstraints();
         advancedConstraint1.setMaxCapacity(200);
@@ -103,15 +103,15 @@ public class PersistentLocation {
 
 
         List<AdvancedConstraints> advancedConstraints = Arrays.asList(advancedConstraint1, advancedConstraint2);
-        
+
         parameters.setAdvancedConstraints(advancedConstraints);
-        
+
         optParameters.setParameters(parameters);
-       
-        
-        
-        
-        
+
+
+
+
+
         try {
             DataObject responseObject = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
@@ -129,5 +129,5 @@ public class PersistentLocation {
     }
 
 
-    
+
 }

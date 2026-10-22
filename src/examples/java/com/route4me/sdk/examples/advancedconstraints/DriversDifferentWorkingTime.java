@@ -36,7 +36,7 @@ public class DriversDifferentWorkingTime {
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
-        
+
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
@@ -49,7 +49,7 @@ public class DriversDifferentWorkingTime {
         parameters.setTravelMode(TravelMode.DRIVING.toString());
 
         // Feets
-        // Full-Time 
+        // Full-Time
         AdvancedConstraints advancedConstraintFullTime = new AdvancedConstraints();
         advancedConstraintFullTime.setMembersCount(4);
         List<List<Integer>> timeWindowsFullTime = new ArrayList<>();
@@ -67,9 +67,9 @@ public class DriversDifferentWorkingTime {
 
 
         List<AdvancedConstraints> advancedConstraints = Arrays.asList(advancedConstraintFullTime, advancedConstraintPartTime);
-        
+
         parameters.setAdvancedConstraints(advancedConstraints);
-        
+
         optParameters.setParameters(parameters);
 
         List<Address> addresses = new ArrayList<>();
@@ -103,8 +103,8 @@ public class DriversDifferentWorkingTime {
 
         address = new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211", 38.251923, -85.800034, 3600);
         addresses.add(address);
-        
-        
+
+
         optParameters.setAddresses(addresses);
 
         try {
@@ -124,5 +124,5 @@ public class DriversDifferentWorkingTime {
     }
 
 
-    
+
 }

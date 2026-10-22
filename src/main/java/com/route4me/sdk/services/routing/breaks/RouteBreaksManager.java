@@ -9,7 +9,7 @@ import java.util.List;
 import org.apache.http.client.utils.URIBuilder;
 
 public class RouteBreaksManager extends Manager {
-    
+
     public static final String ROUTE_BREAKS_EP = "/modules/api/v5.0/route-breaks";
 
     public RouteBreaksManager(String apiKey) {
@@ -23,7 +23,7 @@ public class RouteBreaksManager extends Manager {
         builder.setPath(endpoint);
         return builder;
     }
-    
+
     private Object insertBreak(Integer duration, Integer amount, String type, boolean replaceExisting, String [] routeIDs) throws APIException{
         if (amount == null) {
             throw new IllegalArgumentException("The break amount (" + type + ") must not be null");
@@ -43,10 +43,10 @@ public class RouteBreaksManager extends Manager {
         RouteBreaks routeBreaks = new RouteBreaks();
         routeBreaks.setReplaceExisting(replaceExisting);
         routeBreaks.setBreaks(breaks);
-        routeBreaks.setRouteID(routeIDs);        
+        routeBreaks.setRouteID(routeIDs);
         return this.makeJSONRequest(RequestMethod.POST, builder, routeBreaks, null, Object.class);
     }
-    
+
     /**
      * Inserts a break of {@code duration} seconds after a given travel time:
      * {@code POST /modules/api/v5.0/route-breaks}.
@@ -112,5 +112,5 @@ public class RouteBreaksManager extends Manager {
     }
 
 
-    
+
 }

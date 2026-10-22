@@ -25,5 +25,5 @@ public class GetVehicle {
             e.printStackTrace();
         }
     }
-    
+
 }

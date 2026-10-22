@@ -70,7 +70,7 @@ public class User {
     int level;
     @SerializedName("custom_data")
     private Map<String, Object> customData;
-    
-    
-    
+
+
+
 }

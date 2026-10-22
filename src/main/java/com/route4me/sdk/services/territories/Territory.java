@@ -26,7 +26,7 @@ public class Territory {
 
     @SerializedName("orders")
     private List<Integer> orders;
-    
+
     @SerializedName("territory")
     private TerritoryData territory;
 }

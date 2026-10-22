@@ -11,9 +11,9 @@ import lombok.Data;
 
 @Data
 public class WebSocketsAddress {
-    
+
     @SerializedName("address")
     private Address address;
 
-    
+
 }

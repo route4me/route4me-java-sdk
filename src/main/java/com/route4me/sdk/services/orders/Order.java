@@ -115,5 +115,5 @@ public class Order {
     private List<OrderCustomUserFields> customUserFields;
     @SerializedName("group")
     private String group;
-    
+
 }

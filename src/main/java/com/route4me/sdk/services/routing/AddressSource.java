@@ -28,5 +28,5 @@ public class AddressSource {
         this.source = new Source(sourceID, sourceType.getValue());
     }
 
-    
+
 }

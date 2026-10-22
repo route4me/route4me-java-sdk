@@ -15,7 +15,7 @@ import java.util.List;
 public class PickupDropoffNoJoint {
 
     public static void main(String[] args) {
-        String apiKey = System.getenv("R4M_API_KEY"); 
+        String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
 
@@ -34,7 +34,7 @@ public class PickupDropoffNoJoint {
         List<Address> addresses = new ArrayList<>();
         // Depot
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
-        
+
         // Stops
         Address address = new Address("1407 MCCOY, Louisville, KY, 40215", 38.202496, -85.786514, 300);
         address.setPickUp("PD0001");

@@ -49,5 +49,5 @@ public class RouteSearchLinks {
     private String next;
 
 
-    
+
 }

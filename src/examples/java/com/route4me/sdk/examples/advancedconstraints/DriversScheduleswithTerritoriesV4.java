@@ -37,9 +37,9 @@ public class DriversScheduleswithTerritoriesV4 {
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
-        
+
         // General Route Parameters
-        
+
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
@@ -57,7 +57,7 @@ public class DriversScheduleswithTerritoriesV4 {
         List<String> zone1 = Arrays.asList("ZONE 01");
         List<String> zone2 = Arrays.asList("ZONE 02");
         List<String> zone3 = Arrays.asList("ZONE 03");
-        
+
         // **********************
         // Schedules
         // **********************
@@ -72,7 +72,7 @@ public class DriversScheduleswithTerritoriesV4 {
         List<Integer> timeWindowSchedule1 = Arrays.asList((8 + 5) * 3600 , (11 + 5) * 3600);
         timeWindowsSchedule1.add(timeWindowSchedule1);
         schedule1.setAvailableTimeWindows(timeWindowsSchedule1);
-        
+
 
         // Schedule 2
         // Time Window Start:  8:00 am EST
@@ -84,7 +84,7 @@ public class DriversScheduleswithTerritoriesV4 {
         List<Integer> timeWindowSchedule2 = Arrays.asList((8 + 5) * 3600 , (12 + 5) * 3600);
         timeWindowsSchedule2.add(timeWindowSchedule2);
         schedule2.setAvailableTimeWindows(timeWindowsSchedule2);
-        
+
 
         // Schedule 3
         // Time Window Start:  8:00 am EST
@@ -96,15 +96,15 @@ public class DriversScheduleswithTerritoriesV4 {
         List<Integer> timeWindowSchedule3 = Arrays.asList((8 + 5) * 3600 , (13 + 5) * 3600);
         timeWindowsSchedule3.add(timeWindowSchedule3);
         schedule3.setAvailableTimeWindows(timeWindowsSchedule3);
-        
+
 
         // Schedules registration
-        List<AdvancedConstraints> advancedConstraints = Arrays.asList(schedule1, schedule2, schedule3);       
+        List<AdvancedConstraints> advancedConstraints = Arrays.asList(schedule1, schedule2, schedule3);
         parameters.setAdvancedConstraints(advancedConstraints);
         optParameters.setParameters(parameters);
 
         // Addresses
-        
+
         List<Address> addresses = new ArrayList<>();
         // Depot
 
@@ -112,9 +112,9 @@ public class DriversScheduleswithTerritoriesV4 {
         addresses.add(address);
 
         // Stops
-        
+
         Integer serviceTime = 300;
-        
+
         address = new Address("2158", false, 25.603049, -80.348022, serviceTime);
         address.setTags(zone1);
         addresses.add(address);
@@ -411,8 +411,8 @@ public class DriversScheduleswithTerritoriesV4 {
         addresses.add(address);
         address = new Address("3147", false, 25.921095, -80.261839, serviceTime);
         address.setTags(zone3);
-        addresses.add(address); 
-        
+        addresses.add(address);
+
         optParameters.setAddresses(addresses);
 
         try {
@@ -432,5 +432,5 @@ public class DriversScheduleswithTerritoriesV4 {
     }
 
 
-    
+
 }

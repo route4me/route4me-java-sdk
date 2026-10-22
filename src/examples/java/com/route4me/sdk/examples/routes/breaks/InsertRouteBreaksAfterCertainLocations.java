@@ -15,7 +15,7 @@ import java.util.logging.Logger;
  * @author juan
  */
 public class InsertRouteBreaksAfterCertainLocations {
-    
+
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");
         RouteBreaksManager manager = new RouteBreaksManager(apiKey);

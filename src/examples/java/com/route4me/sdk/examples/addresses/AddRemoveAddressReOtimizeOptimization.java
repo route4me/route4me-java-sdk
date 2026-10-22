@@ -40,10 +40,10 @@ public class AddRemoveAddressReOtimizeOptimization {
         optParameters.setAddresses(addresses);
 
         // Creating Optimization
-        
+
         DataObject optimizationResponse = new DataObject();
-        
-        
+
+
         try {
             optimizationResponse = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + optimizationResponse.getOptimizationProblemId());
@@ -57,11 +57,11 @@ public class AddRemoveAddressReOtimizeOptimization {
             //handle exception
             e.printStackTrace();
         }
-        
-        
+
+
         // Adding More Addresses to Optimization
         System.out.println("\nAdding More Stops and Reoptimizing");
-        
+
         optimizationResponse.getAddresses().add(new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300));
         optimizationResponse.getAddresses().add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300));
         optimizationResponse.getAddresses().add(new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214", 38.162472, -85.792854, 300));
@@ -69,9 +69,9 @@ public class AddRemoveAddressReOtimizeOptimization {
         optParameters = new OptimizationParameters();
         optParameters.setProblemId(optimizationResponse.getOptimizationProblemId());
         optParameters.setReoptimize(true);
-        
+
         Optimization optimizationUpdated = new Optimization();
-        
+
         try {
             optimizationUpdated = manager.reOptimization(optParameters, optimizationResponse);
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
@@ -87,13 +87,13 @@ public class AddRemoveAddressReOtimizeOptimization {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        
+
         // Removing Stops from Optimization
         System.out.println("\nRemoving an Address from Optimization");
 
-        
+
         Address addressToBeRemoved = optimizationUpdated.getRoutes().get(0).getAddresses().get(5);
-        
+
         System.out.println("Removing Address: " + addressToBeRemoved.getAddress() + " "  + addressToBeRemoved.getRouteDestinationId());
 
         try {
@@ -105,7 +105,7 @@ public class AddRemoveAddressReOtimizeOptimization {
         optParameters = new OptimizationParameters();
         optParameters.setProblemId(optimizationResponse.getOptimizationProblemId());
         optParameters.setReoptimize(true);
-        
+
         try {
             optimizationUpdated = manager.reOptimizationByOptimizationID(optParameters);
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
@@ -120,7 +120,7 @@ public class AddRemoveAddressReOtimizeOptimization {
         } catch (IllegalAccessException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
+
        // Getting Updated Optimization
        System.out.println("\nGetting Updated Optimization");
 
@@ -131,20 +131,20 @@ public class AddRemoveAddressReOtimizeOptimization {
         } catch (APIException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
         }
-       
-        
-        // Adding Again more Stops 
-        
+
+
+        // Adding Again more Stops
+
         System.out.println("\nAdding Even More Stops and Reoptimizing");
 
-        
+
         optimizationResponse.getAddresses().add(new Address("4629 HILLSIDE DRIVE, Louisville, KY, 40216", 38.176067, -85.824638, 300));
         optimizationResponse.getAddresses().add(new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300));
 
         optParameters = new OptimizationParameters();
         optParameters.setProblemId(optimizationUpdated.getOptimizationProblemId());
         optParameters.setReoptimize(true);
-        
+
         try {
             optimizationUpdated = manager.reOptimization(optParameters, optimizationResponse);
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
@@ -159,8 +159,8 @@ public class AddRemoveAddressReOtimizeOptimization {
         } catch (IllegalAccessException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        
+
+
     }
 
 }

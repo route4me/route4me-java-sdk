@@ -12,7 +12,7 @@ import lombok.Data;
 
 @Data
 public class Bundling {
-    
+
     @SerializedName("mode")
     @QueryParameter("mode")
     private Integer mode;
@@ -29,5 +29,5 @@ public class Bundling {
     @QueryParameter("time_window_rules")
     private TimeWindowRules timeWindowRules;
 
-    
+
 }

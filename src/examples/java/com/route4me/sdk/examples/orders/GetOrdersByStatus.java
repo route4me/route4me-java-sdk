@@ -18,7 +18,7 @@ public class GetOrdersByStatus {
         orderStatus.add(OrderStatus.DONE.getValue());
         orderStatus.add(OrderStatus.CANCELLED.getValue());
         orderStatus.add(OrderStatus.DAMAGED.getValue());
-        
+
         try {
             List<Order> orders = manager.getOrdersByStatus(orderStatus);
             for (Order order : orders) {

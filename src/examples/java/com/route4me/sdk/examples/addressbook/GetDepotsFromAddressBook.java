@@ -27,5 +27,5 @@ public class GetDepotsFromAddressBook {
             Logger.getLogger(GetDepotsFromAddressBook.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
-    
+
 }

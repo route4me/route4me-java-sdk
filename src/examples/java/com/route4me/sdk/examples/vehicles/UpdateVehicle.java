@@ -23,10 +23,10 @@ public class UpdateVehicle {
             vehicle.setVehicleAlias("Ford Transit Test 6 v2");
             vehicle = manager.updateVehicle(vehicle);
             System.out.println(vehicle);
-            
+
         } catch (APIException e) {
             e.printStackTrace();
         }
     }
-    
+
 }

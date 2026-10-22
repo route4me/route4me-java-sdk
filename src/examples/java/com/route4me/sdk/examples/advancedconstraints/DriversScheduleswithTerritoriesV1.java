@@ -70,7 +70,7 @@ public class DriversScheduleswithTerritoriesV1 {
         parameters.setStoreRoute(Boolean.FALSE);
         parameters.setShareRoute(Boolean.FALSE);
         parameters.setRt(Boolean.TRUE);
-        parameters.setParts(50); // Drivers Schedules Available 
+        parameters.setParts(50); // Drivers Schedules Available
         parameters.setRouteName("50 Drivers Schedules");
         parameters.setOptimize(Optimize.DISTANCE.toString());
         parameters.setDistanceUnit(DistanceUnit.MI.toString());
@@ -86,22 +86,22 @@ public class DriversScheduleswithTerritoriesV1 {
 
         Path currentPath = Paths.get(System.getProperty("user.dir"));
         Path filePath = Paths.get(currentPath.toString(),"src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "schedules.csv");
-        
+
         try {
             for (String[] nextRecord : CsvRows.read(filePath.toString())) {
-                
+
             schedule = new AdvancedConstraints();
             int group = Integer.parseInt(nextRecord[2]);
             Integer timeStart = Integer.parseInt(nextRecord[0]);
             Integer timeEnd = Integer.parseInt(nextRecord[1]);
-            
+
             schedule.setMembersCount(1);
             List<List<Integer>> timeWindowsSchedule = new ArrayList<>();
             List<Integer> timeWindowSchedule = Arrays.asList(timeStart, timeEnd);
             timeWindowsSchedule.add(timeWindowSchedule);
             schedule.setAvailableTimeWindows(timeWindowsSchedule);
             advancedConstraints.add(schedule);
-                
+
             }
 
         } catch (FileNotFoundException ex) {
@@ -109,8 +109,8 @@ public class DriversScheduleswithTerritoriesV1 {
         } catch (IOException ex) {
             Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-    
+
+
         // Schedules registration
         parameters.setAdvancedConstraints(advancedConstraints);
         optParameters.setParameters(parameters);
@@ -119,7 +119,7 @@ public class DriversScheduleswithTerritoriesV1 {
         List<Address> addresses = new ArrayList<>();
 
 
-        // Depot    
+        // Depot
         Address address = new Address("DEPOT", true, 25.694341, -80.166036, 0);
         address.setAlias("DEPOT");
         addresses.add(address);
@@ -127,8 +127,8 @@ public class DriversScheduleswithTerritoriesV1 {
         // Stops
         filePath = Paths.get(currentPath.toString(),"src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
 
-        Integer serviceTime = 120;       
-        
+        Integer serviceTime = 120;
+
         try {
             for (String[] nextRecord : CsvRows.read(filePath.toString())) {
                 address = new Address();
@@ -145,9 +145,9 @@ public class DriversScheduleswithTerritoriesV1 {
         } catch (IOException ex) {
             Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        
-        
+
+
+
 
 
         optParameters.setAddresses(addresses);

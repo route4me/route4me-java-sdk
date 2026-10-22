@@ -130,7 +130,7 @@ public class OrdersManager extends Manager {
         filter.setTrackingNumbers(trackingNumbers);
         return this.OrderByFilter(filter, limit, offset);
     }
-    
+
     private List<Order> OrderByFilter(OrderFilter filter, Integer limit, Integer offset) throws APIException {
         OrderRequest request = new OrderRequest();
         request.setFilter(filter);
@@ -142,7 +142,7 @@ public class OrdersManager extends Manager {
     }
 
 
-    
+
     private List<Order> OrderByFilter(OrderFilter filter) throws APIException {
         return this.OrderByFilter(filter, 30, 0);
     }

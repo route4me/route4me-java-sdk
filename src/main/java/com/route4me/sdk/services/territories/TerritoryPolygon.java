@@ -12,7 +12,7 @@ import java.awt.Polygon;
  * @author juan
  */
 public class TerritoryPolygon {
-    
+
     private Polygon polygon;
     private Territory territory;
 
@@ -48,5 +48,5 @@ public class TerritoryPolygon {
     public void setTerritory(Territory territory) {
         this.territory = territory;
     }
-    
+
 }

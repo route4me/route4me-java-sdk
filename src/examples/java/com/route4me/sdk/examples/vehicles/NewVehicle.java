@@ -30,5 +30,5 @@ public class NewVehicle {
             e.printStackTrace();
         }
     }
-    
+
 }

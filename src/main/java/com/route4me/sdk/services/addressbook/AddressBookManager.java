@@ -16,7 +16,7 @@ import org.apache.http.HttpEntity;
 
 public class AddressBookManager extends Manager {
     private static final String ADDRESS_BOOK_EP = "/api.v4/address_book.php";
-    private static final String ADDRESS_BOOK_DEPOTS = "/modules/api/v5.0/address-book/addresses/depots"; 
+    private static final String ADDRESS_BOOK_DEPOTS = "/modules/api/v5.0/address-book/addresses/depots";
 
 
     public AddressBookManager(String apiKey) {
@@ -30,9 +30,9 @@ public class AddressBookManager extends Manager {
         builder.setPath(endpoint);
         return builder;
     }
-    
-    
-    
+
+
+
     public Contact createContact(Contact contact) throws APIException {
         return this.makeRequest(RequestMethod.POST,
                 Manager.defaultBuilder(ADDRESS_BOOK_EP),
@@ -97,7 +97,7 @@ public class AddressBookManager extends Manager {
         DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(new AddressIds(addressIds)), DeleteResponse.class);
         return response != null && response.isDeleted();
     }
-    
+
     public List<Contact> getDepotsFromAddressBook() throws APIException{
          URIBuilder builder = this.getAPIV5URI(ADDRESS_BOOK_DEPOTS);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Contact>>() {

@@ -12,21 +12,21 @@ public class BundlingwithTWRulesResolveStrategy1 {
 
 
         /*
-        Bundling        
+        Bundling
         time_window_rules: it’s the list of options about handling time windows (TW).
         time_window_rules.resolve_strategy (type: integer; available values: 0,1; default: 0) it’s the option to pick resolving TW strategy.
             The strategy 0 means the min/max strategy. Example: an address X has TW = [7AM, 10AM], an address Y has TW = [9AM, 11AM], in the end we will get TW = [min(7AM, 9AM), max(10AM, 11AM)] = [7AM, 11AM]
             The strategy 1 means the max/min strategy. Example: an address X has TW = [7AM, 10AM], an address Y has TW = [9AM, 11AM], in the end we will get TW = [max(7AM, 9AM), min(10AM, 11AM)] = [9AM, 10AM]
-        time_window_rules.bundle_only_overlapping (type: boolean; default: false) it’s the option to control bunlding of overlapping TW. 
-            Example: an address X has TW = [8AM, 10AM], an address Y has TW = [4PM, 6PM], so if the option is enabled these addresses won’t be bundled. 
+        time_window_rules.bundle_only_overlapping (type: boolean; default: false) it’s the option to control bunlding of overlapping TW.
+            Example: an address X has TW = [8AM, 10AM], an address Y has TW = [4PM, 6PM], so if the option is enabled these addresses won’t be bundled.
             Note that this option will be automatically enabled if resolve_strategy = 1  (to avoid incorrect TW)
-        time_window_rules.bundle_service_time_greater_than_tw (type: boolean; default: true) it’s the option to control bundling of stops with service-time (ST) > 0 and TW. 
-            Example: an address X has TW = [7AM, 10AM]  and ST = 1 hour, an address Y has TW = [9AM, 11AM] and ST = 1 hour, with resolve_strategy = 1 we will get TW = [9AM, 10AM] and 
-            the sum of service-times will be 1 + 1 = 2 hours, and 2 hours of ST is greater than 1 hour of TW, and in this case these addresses won’t be bundled. 
+        time_window_rules.bundle_service_time_greater_than_tw (type: boolean; default: true) it’s the option to control bundling of stops with service-time (ST) > 0 and TW.
+            Example: an address X has TW = [7AM, 10AM]  and ST = 1 hour, an address Y has TW = [9AM, 11AM] and ST = 1 hour, with resolve_strategy = 1 we will get TW = [9AM, 10AM] and
+            the sum of service-times will be 1 + 1 = 2 hours, and 2 hours of ST is greater than 1 hour of TW, and in this case these addresses won’t be bundled.
             In the same case these addresses can be bundled with  resolve_strategy = 0, because TW will be [7AM, 11AM] which means 4 hours, and 2 hours of ST is less than 4 hours of TW.
         */
-        
-        
+
+
 
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
@@ -67,9 +67,9 @@ public class BundlingwithTWRulesResolveStrategy1 {
 
 
         Bundling bundling = new Bundling();
-       
+
         bundling.setMergeMode(BundlingEnum.BundledItemsMode.KEEP_AS_SEPARATE_DESTINATIONS.getValue());
-        
+
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ADDRESS.getValue());
         ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
         serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingFirstItemMode.USE_CUSTOM_SERVICE_TIME.getValue());

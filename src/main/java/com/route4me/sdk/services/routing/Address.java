@@ -250,10 +250,10 @@ public class Address {
         }
         this.custom_fields.put(key, value);
     }
-    
+
     public void setJoint(int joint) {
         this.setJoint(joint != 0);
-    }    
+    }
 
     /**
      * @return the joint

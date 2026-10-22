@@ -34,7 +34,7 @@ public class DriversSkills {
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
-        
+
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
@@ -53,7 +53,7 @@ public class DriversSkills {
         //Tags
         List<String> skills1 = Arrays.asList("Class A CDL");
         List<String> skills2 = Arrays.asList("Class B CDL");
-        
+
         //Drivers IDs
         List<Integer> route4meMembersID = Arrays.asList(1459842, 1481916, 1481918);
 
@@ -66,7 +66,7 @@ public class DriversSkills {
         List<Integer> timeWindowFleet1 = Arrays.asList(25200, 75000);
         timeWindowsFleet1.add(timeWindowFleet1);
         advancedConstraint1.setAvailableTimeWindows(timeWindowsFleet1);
-        
+
         // AdvancedConstraintsExample 2
         AdvancedConstraints advancedConstraint2 = new AdvancedConstraints();
         advancedConstraint2.setMaxCapacity(500);
@@ -79,9 +79,9 @@ public class DriversSkills {
 
 
         List<AdvancedConstraints> advancedConstraints = Arrays.asList(advancedConstraint1, advancedConstraint2);
-        
+
         parameters.setAdvancedConstraints(advancedConstraints);
-        
+
         optParameters.setParameters(parameters);
 
         List<Address> addresses = new ArrayList<>();
@@ -124,8 +124,8 @@ public class DriversSkills {
         address = new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211", 38.251923, -85.800034, 300, 62000, 85000);
         address.setTags(skills2);
         addresses.add(address);
-        
-        
+
+
         optParameters.setAddresses(addresses);
 
         try {
@@ -145,5 +145,5 @@ public class DriversSkills {
     }
 
 
-    
+
 }

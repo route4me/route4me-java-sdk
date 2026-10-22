@@ -15,7 +15,7 @@ import lombok.Data;
 
 @Data
 public class TimePredictionModel {
-    
+
     @SerializedName("model")
     private String model;
     @SerializedName("value")

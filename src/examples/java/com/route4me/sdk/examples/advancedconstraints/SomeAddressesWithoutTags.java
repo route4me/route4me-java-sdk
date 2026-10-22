@@ -34,8 +34,8 @@ public class SomeAddressesWithoutTags {
         //**********************************************************************
         // TEST CASE: Some addresses without Tags
         //**********************************************************************
-        
-        
+
+
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.ADVANCED_CVRP_TW.getValue());
         parameters.setStoreRoute(Boolean.FALSE);
@@ -77,9 +77,9 @@ public class SomeAddressesWithoutTags {
 
 
         List<AdvancedConstraints> advancedConstraints = Arrays.asList(advancedConstraint1, advancedConstraint2);
-        
+
         parameters.setAdvancedConstraints(advancedConstraints);
-        
+
         optParameters.setParameters(parameters);
 
         List<Address> addresses = new ArrayList<>();
@@ -104,7 +104,7 @@ public class SomeAddressesWithoutTags {
         address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
         address.setTags(tags1);
         addresses.add(address);
-        // Addresses Without Tags will be excluded from the route. 
+        // Addresses Without Tags will be excluded from the route.
         address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
         addresses.add(address);
         address = new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214", 38.162472, -85.792854, 300);
@@ -131,5 +131,5 @@ public class SomeAddressesWithoutTags {
     }
 
 
-    
+
 }

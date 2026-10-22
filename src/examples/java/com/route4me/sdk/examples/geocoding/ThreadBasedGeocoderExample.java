@@ -29,7 +29,7 @@ public class ThreadBasedGeocoderExample {
                                 "82 HOPE ST. W., TAVISTOCK, N0B 2R0",
                                 "70 HOPE ST. W., TAVISTOCK, N0B 2R0",
                                 "485 WOODLAWN RD. W., GUELPH, N1H 7P7",
-                                "183 SILVERCREEK PKWY N, GUELPH, N1H 3T2	",
+                                "183 SILVERCREEK PKWY N, GUELPH, N1H 3T2\t",
                                 "183 SILVERCREEK PARKWAY N., GUELPH, N4G 3S9",
                                 "183 SILVERCREEK PARKWAY N., GUELPH, N1H 3T2",
                                 "130 SILVERCREEK PKY. N., GUELPH, N1H 7Y5",

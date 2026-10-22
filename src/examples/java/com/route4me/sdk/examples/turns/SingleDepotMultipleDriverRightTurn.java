@@ -27,14 +27,14 @@ import java.util.List;
  */
 public class SingleDepotMultipleDriverRightTurn {
 
- 
+
 
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey, true);
         OptimizationParameters optParameters = new OptimizationParameters();
 
- 
+
 
         Parameters parameters = new Parameters();
         parameters.setAlgorithmType(AlgorithmType.CVRP_TW_SD.getValue());
@@ -53,7 +53,7 @@ public class SingleDepotMultipleDriverRightTurn {
         parameters.setRightTurn(Constants.RightTurn.RIGHTTURN_FORBID.getValue());
         optParameters.setParameters(parameters);
 
- 
+
 
         List<Address> addresses = new ArrayList<>();
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
@@ -67,10 +67,10 @@ public class SingleDepotMultipleDriverRightTurn {
         addresses.add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300));
         addresses.add(new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214", 38.162472, -85.792854, 300));
 
- 
+
         optParameters.setAddresses(addresses);
 
- 
+
 
         try {
             DataObject responseObject = manager.runOptimization(optParameters);

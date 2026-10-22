@@ -24,5 +24,5 @@ public class GeocoderProgress {
     private Integer done;
 
 
-    
+
 }

@@ -16,19 +16,19 @@ import org.apache.http.client.utils.URIBuilder;
  * @author Route4Me
  */
 public class PredictOptimizationTimeManager extends Manager {
-    
-    
+
+
     public static final String OPTIMIZATION_PREDICTION_URL = "/api.v4/predict-optimization-time.php";
 
-    
+
     public PredictOptimizationTimeManager(String apiKey) {
         super(apiKey);
     }
-    
+
     public OptimizationTimePrediction runOptimizationPrediction(OptimizationParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_PREDICTION_URL);
         return this.makeJSONRequest(RequestMethod.POST, builder, parameters, OptimizationTimePrediction.class);
-    }    
-    
-    
+    }
+
+
 }

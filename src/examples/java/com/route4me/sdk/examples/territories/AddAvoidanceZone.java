@@ -36,7 +36,7 @@ public class AddAvoidanceZone {
         System.out.println("Polygon Territory");
         System.out.println(responseObject.toString());
         System.out.println();
-        
+
         List<String> rectTerritoryDataList = new ArrayList<>();
         rectTerritoryDataList.add("43.51668853502909,-109.3798828125");
         rectTerritoryDataList.add("46.98025235521883,-101.865234375");
@@ -69,9 +69,9 @@ public class AddAvoidanceZone {
         System.out.println("Circle Territory");
         System.out.println(responseObject.toString());
         System.out.println();
-        
-        
+
+
 
     }
-    
+
 }

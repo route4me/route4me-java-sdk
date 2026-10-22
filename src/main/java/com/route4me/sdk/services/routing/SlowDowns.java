@@ -16,7 +16,7 @@ import lombok.Data;
  */
 @Data
 public class SlowDowns {
-    
+
     @SerializedName("service_time")
     @QueryParameter("service_time")
     private Integer serviceTime;
@@ -24,5 +24,5 @@ public class SlowDowns {
     @QueryParameter("travel_time")
     private Integer travelTime;
 
-    
+
 }

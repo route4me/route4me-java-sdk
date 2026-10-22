@@ -30,11 +30,11 @@ import java.util.Map;
  * @author route4me
  */
 public class ServiceTimeUtils {
-    
+
     public static Long getServiceTimeByAddressType(String key, Map<String, Integer> serviceTimeMap){
         Integer value  = serviceTimeMap.get(key);
         return value != null ? value.longValue(): null;
-       
+
     }
-    
+
 }

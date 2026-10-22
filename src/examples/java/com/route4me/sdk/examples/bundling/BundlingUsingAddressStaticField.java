@@ -43,10 +43,10 @@ public class BundlingUsingAddressStaticField {
         Bundling bundling = new Bundling();
 
         bundling.setMode(BundlingEnum.BundlingMode.BUNDLING_BY_ANY_STATIC_ADDRESS_FIELD.getValue());
-        
+
         bundling.setMergeMode(BundlingEnum.BundledItemsMode.KEEP_AS_SEPARATE_DESTINATIONS.getValue());
 
-        
+
         List<String> modeParams = new ArrayList<>();
         modeParams.add("Alias");
         bundling.setModeParams(modeParams);

@@ -27,7 +27,7 @@ public class Source {
 
     Source() {
     }
-    
+
     Source(Integer sourceID, String sourceType) {
         this.sourceID = sourceID;
         this.sourceType = sourceType;

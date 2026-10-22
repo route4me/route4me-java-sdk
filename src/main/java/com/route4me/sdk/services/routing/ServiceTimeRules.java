@@ -30,5 +30,5 @@ public class ServiceTimeRules {
     @QueryParameter("additional_items_mode_params")
     private List<Integer> additionalItemsModeParams;
 
-    
+
 }

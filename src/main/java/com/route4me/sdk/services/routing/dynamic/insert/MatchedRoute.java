@@ -34,7 +34,7 @@ import lombok.Data;
 
 @Data
 public class MatchedRoute {
-    
+
     @SerializedName("route_name")
     @QueryParameter("route_name")
     private String routeName;
@@ -62,17 +62,17 @@ public class MatchedRoute {
     @SerializedName("new_time")
     @QueryParameter("new_time")
     private Double newTime;
-    
+
     @SerializedName("percentage_distance_increase")
     @QueryParameter("percentage_distance_increase")
     private Double percentageDistanceIncrease;
-    
+
     @SerializedName("percentage_time_increase")
     @QueryParameter("percentage_time_increase")
     private Double percentageTimeIncrease;
-    
+
     @SerializedName("time_violation")
     @QueryParameter("time_violation")
     private Double timeViolation;
-    
+
 }

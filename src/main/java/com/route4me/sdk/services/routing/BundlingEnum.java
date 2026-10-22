@@ -82,7 +82,7 @@ public class BundlingEnum {
 
     }
 
-    
+
     public enum BundlingAdditionalItemMode {
         KEEP_ORIGINAL_SERVICE_TIME_FOR_ADDITIONAL_ITEM(1),
         USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM(2),
@@ -114,7 +114,7 @@ public class BundlingEnum {
         }
 
     }
-    
+
     public enum BundledItemsMode {
 
         KEEP_AS_SEPARATE_DESTINATIONS(1),
@@ -144,10 +144,10 @@ public class BundlingEnum {
         public static BundlingEnum.BundledItemsMode get(int code) {
             return lookup.get(code);
         }
-        
-    
+
+
     }
-    
+
 
 
 }

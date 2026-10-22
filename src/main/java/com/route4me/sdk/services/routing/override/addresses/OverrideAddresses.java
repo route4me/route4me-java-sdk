@@ -34,7 +34,7 @@ import lombok.Data;
 
 @Data
 public class OverrideAddresses {
-    
+
     @QueryParameter("time")
     @SerializedName("time")
     private Integer time;
@@ -45,7 +45,7 @@ public class OverrideAddresses {
     @SerializedName("group")
     private String group;
 
-    
-    
-    
+
+
+
 }

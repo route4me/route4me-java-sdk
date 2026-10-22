@@ -40,7 +40,3 @@ public class DeleteAvoidanceZone {
     }
 
 }
-
-
-
-    

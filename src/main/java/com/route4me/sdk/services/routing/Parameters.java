@@ -31,7 +31,7 @@ public class Parameters {
     private String optimize;
     @SerializedName("lock_last")
     private Boolean lockLast;
-    @QueryParameter("ignore_tw")   
+    @QueryParameter("ignore_tw")
     @SerializedName("ignore_tw")
     private Boolean ignoreTW;
     @SerializedName("vehicle_capacity")
@@ -217,6 +217,6 @@ public class Parameters {
     public void setVehicleCapacity(String vehicleCapacity) {
         this.vehicleCapacity = Integer.parseInt(vehicleCapacity);
     }
-    
+
 
 }

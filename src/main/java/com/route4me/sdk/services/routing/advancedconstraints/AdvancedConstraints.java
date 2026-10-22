@@ -13,15 +13,15 @@ import lombok.Data;
 
 @Data
 public class AdvancedConstraints {
-    
+
     @SerializedName("max_cargo_volume")
     @QueryParameter("max_cargo_volume")
     private Double maxCargoVolume;
 
     @SerializedName("max_capacity")
     @QueryParameter("max_capacity")
-    private Integer maxCapacity;  
-    
+    private Integer maxCapacity;
+
     @SerializedName("members_count")
     @QueryParameter("members_count")
     private Integer membersCount;
@@ -29,15 +29,15 @@ public class AdvancedConstraints {
     @SerializedName("available_time_windows")
     @QueryParameter("available_time_windows")
     private List<List<Integer>> availableTimeWindows;
-            
+
     @SerializedName("tags")
     @QueryParameter("tags")
     private List<String> tags;
-            
+
     @SerializedName("route4me_members_id")
     @QueryParameter("route4me_members_id")
     private List<Integer> route4meMembersID;
-    
+
     @SerializedName("depot_address")
     @QueryParameter("depot_address")
     private Address depotAddress;
@@ -49,6 +49,6 @@ public class AdvancedConstraints {
     @SerializedName("group")
     @QueryParameter("group")
     private String group;
-    
-    
+
+
 }
