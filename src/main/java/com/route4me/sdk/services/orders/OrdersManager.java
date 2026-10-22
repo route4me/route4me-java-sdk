@@ -31,9 +31,21 @@ public class OrdersManager extends Manager {
         return this.makeJSONRequest(RequestMethod.GET, builder, "", Order.class);
     }
 
+    /**
+     * Searches orders on {@code order.php}.
+     *
+     * <p>Without a filter the request is a {@code GET} with the parameters in the query.
+     * With a filter it is a {@code POST} with the parameters, filter included, as the JSON
+     * body, which is how the API takes a filter.
+     *
+     * @param request the search parameters
+     * @return the matching orders
+     * @throws APIException if the request fails
+     */
     public List<Order> getOrders(OrderRequest request) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
-        return this.makeJSONRequest(RequestMethod.GET, builder, request, GetOrdersResponse.class).getResults();
+        RequestMethod method = request.getFilter() != null ? RequestMethod.POST : RequestMethod.GET;
+        return this.makeJSONRequest(method, builder, request, GetOrdersResponse.class).getResults();
     }
 
     public List<Order> getOrdersByScheduledDate(List<String> scheduledForYYMMDD) throws APIException {

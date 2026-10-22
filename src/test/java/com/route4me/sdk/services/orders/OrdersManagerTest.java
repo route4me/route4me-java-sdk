@@ -5,7 +5,6 @@ import com.google.gson.JsonObject;
 import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.testsupport.Fixtures;
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -105,7 +104,6 @@ public class OrdersManagerTest {
         assertEquals("Example Bakery", orders.get(0).getAddressAlias());
     }
 
-    @Ignore("bug (unfiled): getOrders sends OrderFilter.toString() (Lombok text) as the filter query parameter")
     @Test
     public void getOrdersDoesNotSendJavaToStringAsTheFilter() throws Exception {
         OrdersManager manager = manager();
@@ -118,6 +116,26 @@ public class OrdersManagerTest {
 
         String sent = http.request().query("filter");
         assertFalse("filter=" + sent, sent != null && sent.startsWith("OrderFilter("));
+    }
+
+    @Test
+    public void getOrdersWithAFilterPostsItAsJson() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, ordersPage());
+        OrderFilter filter = new OrderFilter();
+        filter.setTrackingNumbers(Collections.singletonList("TRK-1"));
+        OrderRequest request = new OrderRequest().setFilter(filter).setLimit(5)
+                .setDisplay(OrderRequest.DisplayType.UNROUTED);
+
+        List<Order> orders = manager.getOrders(request);
+
+        http.request().assertEndpoint("POST", HOST, ORDERS_EP)
+                .assertNoQuery("filter").assertNoQuery("limit")
+                .assertContentType("application/json")
+                .assertJson("filter.tracking_numbers[0]", "TRK-1")
+                .assertJson("limit", 5)
+                .assertJson("display", "unrouted");
+        assertEquals(1, orders.size());
     }
 
     @Test
@@ -205,7 +223,6 @@ public class OrdersManagerTest {
         assertNull(OrderStatus.get(99));
     }
 
-    @Ignore("bug #34: OrderRequest has no @SerializedName, so its JSON uses the Java field names")
     @Test
     public void orderRequestSerializesWithApiNames() {
         OrderRequest request = new OrderRequest().setDateInserted("2026-10-21").setDateScheduled("2026-10-22")
@@ -217,6 +234,8 @@ public class OrdersManagerTest {
         assertEquals(json.toString(), "2026-10-22", stringField(json, "scheduled_for_YYMMDD"));
         assertEquals(json.toString(), "7001", stringField(json, "order_ids"));
         assertFalse(json.toString(), json.has("dateInserted"));
+        assertEquals("routed", new Gson().toJsonTree(new OrderRequest().setDisplay(OrderRequest.DisplayType.ROUTED))
+                .getAsJsonObject().get("display").getAsString());
     }
 
     /** Returns a string field of {@code json}, or {@code null} when it is absent. */
