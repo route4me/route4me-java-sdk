@@ -60,7 +60,7 @@ public class DynamicInsertManager extends Manager {
 
     /**
      * Finds the routes that a new destination fits best:
-     * {@code POST /modules/api/v5.0/routes/lookup-for-new-destination}.
+     * {@code POST https://wh.route4me.com/modules/api/v5.0/routes/lookup-for-new-destination}.
      *
      * @param scheduledFor  the route date, such as {@code 2026-10-22}; {@code null} leaves it out
      * @param lat           the latitude of the new destination
@@ -72,10 +72,14 @@ public class DynamicInsertManager extends Manager {
      * @param limit         the maximum number of routes to return
      * @param routeIDs      the routes to consider; {@code null} considers all
      * @return the matching routes, best first
-     * @throws APIException if the request fails
+     * @throws IllegalArgumentException if {@code lat} or {@code lng} is {@code null}: the API requires both
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode,
             RecommendedBy recommendedBy, Integer limit, List<String> routeIDs) throws APIException {
+        if (lat == null || lng == null) {
+            throw new IllegalArgumentException("The latitude and the longitude of the new destination are required");
+        }
         URIBuilder builder = this.getURI(ROUTE_DYNAMIC_INSERT);
         DynamicInsert body = new DynamicInsert();
         body.setRouteInfoServer("v5");
