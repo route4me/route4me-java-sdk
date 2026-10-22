@@ -200,6 +200,20 @@ public class GeocodingManagerTest {
     }
 
     @Test
+    public void aDetailedMatchWithoutCoordinatesKeepsItsOwnLatitudeAndLongitude() {
+        GeocodingManager manager = manager();
+        http.respond(200, json("[{'name':'100 Example St','type':'street','lat':40.2,'lng':-74.2},"
+                + "{'name':'Example','type':'city'}]"));
+
+        Address result = new ThreadBasedGeocoding(manager, "100 Example St", new GeocoderOptions(1)).call();
+
+        assertEquals(40.2, result.getLatitude(), 0.0);
+        assertEquals(-74.2, result.getLongitude(), 0.0);
+        assertEquals("street", result.getGeocodings().get(0).getType());
+        assertEquals(0.0, result.getGeocodings().get(1).getLatitude(), 0.0);
+    }
+
+    @Test
     public void bulkGeocoderGrowsTheConnectionPoolToItsThreadCount() {
         GeocodingManager manager = manager();
         http.respondToAll(200, DETAILED_RESULT);

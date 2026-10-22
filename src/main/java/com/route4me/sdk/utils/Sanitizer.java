@@ -1,5 +1,6 @@
 package com.route4me.sdk.utils;
 
+import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.URLDecoder;
 import java.net.URLEncoder;
@@ -44,6 +45,16 @@ public final class Sanitizer {
 
     /** The start of a query parameter value: {@code ?name=} or {@code &name=}. */
     private static final Pattern QUERY_PARAMETER = Pattern.compile("[?&]([^=&#?\\s]+)=");
+
+    /**
+     * A JSON member whose value is a string or a number: {@code "name": "value"} or
+     * {@code "name": 12}. Group 1 is the name, group 2 the value.
+     */
+    private static final Pattern JSON_MEMBER =
+            Pattern.compile("\"((?:[^\"\\\\]|\\\\.){1,100})\"\\s*:\\s*(\"(?:[^\"\\\\]|\\\\.)*\"|-?[0-9][0-9.eE+-]*)");
+
+    /** How deep {@link #redactCause} follows a cause chain. */
+    private static final int MAX_CAUSE_DEPTH = 20;
 
     /** Line breaks and other control characters, which could forge extra log lines. */
     private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\p{Cntrl}\\u0085\\u2028\\u2029]");
@@ -143,6 +154,88 @@ public final class Sanitizer {
             }
         }
         return url.length();
+    }
+
+    /**
+     * Hides the values of credential members in a JSON text, such as a response body: every
+     * string or number member whose name is a credential by
+     * {@link #isSensitiveParameter(String)}, such as {@code "api_key"}, {@code "password"},
+     * {@code "connection_token"} or {@code "session_guid"}, at any depth.
+     *
+     * <p>The text need not be valid JSON (a body cut short, an HTML page): only the
+     * {@code "name": value} pairs found in it are changed.
+     *
+     * @param json the text, or {@code null}
+     * @return the text with each credential value replaced by {@code "REDACTED"}, or
+     *     {@code null} when {@code json} is {@code null}
+     */
+    public static String redactJson(String json) {
+        if (json == null) {
+            return null;
+        }
+        Matcher member = JSON_MEMBER.matcher(json);
+        StringBuffer result = null;
+        while (member.find()) {
+            if (isSensitiveParameter(member.group(1))) {
+                if (result == null) {
+                    result = new StringBuffer(json.length());
+                }
+                String value = member.group(0);
+                String replaced = value.substring(0, member.start(2) - member.start()) + "\"" + REDACTED + "\"";
+                member.appendReplacement(result, Matcher.quoteReplacement(replaced));
+            }
+        }
+        if (result == null) {
+            return json;
+        }
+        member.appendTail(result);
+        return result.toString();
+    }
+
+    /**
+     * Makes the cause of an exception safe to keep: when the message of the cause, or of one
+     * of its own causes, contains a credential query parameter (such as an HttpClient
+     * redirect error that quotes the whole {@code Location}) or {@code secret}, the chain is
+     * replaced by plain {@link IOException}s with the same messages, redacted, and the same
+     * stack traces. A clean cause is returned as it is.
+     *
+     * @param cause  the cause, or {@code null}
+     * @param secret a value to hide as well, such as the API key; {@code null} hides none
+     * @return {@code cause}, or a redacted copy of its chain; {@code null} for {@code null}
+     */
+    public static IOException redactCause(IOException cause, String secret) {
+        if (cause == null || !needsRedaction(cause, secret)) {
+            return cause;
+        }
+        return (IOException) redactedCopy(cause, secret, 0);
+    }
+
+    /** Returns whether a message in the cause chain holds a credential. */
+    private static boolean needsRedaction(Throwable cause, String secret) {
+        Throwable current = cause;
+        for (int depth = 0; current != null && depth < MAX_CAUSE_DEPTH; depth++) {
+            String text = String.valueOf(current.getMessage());
+            if (!redact(redactUrl(text), secret).equals(text)) {
+                return true;
+            }
+            if (current.getCause() == current) {
+                break;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    /** Copies a cause chain as plain exceptions with redacted messages. */
+    private static Throwable redactedCopy(Throwable throwable, String secret, int depth) {
+        String message = throwable.getMessage() == null ? null
+                : redact(redactUrl(throwable.getMessage()), secret);
+        Throwable next = throwable.getCause();
+        Throwable cause = next == null || next == throwable || depth + 1 >= MAX_CAUSE_DEPTH ? null
+                : redactedCopy(next, secret, depth + 1);
+        IOException copy = new IOException(message, cause);
+        copy.setStackTrace(throwable.getStackTrace());
+        return copy;
     }
 
     /**

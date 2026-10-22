@@ -12,11 +12,13 @@ import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.RedirectException;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -722,6 +724,55 @@ public class ManagerTest {
         assertTrue(forType.getMessage(), forType.getMessage().endsWith("java.util.ArrayList<"
                 + Reply.class.getName() + ">"));
         assertTrue(forType.getCause() instanceof JsonParseException);
+    }
+
+    @Test
+    public void errorBodiesHideCredentialMembers() {
+        final TestManager manager = manager();
+        http.respond(422, json("{'errors':['bad connection'],'connection_token':'TOKEN-9',"
+                + "'vendor':{'password':'pw-9'}}")).respond(200, json("{'session_guid':'GUID-7','member_id':"));
+
+        APIException status = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+        APIException unparsable = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals(json("{'errors':['bad connection'],'connection_token':'REDACTED',"
+                + "'vendor':{'password':'REDACTED'}}"), status.getResponseBody());
+        assertEquals(Collections.singletonList("bad connection"), status.getErrors());
+        assertEquals(json("{'session_guid':'REDACTED','member_id':"), unparsable.getResponseBody());
+    }
+
+    @Test
+    public void closingTheManagerDuringARequestGivesAnApiException() throws Exception {
+        final TestManager manager = new TestManager(MockHttp.API_KEY);
+        CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
+        Mockito.when(client.execute(Mockito.any(HttpUriRequest.class))).thenAnswer(invocation -> {
+            manager.close();
+            throw new IllegalStateException("Connection pool shut down");
+        });
+        manager.setHttpClient(client);
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals("GET https://api.route4me.com" + PATH + " failed: the manager was closed while the request ran",
+                error.getMessage());
+        assertTrue(error.getCause().getCause() instanceof IllegalStateException);
+    }
+
+    @Test
+    public void anUncheckedClientFailureGivesAnApiException() throws Exception {
+        final TestManager manager = new TestManager(MockHttp.API_KEY);
+        CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
+        Mockito.when(client.execute(Mockito.any(HttpUriRequest.class)))
+                .thenThrow(new IllegalStateException("Connection is still allocated"));
+        manager.setHttpClient(client);
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: Connection is still allocated"));
     }
 
     @Test

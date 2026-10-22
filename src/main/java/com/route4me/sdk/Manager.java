@@ -92,6 +92,8 @@ public abstract class Manager implements Closeable {
     /** The path prefixes of the V5 API on {@link #V5_HOST}. */
     private static final String[] V5_PATH_PREFIXES = {"/modules/api/v5.0", "/modules/api/v5.1"};
     private static final String USER_AGENT = "Route4Me Java SDK";
+    /** The reason of the {@link APIException} of a request that {@link #close()} cut short. */
+    private static final String CLOSED_DURING_REQUEST = "the manager was closed while the request ran";
     /**
      * The {@code Accept} header of V5 requests. The V5 API (Laravel) renders an error as an
      * HTML page unless the client asks for JSON first; {@code *}{@code /*} keeps CSV, XML
@@ -211,10 +213,17 @@ public abstract class Manager implements Closeable {
         this.disableRedirects = disableRedirects;
     }
 
+    /**
+     * Returns a new builder for a path on the V4 API: {@code https://api.route4me.com} followed by
+     * {@code endpoint}. The API key is added when the request is sent, not here.
+     *
+     * @param endpoint the path, such as {@code /api.v4/route.php}
+     * @return a new builder
+     */
     protected static URIBuilder defaultBuilder(String endpoint) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
-        builder.setHost("api.route4me.com");
+        builder.setHost(V4_HOST);
         builder.setPath(endpoint);
         return builder;
     }
@@ -308,20 +317,71 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, !body.isEmpty() ? jsonEntity(body) : (HttpEntity) null, type);
     }
 
+    /**
+     * Sends a request with any body, such as a multipart upload, and parses the response.
+     *
+     * @param method  the HTTP method
+     * @param builder the request URL; it is not changed
+     * @param body    the request body, sent with its own {@code Content-Type}; {@code null} sends none
+     * @param clazz   the response type; {@code String.class} returns the body as text
+     * @param <T>     the response type
+     * @return the parsed response, or {@code null} when the response has no content
+     * @throws APIException if the request fails, the server answers with an error status or
+     *                      the response cannot be parsed
+     */
     protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz)
             throws APIException {
         return this.makeRequest(method, builder, body, clazz, null);
     }
 
+    /**
+     * Sends a request with any body and parses the response into a generic type.
+     *
+     * @param method  the HTTP method
+     * @param builder the request URL; it is not changed
+     * @param body    the request body, sent with its own {@code Content-Type}; {@code null} sends none
+     * @param type    the response type, such as a {@code TypeToken} type
+     * @param <T>     the response type
+     * @return the parsed response, or {@code null} when the response has no content
+     * @throws APIException if the request fails, the server answers with an error status or
+     *                      the response cannot be parsed
+     */
     protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Type type)
             throws APIException {
         return this.makeRequest(method, builder, body, null, type);
     }
 
+    /**
+     * Sends a request with any body and returns the response body as text.
+     *
+     * @param method  the HTTP method
+     * @param builder the request URL; it is not changed
+     * @param body    the request body, sent with its own {@code Content-Type}; {@code null} sends none
+     * @return the response body; empty when the response has no content
+     * @throws APIException if the request fails or the server answers with an error status
+     */
     protected String makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body) throws APIException {
         return this.makeRequest(method, builder, body, String.class, null);
     }
 
+    /**
+     * Sends a request with a JSON body and query parameters, and parses the response.
+     *
+     * <p>{@code requestParams} always goes to the query, whatever the method: its
+     * {@link com.route4me.sdk.queryconverter.QueryParameter} fields, with bracketed keys for
+     * lists and maps on the V5 API ({@code ids[]=1}) and plain keys elsewhere. {@code body} is
+     * serialized with this manager's JSON mapper.
+     *
+     * @param method        the HTTP method
+     * @param builder       the request URL; the query parameters are added to it
+     * @param body          the object to send as the JSON body; {@code null} sends the text {@code null}
+     * @param requestParams the object whose query fields to add, or {@code null} for none
+     * @param clazz         the response type
+     * @param <T>           the response type
+     * @return the parsed response, or {@code null} when the response has no content
+     * @throws APIException if {@code requestParams} cannot be read, the request fails, the
+     *                      server answers with an error status or the response cannot be parsed
+     */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams,
             Class<T> clazz) throws APIException {
         if (requestParams != null) {
@@ -330,13 +390,27 @@ public abstract class Manager implements Closeable {
                 params = queryParameters(builder, requestParams);
                 builder.addParameters(params);
             } catch (IllegalAccessException ex) {
-                logger.error("Could not convert {} to query parameters: {}",
-                        requestParams.getClass().getSimpleName(), Sanitizer.forLog(ex.getMessage()));
+                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
+                        + " to query parameters.", ex);
             }
         }
         return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), clazz, null);
     }
 
+    /**
+     * Sends a request with a JSON body and query parameters, and parses the response into a
+     * generic type. See {@link #makeJSONRequest(RequestMethod, URIBuilder, Object, Object, Class)}.
+     *
+     * @param method        the HTTP method
+     * @param builder       the request URL; the query parameters are added to it
+     * @param body          the object to send as the JSON body; {@code null} sends the text {@code null}
+     * @param requestParams the object whose query fields to add, or {@code null} for none
+     * @param type          the response type, such as a {@code TypeToken} type
+     * @param <T>           the response type
+     * @return the parsed response, or {@code null} when the response has no content
+     * @throws APIException if {@code requestParams} cannot be read, the request fails, the
+     *                      server answers with an error status or the response cannot be parsed
+     */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams,
             Type type) throws APIException {
         if (requestParams != null) {
@@ -345,13 +419,31 @@ public abstract class Manager implements Closeable {
                 params = queryParameters(builder, requestParams);
                 builder.addParameters(params);
             } catch (IllegalAccessException ex) {
-                logger.error("Could not convert {} to query parameters: {}",
-                        requestParams.getClass().getSimpleName(), Sanitizer.forLog(ex.getMessage()));
+                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
+                        + " to query parameters.", ex);
             }
         }
         return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), null, type);
     }
 
+    /**
+     * Sends one request object, as the query on {@code GET} and as the JSON body otherwise,
+     * and parses the response.
+     *
+     * <p>On {@code GET}, the {@link com.route4me.sdk.queryconverter.QueryParameter} fields of
+     * {@code requestParams} are added to the query and no body is sent. On any other method,
+     * the whole object is serialized with this manager's JSON mapper and sent as the body, and
+     * the query is not changed.
+     *
+     * @param method        the HTTP method
+     * @param builder       the request URL; on {@code GET} the query parameters are added to it
+     * @param requestParams the request object, or {@code null} to send neither query fields nor a body
+     * @param clazz         the response type
+     * @param <T>           the response type
+     * @return the parsed response, or {@code null} when the response has no content
+     * @throws APIException if {@code requestParams} cannot be read, the request fails, the
+     *                      server answers with an error status or the response cannot be parsed
+     */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz)
             throws APIException {
         if (requestParams != null) {
@@ -371,6 +463,20 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, (HttpEntity) null, clazz, null);
     }
 
+    /**
+     * Sends one request object, as the query on {@code GET} and as the JSON body otherwise,
+     * and parses the response into a generic type. See
+     * {@link #makeJSONRequest(RequestMethod, URIBuilder, Object, Class)}.
+     *
+     * @param method        the HTTP method
+     * @param builder       the request URL; on {@code GET} the query parameters are added to it
+     * @param requestParams the request object, or {@code null} to send neither query fields nor a body
+     * @param type          the response type, such as a {@code TypeToken} type
+     * @param <T>           the response type
+     * @return the parsed response, or {@code null} when the response has no content
+     * @throws APIException if {@code requestParams} cannot be read, the request fails, the
+     *                      server answers with an error status or the response cannot be parsed
+     */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type)
             throws APIException {
         if (requestParams != null) {
@@ -472,7 +578,7 @@ public abstract class Manager implements Closeable {
         } catch (JsonParseException | IllegalStateException ex) {
             String expected = clazz != null ? clazz.getSimpleName() : type.getTypeName();
             throw APIException.forUnparsableResponse(method.name(), response.safeUrl, response.status,
-                    this.redact(respString), expected, ex);
+                    this.redactBody(respString), expected, ex);
         }
         if (clazz == String.class) {
             return clazz.cast(respString);
@@ -530,16 +636,23 @@ public abstract class Manager implements Closeable {
         }
 
         String safeUrl = this.redact(Sanitizer.redactUrl(hrb.getURI().toString()));
-        try (CloseableHttpResponse resp = this.httpClient().execute(hrb)) {
+        CloseableHttpClient client = this.httpClient();
+        try (CloseableHttpResponse resp = client.execute(hrb)) {
             int status = resp.getStatusLine().getStatusCode();
             String respString = readBody(resp.getEntity());
             if (status < 200 || status > 303) {
                 throw APIException.forErrorStatus(method.name(), safeUrl, status,
-                        respString.isEmpty() ? null : this.redact(respString));
+                        respString.isEmpty() ? null : this.redactBody(respString));
             }
             return new RawResponse(safeUrl, status, resp.getAllHeaders(), respString);
         } catch (IOException ex) {
-            throw APIException.forIOException(method.name(), safeUrl, ex);
+            throw APIException.forIOException(method.name(), safeUrl, Sanitizer.redactCause(ex, this.apiKey));
+        } catch (IllegalStateException ex) {
+            // Apache HttpClient throws this unchecked exception when its connection pool was shut
+            // down, which close() does, while the request ran or waited for a connection.
+            String reason = client != this.httpClient ? CLOSED_DURING_REQUEST : String.valueOf(ex.getMessage());
+            throw APIException.forIOException(method.name(), safeUrl,
+                    Sanitizer.redactCause(new IOException(reason, ex), this.apiKey));
         }
     }
 
@@ -599,6 +712,16 @@ public abstract class Manager implements Closeable {
     /** Removes the API key of this manager from a text, for exceptions and logs. */
     private String redact(String text) {
         return Sanitizer.redact(text, this.apiKey);
+    }
+
+    /**
+     * Removes credentials from a response body that an {@link APIException} keeps: the API
+     * key of this manager, credential members such as {@code "password"} or
+     * {@code "connection_token"} ({@link Sanitizer#redactJson(String)}), and credential
+     * query parameters of URLs in it ({@link Sanitizer#redactUrl(String)}).
+     */
+    private String redactBody(String body) {
+        return this.redact(Sanitizer.redactUrl(Sanitizer.redactJson(body)));
     }
 
     /**
@@ -697,6 +820,10 @@ public abstract class Manager implements Closeable {
      *
      * <p>Closing twice is harmless. A manager that sends another request after
      * {@code close()} creates a new client, which must be closed again.
+     *
+     * <p>Requests that are running, or waiting for a pooled connection, when {@code close()}
+     * is called fail with an {@link APIException} ("the manager was closed while the request
+     * ran"), not with the unchecked exception of the closed connection pool.
      *
      * @throws IOException if the client fails to close
      */

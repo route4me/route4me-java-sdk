@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -185,6 +186,21 @@ public class APIExceptionTest {
         assertEquals("POST https://api.route4me.com/api.v4/route.php failed: IOException", error.getMessage());
         assertEquals(0, error.getStatusCode());
         assertSame(cause, error.getCause());
+    }
+
+    @Test
+    public void ioFailureKeepsARedactedCopyOfACauseThatQuotesACredential() {
+        IOException redirect = new IOException("Invalid redirect URI: https://example.com/?api_key=SECRET-KEY");
+        IOException cause = new IOException(redirect.toString(), redirect);
+
+        APIException error = APIException.forIOException("GET", URL, cause);
+
+        assertFalse(error.getMessage(), error.getMessage().contains("SECRET-KEY"));
+        assertTrue(error.getCause() instanceof IOException);
+        for (Throwable link = error.getCause(); link != null; link = link.getCause()) {
+            assertFalse(String.valueOf(link), String.valueOf(link).contains("SECRET-KEY"));
+        }
+        assertTrue(error.getCause().getCause().getMessage().contains("api_key=REDACTED"));
     }
 
     @Test

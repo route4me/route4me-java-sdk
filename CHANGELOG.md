@@ -17,11 +17,12 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - **`setGPS` returns the new `SetGpsResponse`** instead of `void` (#39). Callers compile unchanged but must be recompiled: the change is binary-incompatible.
 - **The public static `GeocoderWebSockets.geocoderWebSocket` is removed.** Each `GeocoderWebSockets` now has its own socket, so two geocoders no longer share, and close, one connection.
 - `OrderFilter` is now public, with chained setters. Its field `scheduled_for_YYMMDD` is renamed `scheduledForYYMMDD`, so the accessors change.
+- `ThreadBasedGeocoding` implements `Callable<Address>` instead of the raw `Callable`, and its `call()` no longer declares `throws Exception`. Callers compile unchanged unless they catch a checked exception around `call()` or override it.
 - `Route.isUnrouted` and `Parameters.useMixedPickupDeliveryDemands` start as `null` and are sent only when set. The old accessors keep their signatures and return `false` when unset; new accessors `getUnrouted()`/`setUnrouted(Boolean)` and `getUseMixedPickupDeliveryDemands()`/`setUseMixedPickupDeliveryDemands(Boolean)` expose the three states.
 
 **Transport**
 - **Requests time out.** Connect and connection-request timeouts are 6,050 ms and the read timeout is 30,000 ms (`Manager.DEFAULT_CONNECT_TIMEOUT_MS`, `DEFAULT_SOCKET_TIMEOUT_MS`, `DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS`, each with a getter and setter). Before, a stuck call hung forever.
-- **`Manager` implements `Closeable`** and keeps one pooled HTTP client per instance. Reuse managers and `close()` them; a manager used after `close()` builds a new client. The pool grows to the thread count of a bulk geocode.
+- **`Manager` implements `Closeable`** and keeps one pooled HTTP client per instance. Reuse managers and `close()` them; a manager used after `close()` builds a new client. The pool grows to the thread count of a bulk geocode. A request still running when another thread calls `close()` fails with an `APIException` ("the manager was closed while the request ran"), not with the unchecked `IllegalStateException` of the closed pool.
 - **API V5 requests send the key as `Authorization: Bearer <key>`** instead of the `api_key` query parameter, so the key no longer appears in URLs, proxy logs or server logs. V4 requests are unchanged.
 - **API V5 requests send `Accept: application/json, */*;q=0.8`.** Without it, API V5 answered errors with an HTML page, so their messages were lost. File exports still work.
 - **Redirects are followed only over https to the Route4Me API hosts**, `api.route4me.com` and `wh.route4me.com`. Any other redirect fails with an `APIException` caused by a `RedirectException` (new class `http.Route4MeRedirectStrategy`).
@@ -34,6 +35,7 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 **Errors**
 - `APIException` carries the HTTP status (`getStatusCode`, 0 when there was no response), the body cut to 2,000 characters (`getResponseBody`), the parsed `errors`, V5 `error`, `code` and `messages` (`getErrors`, `getCode`, `getMessages`), the method and the URL with credentials redacted (`getMethod`, `getUrl`). `APIException(Exception)` keeps the cause (#19).
 - Its message formats changed: "Invalid status code N for METHOD URL: first error"; "Unexpected server response for ...: the body is not valid JSON for X"; "METHOD URL failed: reason".
+- The two `Manager.makeJSONRequest(method, builder, body, requestParams, ...)` overloads throw `APIException` when `requestParams` cannot be converted to query parameters, as the other two did; they logged the error and sent the request without its query.
 
 **Manager methods**
 - `updateTerritory` and `updateAvoidanceZone` send PUT with `territory_id` (#31). `getTerritory` leaves out `null` flags.
@@ -57,6 +59,8 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - Redirects are followed only to `api.route4me.com` and `wh.route4me.com`. `rapid.route4me.com` and `validator.route4me.com` are no longer allowed: no SDK call goes there over HTTP, and Apache HttpClient copies the `Authorization` header onto a redirect.
 - The unit-test request guard fails any request that carries the API key to another host, deprecated endpoints included, or that uses a port other than 443.
 - No credentials in `toString()`: `User`, `AccountProfile`, `TelematicsConnection`, `Registration`, `UserRegistration`, `TeamMemberRequest`, `TelematicsMemberRegister` and `LocationCombinedDataItem` no longer print API keys, passwords, session IDs, activation keys or connection tokens. A test checks every model.
+- The response body that `APIException` keeps hides credential members by the same name rule (`"password"`, `"connection_token"`, `"session_guid"`, any name ending in `api_key`, and so on), not only the manager's own key. When the message of an I/O failure quotes a URL with a credential (Apache HttpClient quotes the whole target of a refused or circular redirect), the exception keeps a redacted copy of the cause chain instead.
+- `SECURITY.md` warns that Apache HttpClient's own DEBUG logging (`org.apache.http.headers`, `org.apache.http.wire`) prints the `Authorization` header and the `api_key` parameter.
 - `APIException` and the logs redact credential query parameters by name (`api_key`, and any name ending in `api_key`, `apikey`, `_token`, `_secret` or `password`, such as `organization_api_key`). New utility class `utils.Sanitizer`.
 - Dependencies: opencsv is removed (it brought old `commons-beanutils`); `log4j-api` 2.25.5, `gson` 2.14.0. `okhttp` 4.12.0 (with `okio` 3.6.0 and the Kotlin standard library) and `org.json` 20260814 are declared as direct dependencies, so Maven and Gradle projects that use the SDK resolve them instead of the vulnerable `okhttp` 3.12.12, `okio` 1.15.0 and `org.json` 20090211 that `socket.io-client` 1.0.2 asks for. osv-scanner reports no known vulnerability; one advisory for socket.io-client is ignored until 2027-04-30, with the reason in `osv-scanner.toml` (2.x cannot connect to `validator.route4me.com`).
 - New `SECURITY.md`: how to report a vulnerability and which versions get fixes.
@@ -80,6 +84,7 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 ### Fixed
 - #31 territory updates used DELETE. #32 busy-wait in `bulkGeocoder`. #33 quoted `address_id`. #34 `OrderRequest` field names. #35 unboxing NPE. #36 `DynamicInsertManager` NPE. #37 `return` in `finally`. #38 telematics searches delegated to the wrong method. #39 `setGPS` (it already used query parameters; it now returns the reply). #40 mutable enums. #41 trailing comma in `deleteRoutes`.
 - `Constants.DeviceType` and `OptimizationParameters` serialise with their API names.
+- `bulkGeocoder` keeps the latitude and longitude of a match that comes without `coordinates`; they were overwritten with 0.
 - `GeocoderWebSockets` unsubscribes from `addresses_bulk` on close, and sizes its download chunks from the job size.
 
 ### Examples

@@ -139,16 +139,22 @@ public class APIException extends Exception {
      * Creates the exception for a request that failed before a response arrived, such as
      * a timeout or a refused connection.
      *
+     * <p>When the message of the I/O error, or of one of its causes, holds a credential query
+     * parameter (Apache HttpClient quotes the whole target of a refused or circular redirect,
+     * for example), the exception keeps a redacted copy of the chain as its cause instead
+     * (see {@link Sanitizer#redactCause(IOException, String)}).
+     *
      * @param method the HTTP method, such as {@code GET}
      * @param url    the request URL, credentials redacted
      * @param cause  the I/O error
      * @return the exception
      */
     public static APIException forIOException(String method, String url, IOException cause) {
-        String reason = cause.getMessage() != null ? cause.getMessage() : cause.getClass().getSimpleName();
+        IOException safe = Sanitizer.redactCause(cause, null);
+        String reason = safe.getMessage() != null ? safe.getMessage() : cause.getClass().getSimpleName();
         String message = String.format("%s %s failed: %s", method, withoutQuery(url),
                 Sanitizer.forLog(reason, MAX_ERROR_LENGTH));
-        return new APIException(message, cause, method, url, 0, null);
+        return new APIException(message, safe, method, url, 0, null);
     }
 
     /**
