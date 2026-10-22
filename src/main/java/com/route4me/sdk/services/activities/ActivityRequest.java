@@ -4,7 +4,10 @@ import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 import lombok.experimental.Accessors;
 
-/** The query of {@link ActivityManager#getActivities(ActivityRequest)}; fields left {@code null} are not sent. */
+/**
+ * The query of {@link ActivityManager#getActivities(ActivityRequest)} and
+ * {@link ActivityManager#getActivityFeed(ActivityRequest)}; fields left {@code null} are not sent.
+ */
 @Data
 @Accessors(chain = true)
 public class ActivityRequest {
@@ -15,8 +18,11 @@ public class ActivityRequest {
     /** Unique ID of a device attached to a vehicle ({@code device_id}). */
     @QueryParameter("device_id")
     private String deviceId;
-    /** Only activities of this type ({@code type}). */
-    @QueryParameter("type")
+    /**
+     * Only activities of this type ({@code activity_type}, the name the C#, PHP and Node.js SDKs send to both
+     * endpoints).
+     */
+    @QueryParameter("activity_type")
     private ActivityType type;
     /** Unique ID of a member ({@code member_id}). */
     @QueryParameter("member_id")
