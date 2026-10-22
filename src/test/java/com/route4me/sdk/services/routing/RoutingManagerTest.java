@@ -210,6 +210,23 @@ public class RoutingManagerTest {
     }
 
     @Test
+    public void optimizationFlagsUseTheirApiNamesInTheJsonBody() throws Exception {
+        RoutingManager manager = manager();
+        http.respondWithFixture(200, "optimization.json");
+        OptimizationParameters request = optimizationParameters();
+        request.setProblemId("OPT-1");
+        request.setReoptimize(true);
+        request.setShowDirections(false);
+
+        manager.updateOptimization(request);
+
+        http.request().assertJson("optimization_problem_id", "OPT-1")
+                .assertJson("reoptimize", true)
+                .assertJson("show_directions", false)
+                .assertJsonLacks("problemId", "showDirections");
+    }
+
+    @Test
     public void reOptimizationByIdSendsIdAndFlagInTheQuery() throws Exception {
         RoutingManager manager = manager();
         http.respondWithFixture(200, "optimization_with_routes.json");
