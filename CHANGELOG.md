@@ -1,0 +1,88 @@
+# CHANGELOG
+
+This is the history of changes of the Route4Me Java SDK (`io.github.route4me:route4me-java-sdk`).
+
+> Please follow this [guide](https://keepachangelog.com/en/1.0.0/).
+
+## [1.17.0] - Unreleased
+
+The SDK still targets **Java 8**: the jar is built with `--release 8` and runs unchanged on Java 11, 17, 21 and later. CI tests it on JDK 8, 11, 17 and 21.
+
+This release fixes every open bug report (#16–#19, #31–#41), adds 27 managers and 243 API methods for the operations the coverage issues list (#42–#104), and hardens how the SDK handles the API key. It also adds an offline test suite of 716 tests behind a request guard, and Javadoc for the whole public API. Several fixes change behaviour that code may rely on, so read **Breaking changes** before upgrading.
+
+### Breaking changes
+
+**Source and binary compatibility**
+- **The SDK enums are immutable.** `setValue()` is removed from every enum, and their value fields are final (#40). No SDK code called the setters.
+- **`setGPS` returns the new `SetGpsResponse`** instead of `void` (#39). Callers compile unchanged but must be recompiled: the change is binary-incompatible.
+- **The public static `GeocoderWebSockets.geocoderWebSocket` is removed.** Each `GeocoderWebSockets` now has its own socket, so two geocoders no longer share, and close, one connection.
+- `OrderFilter` is now public, with chained setters. Its field `scheduled_for_YYMMDD` is renamed `scheduledForYYMMDD`, so the accessors change.
+- `Route.isUnrouted` and `Parameters.useMixedPickupDeliveryDemands` start as `null` and are sent only when set. The old accessors keep their signatures and return `false` when unset; new accessors `getUnrouted()`/`setUnrouted(Boolean)` and `getUseMixedPickupDeliveryDemands()`/`setUseMixedPickupDeliveryDemands(Boolean)` expose the three states.
+
+**Transport**
+- **Requests time out.** Connect and connection-request timeouts are 6,050 ms and the read timeout is 30,000 ms (`Manager.DEFAULT_CONNECT_TIMEOUT_MS`, `DEFAULT_SOCKET_TIMEOUT_MS`, `DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS`, each with a getter and setter). Before, a stuck call hung forever.
+- **`Manager` implements `Closeable`** and keeps one pooled HTTP client per instance. Reuse managers and `close()` them; a manager used after `close()` builds a new client. The pool grows to the thread count of a bulk geocode.
+- **API V5 requests send the key as `Authorization: Bearer <key>`** instead of the `api_key` query parameter, so the key no longer appears in URLs, proxy logs or server logs. V4 requests are unchanged.
+- **API V5 requests send `Accept: application/json, */*;q=0.8`.** Without it, API V5 answered errors with an HTML page, so their messages were lost. File exports still work.
+- **Redirects are followed only over https to the Route4Me API hosts.** Any other redirect fails with an `APIException` caused by a `RedirectException` (new class `http.Route4MeRedirectStrategy`).
+- **Query booleans are sent as `1` and `0`.** `false` was sent as the text `"false"`, which PHP reads as true; `getTerritory` sent its `orders` and `addresses` flags the same way.
+- **API V5 list and map query values use bracketed keys**, for example `ids[]=1&ids[]=2` and `filters[status]=1` (`QueryConverter.toBracketedParameters`). PHP keeps only the last value of a repeated plain key.
+- IDs in URL paths are percent-encoded. A `null`, empty, `.` or `..` ID throws `IllegalArgumentException` before any request.
+- JSON bodies are sent as `application/json; charset=UTF-8`, form bodies as UTF-8 (they were ISO-8859-1), and requests without a body send no `Content-Type`. Responses are decoded with their declared charset, or UTF-8.
+- The caller's `URIBuilder` is no longer modified. A response without a body (204) parses to `null`, or `""` for `String`.
+
+**Errors**
+- `APIException` carries the HTTP status (`getStatusCode`, 0 when there was no response), the body cut to 2,000 characters (`getResponseBody`), the parsed `errors`, V5 `error`, `code` and `messages` (`getErrors`, `getCode`, `getMessages`), the method and the URL with credentials redacted (`getMethod`, `getUrl`). `APIException(Exception)` keeps the cause (#19).
+- Its message formats changed: "Invalid status code N for METHOD URL: first error"; "Unexpected server response for ...: the body is not valid JSON for X"; "METHOD URL failed: reason".
+
+**Manager methods**
+- `updateTerritory` and `updateAvoidanceZone` send PUT with `territory_id` (#31). `getTerritory` leaves out `null` flags.
+- `updateOptimization` puts `optimization_problem_id`, `reoptimize` and `show_directions` in the query; `reOptimizationByOptimizationID` sends no body.
+- `deleteRoutes` joins the IDs without a trailing comma (#41); with no IDs, or a `null` or empty ID, it throws `IllegalArgumentException`.
+- `getOrders` with a filter sends POST with a JSON body. `OrderRequest` fields and `DisplayType` constants serialise with their API names (#34).
+- Geocoding (#32): `bulkGeocoder` returns one result per input, in input order, and no longer drops unmatched addresses. It enforces a deadline of `maxTimeout` per round of `maxThreads` addresses; the default `maxTimeout` goes from 500 to 30,000 ms (`GeocoderOptions.DEFAULT_MAX_TIMEOUT_MS`), since the old value never applied. `maxRetries` is the number of attempts, and 0 means one attempt.
+- Null handling (#35, #36): `logActivity` throws `APIException` on an empty answer or a missing status; the `insertBreak*` methods throw `IllegalArgumentException` for a `null` amount or no route IDs; the `delete*` methods return `false` on an empty answer; several list getters return `null` on an empty body.
+- `getContact` sends the plain ID (#33) and returns `null` when nothing matches.
+- In classes of 1.16.1:
+  - `Activity` reads `route_destination_id` (it mapped the typo `route_destination_od`), and `ActivityRequest` sends its type filter as `activity_type`, as C#, PHP and Node do (it sent `type`).
+  - **`Order.getCustomUserFields()` returns `List<OrderCustomUserField>`** (it was typed with a class that only existed as commented-out code).
+  - `RouteBreaksManager` rejects a `null` break duration, and `DynamicInsertManager` a `null` latitude or longitude, with `IllegalArgumentException` before sending; the API refused those requests anyway.
+  - `RoutesRequest` gains `route_path_output` and `compress_path_points`; `Territory` gains `addresses_count` and `orders_count`; `TrackingHistory` gains its speed unit, member and source fields.
+- **The V5 managers are new in this release** (they were never released before), so their request and reply classes follow the specs as they are now. Among the fixes made while covering the issues: vehicle, vehicle profile, capacity profile and team member updates use PATCH; `searchVehicles` posts its body; the address book list, batch update and export bodies, the order search, batch and archive bodies, and the customer `order_by` match the spec; barcode scans send `lng`; `schedule_blacklist` is a list of `{enabled, start, end}`; team bulk inserts go to `/team/bulk-insert` (the spec's `/team/users/bulk-insert` answers 405).
+- **Booleans that the API sends as `1`/`0` are read correctly** (`LenientBooleanAdapter`, on every manager's JSON mapper). Gson rejected them, so a whole reply failed to parse, for example the vehicle profiles.
+
+### Security
+- No credentials in `toString()`: `User`, `AccountProfile`, `TelematicsConnection`, `Registration`, `UserRegistration`, `TeamMemberRequest`, `TelematicsMemberRegister` and `LocationCombinedDataItem` no longer print API keys, passwords, session IDs, activation keys or connection tokens. A test checks every model.
+- `APIException` and the logs redact credential query parameters by name (`api_key`, and any name ending in `api_key`, `apikey`, `_token`, `_secret` or `password`, such as `organization_api_key`). New utility class `utils.Sanitizer`.
+- Dependencies: opencsv is removed (it brought old `commons-beanutils`); `log4j-api` 2.25.5, `gson` 2.14.0; `okhttp` 4.12.0 and `org.json` 20260814 are pinned under `socket.io-client` 1.0.2. osv-scanner reports no known vulnerability; one advisory for socket.io-client is ignored until 2027-04-30, with the reason in `osv-scanner.toml` (2.x cannot connect to `validator.route4me.com`). Gradle users: see `SECURITY.md` for the constraints Gradle does not apply.
+- New `SECURITY.md`: how to report a vulnerability and which versions get fixes.
+
+### Added
+- **API coverage (#42–#104).** 27 new managers and 243 new manager methods since 1.16.1, for the Route4Me API V4 and V5 operations the coverage issues list. Every request shape comes from the OpenAPI specs, then the C# SDK; the issues' own paths were often wrong. Each method has a unit test that pins its HTTP method, URL, query and body, and a runnable example.
+  - New managers: `AccountProfileManager`, `AddressBarcodeManager`, `AddressBookManagerV5`, `AuthHistoryManager`, `AutocompleteManager`, `ConfigurationSettingsManager`, `ConfigurationSettingsManagerV5`, `CustomerManager`, `DistanceManager`, `DriverReviewManager`, `DriversManager`, `FacilityManager`, `FileUploadManager`, `LocationManager`, `NotesManagerV5`, `OptimizationProfileManager`, `OrderManagerV5`, `PodWorkflowManager`, `RouteCustomDataManager`, `RouteDestinationsManager`, `RouteStatusManager`, `RoutingManagerV5`, `SchedulesManager`, `TeamManagementManagerV5`, `TerritoriesManagerV5`, `TrackingHistoryManager` and `VehiclesManagerV5` (with vehicle and capacity profiles).
+  - New methods on the 1.16.1 managers, for example `RoutingManager` (hybrid optimization, merge, share, mark departed and visited), `AddressBookManager` (groups, searches), `OrdersManager` (custom user fields, order updates), `TrackingManager` (device location history, user locations, batch pings, `findAsset`), `GeocodingManager` (batch geocoding), `UsersManager` (authentication, session validation) and `ActivityManager` (the activity feed).
+  - Methods that start a background job return an `AsyncJob` with the job ID (from `X-Job-Id` or `Location`), so the job status and result calls can follow it. They are the address book update, delete and export by areas, `deleteContacts` and the exports, `LocationManager.exportLocations`, the five vehicle bulk calls, `TeamManagementManagerV5.bulkCreateTeamMembers` and `TerritoriesManagerV5.createAutomaticTerritoriesJob`. Subclasses can use `Manager.makeJobRequest` for the same.
+- `TravelMode.BICYCLING` (#16), `RequestMethod.PATCH`.
+- `Route`: the 15 fields C# has and Java lacked, such as `member_first_name`, `approved_for_execution` and `facility_ids`; `original_route` is typed as `Route`; new `BundledItem` (#17).
+- `Address`: `required_skills` and 8 more fields from C#; new `OrderInventory` (#18).
+- Telematics V5: `getTelematicsVendorsV5()`, `getTelematicsVendorsV5(TelematicsVendorsV5Request)`, `getTelematicsVendorV5(long)`.
+- `forwardGeocode(builder, clazz, maxRetries)`.
+
+### Deprecated
+- The 11 `TelematicsManager` methods on `telematics.route4me.com`, which is retired (it answers 301 to the marketing site), and `TELEMATICS_VENDORS_V4`. Use the V5 vendor methods. Removal comes in the next major version.
+- `RoutingManager.resequenceReoptimizeRoute` (`/api.v3/route/reoptimize_2.php`, `[Obsolete]` in C#): use `updateRoute(Route, RouteUpdateParameters)` with `reoptimize`.
+- Not added, with the reason in the issue comments: the rapid street-data service (404), the retired hosts `oa.route4me.com`, `telematics.route4me.com` and `apps.route4me.com/depots`, the obsolete route fallback endpoints (404), web-session calls, and endpoints that are not Route4Me's (Chamberlain MyQ, an OCR service over plain HTTP).
+
+### Fixed
+- #31 territory updates used DELETE. #32 busy-wait in `bulkGeocoder`. #33 quoted `address_id`. #34 `OrderRequest` field names. #35 unboxing NPE. #36 `DynamicInsertManager` NPE. #37 `return` in `finally`. #38 telematics searches delegated to the wrong method. #39 `setGPS` (it already used query parameters; it now returns the reply). #40 mutable enums. #41 trailing comma in `deleteRoutes`.
+- `Constants.DeviceType` and `OptimizationParameters` serialise with their API names.
+- `GeocoderWebSockets` unsubscribes from `addresses_bulk` on close, and sizes its download chunks from the job size.
+
+### Examples
+- The examples moved to `src/examples/java` and compile with every build (they were excluded before), but are not in the jar. Each has a class comment saying what it shows and which method it calls, and reads the key from `R4M_API_KEY`.
+- 369 examples, one for each new method; the example issues (#105–#109) each get theirs.
+
+### Internal
+- 716 offline unit tests (there were none in the repo): every request is checked against an endpoint registry built from the Route4Me OpenAPI specs, with the host, the scheme and the key placement. JaCoCo enforces a coverage floor.
+- Checkstyle 9.3 with zero violations, `javac -Xlint:all -Werror`, and Javadoc doclint on every build. Every public type, method and field has Javadoc.
+- CI: JDK 8, 11, 17 and 21; Actions pinned to commit SHAs; `permissions: contents: read`; a gitleaks job. The Travis config is removed.
