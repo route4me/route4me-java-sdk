@@ -162,6 +162,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.4.0</version>
+                <configuration>
+                    <!-- Every doclint check except `missing`, which Checkstyle enforces (it also sees
+                         the Javadoc of the Lombok fields). A doclint error fails the build. -->
+                    <doclint>all,-missing</doclint>
+                    <failOnWarnings>true</failOnWarnings>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
