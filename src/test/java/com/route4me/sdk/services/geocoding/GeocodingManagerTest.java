@@ -37,8 +37,8 @@ public class GeocodingManagerTest {
     private static final String ADDRESS_EP = "/api/address.php";
     private static final String GEOCODER_EP = "/api/geocoder.php";
     private static final String DETAILED_RESULT =
-            json("[{'name':'100 Example "
-                    + "St','type':'street','confidence':'high','coordinates':{'lat':40.1,'lng':-74.1}}]");
+            json("[{'name':'100 Example St','type':'street','confidence':'high',"
+                    + "'coordinates':{'lat':40.1,'lng':-74.1}}]");
 
     @Rule
     public final MockHttp http = new MockHttp();
