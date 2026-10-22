@@ -35,6 +35,7 @@ public class GeocodingManagerTest {
 
     private static final String HOST = "api.route4me.com";
     private static final String ADDRESS_EP = "/api/address.php";
+    private static final String GEOCODER_EP = "/api/geocoder.php";
     private static final String DETAILED_RESULT =
             json("[{'name':'100 Example "
                     + "St','type':'street','confidence':'high','coordinates':{'lat':40.1,'lng':-74.1}}]");
@@ -366,6 +367,44 @@ public class GeocodingManagerTest {
 
         assertEquals(1, results.size());
         assertEquals("invalid", results.get(0).getGeocodings().get(0).getType());
+    }
+
+    // ------------------------------------------------------------------ /api/geocoder.php
+
+    @Test
+    public void batchGeocodingPostsTheAddressesAsAForm() throws Exception {
+        GeocodingManager manager = manager();
+        http.respond(200, json("[{'address':'100 Example St','lat':40.1,'lng':-74.1,'original':'100 Example St'}]"))
+                .respond(200, "Invalid or missing addresses.", "text/plain");
+
+        String answer = manager.batchGeocoding("100 Example St||200 Sample Ave", "json");
+        String rejected = manager.batchGeocoding(null, null);
+
+        http.request(0).assertEndpoint("POST", HOST, GEOCODER_EP).assertApiKeyInQuery()
+                .assertQuery("format", "json")
+                .assertContentType("application/x-www-form-urlencoded")
+                .assertForm("addresses", "100 Example St||200 Sample Ave")
+                .assertForm("strExportFormat", "json")
+                .assertNoQuery("addresses");
+        http.request(1).assertNoQuery("format").check("no form fields", http.request(1).formFields().isEmpty());
+        assertTrue(answer.contains("\"lat\":40.1"));
+        assertEquals("Invalid or missing addresses.", rejected);
+    }
+
+    @Test
+    public void geocodeAddressesSendsTheQueryOnly() throws Exception {
+        GeocodingManager manager = manager();
+        http.respondToAll(200, json("[{'address':'100 Example St','lat':40.1,'lng':-74.1}]"));
+
+        String answer = manager.geocodeAddresses("40.1,-74.1", "json");
+        manager.geocodeAddresses(null, null);
+
+        http.request(0).assertEndpoint("GET", HOST, GEOCODER_EP).assertApiKeyInQuery()
+                .assertQuery("addresses", "40.1,-74.1")
+                .assertQuery("format", "json")
+                .assertNoBody();
+        http.request(1).assertNoQuery("addresses").assertNoQuery("format");
+        assertTrue(answer.startsWith("["));
     }
 
     // ------------------------------------------------------------------ JSON upload / websockets

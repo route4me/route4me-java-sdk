@@ -3,6 +3,8 @@ package com.route4me.sdk.services.facilities;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -93,11 +95,15 @@ public class FacilityManager extends Manager {
      * Creates a facility: {@code POST https://wh.route4me.com/modules/api/v5.0/facilities}, with the request as the
      * JSON body.
      *
-     * @param request the facility
+     * @param request the facility: its alias, address, coordinates and types are required
      * @return the created facility
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if the request is {@code null} or a required field is missing
      */
     public FacilityResource createFacility(FacilityCreateRequest request) throws APIException {
+        requireFields(request == null, request == null ? null : request.getFacilityAlias(),
+                request == null ? null : request.getAddress(), request == null ? null : request.getCoordinates(),
+                request == null ? null : request.getFacilityTypes());
         URIBuilder builder = v5Builder(FACILITIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), FacilityResource.class);
     }
@@ -107,12 +113,17 @@ public class FacilityManager extends Manager {
      * request as the JSON body.
      *
      * @param facilityId the facility ID
-     * @param request the new values of the facility
+     * @param request the new values of the facility: its alias, address, coordinates and types are required
      * @return the updated facility
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if the facility ID is {@code null} or empty, the request is {@code null} or a
+     *                                  required field is missing
      */
     public FacilityResource updateFacility(String facilityId, FacilityUpdateRequest request) throws APIException {
         URIBuilder builder = v5Builder(FACILITIES_EP, facilityId);
+        requireFields(request == null, request == null ? null : request.getFacilityAlias(),
+                request == null ? null : request.getAddress(), request == null ? null : request.getCoordinates(),
+                request == null ? null : request.getFacilityTypes());
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), FacilityResource.class);
     }
 
@@ -149,5 +160,38 @@ public class FacilityManager extends Manager {
     public FacilityTypeResource getFacilityType(int typeId) throws APIException {
         URIBuilder builder = v5Builder(FACILITY_TYPES_EP, typeId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, FacilityTypeResource.class);
+    }
+
+    /**
+     * Checks the fields the facilities spec requires in a create or update body.
+     *
+     * @param noRequest whether the request is {@code null}
+     * @param alias the {@code facility_alias}
+     * @param address the {@code address}
+     * @param coordinates the {@code coordinates}
+     * @param types the {@code facility_types}
+     * @throws IllegalArgumentException if the request is {@code null} or a field is {@code null}
+     */
+    private static void requireFields(boolean noRequest, Object alias, Object address, Object coordinates,
+            Object types) {
+        if (noRequest) {
+            throw new IllegalArgumentException("The request is required");
+        }
+        List<String> missing = new ArrayList<>();
+        if (alias == null) {
+            missing.add("facility_alias");
+        }
+        if (address == null) {
+            missing.add("address");
+        }
+        if (coordinates == null) {
+            missing.add("coordinates");
+        }
+        if (types == null) {
+            missing.add("facility_types");
+        }
+        if (!missing.isEmpty()) {
+            throw new IllegalArgumentException("Missing required field(s): " + String.join(", ", missing));
+        }
     }
 }

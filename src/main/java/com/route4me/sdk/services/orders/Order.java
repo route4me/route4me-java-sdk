@@ -177,7 +177,7 @@ public class Order {
     private Integer doneDayID;
     /** Custom user fields ({@code custom_user_fields}). */
     @SerializedName("custom_user_fields")
-    private List<OrderCustomUserFields> customUserFields;
+    private List<OrderCustomUserField> customUserFields;
     /** Group ({@code group}). */
     @SerializedName("group")
     private String group;

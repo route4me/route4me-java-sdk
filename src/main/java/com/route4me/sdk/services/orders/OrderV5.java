@@ -114,9 +114,16 @@ public class OrderV5 {
     @SerializedName("day_added_YYMMDD")
     private String dayAdded;
 
-    /** The date the order is scheduled for, as {@code YYYY-MM-DD} ({@code day_scheduled_for_YYYYMMDD}). */
-    @SerializedName("day_scheduled_for_YYYYMMDD")
+    /**
+     * The date the order is scheduled for, as {@code YYYY-MM-DD}, as the API returns it ({@code
+     * day_scheduled_for_YYMMDD}).
+     */
+    @SerializedName("day_scheduled_for_YYMMDD")
     private String dayScheduledFor;
+
+    /** The date to schedule the order for, as {@code YYYY-MM-DD}, in a create or update body. */
+    @SerializedName("date_scheduled_for")
+    private String dateScheduledFor;
 
     /** Timestamp of an order creation ({@code created_timestamp}). */
     @SerializedName("created_timestamp")

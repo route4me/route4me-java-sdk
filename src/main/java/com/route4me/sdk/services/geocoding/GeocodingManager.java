@@ -27,13 +27,16 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import lombok.Getter;
 import lombok.Setter;
+import org.apache.http.HttpEntity;
+import org.apache.http.NameValuePair;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.message.BasicNameValuePair;
 
 /**
  * Geocodes addresses through the V4 API ({@code https://api.route4me.com}): one address at a time with {@link
- * #geocode(String)}, many
- * in parallel with {@link #bulkGeocoder(List, GeocoderOptions)}, or as an uploaded batch that
- * {@link GeocoderWebSockets} geocodes over a websocket.
+ * #geocode(String)}, several in one request with {@link #batchGeocoding(String, String)} or {@link
+ * #geocodeAddresses(String, String)}, many in parallel with {@link #bulkGeocoder(List, GeocoderOptions)}, or as an
+ * uploaded batch that {@link GeocoderWebSockets} geocodes over a websocket.
  */
 public class GeocodingManager extends Manager {
 
@@ -70,6 +73,56 @@ public class GeocodingManager extends Manager {
         AddressesJSONBody body = new AddressesJSONBody(addresses);
 
         return makeJSONRequest(RequestMethod.POST, builder, body, null, GeocoderResponse.class);
+    }
+
+    /**
+     * Geocodes several addresses in one request: {@code POST https://api.route4me.com/api/geocoder.php?format=...},
+     * with {@code addresses} and {@code strExportFormat} as form fields. Send coordinates ({@code lat,lng}) instead of
+     * addresses to reverse geocode them.
+     *
+     * <p>C# {@code Route4MeManager.Geocoding} sends {@code addresses} and {@code format} in the query, and C#
+     * {@code BatchGeocoding} and the Node.js SDK send {@code addresses} and {@code strExportFormat} as a form; this
+     * method sends the format in both places and the addresses as a form, so long lists fit.
+     *
+     * @param addresses the addresses, separated by new lines or {@code ||}
+     * @param format the format of the answer: {@code json}, {@code xml} or {@code csv}; {@code null} leaves it to
+     *               the API
+     * @return the answer as text, in the requested format
+     * @throws APIException if the request fails or the server answers with an error status
+     */
+    public String batchGeocoding(String addresses, String format) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(GEOCODING_EP);
+        List<NameValuePair> form = new ArrayList<>();
+        if (format != null) {
+            builder.setParameter("format", format);
+            form.add(new BasicNameValuePair("strExportFormat", format));
+        }
+        if (addresses != null) {
+            form.add(new BasicNameValuePair("addresses", addresses));
+        }
+        return this.makeRequest(RequestMethod.POST, builder, form, String.class);
+    }
+
+    /**
+     * Geocodes addresses, or reverse geocodes coordinates, with the query only: {@code GET
+     * https://api.route4me.com/api/geocoder.php?addresses=...&format=...}, as the Node.js SDK's {@code
+     * Geocoding.forward} and {@code Geocoding.reverse} send it.
+     *
+     * @param addresses the addresses, or coordinates as {@code lat,lng} ({@code addresses})
+     * @param format the format of the answer: {@code json}, {@code xml} or {@code csv} ({@code format}); {@code null}
+     *               leaves it to the API
+     * @return the answer as text, in the requested format
+     * @throws APIException if the request fails or the server answers with an error status
+     */
+    public String geocodeAddresses(String addresses, String format) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(GEOCODING_EP);
+        if (addresses != null) {
+            builder.setParameter("addresses", addresses);
+        }
+        if (format != null) {
+            builder.setParameter("format", format);
+        }
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, String.class);
     }
 
     /**

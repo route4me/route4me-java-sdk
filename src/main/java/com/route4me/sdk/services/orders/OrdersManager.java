@@ -1,6 +1,9 @@
 package com.route4me.sdk.services.orders;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
@@ -11,6 +14,7 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.Setter;
+import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.util.List;
@@ -25,6 +29,8 @@ public class OrdersManager extends Manager {
 
     /** The path of the orders, on {@code api.route4me.com}. */
     public static final String ORDERS_EP = "/api.v4/order.php";
+    private static final String ORDER_CUSTOM_FIELDS_EP = "/api.v4/order_custom_user_fields.php";
+    private static final String ORDERS_UPDATES_EP = "/api.v4/orders/changes.php";
 
     /**
      * Creates a manager that sends its requests with an API key.
@@ -203,6 +209,89 @@ public class OrdersManager extends Manager {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
         return this.makeJSONRequest(RequestMethod.DELETE, builder, new DeleteOrdersRequest(orderIds),
                 StatusResponse.class);
+    }
+
+    /**
+     * Lists the custom user fields of orders: {@code GET https://api.route4me.com/api.v4/order_custom_user_fields.php}.
+     *
+     * <p>The V4 spec describes the answer as {@code {"data": [...]}}, while the C# SDK reads a bare array; both are
+     * accepted.
+     *
+     * @return the fields, or {@code null} when the answer holds no list
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public List<OrderCustomUserField> getOrderCustomUserFields() throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(ORDER_CUSTOM_FIELDS_EP);
+        JsonElement reply = this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, JsonElement.class);
+        JsonElement list = reply != null && reply.isJsonObject() ? reply.getAsJsonObject().get("data") : reply;
+        if (list == null || !list.isJsonArray()) {
+            return null;
+        }
+        try {
+            return this.gson.fromJson(list, new TypeToken<List<OrderCustomUserField>>() {
+            }.getType());
+        } catch (JsonParseException | IllegalStateException ex) {
+            throw new APIException("Could not read the order custom user fields", ex);
+        }
+    }
+
+    /**
+     * Creates a custom user field of orders: {@code POST
+     * https://api.route4me.com/api.v4/order_custom_user_fields.php}, with the field as the JSON body.
+     *
+     * @param field the field: its name, label, type, and optionally its value and type info
+     * @return the result, with the created field
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public OrderCustomUserFieldResponse createOrderCustomUserField(OrderCustomUserField field) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(ORDER_CUSTOM_FIELDS_EP);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(field),
+                OrderCustomUserFieldResponse.class);
+    }
+
+    /**
+     * Updates a custom user field of orders: {@code PUT
+     * https://api.route4me.com/api.v4/order_custom_user_fields.php}, with the field as the JSON body.
+     *
+     * @param field the field, with its {@code order_custom_field_id} and the new values
+     * @return the result, with the updated field
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public OrderCustomUserFieldResponse updateOrderCustomUserField(OrderCustomUserField field) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(ORDER_CUSTOM_FIELDS_EP);
+        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(field),
+                OrderCustomUserFieldResponse.class);
+    }
+
+    /**
+     * Removes a custom user field of orders: {@code DELETE
+     * https://api.route4me.com/api.v4/order_custom_user_fields.php}, with {@code {"order_custom_field_id": ...}} as
+     * the JSON body.
+     *
+     * @param orderCustomFieldId the ID of the field
+     * @return the result
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public OrderCustomUserFieldResponse removeOrderCustomUserField(long orderCustomFieldId) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(ORDER_CUSTOM_FIELDS_EP);
+        OrderCustomUserField field = new OrderCustomUserField();
+        field.setOrderCustomFieldId(orderCustomFieldId);
+        return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(field),
+                OrderCustomUserFieldResponse.class);
+    }
+
+    /**
+     * Lists the orders changed since a time: {@code GET
+     * https://api.route4me.com/api.v4/orders/changes.php?last_known_ts=...}.
+     *
+     * @param lastKnownTs the time of the last known change, as a Unix timestamp ({@code last_known_ts}, required)
+     * @return the changed orders
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public OrdersUpdatesResponse getOrdersUpdates(long lastKnownTs) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(ORDERS_UPDATES_EP);
+        builder.setParameter("last_known_ts", Long.toString(lastKnownTs));
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, OrdersUpdatesResponse.class);
     }
 
     @Getter

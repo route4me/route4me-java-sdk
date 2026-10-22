@@ -34,6 +34,14 @@ public class Territory {
     @SerializedName("orders")
     private List<Integer> orders;
 
+    /** The number of addresses in the territory, from the V5 API when asked for ({@code addresses_count}). */
+    @SerializedName("addresses_count")
+    private Integer addressesCount;
+
+    /** The number of orders in the territory, from the V5 API when asked for ({@code orders_count}). */
+    @SerializedName("orders_count")
+    private Integer ordersCount;
+
     /** The shape of the territory ({@code territory}). */
     @SerializedName("territory")
     private TerritoryData territory;

@@ -4,6 +4,7 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
@@ -42,6 +43,21 @@ public class FacilityManagerTest {
         request.setCoordinates(coordinates);
         request.setFacilityTypes(Collections.singletonList(type));
         request.setStatus(1);
+        return request;
+    }
+
+    /** Builds a sample facility update request with fake data. */
+    private static FacilityUpdateRequest updateRequest() {
+        FacilityCoordinates coordinates = new FacilityCoordinates();
+        coordinates.setLat(40.6);
+        coordinates.setLng(-74.6);
+        FacilityTypeAssignment type = new FacilityTypeAssignment();
+        type.setFacilityTypeId(2);
+        FacilityUpdateRequest request = new FacilityUpdateRequest();
+        request.setFacilityAlias("South hub");
+        request.setAddress("200 Example St");
+        request.setCoordinates(coordinates);
+        request.setFacilityTypes(Collections.singletonList(type));
         return request;
     }
 
@@ -108,12 +124,52 @@ public class FacilityManagerTest {
     public void updateFacilityPutsTheFacility() throws Exception {
         FacilityManager manager = manager();
         http.respond(200, FACILITY);
-        FacilityUpdateRequest request = new FacilityUpdateRequest();
-        request.setFacilityAlias("South hub");
 
-        manager.updateFacility("FAC-1", request);
+        manager.updateFacility("FAC-1", updateRequest());
 
-        http.request().assertEndpoint("PUT", HOST, FACILITIES_EP + "/FAC-1").assertJson("facility_alias", "South hub");
+        http.request().assertEndpoint("PUT", HOST, FACILITIES_EP + "/FAC-1").assertApiKeyAsBearer()
+                .assertJson("facility_alias", "South hub")
+                .assertJson("address", "200 Example St")
+                .assertJson("coordinates.lat", 40.6)
+                .assertJson("facility_types[0].facility_type_id", 2);
+    }
+
+    @Test
+    public void requiredFieldsAreCheckedBeforeSending() {
+        final FacilityManager manager = manager();
+        final FacilityCreateRequest create = createRequest();
+        create.setCoordinates(null);
+        final FacilityUpdateRequest update = new FacilityUpdateRequest();
+        update.setFacilityAlias("South hub");
+
+        IllegalArgumentException createError = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.createFacility(create));
+        IllegalArgumentException updateError = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateFacility("FAC-1", update));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createFacility(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateFacility("FAC-1", null));
+
+        http.assertNoRequests();
+        assertEquals("Missing required field(s): coordinates", createError.getMessage());
+        assertEquals("Missing required field(s): address, coordinates, facility_types", updateError.getMessage());
+    }
+
+    @Test
+    public void facilityIdsAreRejectedWhenEmptyAndEncodedWhenTheyHaveASlash() throws Exception {
+        final FacilityManager manager = manager();
+
+        for (final String id : Arrays.asList(null, "", ".", "..")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getFacility(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateFacility(id, updateRequest()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteFacility(id));
+        }
+        http.assertNoRequests();
+
+        http.respond(200, FACILITY).respond(200, "[" + FACILITY + "]");
+        manager.updateFacility("FAC/1", updateRequest());
+        manager.deleteFacility("FAC/../1");
+        assertEquals(FACILITIES_EP + "/FAC%2F1", http.request(0).getUri().getRawPath());
+        assertEquals(FACILITIES_EP + "/FAC%2F..%2F1", http.request(1).getUri().getRawPath());
     }
 
     @Test
@@ -126,6 +182,7 @@ public class FacilityManagerTest {
         http.request().assertEndpoint("DELETE", HOST, FACILITIES_EP + "/FAC-1").assertNoBody();
         assertEquals("FAC-1", deleted[0].getFacilityId());
     }
+
     @Test
     public void getFacilityTypePutsTheIdInThePath() throws Exception {
         FacilityManager manager = manager();
