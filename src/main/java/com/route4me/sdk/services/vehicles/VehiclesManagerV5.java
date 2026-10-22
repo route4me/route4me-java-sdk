@@ -12,6 +12,13 @@ import org.apache.http.client.utils.URIBuilder;
  * ({@code https://wh.route4me.com/modules/api/v5.0/vehicles}, {@code
  * https://wh.route4me.com/modules/api/v5.0/vehicle-profiles} and {@code
  * https://wh.route4me.com/modules/api/v5.0/vehicle-capacity-profiles}).
+ *
+ * <p>The bulk methods ({@link #activateVehicles(String[])}, {@link #deactivateVehicles(String[])},
+ * {@link #deleteVehicles(String[])} and {@link #restoreVehicles(String[])}) start an asynchronous job: the API
+ * answers {@code 202 Accepted}, usually with an empty body and the job ID in the {@code X-Job-Id} and
+ * {@code Location} response headers, which this manager cannot read yet. They return {@code null} for an empty
+ * body, or the {@link VehicleJobResponse} the API sends; when it has a job ID ({@code job_id}), follow the job with
+ * {@link #getVehicleJobStatus(String)} and {@link #getVehicleJobResult(String)}.
  */
 public class VehiclesManagerV5 extends Manager {
 
@@ -60,25 +67,34 @@ public class VehiclesManagerV5 extends Manager {
         return builder;
     }
 
+    /** Throws {@link IllegalArgumentException} when a field the API requires is {@code null}. */
+    private static void require(Object value, String name) {
+        if (value == null) {
+            throw new IllegalArgumentException(name + " is required");
+        }
+    }
+
+    /** Throws {@link IllegalArgumentException} when a text the API requires is {@code null} or empty. */
+    private static void requireText(String value, String name) {
+        if (value == null || value.isEmpty()) {
+            throw new IllegalArgumentException(name + " is required");
+        }
+    }
+
     // --- Vehicle CRUD ---
 
     /**
-     * Lists the vehicles: {@code GET https://wh.route4me.com/modules/api/v5.0/vehicles}.
+     * Lists the vehicles, all at once: {@code GET https://wh.route4me.com/modules/api/v5.0/vehicles}, with the
+     * filters as query parameters. Set the {@code show} filter of {@link VehicleListRequest} to get the vehicles by
+     * state ({@code active}, {@code pending}, {@code deleted} or {@code all}).
      *
-     * @param page the page number, from 1; {@code null} leaves {@code page} out
-     * @param perPage the number of items per page; {@code null} leaves {@code per_page} out
+     * @param filters the filters; {@code null}, or a {@code null} field, leaves them out
      * @return the vehicles
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public VehicleV5[] getVehicles(Integer page, Integer perPage) throws APIException {
+    public VehicleV5[] getVehicles(VehicleListRequest filters) throws APIException {
         URIBuilder builder = v5Builder(VEHICLES_EP);
-        if (page != null) {
-            builder.setParameter("page", String.valueOf(page));
-        }
-        if (perPage != null) {
-            builder.setParameter("per_page", String.valueOf(perPage));
-        }
-        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleV5[].class);
+        return this.makeJSONRequest(RequestMethod.GET, builder, filters, VehicleV5[].class);
     }
 
     /**
@@ -97,27 +113,31 @@ public class VehiclesManagerV5 extends Manager {
      * Creates a vehicle: {@code POST https://wh.route4me.com/modules/api/v5.0/vehicles}, with the vehicle as the JSON
      * body.
      *
-     * @param vehicle the vehicle
+     * @param vehicle the vehicle; {@code vehicle_alias} is required
      * @return the created vehicle
+     * @throws IllegalArgumentException if {@code vehicle} or its alias is {@code null} or empty; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 createVehicle(VehicleV5 vehicle) throws APIException {
+        require(vehicle, "vehicle");
+        requireText(vehicle.getVehicleAlias(), "vehicle_alias");
         URIBuilder builder = v5Builder(VEHICLES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(vehicle), VehicleV5.class);
     }
 
     /**
-     * Updates a vehicle: {@code PUT https://wh.route4me.com/modules/api/v5.0/vehicles/{vehicleId}}, with the vehicle as
-     * the JSON body.
+     * Updates a vehicle: {@code PATCH https://wh.route4me.com/modules/api/v5.0/vehicles/{vehicleId}}, with the
+     * vehicle as the JSON body. Only the fields that are set are sent, so the others keep their value.
      *
      * @param vehicleId the vehicle ID
      * @param vehicle the new values
      * @return the updated vehicle
+     * @throws IllegalArgumentException if {@code vehicleId} is {@code null} or empty; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 updateVehicle(String vehicleId, VehicleV5 vehicle) throws APIException {
         URIBuilder builder = v5Builder(VEHICLES_EP, vehicleId);
-        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(vehicle), VehicleV5.class);
+        return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(vehicle), VehicleV5.class);
     }
 
     /**
@@ -133,27 +153,35 @@ public class VehiclesManagerV5 extends Manager {
     }
 
     /**
-     * Searches the vehicles: {@code GET https://wh.route4me.com/modules/api/v5.0/vehicles/search?search=...}.
+     * Finds where some vehicles are, and how far they are from a location: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/vehicles/search}, with {@code {"vehicle_ids": [...], "lat": ...,
+     * "lng": ...}} as the JSON body.
      *
-     * @param search the text to search for
-     * @return the matching vehicles
+     * @param request the vehicle IDs and the location; all its fields are required
+     * @return one result per vehicle found
+     * @throws IllegalArgumentException if {@code request} or one of its fields is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public VehicleV5[] searchVehicles(String search) throws APIException {
+    public VehicleSearchResult[] searchVehicles(VehicleSearchRequest request) throws APIException {
+        require(request, "request");
+        require(request.getVehicleIds(), "vehicle_ids");
+        require(request.getLat(), "lat");
+        require(request.getLng(), "lng");
         URIBuilder builder = v5Builder(VEHICLES_SEARCH_EP);
-        builder.setParameter("search", search);
-        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleV5[].class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), VehicleSearchResult[].class);
     }
 
     /**
      * Finds a vehicle by its license plate: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/vehicles/license?vehicle_license_plate=...}.
      *
-     * @param licensePlate the license plate
-     * @return the vehicle
+     * @param licensePlate the license plate, at most 7 characters
+     * @return the vehicle, under {@code data.vehicle}
+     * @throws IllegalArgumentException if {@code licensePlate} is {@code null} or empty; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleResponse getVehicleByLicensePlate(String licensePlate) throws APIException {
+        requireText(licensePlate, "vehicle_license_plate");
         URIBuilder builder = v5Builder(VEHICLES_LICENSE_EP);
         builder.setParameter("vehicle_license_plate", licensePlate);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleResponse.class);
@@ -176,103 +204,123 @@ public class VehiclesManagerV5 extends Manager {
     // --- Bulk Operations ---
 
     /**
-     * Activates vehicles: {@code POST https://wh.route4me.com/modules/api/v5.0/vehicles/bulk/activate}, with {@code
-     * {"vehicle_ids": [...]}} as the JSON body.
+     * Activates vehicles, as an asynchronous job: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/vehicles/bulk/activate}, with {@code {"vehicle_ids": [...]}} as the
+     * JSON body.
      *
-     * @param vehicleIds the vehicle IDs
-     * @return the activated vehicles
+     * @param vehicleIds the vehicle IDs; required
+     * @return {@code null} when the API answers {@code 202 Accepted} with an empty body, as it documents; otherwise
+     *     the job it sends
+     * @throws IllegalArgumentException if {@code vehicleIds} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public VehiclesResults activateVehicles(String[] vehicleIds) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLES_BULK_ACTIVATE_EP);
-        VehicleIdsRequest request = new VehicleIdsRequest();
-        request.setVehicleIds(vehicleIds);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), VehiclesResults.class);
+    public VehicleJobResponse activateVehicles(String[] vehicleIds) throws APIException {
+        return this.startBulkJob(VEHICLES_BULK_ACTIVATE_EP, vehicleIds);
     }
 
     /**
-     * Deactivates vehicles: {@code POST https://wh.route4me.com/modules/api/v5.0/vehicles/bulk/deactivate}, with {@code
-     * {"vehicle_ids": [...]}} as the JSON body.
+     * Deactivates vehicles, as an asynchronous job: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/vehicles/bulk/deactivate}, with {@code {"vehicle_ids": [...]}} as the
+     * JSON body.
      *
-     * @param vehicleIds the vehicle IDs
-     * @return the deactivated vehicles
+     * @param vehicleIds the vehicle IDs; required
+     * @return {@code null} when the API answers {@code 202 Accepted} with an empty body, as it documents; otherwise
+     *     the job it sends
+     * @throws IllegalArgumentException if {@code vehicleIds} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public VehicleV5[] deactivateVehicles(String[] vehicleIds) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLES_BULK_DEACTIVATE_EP);
-        VehicleIdsRequest request = new VehicleIdsRequest();
-        request.setVehicleIds(vehicleIds);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), VehicleV5[].class);
+    public VehicleJobResponse deactivateVehicles(String[] vehicleIds) throws APIException {
+        return this.startBulkJob(VEHICLES_BULK_DEACTIVATE_EP, vehicleIds);
     }
 
     /**
-     * Deletes vehicles: {@code POST https://wh.route4me.com/modules/api/v5.0/vehicles/bulk/delete}, with {@code
-     * {"vehicle_ids": [...]}} as the JSON body.
+     * Deletes vehicles, as an asynchronous job: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/vehicles/bulk/delete}, with {@code {"vehicle_ids": [...]}} as the JSON
+     * body.
      *
-     * @param vehicleIds the vehicle IDs
-     * @return the status of the request
+     * @param vehicleIds the vehicle IDs; required
+     * @return {@code null} when the API answers {@code 202 Accepted} with an empty body, as it documents; otherwise
+     *     the job it sends
+     * @throws IllegalArgumentException if {@code vehicleIds} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public StatusResponse deleteVehicles(String[] vehicleIds) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLES_BULK_DELETE_EP);
-        VehicleIdsRequest request = new VehicleIdsRequest();
-        request.setVehicleIds(vehicleIds);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), StatusResponse.class);
+    public VehicleJobResponse deleteVehicles(String[] vehicleIds) throws APIException {
+        return this.startBulkJob(VEHICLES_BULK_DELETE_EP, vehicleIds);
     }
 
     /**
-     * Restores deleted vehicles: {@code POST https://wh.route4me.com/modules/api/v5.0/vehicles/bulk/restore}, with
-     * {@code {"vehicle_ids": [...]}} as the JSON body.
+     * Restores deleted vehicles, as an asynchronous job: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/vehicles/bulk/restore}, with {@code {"vehicle_ids": [...]}} as the
+     * JSON body.
      *
-     * @param vehicleIds the vehicle IDs
-     * @return the status of the request
+     * @param vehicleIds the vehicle IDs; required
+     * @return {@code null} when the API answers {@code 202 Accepted} with an empty body, as it documents; otherwise
+     *     the job it sends
+     * @throws IllegalArgumentException if {@code vehicleIds} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public StatusResponse restoreVehicles(String[] vehicleIds) throws APIException {
-        URIBuilder builder = v5Builder(VEHICLES_BULK_RESTORE_EP);
+    public VehicleJobResponse restoreVehicles(String[] vehicleIds) throws APIException {
+        return this.startBulkJob(VEHICLES_BULK_RESTORE_EP, vehicleIds);
+    }
+
+    /** Posts {@code {"vehicle_ids": [...]}} to a bulk endpoint, which starts an asynchronous job. */
+    private VehicleJobResponse startBulkJob(String endpoint, String[] vehicleIds) throws APIException {
+        require(vehicleIds, "vehicle_ids");
         VehicleIdsRequest request = new VehicleIdsRequest();
         request.setVehicleIds(vehicleIds);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), StatusResponse.class);
+        URIBuilder builder = v5Builder(endpoint);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), VehicleJobResponse.class);
     }
 
     /**
      * Gets the result of a vehicle background job: {@code GET
-     * https://wh.route4me.com/modules/api/v5.0/vehicles/job-tracker/result/{jobId}}.
+     * https://wh.route4me.com/modules/api/v5.0/vehicles/job-tracker/result/{jobId}}. While the job runs, the API
+     * answers {@code 409}, which throws.
      *
      * @param jobId the job ID
-     * @return the result
+     * @return the result: {@code status} is {@code "true"} and {@code result} holds what the job wrote
+     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public StatusResponse getVehicleJobResult(String jobId) throws APIException {
+    public VehicleJobResponse getVehicleJobResult(String jobId) throws APIException {
         URIBuilder builder = v5Builder(VEHICLES_JOB_RESULT_EP, jobId);
-        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, StatusResponse.class);
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleJobResponse.class);
     }
 
     /**
      * Gets the status of a vehicle background job: {@code GET
-     * https://wh.route4me.com/modules/api/v5.0/vehicles/job-tracker/status/{jobId}}.
+     * https://wh.route4me.com/modules/api/v5.0/vehicles/job-tracker/status/{jobId}}. While the job runs, the status
+     * is {@code processing}. Once it is over, the API answers {@code 303 See Other} towards the result: a manager
+     * that follows redirects (the default) returns that result, as {@link #getVehicleJobResult(String)} does; one
+     * created with redirects disabled returns the final status ({@code processed}, {@code failed} or
+     * {@code canceled}).
      *
      * @param jobId the job ID
-     * @return the status
+     * @return the status, or the result
+     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public StatusResponse getVehicleJobStatus(String jobId) throws APIException {
+    public VehicleJobResponse getVehicleJobStatus(String jobId) throws APIException {
         URIBuilder builder = v5Builder(VEHICLES_JOB_STATUS_EP, jobId);
-        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, StatusResponse.class);
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleJobResponse.class);
     }
 
     // --- Vehicle Profiles ---
 
     /**
-     * Lists the vehicle profiles: {@code GET https://wh.route4me.com/modules/api/v5.0/vehicle-profiles}.
+     * Lists the vehicle profiles one page at a time: {@code GET
+     * https://wh.route4me.com/modules/api/v5.0/vehicle-profiles?with_pagination=1}. The API requires
+     * {@code with_pagination}; this method always sends {@code 1}, because the unpaginated answer is a bare array of
+     * another shape.
      *
      * @param page the page number, from 1; {@code null} leaves {@code page} out
      * @param perPage the number of items per page; {@code null} leaves {@code per_page} out
-     * @return the vehicle profiles
+     * @return the page of vehicle profiles
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleProfilesResponse getVehicleProfiles(Integer page, Integer perPage) throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP);
+        builder.setParameter("with_pagination", "1");
         if (page != null) {
             builder.setParameter("page", String.valueOf(page));
         }
@@ -298,27 +346,31 @@ public class VehiclesManagerV5 extends Manager {
      * Creates a vehicle profile: {@code POST https://wh.route4me.com/modules/api/v5.0/vehicle-profiles}, with the
      * profile as the JSON body.
      *
-     * @param profile the profile
+     * @param profile the profile; {@code name} is required
      * @return the created profile
+     * @throws IllegalArgumentException if {@code profile} or its name is {@code null} or empty; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleProfile createVehicleProfile(VehicleProfile profile) throws APIException {
+        require(profile, "profile");
+        requireText(profile.getName(), "name");
         URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(profile), VehicleProfile.class);
     }
 
     /**
-     * Updates a vehicle profile: {@code PUT https://wh.route4me.com/modules/api/v5.0/vehicle-profiles/{profileId}},
-     * with the profile as the JSON body.
+     * Updates a vehicle profile: {@code PATCH
+     * https://wh.route4me.com/modules/api/v5.0/vehicle-profiles/{profileId}}, with the profile as the JSON body.
      *
      * @param profileId the profile ID
      * @param profile the new values
      * @return the updated profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleProfile updateVehicleProfile(String profileId, VehicleProfile profile) throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP, profileId);
-        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(profile), VehicleProfile.class);
+        return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(profile), VehicleProfile.class);
     }
 
     /**
@@ -373,31 +425,35 @@ public class VehiclesManagerV5 extends Manager {
      * Creates a vehicle capacity profile: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/vehicle-capacity-profiles}, with the profile as the JSON body.
      *
-     * @param profile the profile
+     * @param profile the profile; {@code name} is required
      * @return the created profile
+     * @throws IllegalArgumentException if {@code profile} or its name is {@code null} or empty; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleCapacityProfileResponse createVehicleCapacityProfile(VehicleCapacityProfile profile)
             throws APIException {
+        require(profile, "profile");
+        requireText(profile.getName(), "name");
         URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(profile),
                 VehicleCapacityProfileResponse.class);
     }
 
     /**
-     * Updates a vehicle capacity profile: {@code PUT
+     * Updates a vehicle capacity profile: {@code PATCH
      * https://wh.route4me.com/modules/api/v5.0/vehicle-capacity-profiles/{profileId}}, with the profile as the JSON
      * body.
      *
      * @param profileId the profile ID
      * @param profile the new values
      * @return the updated profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleCapacityProfileResponse updateVehicleCapacityProfile(String profileId, VehicleCapacityProfile profile)
             throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP, profileId);
-        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(profile),
+        return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(profile),
                 VehicleCapacityProfileResponse.class);
     }
 
