@@ -39,7 +39,7 @@ public class RouteBreaksManager extends Manager {
         int[] params = new int[routeIDs.length];
         Arrays.fill(params, amount);
         routeBreak.setParams(params);
-        List<RouteBreak> breaks = new ArrayList();
+        List<RouteBreak> breaks = new ArrayList<>();
         breaks.add(routeBreak);
         RouteBreaks routeBreaks = new RouteBreaks();
         routeBreaks.setReplaceExisting(replaceExisting);

@@ -46,7 +46,7 @@ import org.apache.logging.log4j.LogManager;
  *
  * @author route4me
  */
-public class TheadBasedAddressesAliasUpdater implements Callable {
+public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
 
     private final Address address;
     private final String routeID;
@@ -74,7 +74,7 @@ public class TheadBasedAddressesAliasUpdater implements Callable {
     }
 
     @Override
-    public Object call() throws Exception {
+    public Address call() throws Exception {
 
         Address updatedAddress = updateAddressFirstName();
         return updatedAddress;
@@ -94,7 +94,7 @@ public class TheadBasedAddressesAliasUpdater implements Callable {
                 System.out.println("Current Alias: " + address.getAlias() + " Route Destination ID: "
                         + address.getRouteDestinationId());
 
-                Callable callableWorker = new TheadBasedAddressesAliasUpdater(manager, routeID, address);
+                Callable<Address> callableWorker = new TheadBasedAddressesAliasUpdater(manager, routeID, address);
                 Future<Address> future = executor.submit(callableWorker);
                 workers.add(future);
             }

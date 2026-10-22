@@ -9,8 +9,11 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import java.util.List;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
 @Data
+// equals and hashCode compare the fields of this class only, as they always have.
+@EqualsAndHashCode(callSuper = false)
 public class Optimization extends DataObject {
     @SerializedName("routes")
     @QueryParameter("routes")

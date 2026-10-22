@@ -77,9 +77,9 @@ public class BundlingUsingCustomField {
         serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingFirstItemMode.USE_CUSTOM_SERVICE_TIME.getValue());
         serviceTimeRules.setAdditionalItemsMode(
                 BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
-        ArrayList<Integer> firstItemModeParams = new ArrayList();
+        ArrayList<Integer> firstItemModeParams = new ArrayList<>();
         firstItemModeParams.add(900);
-        ArrayList<Integer> additionalItemModeParams = new ArrayList();
+        ArrayList<Integer> additionalItemModeParams = new ArrayList<>();
         additionalItemModeParams.add(200);
         serviceTimeRules.setFirstItemModeParams(firstItemModeParams);
         serviceTimeRules.setAdditionalItemsModeParams(additionalItemModeParams);

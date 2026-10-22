@@ -433,7 +433,7 @@ public abstract class Manager implements Closeable {
                         expected, ex);
             }
             if (clazz == String.class) {
-                return (T) respString;
+                return clazz.cast(respString);
             }
             return null;
         } catch (IOException ex) {

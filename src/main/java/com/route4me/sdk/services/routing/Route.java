@@ -5,12 +5,15 @@ import com.route4me.sdk.queryconverter.QueryParameter;
 import com.route4me.sdk.services.notes.Note;
 import lombok.AccessLevel;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
 
 import java.util.List;
 
 @Data
+// equals and hashCode compare the fields of this class only, as they always have.
+@EqualsAndHashCode(callSuper = false)
 public class Route extends DataObject {
 
     @SerializedName("route_id")
