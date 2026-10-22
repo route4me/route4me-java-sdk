@@ -101,11 +101,9 @@ jobs:
       # 3. Install Gemini CLI, at an exact version and without install scripts.
       - name: Install Gemini CLI
         env:
-          # PLACEHOLDER, to be replaced before this workflow is used: the exact
-          # @google/gemini-cli release to install, such as 1.2.3. It could not be looked up
-          # when this pin was added. Until it is set, this step fails on purpose rather than
-          # install an unpinned release.
-          GEMINI_CLI_VERSION: PIN-GEMINI-CLI-VERSION
+          # The exact @google/gemini-cli release to install (0.62.0, 2026-09-29). Raise it
+          # deliberately; the step fails rather than install a version that is not exact.
+          GEMINI_CLI_VERSION: 0.62.0
         run: |
           if ! printf '%s' "$GEMINI_CLI_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
             echo "::error::Set GEMINI_CLI_VERSION in ai-risks-analysis.yaml to an exact @google/gemini-cli version"
