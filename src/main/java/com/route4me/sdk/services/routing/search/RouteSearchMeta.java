@@ -32,27 +32,35 @@ import lombok.Data;
  * @author route4me
  */
 
+/** The position of a page of a {@link RouteSearchResult}. */
 @Data
 public class RouteSearchMeta {
 
+    /** Current page number ({@code current_page}). */
     @QueryParameter("current_page")
     @SerializedName("current_page")
     private Integer currentPage;
+    /** The position of the first route of this page ({@code from}). */
     @QueryParameter("from")
     @SerializedName("from")
     private Integer from;
+    /** The number of the last page ({@code last_page}). */
     @QueryParameter("last_page")
     @SerializedName("last_page")
     private Integer lastPage;
+    /** The URL of the search, without the page parameters ({@code path}). */
     @QueryParameter("path")
     @SerializedName("path")
     private String path;
+    /** The number of routes per page ({@code per_page}). */
     @QueryParameter("per_page")
     @SerializedName("per_page")
     private Integer perPage;
+    /** The position of the last route of this page ({@code to}). */
     @QueryParameter("to")
     @SerializedName("to")
     private Integer to;
+    /** The number of routes in all the pages ({@code total}). */
     @QueryParameter("total")
     @SerializedName("total")
     private Integer total;

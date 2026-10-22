@@ -33,17 +33,25 @@ import lombok.Data;
  * @author route4me
  */
 
+/** The filters of a {@link RouteSearch}. */
 @Data
 public class RouteSearchFilter {
 
+    /** Text to search for in the routes ({@code query}). */
     @QueryParameter("query")
     @SerializedName("query")
     private String query;
 
+    /** The first and last scheduled dates of the routes to find, as {@code YYYY-MM-DD} ({@code schedule_date}). */
     @QueryParameter("schedule_date")
     @SerializedName("schedule_date")
     private List<String> scheduleDate;
 
+    /**
+     * Creates a filter on the scheduled date.
+     *
+     * @param scheduleDate the first and last dates, as {@code YYYY-MM-DD}
+     */
     public RouteSearchFilter(List<String> scheduleDate) {
         this.query = "";
         this.scheduleDate = scheduleDate;

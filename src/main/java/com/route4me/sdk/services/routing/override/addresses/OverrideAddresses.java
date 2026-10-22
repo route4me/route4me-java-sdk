@@ -32,15 +32,22 @@ import lombok.Data;
  * @author route4me
  */
 
+/** Values that replace those of every address of an optimization ({@code override_addresses}). */
 @Data
 public class OverrideAddresses {
 
+    /** The service time to give every address of the route, in seconds ({@code time}). */
     @QueryParameter("time")
     @SerializedName("time")
     private Integer time;
+    /**
+     * The type of stop that this is (DELIVERY,PICKUP,BREAK,MEETUP,SERVICE,VISIT,DRIVEBY,REFUEL) ({@code
+     * address_stop_type}).
+     */
     @QueryParameter("address_stop_type")
     @SerializedName("address_stop_type")
     private String addressStopType;
+    /** The address group ({@code group}). */
     @QueryParameter("group")
     @SerializedName("group")
     private String group;

@@ -32,45 +32,56 @@ import lombok.Data;
  * @author route4me
  */
 
+/** A route where a new destination fits, with what it costs the route. */
 @Data
 public class MatchedRoute {
 
+    /** Route name ({@code route_name}). */
     @SerializedName("route_name")
     @QueryParameter("route_name")
     private String routeName;
 
+    /** Route ID ({@code route_id}). */
     @SerializedName("route_id")
     @QueryParameter("route_id")
     private String routeID;
 
+    /** The stop number at which to insert the new destination ({@code recommended_insertion_stop_number}). */
     @SerializedName("recommended_insertion_stop_number")
     @QueryParameter("recommended_insertion_stop_number")
     private Long recommendedInsertionStopNumber;
 
+    /** The distance of the route without it ({@code old_distance}). */
     @SerializedName("old_distance")
     @QueryParameter("old_distance")
     private Double oldDistance;
 
+    /** The distance of the route with the new destination ({@code new_distance}). */
     @SerializedName("new_distance")
     @QueryParameter("new_distance")
     private Double newDistance;
 
+    /** The duration of the route without it ({@code old_time}). */
     @SerializedName("old_time")
     @QueryParameter("old_time")
     private Double oldTime;
 
+    /** The duration of the route with the new destination ({@code new_time}). */
     @SerializedName("new_time")
     @QueryParameter("new_time")
     private Double newTime;
 
+    /** How much longer, in percent, the route is with the new destination ({@code percentage_distance_increase}). */
     @SerializedName("percentage_distance_increase")
     @QueryParameter("percentage_distance_increase")
     private Double percentageDistanceIncrease;
 
+    /** How much longer, in percent, the route takes with the new destination ({@code percentage_time_increase}). */
     @SerializedName("percentage_time_increase")
     @QueryParameter("percentage_time_increase")
     private Double percentageTimeIncrease;
 
+    /** Whether the new destination breaks a time window of the route ({@code time_violation}). */
     @SerializedName("time_violation")
     @QueryParameter("time_violation")
     private Double timeViolation;

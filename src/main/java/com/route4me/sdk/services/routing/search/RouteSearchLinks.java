@@ -32,18 +32,23 @@ import lombok.Data;
  * @author route4me
  */
 
+/** The links to the other pages of a {@link RouteSearchResult}. */
 @Data
 public class RouteSearchLinks {
 
+    /** First page link ({@code first}). */
     @QueryParameter("first")
     @SerializedName("first")
     private String first;
+    /** Last page link ({@code last}). */
     @QueryParameter("last")
     @SerializedName("last")
     private String last;
+    /** Previous page link ({@code prev}). */
     @QueryParameter("prev")
     @SerializedName("prev")
     private String prev;
+    /** Next page link ({@code next}). */
     @QueryParameter("next")
     @SerializedName("next")
     private String next;

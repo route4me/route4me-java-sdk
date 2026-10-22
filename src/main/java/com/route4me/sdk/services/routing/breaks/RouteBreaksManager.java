@@ -8,10 +8,17 @@ import java.util.Arrays;
 import java.util.List;
 import org.apache.http.client.utils.URIBuilder;
 
+/** Adds breaks to routes through the V5 API ({@code https://wh.route4me.com/modules/api/v5.0/route-breaks}). */
 public class RouteBreaksManager extends Manager {
 
+    /** The path of the route breaks, on {@code wh.route4me.com}. */
     public static final String ROUTE_BREAKS_EP = "/modules/api/v5.0/route-breaks";
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as a bearer token
+     */
     public RouteBreaksManager(String apiKey) {
         super(apiKey);
     }
