@@ -317,6 +317,42 @@ public class RoutingManagerTest {
     // ------------------------------------------------------------------ route destinations
 
     @Test
+    public void getHybridOptimizationSendsTheDayAndOffset() throws Exception {
+        RoutingManager manager = manager();
+        http.respondToAll(200, Fixtures.read("optimization.json"));
+
+        DataObject hybrid = manager.getHybridOptimization("2026-10-22", -240);
+        manager.getHybridOptimization("2026-10-22", null);
+
+        http.request(0).assertEndpoint("GET", API, "/api.v4/hybrid_date_optimization.php").assertApiKeyInQuery()
+                .assertQuery("target_date_string", "2026-10-22")
+                .assertQuery("timezone_offset_minutes", "-240")
+                .assertNoBody();
+        http.request(1).assertNoQuery("timezone_offset_minutes");
+        assertEquals("OPT-1", hybrid.getOptimizationProblemId());
+    }
+
+    @Test
+    public void addDepotsToHybridOptimizationPostsTheDepots() throws Exception {
+        RoutingManager manager = manager();
+        http.respondToAll(200, json("{'status':true}"));
+        List<Address> depots = Collections.singletonList(new Address("100 Example St", true, 40.1, -74.1, 0));
+
+        StatusResponse result = manager.addDepotsToHybridOptimization("OPT-1", true, depots);
+        manager.addDepotsToHybridOptimization("OPT-1", null, depots);
+
+        http.request(0).assertEndpoint("POST", API, "/api/change_hybrid_optimization_depot.php")
+                .assertApiKeyInQuery()
+                .assertContentType("application/json")
+                .assertJson("optimization_problem_id", "OPT-1")
+                .assertJson("delete_old_depots", true)
+                .assertJson("new_depots[0].address", "100 Example St")
+                .assertJson("new_depots[0].is_depot", true);
+        http.request(1).assertJsonLacks("delete_old_depots");
+        assertTrue(result.getStatus());
+    }
+
+    @Test
     public void addAddressesToRouteSendsAddressesAndOptimalPosition() throws Exception {
         RoutingManager manager = manager();
         http.respondToAll(200, Fixtures.read("optimization.json"));

@@ -40,6 +40,8 @@ public class RoutingManager extends Manager {
     private static final String RENAME_ROUTE_EP = "/actions/route/rename_route.php";
     private static final String MOVE_ADDRESS = "/actions/route/move_route_destination.php";
     private static final String ROUTE_SEARCH_V5_1 = "/modules/api/v5.1/routes";
+    private static final String HYBRID_OPTIMIZATION_EP = "/api.v4/hybrid_date_optimization.php";
+    private static final String HYBRID_DEPOTS_EP = "/api/change_hybrid_optimization_depot.php";
     private static final String MERGE_ROUTES_EP = "/actions/merge_routes.php";
     private static final String SHARE_ROUTE_EP = "/actions/route/share_route.php";
     private static final String REOPTIMIZE_V3_EP = "/api.v3/route/reoptimize_2.php";
@@ -241,6 +243,47 @@ public class RoutingManager extends Manager {
         return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(dataObj),
                 new TypeToken<Map<String, Object>>() {
                 }.getType());
+    }
+
+    /**
+     * Gets the hybrid optimization of a day: {@code GET
+     * https://api.route4me.com/api.v4/hybrid_date_optimization.php?target_date_string=...&timezone_offset_minutes=...}.
+     * The API gathers the orders and address book contacts scheduled for that day into one optimization, to which
+     * {@link #addDepotsToHybridOptimization(String, Boolean, List)} can add depots. Every {@code null} argument is left
+     * out of the query.
+     *
+     * @param targetDateString the day, as {@code YYYY-MM-DD} ({@code target_date_string})
+     * @param timezoneOffsetMinutes the offset of the local time zone from UTC, in minutes
+     *     ({@code timezone_offset_minutes})
+     * @return the optimization
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public DataObject getHybridOptimization(String targetDateString, Integer timezoneOffsetMinutes)
+            throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(HYBRID_OPTIMIZATION_EP);
+        addParameter(builder, "target_date_string", targetDateString);
+        addParameter(builder, "timezone_offset_minutes", timezoneOffsetMinutes);
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, DataObject.class);
+    }
+
+    /**
+     * Adds depots to a hybrid optimization, or replaces its depots: {@code POST
+     * https://api.route4me.com/api/change_hybrid_optimization_depot.php}, with {@code optimization_problem_id},
+     * {@code delete_old_depots} and {@code new_depots} as the JSON body. A {@code null} argument is left out of the
+     * body.
+     *
+     * @param optimizationProblemId the ID of the hybrid optimization, from
+     *     {@link #getHybridOptimization(String, Integer)} ({@code optimization_problem_id})
+     * @param deleteOldDepots {@code true} to remove the current depots first ({@code delete_old_depots})
+     * @param newDepots the depots to add ({@code new_depots})
+     * @return whether the depots were changed
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public StatusResponse addDepotsToHybridOptimization(String optimizationProblemId, Boolean deleteOldDepots,
+            List<Address> newDepots) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(HYBRID_DEPOTS_EP);
+        HybridDepots body = new HybridDepots(optimizationProblemId, deleteOldDepots, newDepots);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(body), StatusResponse.class);
     }
 
     /**
@@ -831,6 +874,22 @@ public class RoutingManager extends Manager {
         /** The route IDs, separated by commas ({@code route_id}). */
         @SerializedName("route_id")
         private String routeId;
+    }
+
+    /** The body of {@link #addDepotsToHybridOptimization(String, Boolean, List)}. */
+    @Getter
+    @AllArgsConstructor
+    private static class HybridDepots {
+
+        /** The ID of the hybrid optimization ({@code optimization_problem_id}). */
+        @SerializedName("optimization_problem_id")
+        private String optimizationProblemId;
+        /** Whether to remove the current depots first ({@code delete_old_depots}). */
+        @SerializedName("delete_old_depots")
+        private Boolean deleteOldDepots;
+        /** The depots to add ({@code new_depots}). */
+        @SerializedName("new_depots")
+        private List<Address> newDepots;
     }
 
     @Getter
