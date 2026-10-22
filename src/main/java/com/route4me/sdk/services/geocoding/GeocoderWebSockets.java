@@ -38,10 +38,16 @@ public class GeocoderWebSockets {
     private long nextDownloadStage = 0;
     private String temporaryAddressesStorageID;
 
-    private final long bufferFailSafeMaxAddresses = 100;
-    private final long chunkSize = Math.round(Math.min(100, Math.max(100, this.totalAddresses / 100)));
-    private final long chunksLimit = Math.round(Math.ceil(bufferFailSafeMaxAddresses / chunkSize));
-    private final long maxAddressesToBeDownloaded = chunkSize * chunksLimit;
+    /** The number of addresses to download in one stage, before the chunks are split. */
+    private static final int BUFFER_FAIL_SAFE_MAX_ADDRESSES = 100;
+    /** The smallest and largest chunk the validator is asked for. */
+    private static final int MIN_CHUNK_SIZE = 10;
+    private static final int MAX_CHUNK_SIZE = 200;
+
+    // Set by startGeocoding, from the number of addresses of the job.
+    private long chunkSize;
+    private long chunksLimit;
+    private long maxAddressesToBeDownloaded;
 
     public GeocoderWebSockets() {
         this.geocodedAddresses = null;
@@ -197,6 +203,12 @@ public class GeocoderWebSockets {
 
     public void startGeocoding(String temporaryAddressesStorageID, int totalAddresses) {
         this.totalAddresses = totalAddresses;
+        // One chunk per hundredth of the job, from 10 to 200 addresses, and as many chunks
+        // as fill a stage of 100 addresses (the same rule as the C# SDK). Floating-point
+        // division: with integer division the chunk was always 100.
+        this.chunkSize = Math.round(Math.min(MAX_CHUNK_SIZE, Math.max(MIN_CHUNK_SIZE, totalAddresses / 100.0)));
+        this.chunksLimit = (long) Math.ceil(BUFFER_FAIL_SAFE_MAX_ADDRESSES / (double) this.chunkSize);
+        this.maxAddressesToBeDownloaded = this.chunkSize * this.chunksLimit;
         this.temporaryAddressesStorageID = temporaryAddressesStorageID;
         geocodedAddresses = new ArrayList<>();
         if (geocoderWebSocket == null || !geocoderWebSocket.connected()) {

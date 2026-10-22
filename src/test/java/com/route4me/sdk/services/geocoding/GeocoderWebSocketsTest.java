@@ -1,12 +1,16 @@
 package com.route4me.sdk.services.geocoding;
 
 import io.socket.client.Socket;
+import org.json.JSONObject;
 import org.junit.After;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 
+import static org.junit.Assert.assertEquals;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -30,6 +34,41 @@ public class GeocoderWebSocketsTest {
         Field field = GeocoderWebSockets.class.getDeclaredField("geocoderWebSocket");
         field.setAccessible(true);
         field.set(geocoder, socket);
+    }
+
+    /**
+     * Starts a geocoding job of {@code totalAddresses} on a connected mock socket, asks for
+     * the first download and returns the {@code download} payload it emits.
+     */
+    private JSONObject firstDownload(int totalAddresses) throws Exception {
+        Socket connected = Mockito.mock(Socket.class);
+        Mockito.when(connected.connected()).thenReturn(true);
+        GeocoderWebSockets geocoder = new GeocoderWebSockets();
+        setSocket(geocoder, connected);
+        geocoder.startGeocoding("TMP-1", totalAddresses);
+
+        Method download = GeocoderWebSockets.class.getDeclaredMethod("downloadAddresses", int.class);
+        download.setAccessible(true);
+        download.invoke(geocoder, 0);
+
+        ArgumentCaptor<Object> payload = ArgumentCaptor.forClass(Object.class);
+        verify(connected).emit(Mockito.eq("download"), payload.capture());
+        verify(connected, never()).connect();
+        return (JSONObject) payload.getValue();
+    }
+
+    @Test
+    public void downloadChunksFollowTheNumberOfAddresses() throws Exception {
+        // chunk_size = round(min(200, max(10, total / 100))); chunks_limit = ceil(100 / chunk_size)
+        int[][] cases = {{50, 10, 10}, {500, 10, 10}, {1500, 15, 7}, {5000, 50, 2}, {15050, 151, 1}, {50000, 200, 1}};
+        for (int[] expected : cases) {
+            JSONObject payload = firstDownload(expected[0]);
+
+            assertEquals(expected[0] + " addresses", expected[1], payload.getInt("chunk_size"));
+            assertEquals(expected[0] + " addresses", expected[2], payload.getInt("chunks_limit"));
+            assertEquals("TMP-1", payload.getString("temporary_addresses_storage_id"));
+            assertEquals(0, payload.getInt("from_index"));
+        }
     }
 
     @Test
