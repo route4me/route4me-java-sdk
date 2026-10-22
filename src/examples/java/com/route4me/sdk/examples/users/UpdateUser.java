@@ -12,11 +12,14 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Reads a user with {@link UsersManager#getUser} and changes its phone number with {@link UsersManager#updateUser}. Set
- * {@code MEMBER_ID} to a member of a test account.
+ * Reads a user with the deprecated {@link UsersManager#getUser} and changes its phone number with the deprecated
+ * {@link UsersManager#updateUser}. New code uses {@code TeamManagementManagerV5.updateTeamMember}; see
+ * {@link AddSkillsToDriverV5}. Set {@code MEMBER_ID} to a member of a test account.
  */
 public class UpdateUser {
 
+    // Shows a deprecated V4 user.php method (obsolete in the C# SDK) until it is removed.
+    @SuppressWarnings("deprecation")
     public static void main(String[] args) {
         String memberId = System.getenv("MEMBER_ID");
         if (memberId == null || memberId.isEmpty()) {

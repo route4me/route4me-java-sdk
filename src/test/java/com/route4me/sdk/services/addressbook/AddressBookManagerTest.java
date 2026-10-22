@@ -44,6 +44,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void createContactPostsTheContact() throws Exception {
         AddressBookManager manager = manager();
         http.respondWithFixture(200, "contact.json");
@@ -60,6 +61,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void updateContactPutsTheContact() throws Exception {
         AddressBookManager manager = manager();
         http.respondWithFixture(200, "contact.json");
@@ -95,6 +97,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void emptyResponsesDoNotThrow() throws Exception {
         AddressBookManager manager = manager();
         http.respondWithoutBody(200).respondWithoutBody(200);
@@ -114,6 +117,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void getContactsSendsIdsAndQueryParameters() throws Exception {
         AddressBookManager manager = manager();
         http.respondWithFixture(200, "contacts.json").respondWithFixture(200, "contacts.json");
@@ -139,6 +143,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void deleteContactSendsTheIdsInTheBody() throws Exception {
         AddressBookManager manager = manager();
         http.respond(200, json("{'status':true}"));
@@ -162,6 +167,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void createContactSendsTheMemberId() throws Exception {
         AddressBookManager manager = manager();
         http.respondWithFixture(200, "contact.json");
@@ -339,6 +345,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void errorBecomesApiException() {
         final AddressBookManager manager = manager();
         http.respondWithFixture(400, "error_400.json");

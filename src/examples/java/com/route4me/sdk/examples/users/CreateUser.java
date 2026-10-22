@@ -12,8 +12,13 @@ import com.route4me.sdk.services.users.UsersManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** Creates a user of the account with {@link UsersManager#createUser}. */
+/**
+ * Creates a user of the account with the deprecated {@link UsersManager#createUser}. New code uses
+ * {@code TeamManagementManagerV5.createTeamMember}; see {@link CreateTeamMemberV5}.
+ */
 public class CreateUser {
+    // Shows a deprecated V4 user.php method (obsolete in the C# SDK) until it is removed.
+    @SuppressWarnings("deprecation")
     public static void main(String[] args) {
         String password = System.getenv("R4M_NEW_MEMBER_PASSWORD");
         if (password == null || password.isEmpty()) {

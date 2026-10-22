@@ -54,7 +54,12 @@ public class AddressBookManager extends Manager {
      * @param contact the contact
      * @return the created contact
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V4 {@code /api.v4/address_book.php} call is obsolete: the C# SDK marks
+     *     {@code AddAddressBookContact} as {@code [Obsolete]}. Use
+     *     {@link AddressBookManagerV5#addContact(AddressBookContactV5)}. This method will be removed in the next
+     *     major version.
      */
+    @Deprecated
     public Contact createContact(Contact contact) throws APIException {
         return this.makeRequest(RequestMethod.POST,
                 Manager.defaultBuilder(ADDRESS_BOOK_EP),
@@ -69,7 +74,12 @@ public class AddressBookManager extends Manager {
      * @param contact the contact, with its address ID
      * @return the updated contact
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V4 {@code /api.v4/address_book.php} call is obsolete: the C# SDK marks
+     *     {@code UpdateAddressBookContact} as {@code [Obsolete]}. Use
+     *     {@link AddressBookManagerV5#updateContact(long, AddressBookContactV5)}. This method will be removed in the
+     *     next major version.
      */
+    @Deprecated
     public Contact updateContact(Contact contact) throws APIException {
         return this.makeRequest(RequestMethod.PUT,
                 Manager.defaultBuilder(ADDRESS_BOOK_EP),
@@ -103,7 +113,12 @@ public class AddressBookManager extends Manager {
      * @param request the IDs or search parameters
      * @return the contacts, or {@code null} when the answer has no results
      * @throws APIException if the request fails
+     * @deprecated the V4 {@code /api.v4/address_book.php} call is obsolete: the C# SDK marks
+     *     {@code GetAddressBookContacts} as {@code [Obsolete]}. Use
+     *     {@link AddressBookManagerV5#getContacts(AddressBookContactsQuery)}. This method will be removed in the next
+     *     major version.
      */
+    @Deprecated
     public List<Contact> getContacts(ContactsRequest request) throws APIException {
         URIBuilder builder = contactsQuery(request);
         ContactsResponse cr = this.makeJSONRequest(RequestMethod.GET, builder, request, ContactsResponse.class);
@@ -308,7 +323,11 @@ public class AddressBookManager extends Manager {
      * @param addressIds the contacts' address IDs
      * @return whether they were deleted; {@code false} also when the answer is empty
      * @throws APIException if the request fails
+     * @deprecated the V4 {@code /api.v4/address_book.php} call is obsolete: the C# SDK marks
+     *     {@code RemoveAddressBookContacts} as {@code [Obsolete]}. Use
+     *     {@link AddressBookManagerV5#deleteContacts(long[])}. This method will be removed in the next major version.
      */
+    @Deprecated
     public boolean deleteContact(List<Number> addressIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
         DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder,

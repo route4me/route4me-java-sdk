@@ -11,8 +11,13 @@ import com.route4me.sdk.services.users.UsersManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** Gets one user with {@link UsersManager#getUser}. */
+/**
+ * Gets one user with the deprecated {@link UsersManager#getUser}. New code uses
+ * {@code TeamManagementManagerV5.getTeamMemberById}; see {@link AddSkillsToDriverV5}.
+ */
 public class GetUser {
+    // Shows a deprecated V4 user.php method (obsolete in the C# SDK) until it is removed.
+    @SuppressWarnings("deprecation")
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");
         UsersManager manager = new UsersManager(apiKey);

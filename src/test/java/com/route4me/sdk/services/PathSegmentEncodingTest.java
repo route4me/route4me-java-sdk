@@ -15,7 +15,6 @@ import com.route4me.sdk.services.routedestinations.RouteDestinationsManager;
 import com.route4me.sdk.services.routestatus.RouteStatusManager;
 import com.route4me.sdk.services.schedules.SchedulesManager;
 import com.route4me.sdk.services.vehicles.Vehicles;
-import com.route4me.sdk.services.vehicles.VehiclesManager;
 import com.route4me.sdk.services.vehicles.VehiclesManagerV5;
 import com.route4me.sdk.testsupport.CapturedRequest;
 import com.route4me.sdk.testsupport.MockHttp;
@@ -61,9 +60,12 @@ public class PathSegmentEncodingTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the deprecated V4 VehiclesManager must still encode its IDs
     public void vehicleIdsStayInOneSegment() throws Exception {
         final VehiclesManagerV5 v5 = http.install(new VehiclesManagerV5(MockHttp.API_KEY));
-        final VehiclesManager v4 = http.install(new VehiclesManager(MockHttp.API_KEY));
+        // Fully qualified: Java 8 warns on an import of a deprecated class, and no annotation can suppress that.
+        final com.route4me.sdk.services.vehicles.VehiclesManager v4 =
+                http.install(new com.route4me.sdk.services.vehicles.VehiclesManager(MockHttp.API_KEY));
         final Vehicles vehicle = new Vehicles();
         vehicle.setVehicleId(ESCAPE);
 
