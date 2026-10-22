@@ -4,6 +4,7 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
@@ -65,6 +66,28 @@ public class RouteCustomDataManagerTest {
 
         http.request().assertEndpoint("GET", HOST, ROUTES_EP + "/custom-data/keys");
         assertArrayEquals(new String[] {"region", "shift"}, keys);
+    }
+
+    @Test
+    public void emptyRouteIdsAreRejectedBeforeSending() {
+        final RouteCustomDataManager manager = manager();
+        final Map<String, String> data = Collections.singletonMap("region", "north");
+
+        for (final String id : Arrays.asList(null, "")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteCustomData(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteCustomData(id, data));
+        }
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void routeIdsWithASlashStayInOneSegment() throws Exception {
+        RouteCustomDataManager manager = manager();
+        http.respondToAll(200, json("{'region':'north'}"));
+
+        manager.updateRouteCustomData("../secret", Collections.singletonMap("region", "north"));
+
+        assertEquals(ROUTES_EP + "/..%2Fsecret/custom-data", http.request().getUri().getRawPath());
     }
 
     @Test

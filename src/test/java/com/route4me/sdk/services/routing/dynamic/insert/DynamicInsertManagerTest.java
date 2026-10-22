@@ -75,6 +75,17 @@ public class DynamicInsertManagerTest {
     }
 
     @Test
+    public void latitudeAndLongitudeAreRequired() {
+        final DynamicInsertManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.lookForNewDestination("2026-10-22", null, -74.5, null, null, 3));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.lookForNewDestination(40.5, null, null, null, 3, null));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void optionalEnumsMayBeNull() throws Exception {
         DynamicInsertManager manager = manager();
         http.respond(200, "[]");

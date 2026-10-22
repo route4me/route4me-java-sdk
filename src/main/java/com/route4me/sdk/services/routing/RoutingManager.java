@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.routing;
 
+import com.google.gson.JsonElement;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.Manager;
@@ -39,6 +40,14 @@ public class RoutingManager extends Manager {
     private static final String RENAME_ROUTE_EP = "/actions/route/rename_route.php";
     private static final String MOVE_ADDRESS = "/actions/route/move_route_destination.php";
     private static final String ROUTE_SEARCH_V5_1 = "/modules/api/v5.1/routes";
+    private static final String HYBRID_OPTIMIZATION_EP = "/api.v4/hybrid_date_optimization.php";
+    private static final String HYBRID_DEPOTS_EP = "/api/change_hybrid_optimization_depot.php";
+    private static final String MERGE_ROUTES_EP = "/actions/merge_routes.php";
+    private static final String SHARE_ROUTE_EP = "/actions/route/share_route.php";
+    private static final String REOPTIMIZE_V3_EP = "/api.v3/route/reoptimize_2.php";
+    private static final String MARK_ADDRESS_DEPARTED_EP = "/api/route/mark_address_departed.php";
+    private static final String MARK_ADDRESS_VISITED_EP = "/actions/address/update_address_visited.php";
+    private static final String DELETE_ROUTE_DESTINATION_EP = "/actions/route/delete_route_destination.php";
 
     private URIBuilder getRouteSearchURI(String endpoint) {
         URIBuilder builder = new URIBuilder();
@@ -234,6 +243,47 @@ public class RoutingManager extends Manager {
         return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(dataObj),
                 new TypeToken<Map<String, Object>>() {
                 }.getType());
+    }
+
+    /**
+     * Gets the hybrid optimization of a day: {@code GET
+     * https://api.route4me.com/api.v4/hybrid_date_optimization.php?target_date_string=...&timezone_offset_minutes=...}.
+     * The API gathers the orders and address book contacts scheduled for that day into one optimization, to which
+     * {@link #addDepotsToHybridOptimization(String, Boolean, List)} can add depots. Every {@code null} argument is left
+     * out of the query.
+     *
+     * @param targetDateString the day, as {@code YYYY-MM-DD} ({@code target_date_string})
+     * @param timezoneOffsetMinutes the offset of the local time zone from UTC, in minutes
+     *     ({@code timezone_offset_minutes})
+     * @return the optimization
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public DataObject getHybridOptimization(String targetDateString, Integer timezoneOffsetMinutes)
+            throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(HYBRID_OPTIMIZATION_EP);
+        addParameter(builder, "target_date_string", targetDateString);
+        addParameter(builder, "timezone_offset_minutes", timezoneOffsetMinutes);
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, DataObject.class);
+    }
+
+    /**
+     * Adds depots to a hybrid optimization, or replaces its depots: {@code POST
+     * https://api.route4me.com/api/change_hybrid_optimization_depot.php}, with {@code optimization_problem_id},
+     * {@code delete_old_depots} and {@code new_depots} as the JSON body. A {@code null} argument is left out of the
+     * body.
+     *
+     * @param optimizationProblemId the ID of the hybrid optimization, from
+     *     {@link #getHybridOptimization(String, Integer)} ({@code optimization_problem_id})
+     * @param deleteOldDepots {@code true} to remove the current depots first ({@code delete_old_depots})
+     * @param newDepots the depots to add ({@code new_depots})
+     * @return whether the depots were changed
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public StatusResponse addDepotsToHybridOptimization(String optimizationProblemId, Boolean deleteOldDepots,
+            List<Address> newDepots) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(HYBRID_DEPOTS_EP);
+        HybridDepots body = new HybridDepots(optimizationProblemId, deleteOldDepots, newDepots);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(body), StatusResponse.class);
     }
 
     /**
@@ -495,10 +545,28 @@ public class RoutingManager extends Manager {
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public Route updateRoute(Route route) throws APIException {
+        return this.updateRoute(route, null);
+    }
+
+    /**
+     * Updates a route, then re-optimizes it or recomputes its directions if asked: {@code PUT
+     * https://api.route4me.com/api.v4/route.php?route_id=...}, with the flags of {@code parameters}
+     * ({@code reoptimize}, {@code remaining}, {@code prioritize_by}, {@code recompute_directions} and
+     * {@code recompute_actual_distance}) in the query and the route as the JSON body.
+     *
+     * <p>The same request re-sequences stops (addresses with their {@code route_destination_id} and new
+     * {@code sequence_no}), adds orders (addresses with an {@code order_id}) and changes the route parameters. To
+     * only re-optimize the route, or only recompute its directions, send a route with just its ID.
+     *
+     * @param route the route, with its ID and the fields to change
+     * @param parameters the query flags; {@code null} sends none
+     * @return the updated route
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public Route updateRoute(Route route, RouteUpdateParameters parameters) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
-        String routeId = route.getId();
-        builder.setParameter("route_id", routeId);
-        return this.makeJSONRequest(RequestMethod.PUT, builder, route, Route.class);
+        builder.setParameter("route_id", route.getId());
+        return this.makeJSONRequest(RequestMethod.PUT, builder, route, parameters, Route.class);
     }
 
     /**
@@ -598,6 +666,194 @@ public class RoutingManager extends Manager {
         return this.makeRequest(RequestMethod.POST, builder, body, RouteRenamedStatus.class);
     }
 
+    /**
+     * Merges routes into one: {@code POST https://api.route4me.com/actions/merge_routes.php}, with {@code route_ids}
+     * (the IDs, separated by commas), {@code depot_address}, {@code remove_origin}, {@code depot_lat} and
+     * {@code depot_lng} as a form. Every {@code null} argument is left out of the form.
+     *
+     * @param routeIds the IDs of the routes to merge; at least one
+     * @param depotAddress the address of the depot of the merged route ({@code depot_address})
+     * @param removeOrigin {@code true} to delete the original routes, sent as {@code 1} or {@code 0}
+     *     ({@code remove_origin})
+     * @param depotLat the latitude of the depot ({@code depot_lat})
+     * @param depotLng the longitude of the depot ({@code depot_lng})
+     * @return whether the routes were merged, and the optimization of the merged route
+     * @throws IllegalArgumentException if no route ID is given, or one is {@code null} or empty
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public MergeRoutesResponse mergeRoutes(List<String> routeIds, String depotAddress, Boolean removeOrigin,
+            Double depotLat, Double depotLng) throws APIException {
+        if (routeIds == null || routeIds.isEmpty()) {
+            throw new IllegalArgumentException("At least one route ID is required");
+        }
+        for (String routeId : routeIds) {
+            if (routeId == null || routeId.isEmpty()) {
+                throw new IllegalArgumentException("A route ID must not be null or empty");
+            }
+        }
+        URIBuilder builder = Manager.defaultBuilder(MERGE_ROUTES_EP);
+        List<NameValuePair> form = new ArrayList<>();
+        form.add(new BasicNameValuePair("route_ids", String.join(",", routeIds)));
+        addField(form, "depot_address", depotAddress);
+        addField(form, "remove_origin", removeOrigin);
+        addField(form, "depot_lat", depotLat);
+        addField(form, "depot_lng", depotLng);
+        return this.makeRequest(RequestMethod.POST, builder, form, MergeRoutesResponse.class);
+    }
+
+    /**
+     * Shares a route by e-mail: {@code POST
+     * https://api.route4me.com/actions/route/share_route.php?route_id=...&response_format=json}, with
+     * {@code recipient_email} as a form.
+     *
+     * @param routeId the route ID ({@code route_id})
+     * @param recipientEmail the e-mail address to send the route to ({@code recipient_email})
+     * @return whether the route was shared
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public StatusResponse routeSharing(String routeId, String recipientEmail) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(SHARE_ROUTE_EP);
+        addParameter(builder, "route_id", routeId);
+        builder.setParameter("response_format", "json");
+        List<NameValuePair> form = new ArrayList<>();
+        addField(form, "recipient_email", recipientEmail);
+        return this.makeRequest(RequestMethod.POST, builder, form, StatusResponse.class);
+    }
+
+    /**
+     * Re-sequences all the stops of a route: {@code GET
+     * https://api.route4me.com/api.v3/route/reoptimize_2.php?route_id=...&disable_optimization=...&optimize=...}.
+     * Every {@code null} argument is left out of the query. {@link #updateRoute(Route, RouteUpdateParameters)} with
+     * {@code reoptimize} re-optimizes a route through the V4 API instead.
+     *
+     * @param routeId the route ID ({@code route_id})
+     * @param disableOptimization {@code true} to keep the order of the stops and only recompute the route, sent as
+     *     {@code 1} or {@code 0} ({@code disable_optimization})
+     * @param optimize what to minimize: {@code Distance}, {@code Time} or {@code timeWithTraffic}
+     *     ({@code optimize}; see {@link Constants.Optimize})
+     * @return whether the route was re-sequenced
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public StatusResponse resequenceReoptimizeRoute(String routeId, Boolean disableOptimization, String optimize)
+            throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(REOPTIMIZE_V3_EP);
+        addParameter(builder, "route_id", routeId);
+        addParameter(builder, "disable_optimization", disableOptimization);
+        addParameter(builder, "optimize", optimize);
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, StatusResponse.class);
+    }
+
+    /**
+     * Marks a destination of a route as departed, or clears the mark: {@code GET
+     * https://api.route4me.com/api/route/mark_address_departed.php}, with the arguments in the query. Every
+     * {@code null} argument is left out. A destination can be marked departed only after it was marked visited (see
+     * {@link #markAddressVisited(String, Number, boolean, Long, Long, Double, Double)}).
+     *
+     * @param routeId the route ID ({@code route_id})
+     * @param addressId the route destination ID ({@code address_id})
+     * @param isDeparted {@code true} to mark it, {@code false} to clear the mark, sent as {@code 1} or {@code 0}
+     *     ({@code is_departed})
+     * @param memberId the member who departed ({@code member_id})
+     * @param utcTime when, as a Unix timestamp in seconds ({@code utc_time})
+     * @param lat where: the latitude ({@code lat})
+     * @param lng where: the longitude ({@code lng})
+     * @return whether the mark changed
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public StatusResponse markAddressDeparted(String routeId, Number addressId, boolean isDeparted, Long memberId,
+            Long utcTime, Double lat, Double lng) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(MARK_ADDRESS_DEPARTED_EP);
+        addMarkParameters(builder, routeId, addressId, memberId, utcTime, lat, lng);
+        addParameter(builder, "is_departed", isDeparted);
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, StatusResponse.class);
+    }
+
+    /**
+     * Marks a destination of a route as visited, or clears the mark: {@code GET
+     * https://api.route4me.com/actions/address/update_address_visited.php}, with the arguments in the query. Every
+     * {@code null} argument is left out.
+     *
+     * @param routeId the route ID ({@code route_id})
+     * @param addressId the route destination ID ({@code address_id})
+     * @param isVisited {@code true} to mark it, {@code false} to clear the mark, sent as {@code 1} or {@code 0}
+     *     ({@code is_visited})
+     * @param memberId the member who visited ({@code member_id})
+     * @param utcTime when, as a Unix timestamp in seconds ({@code utc_time})
+     * @param lat where: the latitude ({@code lat})
+     * @param lng where: the longitude ({@code lng})
+     * @return the number of destinations marked, as the API answers it; {@code null} if the answer is empty
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public Integer markAddressVisited(String routeId, Number addressId, boolean isVisited, Long memberId,
+            Long utcTime, Double lat, Double lng) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(MARK_ADDRESS_VISITED_EP);
+        addMarkParameters(builder, routeId, addressId, memberId, utcTime, lat, lng);
+        addParameter(builder, "is_visited", isVisited);
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, Integer.class);
+    }
+
+    /**
+     * Deletes destinations from their routes: {@code POST
+     * https://api.route4me.com/actions/route/delete_route_destination.php?format=json}, with
+     * {@code route_destination_ids} (the IDs, separated by commas) as a form.
+     * {@link #deleteAddress(String, Number)} deletes one destination through the V4 API instead.
+     *
+     * @param routeDestinationIds the route destination IDs; at least one
+     * @return the answer of the API, as JSON: its shape is not documented
+     * @throws IllegalArgumentException if no route destination ID is given
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public JsonElement deleteRouteDestinations(long... routeDestinationIds) throws APIException {
+        if (routeDestinationIds == null || routeDestinationIds.length == 0) {
+            throw new IllegalArgumentException("At least one route destination ID is required");
+        }
+        StringBuilder ids = new StringBuilder();
+        for (long id : routeDestinationIds) {
+            if (ids.length() > 0) {
+                ids.append(',');
+            }
+            ids.append(id);
+        }
+        URIBuilder builder = Manager.defaultBuilder(DELETE_ROUTE_DESTINATION_EP);
+        builder.setParameter("format", "json");
+        List<NameValuePair> form = new ArrayList<>();
+        form.add(new BasicNameValuePair("route_destination_ids", ids.toString()));
+        return this.makeRequest(RequestMethod.POST, builder, form, JsonElement.class);
+    }
+
+    /** Adds the query of the mark-visited and mark-departed requests, leaving out the {@code null} values. */
+    private static void addMarkParameters(URIBuilder builder, String routeId, Number addressId, Long memberId,
+            Long utcTime, Double lat, Double lng) {
+        addParameter(builder, "route_id", routeId);
+        addParameter(builder, "address_id", addressId);
+        addParameter(builder, "member_id", memberId);
+        addParameter(builder, "utc_time", utcTime);
+        addParameter(builder, "lat", lat);
+        addParameter(builder, "lng", lng);
+    }
+
+    /** Adds a query parameter unless its value is {@code null}; a boolean is sent as {@code 1} or {@code 0}. */
+    private static void addParameter(URIBuilder builder, String name, Object value) {
+        if (value != null) {
+            builder.addParameter(name, v4Value(value));
+        }
+    }
+
+    /** Adds a form field unless its value is {@code null}; a boolean is sent as {@code 1} or {@code 0}. */
+    private static void addField(List<NameValuePair> form, String name, Object value) {
+        if (value != null) {
+            form.add(new BasicNameValuePair(name, v4Value(value)));
+        }
+    }
+
+    /** Returns the text of a V4 value: {@code 1} or {@code 0} for a boolean, which PHP reads correctly. */
+    private static String v4Value(Object value) {
+        if (value instanceof Boolean) {
+            return ((Boolean) value) ? "1" : "0";
+        }
+        return String.valueOf(value);
+    }
+
     /** The answer of {@link #duplicateRoute(String)}. */
     @Getter
     @ToString
@@ -618,6 +874,22 @@ public class RoutingManager extends Manager {
         /** The route IDs, separated by commas ({@code route_id}). */
         @SerializedName("route_id")
         private String routeId;
+    }
+
+    /** The body of {@link #addDepotsToHybridOptimization(String, Boolean, List)}. */
+    @Getter
+    @AllArgsConstructor
+    private static class HybridDepots {
+
+        /** The ID of the hybrid optimization ({@code optimization_problem_id}). */
+        @SerializedName("optimization_problem_id")
+        private String optimizationProblemId;
+        /** Whether to remove the current depots first ({@code delete_old_depots}). */
+        @SerializedName("delete_old_depots")
+        private Boolean deleteOldDepots;
+        /** The depots to add ({@code new_depots}). */
+        @SerializedName("new_depots")
+        private List<Address> newDepots;
     }
 
     @Getter

@@ -13,13 +13,21 @@ public class RouteStatusRequest {
     @SerializedName("status")
     private String status;
 
-    /** The latitude where the status changes ({@code lat}). */
+    /** The latitude where the status changes; {@code null} leaves it out ({@code lat}). */
     @SerializedName("lat")
-    private double latitude;
+    private Double latitude;
 
-    /** The longitude where the status changes ({@code lng}). */
+    /** The longitude where the status changes; {@code null} leaves it out ({@code lng}). */
     @SerializedName("lng")
-    private double longitude;
+    private Double longitude;
+
+    /** Why the status changes, in words ({@code reason}). */
+    @SerializedName("reason")
+    private String reason;
+
+    /** The code of the reason for the change ({@code reason_code}). */
+    @SerializedName("reason_code")
+    private String reasonCode;
 
     /** Event timestamp (Unix timestamp in seconds) ({@code event_timestamp}). */
     @SerializedName("event_timestamp")

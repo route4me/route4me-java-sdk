@@ -90,6 +90,15 @@ public class RouteBreaksManagerTest {
     }
 
     @Test
+    public void breaksNeedADuration() {
+        final RouteBreaksManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.insertBreakAfterCertainElapsed(null, 3600, false, "ROUTE-A1"));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void nullAmountDoesNotThrowNullPointerException() throws Exception {
         RouteBreaksManager manager = manager();
         http.respond(200, json("{'status':true}"));

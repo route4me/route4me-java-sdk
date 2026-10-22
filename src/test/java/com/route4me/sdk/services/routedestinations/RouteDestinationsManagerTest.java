@@ -49,20 +49,17 @@ public class RouteDestinationsManagerTest {
         RouteDestinationsManager manager = manager();
         http.respond(200, json("{'categories':[{'category':'Main','columns':[{'id':'name','title':'Name'}]}],"
                         + "'order':['name'],'default_order':['name','eta']}"))
-                .respond(200, json("{'categories':[]}"))
                 .respond(200, json("{'order':['eta','name']}"));
         EditDestinationColumnsRequest edit = new EditDestinationColumnsRequest();
         edit.setColumnsConfiguratorKey("route-view");
         edit.setOrder(Arrays.asList("eta", "name"));
 
         RouteDestinationColumnsResource columns = manager.getDestinationColumns("route-view");
-        manager.getDestinationColumns(null);
         EditDestinationColumnsResponse edited = manager.editDestinationColumns(edit);
 
         http.request(0).assertEndpoint("GET", HOST, DESTINATIONS_EP + "/columns")
-                .assertQuery("columns_configurator_key", "route-view");
-        http.request(1).assertNoQuery("columns_configurator_key");
-        http.request(2).assertEndpoint("PUT", HOST, DESTINATIONS_EP + "/columns")
+                .assertQuery("columns_configurator_key", "route-view").assertNoBody();
+        http.request(1).assertEndpoint("PUT", HOST, DESTINATIONS_EP + "/columns")
                 .assertJson("columns_configurator_key", "route-view")
                 .assertJson("order[0]", "eta");
         assertEquals("Name", columns.getCategories().get(0).getColumns().get(0).getTitle());
@@ -83,6 +80,9 @@ public class RouteDestinationsManagerTest {
         request.setPerPage(20);
         request.setOrderBy(Collections.singletonList(new String[] {"sequence_no", "asc"}));
         request.setFields(Arrays.asList("route_destination_id", "destination_name"));
+        request.setNotFilters(Collections.<String, Object>singletonMap("address_stop_type",
+                Collections.singletonList("BREAK")));
+        request.setRoute(Collections.<String, Object>singletonMap("query", "Morning"));
 
         RouteDestinationsListResponse list = manager.getDestinationsList(request);
 
@@ -92,7 +92,9 @@ public class RouteDestinationsManagerTest {
                 .assertJson("page", 1)
                 .assertJson("per_page", 20)
                 .assertJson("order_by[0][0]", "sequence_no")
-                .assertJson("fields[1]", "destination_name");
+                .assertJson("fields[1]", "destination_name")
+                .assertJson("not_filters.address_stop_type[0]", "BREAK")
+                .assertJson("route.query", "Morning");
         assertEquals(Integer.valueOf(5002), list.getItems().get(0).getRouteDestinationId());
     }
 
@@ -146,6 +148,51 @@ public class RouteDestinationsManagerTest {
                 .assertJson("coordinates[0].lat", 40.5)
                 .assertJson("coordinates[0].lng", -74.5);
         assertArrayEquals(new int[] {1, 0}, response.getOptimizedSequence());
+    }
+
+    @Test
+    public void requiredValuesAreCheckedBeforeSending() {
+        final RouteDestinationsManager manager = manager();
+        final EditDestinationColumnsRequest noKey = new EditDestinationColumnsRequest();
+        noKey.setOrder(Collections.singletonList("eta"));
+        final EditDestinationColumnsRequest noOrder = new EditDestinationColumnsRequest();
+        noOrder.setColumnsConfiguratorKey("route-view");
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getDestinationColumns(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getDestinationColumns(""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getDestinationByLabelCode(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getDestinationByLabelCode(""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.editDestinationColumns(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.editDestinationColumns(noKey));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.editDestinationColumns(noOrder));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getDestinationsList(null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.getDestinationsList(new GetDestinationsRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getDestinationSequence(null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.getDestinationSequence(new DestinationSequenceRequest()));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void emptyPathIdsAreRejectedBeforeSending() {
+        final RouteDestinationsManager manager = manager();
+
+        for (final String id : Arrays.asList(null, "")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getDestination(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getDestinationsByOrder(id));
+        }
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void pathIdsWithASlashStayInOneSegment() throws Exception {
+        RouteDestinationsManager manager = manager();
+        http.respondToAll(200, "{\"items\":[]}");
+
+        manager.getDestinationsByOrder("../secret");
+
+        assertEquals(DESTINATIONS_EP + "/order/..%2Fsecret", http.request().getUri().getRawPath());
     }
 
     @Test

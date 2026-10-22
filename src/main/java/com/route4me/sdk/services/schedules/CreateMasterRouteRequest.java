@@ -28,9 +28,9 @@ public class CreateMasterRouteRequest {
     @SerializedName("name")
     private String name;
 
-    /** The dates on which the schedule creates no route ({@code schedule_blacklist}). */
+    /** The periods on which the schedule creates no route ({@code schedule_blacklist}). */
     @SerializedName("schedule_blacklist")
-    private List<String> scheduleBlacklist;
+    private List<ScheduleBlacklistItem> scheduleBlacklist;
 
     /** How far in advance the routes are created ({@code advance_interval}). */
     @SerializedName("advance_interval")

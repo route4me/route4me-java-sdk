@@ -16,6 +16,7 @@ import com.route4me.sdk.services.customers.CustomerStoreRequest;
 import com.route4me.sdk.services.facilities.FacilityResource;
 import com.route4me.sdk.services.facilities.FacilityCoordinates;
 import com.route4me.sdk.services.schedules.Schedule;
+import com.route4me.sdk.services.schedules.ScheduleBlacklistItem;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -261,7 +262,8 @@ public class ModelSerializationTest {
         schedule.setAdvanceInterval(7);
         schedule.setAdvanceScheduleIntervalDays(1);
         schedule.setTimezone("America/New_York");
-        schedule.setScheduleBlacklist(Arrays.asList("2023-12-25", "2024-01-01"));
+        schedule.setScheduleBlacklist(Arrays.asList(new ScheduleBlacklistItem(true, "2023-12-25", "2023-12-26"),
+                new ScheduleBlacklistItem(false, "2024-01-01", "2024-01-01")));
 
         String json = gson.toJson(schedule);
         Schedule deserialized = gson.fromJson(json, Schedule.class);
@@ -271,6 +273,7 @@ public class ModelSerializationTest {
         assertEquals(Integer.valueOf(1), deserialized.getAdvanceScheduleIntervalDays());
         assertEquals("America/New_York", deserialized.getTimezone());
         assertEquals(2, deserialized.getScheduleBlacklist().size());
+        assertEquals("2023-12-26", deserialized.getScheduleBlacklist().get(0).getEnd());
     }
 
     @Test

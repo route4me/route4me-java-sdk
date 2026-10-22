@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.routing;
 
+import com.google.gson.JsonElement;
 import com.route4me.sdk.services.routing.balance.Balance;
 import com.route4me.sdk.services.routing.balance.BalanceMode;
 import com.route4me.sdk.services.routing.search.RouteSearchResult;
@@ -316,6 +317,42 @@ public class RoutingManagerTest {
     // ------------------------------------------------------------------ route destinations
 
     @Test
+    public void getHybridOptimizationSendsTheDayAndOffset() throws Exception {
+        RoutingManager manager = manager();
+        http.respondToAll(200, Fixtures.read("optimization.json"));
+
+        DataObject hybrid = manager.getHybridOptimization("2026-10-22", -240);
+        manager.getHybridOptimization("2026-10-22", null);
+
+        http.request(0).assertEndpoint("GET", API, "/api.v4/hybrid_date_optimization.php").assertApiKeyInQuery()
+                .assertQuery("target_date_string", "2026-10-22")
+                .assertQuery("timezone_offset_minutes", "-240")
+                .assertNoBody();
+        http.request(1).assertNoQuery("timezone_offset_minutes");
+        assertEquals("OPT-1", hybrid.getOptimizationProblemId());
+    }
+
+    @Test
+    public void addDepotsToHybridOptimizationPostsTheDepots() throws Exception {
+        RoutingManager manager = manager();
+        http.respondToAll(200, json("{'status':true}"));
+        List<Address> depots = Collections.singletonList(new Address("100 Example St", true, 40.1, -74.1, 0));
+
+        StatusResponse result = manager.addDepotsToHybridOptimization("OPT-1", true, depots);
+        manager.addDepotsToHybridOptimization("OPT-1", null, depots);
+
+        http.request(0).assertEndpoint("POST", API, "/api/change_hybrid_optimization_depot.php")
+                .assertApiKeyInQuery()
+                .assertContentType("application/json")
+                .assertJson("optimization_problem_id", "OPT-1")
+                .assertJson("delete_old_depots", true)
+                .assertJson("new_depots[0].address", "100 Example St")
+                .assertJson("new_depots[0].is_depot", true);
+        http.request(1).assertJsonLacks("delete_old_depots");
+        assertTrue(result.getStatus());
+    }
+
+    @Test
     public void addAddressesToRouteSendsAddressesAndOptimalPosition() throws Exception {
         RoutingManager manager = manager();
         http.respondToAll(200, Fixtures.read("optimization.json"));
@@ -553,5 +590,229 @@ public class RoutingManagerTest {
         http.respond(404, json("{'errors':['Route not found']}"));
 
         http.expectApiException(() -> manager.getRoute(new RoutesRequest()));
+    }
+
+    // ------------------------------------------------------------------ route updates with query flags
+
+    @Test
+    public void updateRouteWithParametersSendsTheFlagsInTheQuery() throws Exception {
+        RoutingManager manager = manager();
+        http.respondToAll(200, Fixtures.read("route.json"));
+        Route route = new Route();
+        route.setId("ROUTE-A1");
+
+        manager.updateRoute(route, new RouteUpdateParameters().setReoptimize(true).setRemaining(false)
+                .setPrioritizeBy("time_window"));
+        manager.updateRoute(route, new RouteUpdateParameters().setRecomputeDirections(true)
+                .setRecomputeActualDistance(false));
+        manager.updateRoute(route);
+
+        http.request(0).assertEndpoint("PUT", API, ROUTE_EP).assertApiKeyInQuery()
+                .assertQuery("route_id", "ROUTE-A1")
+                .assertQuery("reoptimize", "1")
+                .assertQuery("remaining", "0")
+                .assertQuery("prioritize_by", "time_window")
+                .assertNoQuery("recompute_directions")
+                .assertJson("route_id", "ROUTE-A1");
+        http.request(1).assertQuery("recompute_directions", "1").assertQuery("recompute_actual_distance", "0")
+                .assertNoQuery("reoptimize");
+        http.request(2).assertQuery("route_id", "ROUTE-A1").assertNoQuery("reoptimize")
+                .assertNoQuery("recompute_directions");
+    }
+
+    @Test
+    public void updateRouteResequencesAndAddsOrdersThroughTheAddresses() throws Exception {
+        RoutingManager manager = manager();
+        http.respondToAll(200, Fixtures.read("route.json"));
+        Address moved = new Address();
+        moved.setRouteDestinationId(5002L);
+        moved.setSequenceNo(1L);
+        Address order = new Address("300 Demo Rd", 40.3, -74.3);
+        order.setOrderId(9001);
+        Route route = new Route();
+        route.setId("ROUTE-A1");
+        route.setAddresses(Arrays.asList(moved, order));
+
+        manager.updateRoute(route, null);
+
+        http.request().assertEndpoint("PUT", API, ROUTE_EP).assertQuery("route_id", "ROUTE-A1")
+                .assertJson("addresses[0].route_destination_id", 5002)
+                .assertJson("addresses[0].sequence_no", 1)
+                .assertJson("addresses[1].order_id", 9001);
+    }
+
+    @Test
+    public void getRouteAsksForPathPointsAndSearchesByQuery() throws Exception {
+        RoutingManager manager = manager();
+        http.respond(200, Fixtures.read("route.json")).respond(200, "[" + Fixtures.read("route.json") + "]");
+        RoutesRequest points = new RoutesRequest().setId("ROUTE-A1").setRoutePathOutput("Points")
+                .setCompressPathPoints(true);
+        RoutesRequest search = new RoutesRequest().setQuery("Morning");
+
+        manager.getRoute(points);
+        List<Route> found = manager.getRoutes(search);
+
+        http.request(0).assertEndpoint("GET", API, ROUTE_EP).assertQuery("route_id", "ROUTE-A1")
+                .assertQuery("route_path_output", "Points").assertQuery("compress_path_points", "1").assertNoBody();
+        http.request(1).assertEndpoint("GET", API, ROUTE_EP).assertQuery("query", "Morning").assertNoQuery("route_id");
+        assertEquals(1, found.size());
+    }
+
+    // ------------------------------------------------------------------ route actions
+
+    @Test
+    public void mergeRoutesPostsTheIdsAndDepotAsAForm() throws Exception {
+        RoutingManager manager = manager();
+        http.respondToAll(200, json("{'status':true,'optimization_problem_id':'C0FFEE0000000000000000000000000A'}"));
+
+        MergeRoutesResponse merged = manager.mergeRoutes(Arrays.asList("ROUTE-A1", "ROUTE-A2"), "100 Example St",
+                false, 40.1, -74.1);
+        manager.mergeRoutes(Collections.singletonList("ROUTE-A1"), null, null, null, null);
+
+        http.request(0).assertEndpoint("POST", API, "/actions/merge_routes.php").assertApiKeyInQuery()
+                .assertContentType("application/x-www-form-urlencoded")
+                .assertForm("route_ids", "ROUTE-A1,ROUTE-A2")
+                .assertForm("depot_address", "100 Example St")
+                .assertForm("remove_origin", "0")
+                .assertForm("depot_lat", "40.1")
+                .assertForm("depot_lng", "-74.1");
+        assertNull(http.request(1).form("depot_address"));
+        assertNull(http.request(1).form("remove_origin"));
+        assertTrue(merged.getStatus());
+        assertEquals("C0FFEE0000000000000000000000000A", merged.getOptimizationProblemId());
+    }
+
+    @Test
+    public void mergeRoutesNeedsValidIds() {
+        final RoutingManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.mergeRoutes(null, null, null, null, null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.mergeRoutes(Collections.<String>emptyList(), null, null, null, null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.mergeRoutes(Arrays.asList("ROUTE-A1", ""), null, null, null, null));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void routeSharingPostsTheRecipientAsAForm() throws Exception {
+        RoutingManager manager = manager();
+        http.respond(200, json("{'status':true}"));
+
+        StatusResponse shared = manager.routeSharing("ROUTE-A1", "dispatcher@example.com");
+
+        http.request().assertEndpoint("POST", API, "/actions/route/share_route.php").assertApiKeyInQuery()
+                .assertQuery("route_id", "ROUTE-A1")
+                .assertQuery("response_format", "json")
+                .assertContentType("application/x-www-form-urlencoded")
+                .assertForm("recipient_email", "dispatcher@example.com");
+        assertTrue(shared.getStatus());
+    }
+
+    @Test
+    public void resequenceReoptimizeRouteSendsTheV3Query() throws Exception {
+        RoutingManager manager = manager();
+        http.respondToAll(200, json("{'status':true}"));
+
+        StatusResponse result = manager.resequenceReoptimizeRoute("ROUTE-A1", false,
+                Constants.Optimize.DISTANCE.toString());
+        manager.resequenceReoptimizeRoute("ROUTE-A1", null, null);
+
+        http.request(0).assertEndpoint("GET", API, "/api.v3/route/reoptimize_2.php").assertApiKeyInQuery()
+                .assertQuery("route_id", "ROUTE-A1")
+                .assertQuery("disable_optimization", "0")
+                .assertQuery("optimize", "Distance")
+                .assertNoBody();
+        http.request(1).assertNoQuery("disable_optimization").assertNoQuery("optimize");
+        assertTrue(result.getStatus());
+    }
+
+    @Test
+    public void markAddressDepartedSendsTheQuery() throws Exception {
+        RoutingManager manager = manager();
+        http.respondToAll(200, json("{'status':true}"));
+
+        StatusResponse departed = manager.markAddressDeparted("ROUTE-A1", 5002, true, 1001L, 1792600000L, 40.5,
+                -74.5);
+        manager.markAddressDeparted("ROUTE-A1", 5002L, false, null, null, null, null);
+
+        http.request(0).assertEndpoint("GET", API, "/api/route/mark_address_departed.php").assertApiKeyInQuery()
+                .assertQuery("route_id", "ROUTE-A1")
+                .assertQuery("address_id", "5002")
+                .assertQuery("is_departed", "1")
+                .assertQuery("member_id", "1001")
+                .assertQuery("utc_time", "1792600000")
+                .assertQuery("lat", "40.5")
+                .assertQuery("lng", "-74.5")
+                .assertNoBody();
+        http.request(1).assertQuery("is_departed", "0").assertNoQuery("member_id").assertNoQuery("utc_time")
+                .assertNoQuery("lat").assertNoQuery("lng");
+        assertTrue(departed.getStatus());
+    }
+
+    @Test
+    public void markAddressVisitedSendsTheQueryAndReadsTheCount() throws Exception {
+        RoutingManager manager = manager();
+        http.respond(200, "1").respondWithoutBody(200);
+
+        Integer marked = manager.markAddressVisited("ROUTE-A1", 5002, true, 1001L, 1792600000L, 40.5, -74.5);
+        Integer empty = manager.markAddressVisited("ROUTE-A1", 5002, false, null, null, null, null);
+
+        http.request(0).assertEndpoint("GET", API, "/actions/address/update_address_visited.php")
+                .assertApiKeyInQuery()
+                .assertQuery("route_id", "ROUTE-A1")
+                .assertQuery("address_id", "5002")
+                .assertQuery("is_visited", "1")
+                .assertQuery("member_id", "1001")
+                .assertQuery("utc_time", "1792600000")
+                .assertQuery("lat", "40.5")
+                .assertQuery("lng", "-74.5")
+                .assertNoBody();
+        http.request(1).assertQuery("is_visited", "0").assertNoQuery("member_id");
+        assertEquals(Integer.valueOf(1), marked);
+        assertNull(empty);
+    }
+
+    @Test
+    public void deleteRouteDestinationsPostsTheIdsAsAForm() throws Exception {
+        RoutingManager manager = manager();
+        http.respond(200, json("{'deleted':true,'route_destination_ids':[5002,5003]}"));
+
+        JsonElement result = manager.deleteRouteDestinations(5002, 5003);
+
+        http.request().assertEndpoint("POST", API, "/actions/route/delete_route_destination.php")
+                .assertApiKeyInQuery()
+                .assertQuery("format", "json")
+                .assertContentType("application/x-www-form-urlencoded")
+                .assertForm("route_destination_ids", "5002,5003");
+        assertTrue(result.getAsJsonObject().get("deleted").getAsBoolean());
+    }
+
+    @Test
+    public void deleteRouteDestinationsNeedsAnId() {
+        final RoutingManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRouteDestinations());
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRouteDestinations((long[]) null));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void updateAddressAttributeMarksVisitedAndDepartedInTheBody() throws Exception {
+        RoutingManager manager = manager();
+        http.respondToAll(200, json("{'route_destination_id':5002,'is_visited':true,'is_departed':true}"));
+        Address visited = new Address();
+        visited.setIsVisited(true);
+        Address departed = new Address();
+        departed.setIsDeparted(true);
+
+        Address result = manager.updateAddressAttribute("ROUTE-A1", 5002, visited);
+        manager.updateAddressAttribute("ROUTE-A1", 5002, departed);
+
+        http.request(0).assertEndpoint("PUT", API, ADDRESS_EP).assertQuery("route_id", "ROUTE-A1")
+                .assertQuery("route_destination_id", "5002").assertJson("is_visited", true)
+                .assertJsonLacks("is_departed");
+        http.request(1).assertJson("is_departed", true).assertJsonLacks("is_visited");
+        assertTrue(result.getIsVisited());
     }
 }
