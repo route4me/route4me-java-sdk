@@ -105,8 +105,9 @@ public class OrderManagerV5 extends Manager {
      * Searches orders: {@code POST https://wh.route4me.com/modules/api/v5.0/orders-platform}, with the request as the
      * JSON body.
      *
-     * @param request the filters, sort order, page and fields
-     * @return the matching orders
+     * @param request the order IDs, text search, filters, sort order, page ({@code limit} and {@code offset}) and
+     *                fields
+     * @return the matching orders and their total number
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public SearchOrdersResponse searchOrders(SearchOrdersRequest request) throws APIException {
@@ -128,10 +129,11 @@ public class OrderManagerV5 extends Manager {
     }
 
     /**
-     * Updates several orders: {@code POST https://wh.route4me.com/modules/api/v5.0/orders-platform/batch-update}, with
-     * the orders as the JSON body.
+     * Updates several orders with the same values: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/orders-platform/batch-update}, with the order IDs and the new values
+     * as the JSON body.
      *
-     * @param request the orders
+     * @param request the order IDs and the new values
      * @return the updated orders
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
@@ -142,9 +144,9 @@ public class OrderManagerV5 extends Manager {
 
     /**
      * Deletes several orders: {@code POST https://wh.route4me.com/modules/api/v5.0/orders-platform/batch-delete}, with
-     * their UUIDs as the JSON body.
+     * {@code {"order_ids": [...]}} as the JSON body.
      *
-     * @param request the order UUIDs
+     * @param request the order IDs, as 32-character hex strings
      * @return the status of the request
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
@@ -154,12 +156,11 @@ public class OrderManagerV5 extends Manager {
     }
 
     /**
-     * Updates the orders that match filters: {@code PUT
-     * https://wh.route4me.com/modules/api/v5.0/orders-platform/batch-update/filter}, with the filters and the new
-     * values
-     * as the JSON body.
+     * Updates the orders that match filters, in the background: {@code PUT
+     * https://wh.route4me.com/modules/api/v5.0/orders-platform/batch-update/filter}, with the filters, the text
+     * search and the new values as the JSON body.
      *
-     * @param request the filters and the new values
+     * @param request the filters, the text search and the new values
      * @return whether the request was accepted, and whether a background job does it
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
@@ -169,11 +170,11 @@ public class OrderManagerV5 extends Manager {
     }
 
     /**
-     * Archives orders: {@code POST https://wh.route4me.com/modules/api/v5.0/orders/archive}, with the order IDs as the
-     * JSON body.
+     * Lists the archived orders, one page at a time: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/orders/archive}, with the request as the JSON body.
      *
-     * @param request the order IDs
-     * @return the archived orders
+     * @param request the page cursor, the page size and the filters
+     * @return one page of archived orders, with the cursor of the next page
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public ArchiveOrdersResponse archiveOrders(ArchiveOrdersRequest request) throws APIException {
@@ -183,16 +184,34 @@ public class OrderManagerV5 extends Manager {
 
     /**
      * Gets the history of an order: {@code GET https://wh.route4me.com/modules/api/v5.0/orders/history}. Every {@code
-     * null} argument is left out of the
-     * query.
+     * null} argument is left out of the query.
      *
      * @param orderUuid the order UUID ({@code order_uuid})
      * @param trackingNumber the tracking number of the order ({@code tracking_number})
-     * @return the history entries
+     * @return the history events
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @see #getOrderHistory(Long, String, String)
      */
     public OrderHistoryResponse getOrderHistory(String orderUuid, String trackingNumber) throws APIException {
+        return this.getOrderHistory(null, orderUuid, trackingNumber);
+    }
+
+    /**
+     * Gets the history of an order: {@code GET https://wh.route4me.com/modules/api/v5.0/orders/history}, with the
+     * order given by its ID, its UUID or its tracking number. Every {@code null} argument is left out of the query.
+     *
+     * @param orderId the order ID ({@code order_id})
+     * @param orderUuid the order UUID ({@code order_uuid})
+     * @param trackingNumber the tracking number of the order ({@code tracking_number})
+     * @return the history events
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public OrderHistoryResponse getOrderHistory(Long orderId, String orderUuid, String trackingNumber)
+            throws APIException {
         URIBuilder builder = v5Builder(ORDERS_HISTORY_EP);
+        if (orderId != null) {
+            builder.setParameter("order_id", String.valueOf(orderId));
+        }
         if (orderUuid != null) {
             builder.setParameter("order_uuid", orderUuid);
         }

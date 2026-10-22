@@ -2,12 +2,19 @@ package com.route4me.sdk.services.orders;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
-import java.util.List;
 
-/** The body of {@link OrderManagerV5#archiveOrders(ArchiveOrdersRequest)}. */
+/** The body of {@link OrderManagerV5#archiveOrders(ArchiveOrdersRequest)}; fields left {@code null} are not sent. */
 @Data
 public class ArchiveOrdersRequest {
-    /** The IDs of the orders to archive ({@code order_ids}). */
-    @SerializedName("order_ids")
-    private List<String> orderIds;
+    /** The page to read: the {@code next_page_cursor} of the previous answer; none for the first ({@code cursor}). */
+    @SerializedName("cursor")
+    private String cursor;
+
+    /** The number of orders per page ({@code per_page}). */
+    @SerializedName("per_page")
+    private Integer perPage;
+
+    /** The filters ({@code filters}). */
+    @SerializedName("filters")
+    private ArchiveOrdersFilters filters;
 }
