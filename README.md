@@ -17,7 +17,7 @@ Maven:
     <version>2.0.0</version>
 </dependency>
 ```
-Gradle: `implementation 'io.github.route4me:route4me-java-sdk:2.0.0'`. Gradle does not apply the Maven dependency pins; `SECURITY.md` lists the constraints to add.
+Gradle: `implementation 'io.github.route4me:route4me-java-sdk:2.0.0'`. The SDK declares the patched `okhttp` and `org.json` versions as its own dependencies, so Maven and Gradle use them without extra configuration (see `SECURITY.md`).
 
 ### Authentication
 Every manager takes your API key (Route4Me.com, Settings, API). The SDK sends it as the `api_key` query parameter to the API V4 (`https://api.route4me.com`), which requires that, and as an `Authorization: Bearer` header to the API V5 (`https://wh.route4me.com/modules/api/v5.0`), so it does not appear in V5 URLs or logs. Read the key from the environment or a secret store; do not put it in source code. The examples read `R4M_API_KEY`.

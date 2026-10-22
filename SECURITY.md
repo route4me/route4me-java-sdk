@@ -30,15 +30,6 @@ The SDK supports Java 8 and newer. Every change is built and tested on Java 8, 1
 
 The project checks its dependencies with `osv-scanner` and its history with `gitleaks`.
 
-The WebSocket geocoder uses `socket.io-client` 1.0.2, because the Route4Me geocoding server runs Socket.IO 2, which the 2.x Java client cannot connect to. The SDK pins patched versions of the libraries it brings: `okhttp` 4.12.0 (with `okio` 3.6.0) and `org.json` 20260814. Advisory GHSA-85xx-xhjm-rhrw (CVE-2022-25867) still lists `socket.io-client` 1.0.2, but that release contains the fix; `osv-scanner.toml` records why it is ignored.
+The WebSocket geocoder uses `socket.io-client` 1.0.2, because the Route4Me geocoding server runs Socket.IO 2, which the 2.x Java client cannot connect to. That release asks for `okhttp` 3.12.12 (with `okio` 1.15.0) and `org.json` 20090211, which have known vulnerabilities. The SDK declares the patched `okhttp` 4.12.0 (with `okio` 3.6.0, and the Kotlin standard library it needs) and `org.json` 20260814 as direct dependencies, so Maven (nearest wins) and Gradle (highest wins) resolve them for your project instead of the versions `socket.io-client` asks for; you do not need to add anything. Advisory GHSA-85xx-xhjm-rhrw (CVE-2022-25867) still lists `socket.io-client` 1.0.2, but that release contains the fix; `osv-scanner.toml` records why it is ignored.
 
-Maven applies these pins for you. Gradle does not read the `dependencyManagement` section of a dependency, so if you build with Gradle, add the same versions as constraints:
-
-```groovy
-dependencies {
-    constraints {
-        implementation 'com.squareup.okhttp3:okhttp:4.12.0'
-        implementation 'org.json:json:20260814'
-    }
-}
-```
+If your build forces other versions of these libraries, for example through a BOM or `dependencyManagement`, keep them at these versions or later.
