@@ -53,6 +53,10 @@ import org.apache.logging.log4j.LogManager;
  * URLs and server logs. Every other request sends it as the {@code api_key} query
  * parameter, which the V4 API requires.
  *
+ * <p>Requests to the V5 API also send {@code Accept: application/json, *}{@code /*;q=0.8}, so
+ * that its errors come back as JSON rather than as an HTML page. Other requests send no
+ * {@code Accept} header.
+ *
  * <p>Redirects are followed only over https to the Route4Me API hosts; see
  * {@link Route4MeRedirectStrategy}.
  *
@@ -75,6 +79,12 @@ public abstract class Manager implements Closeable {
     /** The path prefixes of the V5 API on {@link #V5_HOST}. */
     private static final String[] V5_PATH_PREFIXES = {"/modules/api/v5.0", "/modules/api/v5.1"};
     private static final String USER_AGENT = "Route4Me Java SDK";
+    /**
+     * The {@code Accept} header of V5 requests. The V5 API (Laravel) renders an error as an
+     * HTML page unless the client asks for JSON first; {@code *}{@code /*} keeps CSV, XML
+     * and PDF exports acceptable.
+     */
+    private static final String V5_ACCEPT = "application/json, */*;q=0.8";
 
     protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(Manager.class);
     private final String apiKey;
@@ -336,6 +346,9 @@ public abstract class Manager implements Closeable {
         }
         if (this.apiKey != null && bearer) {
             hrb.setHeader("Authorization", "Bearer " + this.apiKey);
+        }
+        if (bearer) {
+            hrb.setHeader("Accept", V5_ACCEPT);
         }
         // Adding User-Agent
         hrb.setHeader("User-Agent", USER_AGENT);

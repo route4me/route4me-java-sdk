@@ -188,6 +188,35 @@ public class ManagerTest {
     }
 
     @Test
+    public void v5RequestsAskForJsonFirst() throws Exception {
+        TestManager manager = manager();
+        TestManager keyless = http.install(new TestManager(null));
+        http.respondToAll(200, "{}");
+
+        manager.makeRequest(RequestMethod.GET, wh("/modules/api/v5.0/vehicles"), "", Reply.class);
+        manager.makeRequest(RequestMethod.POST, wh("/modules/api/v5.1/routes"), "{}", Reply.class);
+        keyless.makeRequest(RequestMethod.GET, wh("/modules/api/v5.0/vehicles"), "", Reply.class);
+
+        for (int i = 0; i < 3; i++) {
+            http.request(i).assertHeader("Accept", "application/json, */*;q=0.8");
+        }
+    }
+
+    @Test
+    public void otherRequestsSendNoAcceptHeader() throws Exception {
+        TestManager manager = manager();
+        http.respondToAll(200, "{}");
+
+        manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
+        manager.makeRequest(RequestMethod.GET, wh("/modules/api/vehicles"), "", Reply.class);
+        manager.makeRequest(RequestMethod.GET, wh("/api.v4/note_custom_types.php"), "", Reply.class);
+
+        for (int i = 0; i < 3; i++) {
+            assertNull(http.request(i).toString(), http.request(i).header("Accept"));
+        }
+    }
+
+    @Test
     public void otherRequestsKeepTheKeyInTheQuery() throws Exception {
         TestManager manager = manager();
         http.respondToAll(200, "{}");
