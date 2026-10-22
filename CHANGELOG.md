@@ -93,7 +93,7 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - `GeocoderWebSockets` unsubscribes from `addresses_bulk` on close, and sizes its download chunks from the job size.
 
 ### Examples
-- The examples moved from `src/main/java` to `src/examples/java` and compile with every build. They are no longer in the jar: the `com.route4me.sdk.examples` classes that the 1.16.x jars contained are gone. Each has a class comment saying what it shows and which method it calls, and reads the key from `R4M_API_KEY`.
+- The examples moved from `src/main/java` to `src/examples/java` and compile with every build. They are no longer in the jar: the `com.route4me.sdk.examples` classes that the 1.16.x jars contained are gone. Each has a class comment saying what it shows and which method it calls, and reads the key from `R4M_API_KEY`. They call the live API, so run them against a test account. The examples that change or delete existing data (`DeleteRoute`, `DeleteRoutes`, `DeleteAddress`, the `MoveAddressesToRoute` pair, `UpdateRoute`, `UpdateRouteParameters`, `UpdateAddressBookContact`, `UpdateUser` and `TheadBasedAddressesAliasUpdater`) take their targets from environment variables such as `ROUTE_ID` and stop when they are not set; they no longer pick the newest route or the first contact. Passwords and connection tokens come from environment variables too, and the contact data is fake (`example.com`, `555` numbers).
 - 368 runnable examples, one for each new method, plus the `CsvRows` helper; the example issues (#105–#109) each get theirs.
 
 ### Internal

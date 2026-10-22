@@ -60,7 +60,7 @@ if (job.getJobId() != null) {
 ```
 
 ### Examples
-`src/examples/java` has a runnable example for each manager method, by area; each one says what it does and which method it calls. They read the key from `R4M_API_KEY`, are compiled by every build, and are not part of the jar. Run one from your IDE, or with `mvn test-compile` and the test classpath.
+`src/examples/java` has a runnable example for each manager method, by area; each one says what it does and which method it calls. They read the key from `R4M_API_KEY`, are compiled by every build, and are not part of the jar. They call the live API: run them against a test account. The examples that change or delete data take their target IDs from environment variables such as `ROUTE_ID` and stop when they are not set. Run one from your IDE, or with `mvn test-compile` and the test classpath.
 
 ### Deprecated methods
 Methods on retired Route4Me hosts or obsolete endpoints are marked `@Deprecated` and name their replacement: the telematics vendor methods on the retired `telematics.route4me.com` host (use `TelematicsManager.getTelematicsVendorsV5`; they throw without sending a request) and `RoutingManager.resequenceReoptimizeRoute`, on the obsolete V3 endpoint `/api.v3/route/reoptimize_2.php` (use `updateRoute` with `reoptimize`). They will be removed in the next major version. See `CHANGELOG.md`.
