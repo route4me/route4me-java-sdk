@@ -20,15 +20,7 @@ public class AddRemoveAddressReOtimizeOptimization {
         RoutingManager manager = new RoutingManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
 
-        Parameters parameters = new Parameters();
-        parameters.setAlgorithmType(Constants.AlgorithmType.TSP.getValue());
-        parameters.setStoreRoute(Boolean.FALSE);
-        parameters.setShareRoute(Boolean.FALSE);
-        parameters.setRouteName("Single Depot, Single Driver - Adding Addresses Post Optimization");
-        parameters.setOptimize(Constants.Optimize.DISTANCE.toString());
-        parameters.setDistanceUnit(Constants.DistanceUnit.MI.toString());
-        parameters.setDeviceType(Constants.DeviceType.WEB.toString());
-        parameters.setTravelMode(Constants.TravelMode.DRIVING.toString());
+        Parameters parameters = buildParameters();
         optParameters.setParameters(parameters);
 
         List<Address> addresses = new ArrayList<>();
@@ -168,6 +160,24 @@ public class AddRemoveAddressReOtimizeOptimization {
         }
 
 
+    }
+
+    /**
+     * Builds the parameters of the optimization: one driver, TSP, shortest distance in miles.
+     *
+     * @return the route parameters
+     */
+    private static Parameters buildParameters() {
+        Parameters parameters = new Parameters();
+        parameters.setAlgorithmType(Constants.AlgorithmType.TSP.getValue());
+        parameters.setStoreRoute(Boolean.FALSE);
+        parameters.setShareRoute(Boolean.FALSE);
+        parameters.setRouteName("Single Depot, Single Driver - Adding Addresses Post Optimization");
+        parameters.setOptimize(Constants.Optimize.DISTANCE.toString());
+        parameters.setDistanceUnit(Constants.DistanceUnit.MI.toString());
+        parameters.setDeviceType(Constants.DeviceType.WEB.toString());
+        parameters.setTravelMode(Constants.TravelMode.DRIVING.toString());
+        return parameters;
     }
 
 }

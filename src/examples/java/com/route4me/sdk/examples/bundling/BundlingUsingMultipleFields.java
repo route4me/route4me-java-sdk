@@ -57,123 +57,7 @@ public class BundlingUsingMultipleFields {
         parameters.setRouteName("Single Depot, Multiple Driver, Bundling Multiple Fields");
         parameters.setTravelMode(Constants.TravelMode.DRIVING.toString());
 
-        List<Address> addresses = new ArrayList<>();
-        // DEPOT
-        addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
-
-        // Addresses
-        addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215", 38.202496, -85.786514, 300));
-        addresses.add(new Address("730 CECIL AVENUE, Louisville, KY, 40211", 38.248684, -85.821121, 300));
-        addresses.add(new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211", 38.251923, -85.800034, 300));
-        addresses.add(new Address("4629 HILLSIDE DRIVE, Louisville, KY, 40216", 38.176067, -85.824638, 300));
-
-        // Bundling Addresses
-        Address address;
-
-        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE001"},
-            {"LOCATION_ID", "FLOOR001"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE001"},
-            {"LOCATION_ID", "FLOOR001"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE001"},
-            {"LOCATION_ID", "FLOOR001"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE001"},
-            {"LOCATION_ID", "FLOOR003"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE001"},
-            {"LOCATION_ID", "FLOOR003"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE001"},
-            {"LOCATION_ID", "FLOOR003"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "FLOOR001"},
-            {"LOCATION_ID", "Doe"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE002"},
-            {"LOCATION_ID", "FLOOR001"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE002"},
-            {"LOCATION_ID", "FLOOR001"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE002"},
-            {"LOCATION_ID", "FLOOR004"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE002"},
-            {"LOCATION_ID", "FLOOR004"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE003"},
-            {"LOCATION_ID", "FLOOR001"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE003"},
-            {"LOCATION_ID", "FLOOR001"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE003"},
-            {"LOCATION_ID", "FLOOR002"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE003"},
-            {"LOCATION_ID", "FLOOR002"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE003"},
-            {"LOCATION_ID", "FLOOR003"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE003"},
-            {"LOCATION_ID", "FLOOR003"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE004"},
-            {"LOCATION_ID", "FLOOR001"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE004"},
-            {"LOCATION_ID", "FLOOR001"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE004"},
-            {"LOCATION_ID", "FLOOR002"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-        address = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "ZONE004"},
-            {"LOCATION_ID", "FLOOR002"}, }).collect(Collectors.toMap(data -> data[0], data -> data[1])));
-        addresses.add(address);
-
+        List<Address> addresses = buildAddresses();
         optParameters.setAddresses(addresses);
 
         Bundling bundling = new Bundling();
@@ -207,6 +91,132 @@ public class BundlingUsingMultipleFields {
             e.printStackTrace();
         }
 
+    }
+
+    /**
+     * Builds the depot and the stops; the bundled stops carry BUNDLING_KEY and LOCATION_ID custom fields.
+     *
+     * @return the addresses of the optimization
+     */
+    private static List<Address> buildAddresses() {
+        List<Address> addresses = new ArrayList<>();
+        // DEPOT
+        addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 300));
+
+        // Addresses
+        addresses.add(new Address("1407 MCCOY, Louisville, KY, 40215", 38.202496, -85.786514, 300));
+        addresses.add(new Address("730 CECIL AVENUE, Louisville, KY, 40211", 38.248684, -85.821121, 300));
+        addresses.add(new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211", 38.251923, -85.800034, 300));
+        addresses.add(new Address("4629 HILLSIDE DRIVE, Louisville, KY, 40216", 38.176067, -85.824638, 300));
+
+        // Bundling Addresses
+        Address address;
+
+        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE001"},
+            {"LOCATION_ID", "FLOOR001"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE001"},
+            {"LOCATION_ID", "FLOOR001"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE001"},
+            {"LOCATION_ID", "FLOOR001"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE001"},
+            {"LOCATION_ID", "FLOOR003"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE001"},
+            {"LOCATION_ID", "FLOOR003"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE001"},
+            {"LOCATION_ID", "FLOOR003"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "FLOOR001"},
+            {"LOCATION_ID", "Doe"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE002"},
+            {"LOCATION_ID", "FLOOR001"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE002"},
+            {"LOCATION_ID", "FLOOR001"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE002"},
+            {"LOCATION_ID", "FLOOR004"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE002"},
+            {"LOCATION_ID", "FLOOR004"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE003"},
+            {"LOCATION_ID", "FLOOR001"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE003"},
+            {"LOCATION_ID", "FLOOR001"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE003"},
+            {"LOCATION_ID", "FLOOR002"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE003"},
+            {"LOCATION_ID", "FLOOR002"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE003"},
+            {"LOCATION_ID", "FLOOR003"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE003"},
+            {"LOCATION_ID", "FLOOR003"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE004"},
+            {"LOCATION_ID", "FLOOR001"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE004"},
+            {"LOCATION_ID", "FLOOR001"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE004"},
+            {"LOCATION_ID", "FLOOR002"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+        address = new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", 38.162472, -85.792854, 300);
+        address.setCustom_fields(Stream.of(new String[][]{
+            {"BUNDLING_KEY", "ZONE004"},
+            {"LOCATION_ID", "FLOOR002"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
+        addresses.add(address);
+
+        return addresses;
     }
 
 }

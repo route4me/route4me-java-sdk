@@ -106,57 +106,11 @@ public class DriversScheduleswithTerritoriesV2 {
         // **********************
         // Schedules
         // **********************
-        AdvancedConstraints schedule;
-        List<String> zone = new ArrayList<>();
-        List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
-
         Path currentPath = Paths.get(System.getProperty("user.dir"));
         Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk",
                 "examples", "advancedconstraints", "schedules.csv");
 
-
-        try {
-            for (String[] nextRecord : CsvRows.read(filePath.toString())) {
-
-                schedule = new AdvancedConstraints();
-                int group = Integer.parseInt(nextRecord[2]);
-                switch (group) {
-                    case 0:
-                        schedule.setTags(zone1);
-                        break;
-                    case 1:
-                        schedule.setTags(zone2);
-                        break;
-                    case 2:
-                        schedule.setTags(zone3);
-                        break;
-                    case 3:
-                        schedule.setTags(zone4);
-                        break;
-                    case 4:
-                        schedule.setTags(zone5);
-                        break;
-                    default:
-                        break;
-                }
-
-                Integer timeStart = Integer.parseInt(nextRecord[0]);
-                Integer timeEnd = Integer.parseInt(nextRecord[1]);
-
-                schedule.setMembersCount(1);
-                List<List<Integer>> timeWindowsSchedule = new ArrayList<>();
-                List<Integer> timeWindowSchedule = Arrays.asList(timeStart, timeEnd);
-                timeWindowsSchedule.add(timeWindowSchedule);
-                schedule.setAvailableTimeWindows(timeWindowsSchedule);
-                advancedConstraints.add(schedule);
-
-            }
-
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV2.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV2.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        List<AdvancedConstraints> advancedConstraints = readSchedules(filePath, zone1, zone2, zone3, zone4, zone5);
 
 
         // Schedules registration
@@ -237,6 +191,71 @@ public class DriversScheduleswithTerritoriesV2 {
             //handle exception
             e.printStackTrace();
         }
+    }
+
+    /**
+     * Reads the driver schedules of schedules.csv: one schedule per row, with its time window and the tags of
+     * its zone.
+     *
+     * @param filePath the path of schedules.csv
+     * @param zone1 the tags of zone 1 (group 0)
+     * @param zone2 the tags of zone 2 (group 1)
+     * @param zone3 the tags of zone 3 (group 2)
+     * @param zone4 the tags of zone 4 (group 3)
+     * @param zone5 the tags of zone 5 (group 4)
+     * @return the schedules, as advanced constraints
+     */
+    private static List<AdvancedConstraints> readSchedules(Path filePath, List<String> zone1, List<String> zone2,
+            List<String> zone3, List<String> zone4, List<String> zone5) {
+        AdvancedConstraints schedule;
+        List<String> zone = new ArrayList<>();
+        List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
+
+
+
+        try {
+            for (String[] nextRecord : CsvRows.read(filePath.toString())) {
+
+                schedule = new AdvancedConstraints();
+                int group = Integer.parseInt(nextRecord[2]);
+                switch (group) {
+                    case 0:
+                        schedule.setTags(zone1);
+                        break;
+                    case 1:
+                        schedule.setTags(zone2);
+                        break;
+                    case 2:
+                        schedule.setTags(zone3);
+                        break;
+                    case 3:
+                        schedule.setTags(zone4);
+                        break;
+                    case 4:
+                        schedule.setTags(zone5);
+                        break;
+                    default:
+                        break;
+                }
+
+                Integer timeStart = Integer.parseInt(nextRecord[0]);
+                Integer timeEnd = Integer.parseInt(nextRecord[1]);
+
+                schedule.setMembersCount(1);
+                List<List<Integer>> timeWindowsSchedule = new ArrayList<>();
+                List<Integer> timeWindowSchedule = Arrays.asList(timeStart, timeEnd);
+                timeWindowsSchedule.add(timeWindowSchedule);
+                schedule.setAvailableTimeWindows(timeWindowsSchedule);
+                advancedConstraints.add(schedule);
+
+            }
+
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(DriversScheduleswithTerritoriesV2.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(DriversScheduleswithTerritoriesV2.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return advancedConstraints;
     }
 
 }
