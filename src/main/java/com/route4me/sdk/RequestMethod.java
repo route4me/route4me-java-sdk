@@ -24,8 +24,9 @@ public enum RequestMethod {
     /** {@code PUT}. */
     PUT(HttpPut.class),
     /**
-     * {@code PATCH}, for partial updates. It is here for future use: the managers keep
-     * sending {@code PUT} where they do today, which the API accepts as well.
+     * {@code PATCH}, for partial updates, where the API asks for it: for example the V5
+     * vehicle, vehicle profile, vehicle capacity profile, team member and driver review
+     * updates.
      */
     PATCH(HttpPatch.class);
 

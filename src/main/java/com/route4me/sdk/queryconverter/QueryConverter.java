@@ -14,9 +14,9 @@ import java.util.Map;
 public class QueryConverter {
     /**
      * Converts the {@link QueryParameter} fields of an object to parameters, as the V4 API reads them. {@code null}
-     * fields are left out; an array or an iterable gives one parameter per item, under the same name; {@code true}
-     * becomes {@code 1}, and any other value its {@code toString()}, so {@code false} stays {@code false}. Nested
-     * objects are not converted.
+     * fields are left out; an array or an iterable gives one parameter per item, under the same name; a boolean, also
+     * inside an array or an iterable, becomes {@code 1} or {@code 0} (PHP reads any non-empty string, {@code "false"}
+     * included, as true), and any other value its {@code toString()}. Nested objects are not converted.
      *
      * @param object the object to convert
      * @return the parameters, in field order
