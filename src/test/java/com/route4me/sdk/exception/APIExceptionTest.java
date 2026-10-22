@@ -96,6 +96,46 @@ public class APIExceptionTest {
     }
 
     @Test
+    public void v5FeatureGateErrorIsReadFromTheSingularErrorKey() {
+        String body = "{\"status\":false,\"exit_code\":1,"
+                + "\"error\":\"Access denied: the required feature is not enabled on the used Route4Me account\"}";
+
+        APIException error = APIException.forErrorStatus("GET", URL, 403, body);
+
+        assertEquals(Collections.singletonList(
+                "Access denied: the required feature is not enabled on the used Route4Me account"), error.getErrors());
+        assertEquals("Invalid status code 403 for GET https://api.route4me.com/api.v4/route.php: "
+                + "Access denied: the required feature is not enabled on the used Route4Me account", error.getMessage());
+        assertEquals(403, error.getStatusCode());
+        assertTrue(error.getMessages().isEmpty());
+    }
+
+    @Test
+    public void singularErrorIsAddedAfterTheErrorsList() {
+        APIException error = APIException.forErrorStatus("GET", URL, 400,
+                "{\"errors\":[\"First\"],\"error\":\"Second\"}");
+
+        assertEquals(Arrays.asList("First", "Second"), error.getErrors());
+        assertTrue(error.getMessage(), error.getMessage().endsWith(": First"));
+    }
+
+    @Test
+    public void booleanErrorFlagIsIgnored() {
+        APIException flagOnly = APIException.forErrorStatus("GET", URL, 400, "{\"error\":true}");
+        APIException flagAndMessage = APIException.forErrorStatus("GET", URL, 400,
+                "{\"error\":true,\"message\":\"Route not found\"}");
+        APIException flagAndMessages = APIException.forErrorStatus("GET", URL, 422,
+                "{\"error\":false,\"messages\":{\"route_id\":[\"Required\"]}}");
+
+        assertTrue(flagOnly.getErrors().isEmpty());
+        assertEquals("Invalid status code 400 for GET https://api.route4me.com/api.v4/route.php", flagOnly.getMessage());
+        assertTrue(flagAndMessage.getErrors().isEmpty());
+        assertTrue(flagAndMessage.getMessage(), flagAndMessage.getMessage().endsWith(": Route not found"));
+        assertTrue(flagAndMessages.getErrors().isEmpty());
+        assertTrue(flagAndMessages.getMessage(), flagAndMessages.getMessage().endsWith(": Required"));
+    }
+
+    @Test
     public void nonJsonOrNonObjectBodiesHaveNoParsedDetails() {
         for (String body : Arrays.asList("<html>oops</html>", "[1,2]", "\"text\"", "", "{\"code\":\"x\"}")) {
             APIException error = APIException.forErrorStatus("GET", URL, 500, body);

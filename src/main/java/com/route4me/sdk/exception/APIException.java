@@ -21,7 +21,9 @@ import java.util.Map;
  * <ul>
  *   <li>{@link #getStatusCode()}: the HTTP status, for example to retry on {@code 502} but
  *       not on {@code 404};</li>
- *   <li>{@link #getErrors()}: the V4 {@code {"errors": [...]}} list;</li>
+ *   <li>{@link #getErrors()}: the V4 {@code {"errors": [...]}} list, followed by a
+ *       singular {@code "error"} string, which the V5 API sends for example when the
+ *       account lacks a module ({@code 403 {"status": false, "error": "..."}});</li>
  *   <li>{@link #getCode()} and {@link #getMessages()}: the V5
  *       {@code {"code": 422, "messages": {...}}} fields;</li>
  *   <li>{@link #getResponseBody()}: the body, cut to {@link #MAX_BODY_LENGTH}
@@ -165,7 +167,8 @@ public class APIException extends Exception {
 
     /**
      * @return the {@code errors} of a V4 error response ({@code {"errors": [...]}}), in
-     * order; empty when the body has none
+     * order, followed by the {@code error} of the body when it is a string (a boolean
+     * {@code error} flag is ignored); empty when the body has neither
      */
     public List<String> getErrors() {
         return Collections.unmodifiableList(errors);
@@ -221,9 +224,9 @@ public class APIException extends Exception {
     }
 
     /**
-     * Returns the first error of a body, cleaned for a one-line message: the first V4
-     * error, else the first V5 message, else a top-level {@code message} or {@code error}
-     * string.
+     * Returns the first error of a body, cleaned for a one-line message: the first of the
+     * {@code errors} and the {@code error} string, else the first V5 message, else a
+     * top-level {@code message} string.
      */
     private static String firstError(String body) {
         List<String> errors = new ArrayList<>();
@@ -244,16 +247,14 @@ public class APIException extends Exception {
             JsonObject object = parseObject(body);
             if (object != null) {
                 first = stringMember(object, "message");
-                if (first == null) {
-                    first = stringMember(object, "error");
-                }
             }
         }
         return first == null ? null : Sanitizer.forLog(first, MAX_ERROR_LENGTH);
     }
 
     /**
-     * Reads the V4 {@code errors} and the V5 {@code messages} of a JSON body.
+     * Reads the V4 {@code errors}, the singular {@code error} string and the V5
+     * {@code messages} of a JSON body.
      *
      * @return the V5 {@code code}, or {@code null}
      */
@@ -264,6 +265,12 @@ public class APIException extends Exception {
         }
         if (object.has("errors")) {
             addTexts(object.get("errors"), errors);
+        }
+        // The V5 API answers {"status": false, "exit_code": 1, "error": "..."} for example
+        // when the account lacks a module. Some answers carry "error": true as a flag only.
+        String error = stringMember(object, "error");
+        if (error != null) {
+            errors.add(error);
         }
         if (object.has("messages")) {
             JsonElement value = object.get("messages");
@@ -306,7 +313,8 @@ public class APIException extends Exception {
     /** Returns a string member of an object, or {@code null} when it is absent or not a string. */
     private static String stringMember(JsonObject object, String name) {
         JsonElement value = object.get(name);
-        return value != null && value.isJsonPrimitive() ? value.getAsString() : null;
+        return value != null && value.isJsonPrimitive() && value.getAsJsonPrimitive().isString()
+                ? value.getAsString() : null;
     }
 
     /** Adds the texts of a JSON value: a string, a list, or the values of an object. */
