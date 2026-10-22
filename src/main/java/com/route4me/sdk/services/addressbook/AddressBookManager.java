@@ -64,6 +64,13 @@ public class AddressBookManager extends Manager {
         return response.getResults().get(0);
     }
 
+    /**
+     * Searches the address book: {@code GET /api.v4/address_book.php}.
+     *
+     * @param request the IDs or search parameters
+     * @return the contacts, or {@code null} when the answer has no results
+     * @throws APIException if the request fails
+     */
     public List<Contact> getContacts(ContactsRequest request) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
         if (request.getAddressIds() != null && !request.getAddressIds().isEmpty()) {
@@ -77,6 +84,14 @@ public class AddressBookManager extends Manager {
         return cr == null ? null : cr.getResults();
     }
 
+    /**
+     * Deletes address book contacts: {@code DELETE /api.v4/address_book.php}, with the IDs in
+     * the JSON body.
+     *
+     * @param addressIds the contacts' address IDs
+     * @return whether they were deleted; {@code false} also when the answer is empty
+     * @throws APIException if the request fails
+     */
     public boolean deleteContact(List<Number> addressIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
         DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(new AddressIds(addressIds)), DeleteResponse.class);

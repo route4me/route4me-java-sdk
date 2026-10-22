@@ -22,6 +22,14 @@ public class NotesManager extends Manager {
         super(apiKey);
     }
 
+    /**
+     * Gets the notes of a route destination: {@code GET /api.v4/address.php?notes=1}.
+     *
+     * @param routeId            the route ID
+     * @param routeDestinationId the destination ID
+     * @return the notes, or {@code null} when the answer has none
+     * @throws APIException if the request fails
+     */
     public List<Note> getAddressNotes(String routeId, String routeDestinationId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(GET_NOTES_EP);
         builder.setParameter("route_id", routeId);
@@ -31,6 +39,16 @@ public class NotesManager extends Manager {
         return address == null ? null : address.getNotes();
     }
 
+    /**
+     * Adds a note to a route destination: {@code POST /actions/addRouteNotes.php}, with the
+     * location in the query and the note as a form.
+     *
+     * @param note       the route, destination and device location
+     * @param content    the note text
+     * @param updateType the note type; {@code null} sends {@code unclassified}
+     * @return the added note
+     * @throws APIException if the request fails
+     */
     public AddedNote addAddressNotes(NoteRequest note, String content, StatusUpdateType updateType) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADD_NOTES_EP);
         try {

@@ -117,6 +117,14 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, optimization, Optimization.class);
     }
 
+    /**
+     * Lists optimizations: {@code GET /api.v4/optimization_problem.php?limit=...&offset=...}.
+     *
+     * @param limit  the page size
+     * @param offset the number of optimizations to skip
+     * @return the optimizations, or {@code null} when the answer has none
+     * @throws APIException if the request fails
+     */
     public List<DataObject> getOptimizations(int limit, int offset) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         builder.setParameter("limit", Integer.toString(limit));

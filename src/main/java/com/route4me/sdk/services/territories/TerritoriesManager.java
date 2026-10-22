@@ -85,6 +85,13 @@ public class TerritoriesManager extends Manager {
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(territory), Territory.class);
     }
 
+    /**
+     * Deletes an avoidance zone: {@code DELETE /api.v4/avoidance.php?territory_id=...}.
+     *
+     * @param territoryId the zone ID
+     * @return whether the zone was deleted; {@code false} also when the answer is empty
+     * @throws APIException if the request fails
+     */
     public boolean deleteAvoidanceZone(String territoryId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(AVOIDANCE_EP);
         builder.setParameter("territory_id", territoryId);
@@ -125,6 +132,13 @@ public class TerritoriesManager extends Manager {
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(territory), Territory.class);
     }
 
+    /**
+     * Deletes a territory: {@code DELETE /api.v4/territory.php?territory_id=...}.
+     *
+     * @param territoryId the territory ID
+     * @return whether the territory was deleted; {@code false} also when the answer is empty
+     * @throws APIException if the request fails
+     */
     public boolean deleteTerritory(String territoryId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TERRITORY_EP);
         builder.setParameter("territory_id", territoryId);
