@@ -819,7 +819,8 @@ public class RoutingManagerTest {
                 .assertApiKeyInQuery()
                 .assertQuery("format", "json")
                 .assertContentType("application/x-www-form-urlencoded")
-                .assertForm("route_destination_ids", "5002,5003");
+                .assertForm("route_destination_id", "5002,5003");
+        assertEquals("the API rejects the plural name (409)", 1, http.request().formFields().size());
         assertTrue(result.getAsJsonObject().get("deleted").getAsBoolean());
     }
 

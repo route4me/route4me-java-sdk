@@ -811,7 +811,8 @@ public class RoutingManager extends Manager {
     /**
      * Deletes destinations from their routes: {@code POST
      * https://api.route4me.com/actions/route/delete_route_destination.php?format=json}, with
-     * {@code route_destination_ids} (the IDs, separated by commas) as a form.
+     * {@code route_destination_id} (the IDs, separated by commas) as a form. The API reads that singular name, also
+     * for several IDs; it rejects {@code route_destination_ids} (409, "Unspecified required destination ID").
      * {@link #deleteAddress(String, Number)} deletes one destination through the V4 API instead.
      *
      * @param routeDestinationIds the route destination IDs; at least one
@@ -833,7 +834,7 @@ public class RoutingManager extends Manager {
         URIBuilder builder = Manager.defaultBuilder(DELETE_ROUTE_DESTINATION_EP);
         builder.setParameter("format", "json");
         List<NameValuePair> form = new ArrayList<>();
-        form.add(new BasicNameValuePair("route_destination_ids", ids.toString()));
+        form.add(new BasicNameValuePair("route_destination_id", ids.toString()));
         return this.makeRequest(RequestMethod.POST, builder, form, JsonElement.class);
     }
 

@@ -6,6 +6,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertNull;
@@ -124,7 +125,7 @@ public class NotesManagerTest {
     }
 
     @Test
-    public void addCustomNoteTypePostsTheSpecFields() throws Exception {
+    public void addCustomNoteTypePostsTypeAndValues() throws Exception {
         NotesManager manager = manager();
         http.respond(200, json("{'result':'OK','affected':1,'data':{'note_custom_type_id':7,"
                 + "'note_custom_type':'Reason','note_custom_type_values':['Closed','Moved']}}"));
@@ -136,22 +137,29 @@ public class NotesManagerTest {
 
         http.request().assertEndpoint("POST", HOST, "/api.v4/note_custom_types.php").assertApiKeyInQuery()
                 .assertContentType("application/json")
-                .assertJson("note_custom_type", "Reason")
-                .assertJson("note_custom_type_values[1]", "Moved")
-                .assertJsonLacks("note_custom_field_type", "type", "values");
+                .assertJson("type", "Reason")
+                .assertJson("values[1]", "Moved")
+                .assertJsonLacks("note_custom_field_type", "note_custom_type", "note_custom_type_values");
         assertEquals("OK", added.getResult());
         assertEquals(Integer.valueOf(1), added.getAffected());
         assertEquals(Long.valueOf(7), added.getData().getNoteCustomTypeId());
     }
 
     @Test
-    public void addCustomNoteTypeRequiresTheName() {
+    public void addCustomNoteTypeRequiresTheNameAndValues() {
         final NotesManager manager = manager();
         final CustomNoteTypeRequest unnamed = new CustomNoteTypeRequest();
         unnamed.setNoteCustomTypeValues(Arrays.asList("Closed"));
+        final CustomNoteTypeRequest noValues = new CustomNoteTypeRequest();
+        noValues.setNoteCustomType("Reason");
+        final CustomNoteTypeRequest emptyValues = new CustomNoteTypeRequest();
+        emptyValues.setNoteCustomType("Reason");
+        emptyValues.setNoteCustomTypeValues(Collections.<String>emptyList());
 
         http.expectThrows(IllegalArgumentException.class, () -> manager.addCustomNoteType(null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.addCustomNoteType(unnamed));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.addCustomNoteType(noValues));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.addCustomNoteType(emptyValues));
         http.assertNoRequests();
     }
 

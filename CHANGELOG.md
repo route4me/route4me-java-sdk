@@ -94,6 +94,8 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - #31 territory updates used DELETE. #32 busy-wait in `bulkGeocoder`. #33 quoted `address_id`. #34 `OrderRequest` field names. #35 unboxing NPE. #36 `DynamicInsertManager` NPE. #37 `return` in `finally`. #38 telematics searches delegated to the wrong method. #39 `setGPS` (it already used query parameters; it now returns the reply). #40 mutable enums. #41 trailing comma in `deleteRoutes`.
 - `Constants.DeviceType` and `OptimizationParameters` serialise with their API names.
 - `bulkGeocoder` keeps the latitude and longitude of a match that comes without `coordinates`; they were overwritten with 0.
+- `RoutingManager.deleteRouteDestinations` sends the form field `route_destination_id` (the IDs, comma-separated), which the API reads; it answered `409` ("Unspecified required destination ID") to the `route_destination_ids` sent before.
+- `NotesManager.addCustomNoteType` sends `type` and `values`, as the C# and PHP SDKs do, and requires at least one value; the API answered `400` ("Field values is required") to the spec's `note_custom_type` and `note_custom_type_values`.
 - `GeocoderWebSockets` unsubscribes from `addresses_bulk` on close, and sizes its download chunks from the job size.
 
 ### Examples
