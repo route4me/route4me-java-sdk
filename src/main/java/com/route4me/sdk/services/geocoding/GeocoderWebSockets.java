@@ -26,7 +26,11 @@ public class GeocoderWebSockets {
 
     private final static Logger LOG = Logger.getLogger(GeocoderWebSockets.class.getName());
 
-    public static Socket geocoderWebSocket;
+    /**
+     * The connection of this geocoder; {@code null} until {@link #startGeocoding} connects.
+     * Each geocoder has its own, so that two jobs never share or close each other's socket.
+     */
+    private Socket geocoderWebSocket;
 
     private static final String GEOCODER_URL = "https://validator.route4me.com";
 

@@ -9,8 +9,10 @@ import org.mockito.Mockito;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -69,6 +71,20 @@ public class GeocoderWebSocketsTest {
             assertEquals("TMP-1", payload.getString("temporary_addresses_storage_id"));
             assertEquals(0, payload.getInt("from_index"));
         }
+    }
+
+    @Test
+    public void eachGeocoderHasItsOwnSocket() throws Exception {
+        GeocoderWebSockets first = new GeocoderWebSockets();
+        GeocoderWebSockets second = new GeocoderWebSockets();
+        setSocket(first, socket);
+
+        second.closeGeoCodeSocketIO();
+
+        Mockito.verifyNoInteractions(socket);
+        Field field = GeocoderWebSockets.class.getDeclaredField("geocoderWebSocket");
+        assertFalse("the socket field must not be static", Modifier.isStatic(field.getModifiers()));
+        assertFalse("the socket field must not be public", Modifier.isPublic(field.getModifiers()));
     }
 
     @Test

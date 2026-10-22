@@ -11,6 +11,7 @@ import org.junit.Test;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -364,14 +365,16 @@ public class GeocodingManagerTest {
     }
 
     @Test
-    public void websocketsGeocoderReturnsAnIdleGeocoderWhenTheUploadFails() {
+    public void websocketsGeocoderReturnsAnIdleGeocoderWhenTheUploadFails() throws Exception {
         GeocodingManager manager = manager();
         http.respondWithFixture(400, "error_400.json");
 
         GeocoderWebSockets geocoder = manager.websocketsGeocoder(new ArrayList<Address>());
 
         http.request().assertPath("/actions/upload/json-geocode.php");
-        assertNull("no socket may be opened in a unit test", GeocoderWebSockets.geocoderWebSocket);
+        Field socket = GeocoderWebSockets.class.getDeclaredField("geocoderWebSocket");
+        socket.setAccessible(true);
+        assertNull("no socket may be opened in a unit test", socket.get(geocoder));
         assertNull(geocoder.getAddresses());
         assertEquals(0, geocoder.getAddressesCount());
         assertEquals(0, geocoder.getTotalAddresses());
