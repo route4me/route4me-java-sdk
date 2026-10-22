@@ -17,6 +17,7 @@ import java.util.Map;
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -710,6 +711,7 @@ public class RoutingManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void resequenceReoptimizeRouteSendsTheV3Query() throws Exception {
         RoutingManager manager = manager();
         http.respondToAll(200, json("{'status':true}"));
@@ -725,6 +727,12 @@ public class RoutingManagerTest {
                 .assertNoBody();
         http.request(1).assertNoQuery("disable_optimization").assertNoQuery("optimize");
         assertTrue(result.getStatus());
+    }
+
+    @Test
+    public void resequenceReoptimizeRouteIsDeprecatedForUpdateRoute() throws Exception {
+        assertNotNull(RoutingManager.class.getMethod("resequenceReoptimizeRoute", String.class, Boolean.class,
+                String.class).getAnnotation(Deprecated.class));
     }
 
     @Test

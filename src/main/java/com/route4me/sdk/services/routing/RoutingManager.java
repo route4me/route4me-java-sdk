@@ -723,8 +723,7 @@ public class RoutingManager extends Manager {
     /**
      * Re-sequences all the stops of a route: {@code GET
      * https://api.route4me.com/api.v3/route/reoptimize_2.php?route_id=...&disable_optimization=...&optimize=...}.
-     * Every {@code null} argument is left out of the query. {@link #updateRoute(Route, RouteUpdateParameters)} with
-     * {@code reoptimize} re-optimizes a route through the V4 API instead.
+     * Every {@code null} argument is left out of the query.
      *
      * @param routeId the route ID ({@code route_id})
      * @param disableOptimization {@code true} to keep the order of the stops and only recompute the route, sent as
@@ -733,7 +732,12 @@ public class RoutingManager extends Manager {
      *     ({@code optimize}; see {@link Constants.Optimize})
      * @return whether the route was re-sequenced
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V3 endpoint is obsolete, as in the C# SDK ({@code ResequenceReoptimizeRoute}). Use
+     *             {@link #updateRoute(Route, RouteUpdateParameters)} with {@code reoptimize} ({@code PUT
+     *             https://api.route4me.com/api.v4/route.php?route_id=...&reoptimize=1}), which C# calls
+     *             {@code ReoptimizeRoute}; {@code remaining} re-optimizes only the stops not visited yet.
      */
+    @Deprecated
     public StatusResponse resequenceReoptimizeRoute(String routeId, Boolean disableOptimization, String optimize)
             throws APIException {
         URIBuilder builder = Manager.defaultBuilder(REOPTIMIZE_V3_EP);
