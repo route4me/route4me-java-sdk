@@ -1,15 +1,18 @@
 package com.route4me.sdk.examples.addressbook;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.addressbook.AddressBookAreasFilter;
 import com.route4me.sdk.services.addressbook.AddressBookContactV5;
 import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
 import com.route4me.sdk.services.addressbook.BoundingBox;
+import com.route4me.sdk.services.addressbook.JobStatusResponse;
 import com.route4me.sdk.services.addressbook.UpdateContactsByAreasRequest;
 
 /**
  * Moves the contacts inside a rectangle to another group, in a background job, with
- * {@link AddressBookManagerV5#updateAddressBookContactByAreas}.
+ * {@link AddressBookManagerV5#updateAddressBookContactByAreas}, then reads the job status with
+ * {@link AddressBookManagerV5#getJobStatus}.
  */
 public class UpdateContactsByAreasV5 {
     public static void main(String[] args) {
@@ -28,8 +31,12 @@ public class UpdateContactsByAreasV5 {
             UpdateContactsByAreasRequest request = new UpdateContactsByAreasRequest();
             request.setFilter(filter);
             request.setData(data);
-            manager.updateAddressBookContactByAreas(request);
-            System.out.println("The update was queued");
+            AsyncJob job = manager.updateAddressBookContactByAreas(request);
+            System.out.println("The update was queued as job " + job.getJobId());
+            if (job.getJobId() != null) {
+                JobStatusResponse status = manager.getJobStatus(job.getJobId());
+                System.out.println("Job status: " + status.getStatus());
+            }
         } catch (APIException e) {
             e.printStackTrace();
         }

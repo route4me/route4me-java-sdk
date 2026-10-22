@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.addressbook;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
 import com.route4me.sdk.services.addressbook.AddressExportByAreasFilter;
@@ -23,8 +24,8 @@ public class ExportAddressesByAreasV5 {
             filter.setBoundingBox(box);
             filter.setFilename("midtown-contacts");
             filter.setExtension("csv");
-            manager.exportAddressesByAreas(filter);
-            System.out.println("The export was queued");
+            AsyncJob job = manager.exportAddressesByAreas(filter);
+            System.out.println("The export was queued as job " + job.getJobId() + "; its status: " + job.getLocation());
         } catch (APIException e) {
             e.printStackTrace();
         }

@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.addressbook;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -28,6 +29,8 @@ public class AddressBookManagerV5Test {
             + "'service_time':300,'address_stop_type':'DELIVERY','tags':['vip'],'in_route_count':2}");
     private static final String CONTACTS = "{\"results\":[" + CONTACT + "],\"total\":1}";
     private static final String STATUS_TRUE = json("{'status':true}");
+    private static final String JOB_ID = "C0FFEE0000000000000000000000000E";
+    private static final String JOB_STATUS_URL = "https://" + HOST + BOOK_EP + "/job-tracker/status/" + JOB_ID;
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -35,6 +38,19 @@ public class AddressBookManagerV5Test {
     /** Returns a manager that sends its requests to the mocked client. */
     private AddressBookManagerV5 manager() {
         return http.install(new AddressBookManagerV5(MockHttp.API_KEY));
+    }
+
+    /** Queues a {@code 202 Accepted} reply without a body, with the job ID and the job status URL. */
+    private void respondWithQueuedJob() {
+        http.respondWithHeaders(202, null, "x-job-id", JOB_ID, "Location", JOB_STATUS_URL);
+    }
+
+    /** Asserts that a job came back from {@link #respondWithQueuedJob()}. */
+    private static void assertQueuedJob(AsyncJob job) {
+        assertEquals(202, job.getStatusCode());
+        assertEquals(JOB_ID, job.getJobId());
+        assertEquals(JOB_STATUS_URL, job.getLocation());
+        assertEquals("", job.getBody());
     }
 
     /** Builds a sample address book contact with fake data. */
@@ -286,27 +302,31 @@ public class AddressBookManagerV5Test {
     @Test
     public void batchCreateAndDelete() throws Exception {
         AddressBookManagerV5 manager = manager();
-        http.respond(200, STATUS_TRUE).respond(200, STATUS_TRUE).respondWithoutBody(202);
+        http.respond(200, STATUS_TRUE).respond(200, STATUS_TRUE);
+        respondWithQueuedJob();
         BatchCreateContactsRequest create = new BatchCreateContactsRequest();
         create.setData(Collections.singletonList(contact()));
 
         StatusResponse created = manager.batchCreateContacts(create);
-        boolean deleted = manager.deleteContacts(new long[] {12345L});
-        boolean queued = manager.deleteContacts(new long[] {12346L});
+        AsyncJob deleted = manager.deleteContacts(new long[] {12345L});
+        AsyncJob queued = manager.deleteContacts(new long[] {12346L});
 
         http.request(0).assertEndpoint("POST", HOST, ADDRESSES_EP + "/batch-create")
                 .assertJson("data[0].first_name", "Alex");
         http.request(1).assertEndpoint("DELETE", HOST, ADDRESSES_EP + "/delete").assertJson("address_ids[0]", 12345);
-        http.request(2).assertJson("address_ids[0]", 12346);
+        http.request(2).assertEndpoint("DELETE", HOST, ADDRESSES_EP + "/delete").assertJson("address_ids[0]", 12346);
         assertTrue(created.getStatus());
-        assertTrue(deleted);
-        assertTrue(queued);
+        assertEquals(200, deleted.getStatusCode());
+        assertNull(deleted.getJobId());
+        assertTrue(deleted.getBodyAs(StatusResponse.class).getStatus());
+        assertQueuedJob(queued);
     }
 
     @Test
     public void areaOperationsSendTheFilterAndAcceptAQueuedJob() throws Exception {
         AddressBookManagerV5 manager = manager();
-        http.respondWithoutBody(202).respondWithoutBody(202);
+        respondWithQueuedJob();
+        respondWithQueuedJob();
         AddressBookAreasFilter areas = new AddressBookAreasFilter();
         areas.setQuery("Bakery");
         areas.setBoundingBox(box());
@@ -317,8 +337,8 @@ public class AddressBookManagerV5Test {
         update.setFilter(areas);
         update.setData(data);
 
-        assertNull(manager.updateAddressBookContactByAreas(update));
-        assertNull(manager.removeAddressBookContactsByAreas(areas));
+        AsyncJob updated = manager.updateAddressBookContactByAreas(update);
+        AsyncJob removed = manager.removeAddressBookContactsByAreas(areas);
 
         http.request(0).assertEndpoint("PUT", HOST, ADDRESSES_EP + "/update-by-areas")
                 .assertJson("filter.query", "Bakery")
@@ -328,6 +348,8 @@ public class AddressBookManagerV5Test {
         http.request(1).assertEndpoint("DELETE", HOST, ADDRESSES_EP + "/delete-by-areas")
                 .assertJson("filter.query", "Bakery")
                 .assertJson("filter.bounding_box.bottom", 40.0);
+        assertQueuedJob(updated);
+        assertQueuedJob(removed);
     }
 
     /** Regression: the answer was read as {@code data}; the spec names it {@code custom_fields}. */
@@ -354,7 +376,9 @@ public class AddressBookManagerV5Test {
     @Test
     public void exportsSendTheSpecBodiesAndAcceptAQueuedJob() throws Exception {
         AddressBookManagerV5 manager = manager();
-        http.respondWithoutBody(202).respond(200, STATUS_TRUE).respondWithoutBody(202);
+        respondWithQueuedJob();
+        http.respond(200, STATUS_TRUE);
+        respondWithQueuedJob();
         AddressExportRequest byIds = new AddressExportRequest();
         byIds.setIds(Arrays.asList(12345L, 12346L));
         byIds.setFilename("contacts");
@@ -370,9 +394,9 @@ public class AddressBookManagerV5Test {
         byAreaIds.setFilename("territory-contacts");
         byAreaIds.setTimezone("UTC");
 
-        assertNull(manager.exportAddresses(byIds));
-        assertTrue(manager.exportAddressesByAreas(byAreas).getStatus());
-        assertNull(manager.exportAddressesByAreaIds(byAreaIds));
+        AsyncJob exported = manager.exportAddresses(byIds);
+        AsyncJob answered = manager.exportAddressesByAreas(byAreas);
+        AsyncJob exportedByAreaIds = manager.exportAddressesByAreaIds(byAreaIds);
 
         http.request(0).assertEndpoint("POST", HOST, ADDRESSES_EP + "/export")
                 .assertJson("ids[1]", 12346)
@@ -390,6 +414,27 @@ public class AddressBookManagerV5Test {
                 .assertJson("territory_ids[0]", "C0FFEE0000000000000000000000000A")
                 .assertJson("filename", "territory-contacts")
                 .assertJson("tz", "UTC");
+        assertQueuedJob(exported);
+        assertEquals(200, answered.getStatusCode());
+        assertNull(answered.getJobId());
+        assertTrue(answered.getBodyAs(StatusResponse.class).getStatus());
+        assertQueuedJob(exportedByAreaIds);
+    }
+
+    @Test
+    public void jobIdOfAStartedJobFeedsTheJobStatus() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        http.respondWithHeaders(202, null, "Location", BOOK_EP + "/job-tracker/status/" + JOB_ID)
+                .respond(200, json("{'status':'processing'}"));
+        AddressBookAreasFilter areas = new AddressBookAreasFilter();
+        areas.setQuery("Bakery");
+
+        AsyncJob job = manager.removeAddressBookContactsByAreas(areas);
+        JobStatusResponse status = manager.getJobStatus(job.getJobId());
+
+        assertEquals(JOB_ID, job.getJobId());
+        http.request(1).assertEndpoint("GET", HOST, BOOK_EP + "/job-tracker/status/" + JOB_ID);
+        assertEquals("processing", status.getStatus());
     }
 
     @Test

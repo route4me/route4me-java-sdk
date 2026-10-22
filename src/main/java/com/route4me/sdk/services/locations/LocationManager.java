@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.locations;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
@@ -144,16 +145,16 @@ public class LocationManager extends Manager {
     /**
      * Starts an export of locations to a file: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/address-book/locations/export}, with the request as the JSON body.
-     * The API builds the file in a background job and answers {@code 202 Accepted} with no body; the
-     * {@code Location} header of that answer, the link to the export status, is not exposed by this SDK.
+     * The API builds the file in a background job and answers {@code 202 Accepted} with no body, and with the link
+     * to the export status in {@code Location} ({@link AsyncJob#getLocation()}).
      *
      * @param request the locations, the columns, the file name and the format
-     * @return the status in the answer, or {@code null} when the answer has no body (the job was queued)
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @return the accepted job: its ID, status URL and reply body
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public StatusResponse exportLocations(LocationExportRequest request) throws APIException {
+    public AsyncJob exportLocations(LocationExportRequest request) throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_EXPORT_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), StatusResponse.class);
+        return this.makeJobRequest(RequestMethod.POST, builder, this.gson.toJson(request));
     }
 
     /**

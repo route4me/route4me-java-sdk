@@ -1,6 +1,7 @@
 package com.route4me.sdk.services.addressbook;
 
 import com.google.gson.annotations.SerializedName;
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
@@ -11,12 +12,16 @@ import org.apache.http.client.utils.URIBuilder;
  * Manages the address book (contacts) and its groups through the V5 API ({@code
  * https://wh.route4me.com/modules/api/v5.0/address-book}).
  *
- * <p>Some operations run as a background job: the API answers {@code 202 Accepted} with no body, and puts the link
- * to the job status in the {@code Location} header (and the job ID in {@code x-job-id} for
- * {@link #deleteContacts(long[])}). The methods that start a job then return {@code null}, or {@code true} for
- * {@link #deleteContacts(long[])}. This SDK does not expose the response headers yet, so the job ID for
- * {@link #getJobStatus(String)} and {@link #getJobResult(String)} has to come from elsewhere, such as the job's
- * notification.
+ * <p>Some operations run as a background job: the API answers {@code 202 Accepted}, usually with no body, and puts
+ * the link to the job status in the {@code Location} header (and the job ID in {@code x-job-id} for
+ * {@link #deleteContacts(long[])}). The methods that can start a job return an {@link AsyncJob}: pass its
+ * {@link AsyncJob#getJobId()} to {@link #getJobStatus(String)} and {@link #getJobResult(String)}:
+ * <pre>{@code
+ * AsyncJob job = manager.removeAddressBookContactsByAreas(filter);
+ * if (job.getJobId() != null) {
+ *     JobStatusResponse status = manager.getJobStatus(job.getJobId());
+ * }
+ * }</pre>
  */
 public class AddressBookManagerV5 extends Manager {
     private static final String V5_BASE = "/modules/api/v5.0/address-book";
@@ -232,16 +237,16 @@ public class AddressBookManagerV5 extends Manager {
     /**
      * Sets the same field values on the contacts inside some areas: {@code PUT
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/update-by-areas}, with the request as the JSON
-     * body. The API runs the update as a background job.
+     * body. The API runs the update as a background job and answers {@code 202 Accepted}, with the job status URL
+     * in {@code Location}; follow it with {@link #getJobStatus(String)}.
      *
      * @param request the areas and the fields to set
-     * @return the status in the answer, or {@code null} when the answer has no body ({@code 202 Accepted}: the job
-     *     was queued)
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @return the accepted job: its ID, status URL and reply body
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public StatusResponse updateAddressBookContactByAreas(UpdateContactsByAreasRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.PUT, v5Builder(CONTACTS_UPDATE_BY_AREAS_EP), this.gson.toJson(request),
-                StatusResponse.class);
+    public AsyncJob updateAddressBookContactByAreas(UpdateContactsByAreasRequest request) throws APIException {
+        return this.makeJobRequest(RequestMethod.PUT, v5Builder(CONTACTS_UPDATE_BY_AREAS_EP),
+                this.gson.toJson(request));
     }
 
     /**
@@ -266,33 +271,35 @@ public class AddressBookManagerV5 extends Manager {
 
     /**
      * Deletes contacts: {@code DELETE https://wh.route4me.com/modules/api/v5.0/address-book/addresses/delete}, with
-     * {@code {"address_ids": [...]}} as the JSON body. The API answers {@code {"status": true}}, or queues the
-     * deletion as a background job ({@code 202 Accepted}, no body).
+     * {@code {"address_ids": [...]}} as the JSON body. The API deletes the contacts at once and answers
+     * {@code 200} with {@code {"status": true}}, or queues the deletion as a background job: {@code 202 Accepted},
+     * no body, and the job ID in {@code x-job-id}; follow it with {@link #getJobStatus(String)}.
      *
      * @param contactIds the contact IDs
-     * @return {@code true}; an error status throws instead
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @return the accepted job: its ID, status URL and reply body; the job ID is {@code null} when the contacts were
+     *     deleted at once, and {@code getBodyAs(StatusResponse.class)} then reads the status
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public boolean deleteContacts(long[] contactIds) throws APIException {
+    public AsyncJob deleteContacts(long[] contactIds) throws APIException {
         ContactIdsRequest request = new ContactIdsRequest();
         request.setAddressIds(contactIds);
-        this.makeRequest(RequestMethod.DELETE, v5Builder(CONTACTS_DELETE_EP), this.gson.toJson(request), String.class);
-        return true;
+        return this.makeJobRequest(RequestMethod.DELETE, v5Builder(CONTACTS_DELETE_EP), this.gson.toJson(request));
     }
 
     /**
      * Deletes the contacts inside some areas: {@code DELETE
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/delete-by-areas}, with
-     * {@code {"filter": ...}} as the JSON body. The API runs the deletion as a background job.
+     * {@code {"filter": ...}} as the JSON body. The API runs the deletion as a background job and answers
+     * {@code 202 Accepted}, with the job status URL in {@code Location}; follow it with
+     * {@link #getJobStatus(String)}.
      *
      * @param filter the contacts to delete: a text, a rectangle or drawn areas
-     * @return the status in the answer, or {@code null} when the answer has no body ({@code 202 Accepted}: the job
-     *     was queued)
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @return the accepted job: its ID, status URL and reply body
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public StatusResponse removeAddressBookContactsByAreas(AddressBookAreasFilter filter) throws APIException {
-        return this.makeRequest(RequestMethod.DELETE, v5Builder(CONTACTS_DELETE_BY_AREAS_EP),
-                this.gson.toJson(new FilterBody(filter)), StatusResponse.class);
+    public AsyncJob removeAddressBookContactsByAreas(AddressBookAreasFilter filter) throws APIException {
+        return this.makeJobRequest(RequestMethod.DELETE, v5Builder(CONTACTS_DELETE_BY_AREAS_EP),
+                this.gson.toJson(new FilterBody(filter)));
     }
 
     /**
@@ -322,46 +329,50 @@ public class AddressBookManagerV5 extends Manager {
     /**
      * Starts an export of contacts to a file: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export}, with the request as the JSON body.
-     * The API builds the file in a background job.
+     *
+     * <p>The API builds the file in a background job and answers {@code 202 Accepted}, with the link to the export
+     * status in {@code Location} ({@link AsyncJob#getLocation()}).
      *
      * @param request the contact IDs, the file name and its format
-     * @return the status in the answer, or {@code null} when the answer has no body ({@code 202 Accepted}: the job
-     *     was queued)
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @return the accepted job: its ID, status URL and reply body
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public StatusResponse exportAddresses(AddressExportRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_EP), this.gson.toJson(request),
-                StatusResponse.class);
+    public AsyncJob exportAddresses(AddressExportRequest request) throws APIException {
+        return this.makeJobRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_EP), this.gson.toJson(request));
     }
 
     /**
      * Starts an export of the contacts inside some areas to a file: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export-by-areas}, with {@code {"filter": ...}}
-     * as the JSON body. The API builds the file in a background job.
+     * as the JSON body.
+     *
+     * <p>The API builds the file in a background job and answers {@code 202 Accepted}, with the link to the export
+     * status in {@code Location} ({@link AsyncJob#getLocation()}).
      *
      * @param filter the contacts to export and the file to make
-     * @return the status in the answer, or {@code null} when the answer has no body ({@code 202 Accepted}: the job
-     *     was queued)
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @return the accepted job: its ID, status URL and reply body
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public StatusResponse exportAddressesByAreas(AddressExportByAreasFilter filter) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_BY_AREAS_EP),
-                this.gson.toJson(new FilterBody(filter)), StatusResponse.class);
+    public AsyncJob exportAddressesByAreas(AddressExportByAreasFilter filter) throws APIException {
+        return this.makeJobRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_BY_AREAS_EP),
+                this.gson.toJson(new FilterBody(filter)));
     }
 
     /**
      * Starts an export of the contacts inside some territories to a file: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export-by-area-ids}, with the request as the
-     * JSON body. The API builds the file in a background job.
+     * JSON body.
+     *
+     * <p>The API builds the file in a background job and answers {@code 202 Accepted}, with the link to the export
+     * status in {@code Location} ({@link AsyncJob#getLocation()}).
      *
      * @param request the territory IDs and the file to make
-     * @return the status in the answer, or {@code null} when the answer has no body ({@code 202 Accepted}: the job
-     *     was queued)
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @return the accepted job: its ID, status URL and reply body
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public StatusResponse exportAddressesByAreaIds(AddressExportByAreaIdsRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_BY_AREA_IDS_EP),
-                this.gson.toJson(request), StatusResponse.class);
+    public AsyncJob exportAddressesByAreaIds(AddressExportByAreaIdsRequest request) throws APIException {
+        return this.makeJobRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_BY_AREA_IDS_EP),
+                this.gson.toJson(request));
     }
 
     /**
@@ -369,7 +380,7 @@ public class AddressBookManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/address-book/job-tracker/status/{jobId}}. When the job is over the API
      * answers {@code 303 See Other} to its result; see the {@code status} of {@link JobStatusResponse}.
      *
-     * @param jobId the job ID
+     * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of the job a method of this manager started
      * @return the status
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
@@ -383,7 +394,7 @@ public class AddressBookManagerV5 extends Manager {
      * Gets the result of a finished address book background job: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/address-book/job-tracker/result/{jobId}}.
      *
-     * @param jobId the job ID
+     * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of the job a method of this manager started
      * @return the result: {@code status} is {@code true} when the job succeeded
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent

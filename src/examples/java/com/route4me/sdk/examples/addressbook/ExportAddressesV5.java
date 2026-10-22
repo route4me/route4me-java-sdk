@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.addressbook;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
 import com.route4me.sdk.services.addressbook.AddressExportRequest;
@@ -17,8 +18,8 @@ public class ExportAddressesV5 {
             request.setFilename("contacts");
             request.setExtension("xlsx");
             request.setTimezone("America/New_York");
-            manager.exportAddresses(request);
-            System.out.println("The export was queued");
+            AsyncJob job = manager.exportAddresses(request);
+            System.out.println("The export was queued as job " + job.getJobId() + "; its status: " + job.getLocation());
         } catch (APIException e) {
             e.printStackTrace();
         }
