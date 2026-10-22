@@ -1,5 +1,8 @@
 package com.route4me.sdk.services.addressbook;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonParser;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
@@ -38,6 +41,8 @@ public class AddressBookManagerV5 extends Manager {
     private static final String CONTACTS_CUSTOM_FIELDS_EP = CONTACTS_EP + "/custom-fields";
     private static final String CONTACTS_DEPOTS_EP = CONTACTS_EP + "/depots";
     private static final String CONTACTS_EXPORT_EP = CONTACTS_EP + "/export";
+    private static final String CONTACTS_EXPORT_STATUS_EP = CONTACTS_EXPORT_EP + "/status";
+    private static final String CONTACTS_EXPORT_RESULT_EP = CONTACTS_EXPORT_EP + "/result";
     private static final String CONTACTS_EXPORT_BY_AREAS_EP = CONTACTS_EP + "/export-by-areas";
     private static final String CONTACTS_EXPORT_BY_AREA_IDS_EP = CONTACTS_EP + "/export-by-area-ids";
     private static final String JOB_STATUS_EP = V5_BASE + "/job-tracker/status";
@@ -333,8 +338,10 @@ public class AddressBookManagerV5 extends Manager {
      * Starts an export of contacts to a file: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export}, with the request as the JSON body.
      *
-     * <p>The API builds the file in a background job and answers {@code 202 Accepted}, with the link to the export
-     * status in {@code Location} ({@link AsyncJob#getLocation()}).
+     * <p>The API builds the file in a background job and answers {@code 202 Accepted}, with no {@code X-Job-Id} and
+     * the export status URL ({@code .../address-book/addresses/export/status/{id}}) in {@code Location}
+     * ({@link AsyncJob#getLocation()}); {@link AsyncJob#getJobId()} reads the ID from it. Follow the job with
+     * {@link #getExportStatus(String)}, then download the file with {@link #getExportResult(String)}.
      *
      * @param request the contact IDs, the file name and its format
      * @return the accepted job: its ID, status URL and reply body
@@ -349,8 +356,10 @@ public class AddressBookManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export-by-areas}, with {@code {"filter": ...}}
      * as the JSON body.
      *
-     * <p>The API builds the file in a background job and answers {@code 202 Accepted}, with the link to the export
-     * status in {@code Location} ({@link AsyncJob#getLocation()}).
+     * <p>The API builds the file in a background job and answers {@code 202 Accepted}, with no {@code X-Job-Id} and
+     * the export status URL ({@code .../address-book/addresses/export/status/{id}}) in {@code Location}
+     * ({@link AsyncJob#getLocation()}); {@link AsyncJob#getJobId()} reads the ID from it. Follow the job with
+     * {@link #getExportStatus(String)}, then download the file with {@link #getExportResult(String)}.
      *
      * @param filter the contacts to export and the file to make
      * @return the accepted job: its ID, status URL and reply body
@@ -366,8 +375,10 @@ public class AddressBookManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export-by-area-ids}, with the request as the
      * JSON body.
      *
-     * <p>The API builds the file in a background job and answers {@code 202 Accepted}, with the link to the export
-     * status in {@code Location} ({@link AsyncJob#getLocation()}).
+     * <p>The API builds the file in a background job and answers {@code 202 Accepted}, with no {@code X-Job-Id} and
+     * the export status URL ({@code .../address-book/addresses/export/status/{id}}) in {@code Location}
+     * ({@link AsyncJob#getLocation()}); {@link AsyncJob#getJobId()} reads the ID from it. Follow the job with
+     * {@link #getExportStatus(String)}, then download the file with {@link #getExportResult(String)}.
      *
      * @param request the territory IDs and the file to make
      * @return the accepted job: its ID, status URL and reply body
@@ -376,6 +387,55 @@ public class AddressBookManagerV5 extends Manager {
     public AsyncJob exportAddressesByAreaIds(AddressExportByAreaIdsRequest request) throws APIException {
         return this.makeJobRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_BY_AREA_IDS_EP),
                 this.gson.toJson(request));
+    }
+
+    /**
+     * Gets the status of an address book export: {@code GET
+     * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export/status/{jobId}}. The API answers a JSON
+     * string, which this method returns as text.
+     *
+     * @param jobId the export ID: {@link AsyncJob#getJobId()} of the job that {@link #exportAddresses},
+     *     {@link #exportAddressesByAreas} or {@link #exportAddressesByAreaIds} started
+     * @return the status: the value of the JSON string; any other answer as it came; {@code ""} for an empty answer
+     * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     */
+    public String getExportStatus(String jobId) throws APIException {
+        String body = this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_EXPORT_STATUS_EP, jobId),
+                (HttpEntity) null, String.class);
+        return jsonStringValue(body);
+    }
+
+    /**
+     * Downloads the file of a finished address book export: {@code GET
+     * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export/result/{jobId}}. The API answers the file
+     * itself, for example as {@code text/csv}.
+     *
+     * @param jobId the export ID: {@link AsyncJob#getJobId()} of the export job
+     * @return the content of the file, as text; {@code ""} for an empty answer
+     * @throws APIException if the request fails or the server answers with an error status, for example while the
+     *     export is still running
+     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     */
+    public String getExportResult(String jobId) throws APIException {
+        return this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_EXPORT_RESULT_EP, jobId), (HttpEntity) null,
+                String.class);
+    }
+
+    /** Returns the value of a JSON string answer, or the answer as it is when it is not a JSON string. */
+    private static String jsonStringValue(String body) {
+        if (body == null) {
+            return "";
+        }
+        try {
+            JsonElement element = JsonParser.parseString(body);
+            if (element.isJsonPrimitive() && element.getAsJsonPrimitive().isString()) {
+                return element.getAsString();
+            }
+        } catch (JsonParseException ex) {
+            // Not JSON: return the text as it came.
+        }
+        return body;
     }
 
     /**

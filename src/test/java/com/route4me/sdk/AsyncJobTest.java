@@ -81,16 +81,34 @@ public class AsyncJobTest {
     public void jobIdIsNullWhenTheReplyNamesNoJob() {
         AsyncJob none = AsyncJob.fromReply(200, null, json("{'status':true}"));
         AsyncJob otherUrl = AsyncJob.fromReply(202,
-                headers("Location", "https://wh.route4me.com/modules/api/v5.0/team-files/status/F1"), "");
+                headers("Location", "https://wh.route4me.com/modules/api/v5.0/team-files/F1"), "");
         AsyncJob noSegment = new AsyncJob(202, null, STATUS_URL.substring(0, STATUS_URL.lastIndexOf('/') + 1), "");
         AsyncJob trackerInQuery = new AsyncJob(202, null, "https://example.com/files?next=/job-tracker/status/J1", "");
+        AsyncJob statusInQuery = new AsyncJob(202, null, "https://example.com/files?next=/export/status/J1", "");
+        AsyncJob statusNotLast = new AsyncJob(202, null, "https://example.com/status/J1/details", "");
 
         assertNull(none.getJobId());
         assertNull(none.getLocation());
         assertNull(otherUrl.getJobId());
-        assertEquals("https://wh.route4me.com/modules/api/v5.0/team-files/status/F1", otherUrl.getLocation());
+        assertEquals("https://wh.route4me.com/modules/api/v5.0/team-files/F1", otherUrl.getLocation());
         assertNull(noSegment.getJobId());
         assertNull(trackerInQuery.getJobId());
+        assertNull(statusInQuery.getJobId());
+        assertNull(statusNotLast.getJobId());
+    }
+
+    @Test
+    public void jobIdComesFromAnyStatusLocation() {
+        String exportId = "C0FFEE0000000000000000000000000E";
+        String export = "https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export/status/" + exportId;
+        AsyncJob exportJob = AsyncJob.fromReply(202, headers("Location", export), "");
+        AsyncJob withQuery = new AsyncJob(202, null, export + "/?format=json#top", "");
+        AsyncJob encoded = new AsyncJob(202, null, "/modules/api/v5.0/team-files/status/F%201", "");
+
+        assertEquals(exportId, exportJob.getJobId());
+        assertEquals(export, exportJob.getLocation());
+        assertEquals(exportId, withQuery.getJobId());
+        assertEquals("F 1", encoded.getJobId());
     }
 
     @Test

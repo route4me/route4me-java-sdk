@@ -34,6 +34,8 @@ public final class AsyncJob {
     private static final String LOCATION_HEADER = "Location";
     /** The path parts after which the job ID ends a job tracker URL. */
     private static final String[] JOB_TRACKER_PATHS = {"/job-tracker/status/", "/job-tracker/result/"};
+    /** The path part before the job ID of any status URL, such as an export's {@code .../export/status/{id}}. */
+    private static final String STATUS_PATH = "/status/";
     /** The JSON mapper of {@link #getBodyAs(Class)}; it reads booleans sent as {@code 1}/{@code 0}. */
     private static final Gson GSON =
             LenientMapAdapterFactory.register(LenientBooleanAdapter.register(new GsonBuilder())).create();
@@ -86,8 +88,10 @@ public final class AsyncJob {
 
     /**
      * Returns the job ID: the {@code X-Job-Id} header (in any case, such as {@code x-job-id}) or, when the reply has
-     * none, the last path segment of the {@code Location} URL when that URL is a job tracker URL (its path contains
-     * {@code /job-tracker/status/} or {@code /job-tracker/result/}), percent-decoded.
+     * none, the last path segment of the {@code Location} URL, percent-decoded, when that URL is a job tracker URL
+     * (its path contains {@code /job-tracker/status/} or {@code /job-tracker/result/}) or any other status URL (its
+     * path ends in {@code /status/{id}}). The address book export, for example, answers with only
+     * {@code Location: .../address-book/addresses/export/status/{id}}.
      *
      * @return the job ID, or {@code null} when the reply names no job, for example when the API did the work at once
      */
@@ -160,7 +164,7 @@ public final class AsyncJob {
 
     /**
      * Returns the job ID: the header when it is not blank, else the segment after a job tracker path in the
-     * location, else {@code null}.
+     * location, else the segment after a final {@code /status/} in the location, else {@code null}.
      */
     private static String jobIdOf(String header, String location) {
         if (header != null && !header.trim().isEmpty()) {
@@ -187,6 +191,16 @@ public final class AsyncJob {
             }
             String segment = rest.substring(rest.lastIndexOf('/') + 1);
             return segment.isEmpty() ? null : decode(segment);
+        }
+        while (path.endsWith("/")) {
+            path = path.substring(0, path.length() - 1);
+        }
+        int status = path.lastIndexOf(STATUS_PATH);
+        if (status >= 0) {
+            String segment = path.substring(status + STATUS_PATH.length());
+            if (!segment.isEmpty() && segment.indexOf('/') < 0) {
+                return decode(segment);
+            }
         }
         return null;
     }

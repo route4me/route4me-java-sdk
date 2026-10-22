@@ -50,7 +50,7 @@ try {
 ```
 
 ### Background jobs
-Some V5 calls start a background job and answer `202 Accepted`, for example the address book exports, the vehicle bulk calls and the automatic territories. They return an `AsyncJob`: `getJobId()` gives the job ID (from the `X-Job-Id` or `Location` header), which the job status and result methods take, and `getBodyAs(Class)` parses the reply body when there is one.
+Some V5 calls start a background job and answer `202 Accepted`, for example the address book exports, the vehicle bulk calls and the automatic territories. They return an `AsyncJob`: `getJobId()` gives the job ID (from the `X-Job-Id` header, or from a `Location` status URL), which the job status and result methods take, and `getBodyAs(Class)` parses the reply body when there is one. An address book export is followed with `AddressBookManagerV5.getExportStatus(jobId)` and its file downloaded with `getExportResult(jobId)`.
 
 ```java
 AsyncJob job = vehicles.deleteVehicles(vehicleIds);

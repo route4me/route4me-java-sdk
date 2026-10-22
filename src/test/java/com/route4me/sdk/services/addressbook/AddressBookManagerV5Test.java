@@ -439,6 +439,54 @@ public class AddressBookManagerV5Test {
     }
 
     @Test
+    public void anExportIsFollowedThroughItsStatusAndResult() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        // As the live API answers: 202, no X-Job-Id, only the export status URL in Location.
+        http.respondWithHeaders(202, null, "Location", "https://" + HOST + ADDRESSES_EP + "/export/status/" + JOB_ID)
+                .respond(200, "\"processing\"")
+                .respond(200, "address_id,address_1\n12345,100 Example St\n", "text/csv");
+        AddressExportRequest request = new AddressExportRequest();
+        request.setIds(Collections.singletonList(12345L));
+        request.setExtension("csv");
+
+        AsyncJob job = manager.exportAddresses(request);
+        String status = manager.getExportStatus(job.getJobId());
+        String file = manager.getExportResult(job.getJobId());
+
+        assertEquals(JOB_ID, job.getJobId());
+        http.request(1).assertEndpoint("GET", HOST, ADDRESSES_EP + "/export/status/" + JOB_ID).assertApiKeyAsBearer()
+                .assertNoBody();
+        http.request(2).assertEndpoint("GET", HOST, ADDRESSES_EP + "/export/result/" + JOB_ID).assertApiKeyAsBearer()
+                .assertNoBody();
+        assertEquals("processing", status);
+        assertEquals("address_id,address_1\n12345,100 Example St\n", file);
+    }
+
+    @Test
+    public void exportStatusKeepsAnAnswerThatIsNotAJsonString() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        http.respond(200, json("{'status':'done'}")).respond(200, "not json", "text/plain").respondWithoutBody(204);
+
+        assertEquals(json("{'status':'done'}"), manager.getExportStatus(JOB_ID));
+        assertEquals("not json", manager.getExportStatus(JOB_ID));
+        assertEquals("", manager.getExportStatus(JOB_ID));
+    }
+
+    @Test
+    public void exportStatusAndResultNeedAJobIdInOneSegment() throws Exception {
+        final AddressBookManagerV5 manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getExportStatus(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getExportResult(""));
+        http.assertNoRequests();
+        http.respondToAll(200, "\"done\"");
+        manager.getExportStatus("../secret");
+        manager.getExportResult("../secret");
+        assertEquals(ADDRESSES_EP + "/export/status/..%2Fsecret", http.request(0).getUri().getRawPath());
+        assertEquals(ADDRESSES_EP + "/export/result/..%2Fsecret", http.request(1).getUri().getRawPath());
+    }
+
+    @Test
     public void jobIdOfAStartedJobFeedsTheJobStatus() throws Exception {
         AddressBookManagerV5 manager = manager();
         http.respondWithHeaders(202, null, "Location", BOOK_EP + "/job-tracker/status/" + JOB_ID)
