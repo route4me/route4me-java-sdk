@@ -9,6 +9,7 @@ import java.util.Collections;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -161,6 +162,7 @@ public class LocationManagerTest {
         StoreLocationTypeRequest store = new StoreLocationTypeRequest();
         store.setName("Store");
         store.setDescription("Retail store");
+        store.setIsParentType(false);
         store.setIsChildType(true);
 
         LocationTypeCollection types = manager.getLocationTypes(1, 20);
@@ -175,13 +177,105 @@ public class LocationManagerTest {
         http.request(1).assertNoQuery("page").assertNoQuery("per_page");
         http.request(2).assertEndpoint("GET", HOST, LOCATIONS_EP + "/types/LT-1");
         http.request(3).assertEndpoint("POST", HOST, LOCATIONS_EP + "/types")
-                .assertJson("name", "Store").assertJson("is_child_type", true);
+                .assertJson("name", "Store").assertJson("is_parent_type", false).assertJson("is_child_type", true);
         http.request(4).assertEndpoint("PUT", HOST, LOCATIONS_EP + "/types/LT-1").assertJson("description",
                 "Retail store");
         http.request(5).assertEndpoint("DELETE", HOST, LOCATIONS_EP + "/types/LT-1").assertNoBody();
         assertEquals("Store", types.getData().get(0).getName());
         assertTrue(type.getIsChildType());
         assertTrue(deleted.getStatus());
+    }
+
+    @Test
+    public void getLocationTypesSendsTheFiltersInBrackets() throws Exception {
+        LocationManager manager = manager();
+        http.respondToAll(200, json("{'data':[]}"));
+        LocationTypeFilters filters = new LocationTypeFilters();
+        filters.setIsParentType(true);
+        filters.setOnlyCustomTypes(false);
+        filters.setSearchQuery("Store");
+
+        manager.getLocationTypes(filters, 2, 10);
+        manager.getLocationTypes(new LocationTypeFilters(), null, null);
+
+        http.request(0).assertEndpoint("GET", HOST, LOCATIONS_EP + "/types").assertNoBody()
+                .assertQuery("filters[is_parent_type]", "1")
+                .assertQuery("filters[only_custom_types]", "0")
+                .assertQuery("filters[search_query]", "Store")
+                .assertNoQuery("filters[is_child_type]")
+                .assertQuery("page", "2")
+                .assertQuery("per_page", "10");
+        assertTrue(http.request(1).getQueryParameters().isEmpty());
+    }
+
+    @Test
+    public void locationTypeRequiredFieldsAreCheckedBeforeSending() {
+        final LocationManager manager = manager();
+        final StoreLocationTypeRequest noName = new StoreLocationTypeRequest();
+        noName.setIsParentType(true);
+        noName.setIsChildType(false);
+        final StoreLocationTypeRequest noParent = new StoreLocationTypeRequest();
+        noParent.setName("Store");
+        noParent.setIsChildType(false);
+        final StoreLocationTypeRequest noChild = new StoreLocationTypeRequest();
+        noChild.setName("Store");
+        noChild.setIsParentType(true);
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createLocationType(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createLocationType(noName));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createLocationType(noParent));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateLocationType("LT-1", noChild));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void locationTypeIdsAreRejectedWhenEmptyAndStayInOneSegment() throws Exception {
+        final LocationManager manager = manager();
+        final StoreLocationTypeRequest store = new StoreLocationTypeRequest();
+        store.setName("Store");
+        store.setIsParentType(false);
+        store.setIsChildType(true);
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationTypeById(""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateLocationType(null, store));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteLocationType(""));
+        http.assertNoRequests();
+        http.respondToAll(200, LOCATION_TYPE);
+
+        manager.updateLocationType("LT/1", store);
+        manager.deleteLocationType("LT/1");
+
+        assertEquals(LOCATIONS_EP + "/types/LT%2F1", http.request(0).getUri().getRawPath());
+        assertEquals(LOCATIONS_EP + "/types/LT%2F1", http.request(1).getUri().getRawPath());
+    }
+
+    @Test
+    public void exportLocationsAcceptsAnEmptyAcceptedReply() throws Exception {
+        LocationManager manager = manager();
+        http.respondWithoutBody(202);
+
+        assertNull(manager.exportLocations(withFilters(new LocationExportRequest())));
+
+        http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/export").assertJson("page", 1);
+    }
+
+    @Test
+    public void combinedFieldsAndClusterThresholdAreSent() throws Exception {
+        LocationManager manager = manager();
+        http.respondToAll(200, "{}");
+        LocationCombinedRequest list = new LocationCombinedRequest();
+        list.setFields(Arrays.asList("address_id", "address_1"));
+        list.setOrderBy(Collections.singletonList(new String[] {"address_1", "asc"}));
+        ClusteringParameters clustering = new ClusteringParameters();
+        clustering.setZoom(5);
+        clustering.setCountThreshold(3);
+        LocationClusteringRequest clusters = new LocationClusteringRequest();
+        clusters.setClustering(clustering);
+
+        manager.getLocationsList(list);
+        manager.getLocationsClustering(clusters);
+
+        http.request(0).assertJson("fields[1]", "address_1").assertJson("order_by[0][1]", "asc");
+        http.request(1).assertJson("clustering.count_threshold", 3).assertJson("clustering.zoom", 5);
     }
 
     @Test
