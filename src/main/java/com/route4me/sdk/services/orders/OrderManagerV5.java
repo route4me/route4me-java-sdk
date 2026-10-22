@@ -1,8 +1,16 @@
 package com.route4me.sdk.services.orders;
 
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import java.util.ArrayList;
+import java.util.List;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -22,6 +30,8 @@ public class OrderManagerV5 extends Manager {
     private static final String ORDERS_CUSTOM_FIELDS_EP = ORDERS_PLATFORM_EP + "/order-custom-user-fields";
     private static final String ORDERS_ARCHIVE_EP = V5_BASE + "/orders/archive";
     private static final String ORDERS_HISTORY_EP = V5_BASE + "/orders/history";
+    private static final String ORDERS_GROUP_EP = V5_BASE + "/orders/aggregation/combined";
+    private static final String ORDER_CUSTOM_FIELDS_EP = V5_BASE + "/orders/custom-fields";
 
     /**
      * Creates a manager that sends its requests with an API key.
@@ -238,11 +248,16 @@ public class OrderManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/orders-platform/order-custom-user-fields}, with the request as the JSON
      * body.
      *
-     * @param request the field
+     * @param request the field: its name, label, type and type info, all required
      * @return the created field
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if the request is {@code null} or a required field is missing
      */
     public CustomUserFieldResponse createCustomUserField(CreateCustomUserFieldRequest request) throws APIException {
+        requireFields(request, "order_custom_field_name", request == null ? null : request.getOrderCustomFieldName(),
+                "order_custom_field_label", request == null ? null : request.getOrderCustomFieldLabel(),
+                "order_custom_field_type", request == null ? null : request.getOrderCustomFieldType(),
+                "order_custom_field_type_info", request == null ? null : request.getOrderCustomFieldTypeInfo());
         URIBuilder builder = v5Builder(ORDERS_CUSTOM_FIELDS_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), CustomUserFieldResponse.class);
     }
@@ -254,13 +269,18 @@ public class OrderManagerV5 extends Manager {
      * JSON body.
      *
      * @param fieldUuid the field UUID
-     * @param request the new values
+     * @param request the new values: the label, type and type info, all required
      * @return the updated field
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if the UUID is {@code null} or empty, the request is {@code null} or a required
+     *                                  field is missing
      */
     public CustomUserFieldResponse updateCustomUserField(String fieldUuid, UpdateCustomUserFieldRequest request)
             throws APIException {
         URIBuilder builder = v5Builder(ORDERS_CUSTOM_FIELDS_EP, fieldUuid);
+        requireFields(request, "order_custom_field_label", request == null ? null : request.getOrderCustomFieldLabel(),
+                "order_custom_field_type", request == null ? null : request.getOrderCustomFieldType(),
+                "order_custom_field_type_info", request == null ? null : request.getOrderCustomFieldTypeInfo());
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), CustomUserFieldResponse.class);
     }
 
@@ -275,5 +295,148 @@ public class OrderManagerV5 extends Manager {
     public CustomUserFieldResponse deleteCustomUserField(String fieldUuid) throws APIException {
         URIBuilder builder = v5Builder(ORDERS_CUSTOM_FIELDS_EP, fieldUuid);
         return this.makeRequest(RequestMethod.DELETE, builder, "", CustomUserFieldResponse.class);
+    }
+
+    /**
+     * Gets the groups of the orders scheduled in a date range, with their order counts and optimization profiles:
+     * {@code POST https://wh.route4me.com/modules/api/v5.0/orders/aggregation/combined}, with {@code {"filters":
+     * {"scheduled_for_range": [...], "statuses": [...]}}} as the JSON body.
+     *
+     * @param scheduledForRange the first and last scheduled dates, as {@code YYYY-MM-DD} ({@code scheduled_for_range})
+     * @param statuses the order statuses to include, see {@link OrderStatus#getValue()} ({@code statuses}); {@code
+     *                 null} leaves them out
+     * @return the groups of orders
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public OrdersGroupResponse getOrdersGroup(List<String> scheduledForRange, List<Integer> statuses)
+            throws APIException {
+        URIBuilder builder = v5Builder(ORDERS_GROUP_EP);
+        OrdersGroupBody body = new OrdersGroupBody(new OrdersGroupFilters(scheduledForRange, statuses));
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(body), OrdersGroupResponse.class);
+    }
+
+    /**
+     * Lists the order custom fields: {@code GET https://wh.route4me.com/modules/api/v5.0/orders/custom-fields}.
+     *
+     * <p>The spec wraps each field of the {@code data} list in its own {@code {"status", "code", "data"}} object;
+     * both a wrapped and a plain field are read.
+     *
+     * @return the fields, or {@code null} when the answer holds no list
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public List<OrderCustomUserField> getOrderCustomFields() throws APIException {
+        URIBuilder builder = v5Builder(ORDER_CUSTOM_FIELDS_EP);
+        JsonElement reply = this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, JsonElement.class);
+        JsonElement list = reply != null && reply.isJsonObject() ? reply.getAsJsonObject().get("data") : reply;
+        if (list == null || !list.isJsonArray()) {
+            return null;
+        }
+        List<OrderCustomUserField> fields = new ArrayList<>();
+        try {
+            for (JsonElement item : list.getAsJsonArray()) {
+                JsonElement field = item;
+                if (item.isJsonObject()) {
+                    JsonObject object = item.getAsJsonObject();
+                    if (object.has("data") && object.get("data").isJsonObject()) {
+                        field = object.get("data");
+                    }
+                }
+                fields.add(this.gson.fromJson(field, OrderCustomUserField.class));
+            }
+        } catch (JsonParseException | IllegalStateException ex) {
+            throw new APIException("Could not read the order custom fields", ex);
+        }
+        return fields;
+    }
+
+    /**
+     * Creates an order custom field: {@code POST https://wh.route4me.com/modules/api/v5.0/orders/custom-fields}, with
+     * the request as the JSON body.
+     *
+     * @param request the field: its name, label and type, all required, and its type info
+     * @return the created field
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if the request is {@code null} or a required field is missing
+     */
+    public OrderCustomFieldResource createOrderCustomField(CreateCustomUserFieldRequest request) throws APIException {
+        requireFields(request, "order_custom_field_name", request == null ? null : request.getOrderCustomFieldName(),
+                "order_custom_field_label", request == null ? null : request.getOrderCustomFieldLabel(),
+                "order_custom_field_type", request == null ? null : request.getOrderCustomFieldType());
+        URIBuilder builder = v5Builder(ORDER_CUSTOM_FIELDS_EP);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                OrderCustomFieldResource.class);
+    }
+
+    /**
+     * Updates an order custom field: {@code PUT
+     * https://wh.route4me.com/modules/api/v5.0/orders/custom-fields/{orderCustomFieldId}}, with the request as the
+     * JSON body.
+     *
+     * @param orderCustomFieldId the field ID
+     * @param request the new label, type or type info
+     * @return the updated field
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public OrderCustomFieldResource updateOrderCustomField(long orderCustomFieldId,
+            UpdateCustomUserFieldRequest request) throws APIException {
+        URIBuilder builder = v5Builder(ORDER_CUSTOM_FIELDS_EP, orderCustomFieldId);
+        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request),
+                OrderCustomFieldResource.class);
+    }
+
+    /**
+     * Deletes an order custom field: {@code DELETE
+     * https://wh.route4me.com/modules/api/v5.0/orders/custom-fields/{orderCustomFieldId}}.
+     *
+     * @param orderCustomFieldId the field ID
+     * @return the status of the request
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public StatusResponse deleteOrderCustomField(long orderCustomFieldId) throws APIException {
+        URIBuilder builder = v5Builder(ORDER_CUSTOM_FIELDS_EP, orderCustomFieldId);
+        return this.makeRequest(RequestMethod.DELETE, builder, "", StatusResponse.class);
+    }
+
+    /**
+     * Checks that a request is given and that each of its required fields is set.
+     *
+     * @param request the request
+     * @param namesAndValues pairs of a field's API name and its value
+     * @throws IllegalArgumentException if the request is {@code null} or a value is {@code null}
+     */
+    private static void requireFields(Object request, Object... namesAndValues) {
+        if (request == null) {
+            throw new IllegalArgumentException("The request is required");
+        }
+        List<String> missing = new ArrayList<>();
+        for (int i = 0; i + 1 < namesAndValues.length; i += 2) {
+            if (namesAndValues[i + 1] == null) {
+                missing.add(String.valueOf(namesAndValues[i]));
+            }
+        }
+        if (!missing.isEmpty()) {
+            throw new IllegalArgumentException("Missing required field(s): " + String.join(", ", missing));
+        }
+    }
+
+    /** The body of {@link #getOrdersGroup}. */
+    @Getter
+    @AllArgsConstructor
+    private static final class OrdersGroupBody {
+        /** The filters ({@code filters}). */
+        @SerializedName("filters")
+        private final OrdersGroupFilters filters;
+    }
+
+    /** The {@code filters} of {@link #getOrdersGroup}. */
+    @Getter
+    @AllArgsConstructor
+    private static final class OrdersGroupFilters {
+        /** The first and last scheduled dates ({@code scheduled_for_range}). */
+        @SerializedName("scheduled_for_range")
+        private final List<String> scheduledForRange;
+        /** The order statuses ({@code statuses}). */
+        @SerializedName("statuses")
+        private final List<Integer> statuses;
     }
 }

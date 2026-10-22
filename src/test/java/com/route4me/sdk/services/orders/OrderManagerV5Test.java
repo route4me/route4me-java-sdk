@@ -7,10 +7,12 @@ import org.junit.Test;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -22,6 +24,7 @@ public class OrderManagerV5Test {
     private static final String HOST = "wh.route4me.com";
     private static final String PLATFORM_EP = "/modules/api/v5.0/orders-platform";
     private static final String FIELDS_EP = PLATFORM_EP + "/order-custom-user-fields";
+    private static final String CUSTOM_FIELDS_V5_EP = "/modules/api/v5.0/orders/custom-fields";
     private static final String ORDER = json("{'order_uuid':'ORDER-UUID-1','order_id':'7001','member_id':1001,"
             + "'address_1':'100 Example St','address_geo':{'lat':40.1,'lng':-74.1},'first_name':'Alex',"
             + "'weight':12.5,'day_scheduled_for_YYYYMMDD':'2026-10-22','custom_data':{'gate':'A1'}}");
@@ -269,6 +272,7 @@ public class OrderManagerV5Test {
         UpdateCustomUserFieldRequest update = new UpdateCustomUserFieldRequest();
         update.setOrderCustomFieldLabel("Gate code");
         update.setOrderCustomFieldType("text");
+        update.setOrderCustomFieldTypeInfo(Collections.singletonMap("short_label", "G"));
 
         manager.updateCustomUserField("FIELD-1", update);
         manager.deleteCustomUserField("FIELD-1");
@@ -276,6 +280,140 @@ public class OrderManagerV5Test {
         http.request(0).assertEndpoint("PUT", HOST, FIELDS_EP + "/FIELD-1")
                 .assertJson("order_custom_field_label", "Gate code");
         http.request(1).assertEndpoint("DELETE", HOST, FIELDS_EP + "/FIELD-1").assertNoBody();
+    }
+
+    @Test
+    public void customUserFieldRequiredFieldsAreCheckedBeforeSending() {
+        final OrderManagerV5 manager = manager();
+        final CreateCustomUserFieldRequest create = new CreateCustomUserFieldRequest();
+        create.setOrderCustomFieldName("gate");
+        final UpdateCustomUserFieldRequest update = new UpdateCustomUserFieldRequest();
+        update.setOrderCustomFieldLabel("Gate");
+
+        IllegalArgumentException createError = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.createCustomUserField(create));
+        IllegalArgumentException updateError = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateCustomUserField("FIELD-1", update));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomUserField("FIELD-1", null));
+
+        http.assertNoRequests();
+        assertEquals("Missing required field(s): order_custom_field_label, order_custom_field_type, "
+                + "order_custom_field_type_info", createError.getMessage());
+        assertEquals("Missing required field(s): order_custom_field_type, order_custom_field_type_info",
+                updateError.getMessage());
+    }
+
+    @Test
+    public void customUserFieldUuidIsRejectedWhenEmptyAndEncodedWhenItHasASlash() throws Exception {
+        final OrderManagerV5 manager = manager();
+        final UpdateCustomUserFieldRequest update = new UpdateCustomUserFieldRequest();
+        update.setOrderCustomFieldLabel("Gate");
+        update.setOrderCustomFieldType("text");
+        update.setOrderCustomFieldTypeInfo(Collections.emptyMap());
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomUserField("", update));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteCustomUserField(null));
+        http.assertNoRequests();
+
+        http.respondToAll(200, FIELD);
+        manager.deleteCustomUserField("FIELD/1");
+        assertEquals(FIELDS_EP + "/FIELD%2F1", http.request().getUri().getRawPath());
+    }
+
+    @Test
+    public void getOrdersGroupPostsTheRangeAndStatuses() throws Exception {
+        OrderManagerV5 manager = manager();
+        http.respond(200, json("{'data':{'items':[{'group_id':'GROUP-1','optimization_profile_id':'PROFILE-1',"
+                + "'group_column':'group','group_value':'North','orders_count':12}]}}"))
+                .respond(200, json("{'data':{'items':[]}}"));
+
+        OrdersGroupResponse groups = manager.getOrdersGroup(Arrays.asList("2026-10-01", "2026-10-10"),
+                Collections.singletonList(OrderStatus.SCHEDULED.getValue()));
+        manager.getOrdersGroup(Arrays.asList("2026-10-01", "2026-10-10"), null);
+
+        http.request(0).assertEndpoint("POST", HOST, "/modules/api/v5.0/orders/aggregation/combined")
+                .assertApiKeyAsBearer()
+                .assertJson("filters.scheduled_for_range[0]", "2026-10-01")
+                .assertJson("filters.scheduled_for_range[1]", "2026-10-10")
+                .assertJson("filters.statuses[0]", OrderStatus.SCHEDULED.getValue());
+        assertEquals(Collections.singleton("filters"), http.request(0).jsonKeys());
+        http.request(1).assertJsonLacks("filters.statuses");
+        OrdersGroup group = groups.getData().getItems().get(0);
+        assertEquals("GROUP-1", group.getGroupId());
+        assertEquals("PROFILE-1", group.getOptimizationProfileId());
+        assertEquals("group", group.getGroupColumn());
+        assertEquals("North", group.getGroupValue());
+        assertEquals(Integer.valueOf(12), group.getOrdersCount());
+    }
+
+    @Test
+    public void getOrderCustomFieldsReadsWrappedAndPlainFields() throws Exception {
+        OrderManagerV5 manager = manager();
+        http.respond(200, json("{'status':true,'code':200,'data':[{'status':true,'code':200,'data':"
+                + "{'order_custom_field_id':42,'order_custom_field_name':'gate'}},"
+                + "{'order_custom_field_id':43,'order_custom_field_name':'dock'}]}"))
+                .respond(200, json("{'status':true,'code':200}"));
+
+        List<OrderCustomUserField> fields = manager.getOrderCustomFields();
+
+        http.request(0).assertEndpoint("GET", HOST, CUSTOM_FIELDS_V5_EP).assertApiKeyAsBearer().assertNoBody();
+        assertEquals(Long.valueOf(42L), fields.get(0).getOrderCustomFieldId());
+        assertEquals("dock", fields.get(1).getOrderCustomFieldName());
+        assertNull(manager.getOrderCustomFields());
+    }
+
+    @Test
+    public void getOrderCustomFieldsRejectsItemsOfTheWrongShape() {
+        final OrderManagerV5 manager = manager();
+        http.respond(200, json("{'data':[[1]]}"));
+
+        http.expectApiException(manager::getOrderCustomFields);
+    }
+
+    @Test
+    public void createUpdateAndDeleteOrderCustomField() throws Exception {
+        OrderManagerV5 manager = manager();
+        String resource = json("{'status':true,'code':200,'data':{'order_custom_field_id':42,"
+                + "'root_owner_member_id':1001,'order_custom_field_name':'gate','order_custom_field_label':'Gate'}}");
+        http.respond(200, resource).respond(200, resource).respond(200, json("{'status':true,'code':200}"));
+        CreateCustomUserFieldRequest create = new CreateCustomUserFieldRequest();
+        create.setOrderCustomFieldName("gate");
+        create.setOrderCustomFieldLabel("Gate");
+        create.setOrderCustomFieldType("text");
+        UpdateCustomUserFieldRequest update = new UpdateCustomUserFieldRequest();
+        update.setOrderCustomFieldLabel("Gate code");
+
+        OrderCustomFieldResource created = manager.createOrderCustomField(create);
+        manager.updateOrderCustomField(42L, update);
+        StatusResponse deleted = manager.deleteOrderCustomField(42L);
+
+        http.request(0).assertEndpoint("POST", HOST, CUSTOM_FIELDS_V5_EP).assertApiKeyAsBearer()
+                .assertJson("order_custom_field_name", "gate")
+                .assertJson("order_custom_field_label", "Gate")
+                .assertJson("order_custom_field_type", "text")
+                .assertJsonLacks("order_custom_field_type_info");
+        http.request(1).assertEndpoint("PUT", HOST, CUSTOM_FIELDS_V5_EP + "/42")
+                .assertJson("order_custom_field_label", "Gate code");
+        http.request(2).assertEndpoint("DELETE", HOST, CUSTOM_FIELDS_V5_EP + "/42").assertNoBody();
+        assertTrue(created.getStatus());
+        assertEquals(Integer.valueOf(200), created.getCode());
+        assertEquals(Long.valueOf(1001L), created.getData().getRootOwnerMemberId());
+        assertTrue(deleted.getStatus());
+    }
+
+    @Test
+    public void createOrderCustomFieldChecksTheRequiredFields() {
+        final OrderManagerV5 manager = manager();
+        final CreateCustomUserFieldRequest create = new CreateCustomUserFieldRequest();
+        create.setOrderCustomFieldLabel("Gate");
+
+        IllegalArgumentException error = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.createOrderCustomField(create));
+
+        http.assertNoRequests();
+        assertEquals("Missing required field(s): order_custom_field_name, order_custom_field_type",
+                error.getMessage());
     }
 
     @Test
