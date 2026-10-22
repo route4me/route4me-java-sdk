@@ -15,6 +15,8 @@ public class DriverReviewManager extends Manager {
 
     private static final String V5_BASE = "/modules/api/v5.0";
     private static final String DRIVER_REVIEW_EP = V5_BASE + "/driver-reviews";
+    private static final String SETTINGS_BY_MEMBER_EP = DRIVER_REVIEW_EP + "/settings/get-by-member";
+    private static final String SETTINGS_UPLOAD_EP = DRIVER_REVIEW_EP + "/settings/upload";
 
     /**
      * Creates a manager that sends its requests with an API key.
@@ -108,7 +110,8 @@ public class DriverReviewManager extends Manager {
 
     /**
      * Updates a driver review: {@code PUT https://wh.route4me.com/modules/api/v5.0/driver-reviews/{ratingId}}, with the
-     * review as the JSON body.
+     * review as the JSON body. {@link #patchDriverReview(String, DriverReview)} sends the same change as
+     * {@code PATCH}; the spec and the C# SDK ({@code UpdateDriverReview}) take both.
      *
      * @param ratingId the review ID
      * @param review the new values of the review
@@ -118,5 +121,58 @@ public class DriverReviewManager extends Manager {
     public DriverReviewResponse updateDriverReview(String ratingId, DriverReview review) throws APIException {
         URIBuilder builder = v5Builder(DRIVER_REVIEW_EP, ratingId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(review), DriverReviewResponse.class);
+    }
+
+    /**
+     * Changes some fields of a driver review: {@code PATCH
+     * https://wh.route4me.com/modules/api/v5.0/driver-reviews/{ratingId}}, with the review as the JSON body.
+     *
+     * @param ratingId the review ID
+     * @param review the fields to change ({@code tracking_number}, {@code rating}, {@code review}); fields left
+     *     {@code null} are not sent
+     * @return the updated review
+     * @throws IllegalArgumentException if {@code ratingId} is {@code null} or empty, or {@code review} is {@code null}
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public DriverReviewResponse patchDriverReview(String ratingId, DriverReview review) throws APIException {
+        if (review == null) {
+            throw new IllegalArgumentException("The review must not be null");
+        }
+        URIBuilder builder = v5Builder(DRIVER_REVIEW_EP, ratingId);
+        return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(review), DriverReviewResponse.class);
+    }
+
+    /**
+     * Gets the settings of the review page of the account: {@code GET
+     * https://wh.route4me.com/modules/api/v5.0/driver-reviews/settings/get-by-member}.
+     *
+     * <p>The public variant of this call, {@code GET .../driver-reviews/settings/get?tracking_number=...}, needs no
+     * API key and serves the review page itself, so the SDK does not offer it.
+     *
+     * @return the logo path, the question and the logo background color
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public DriverReviewSettingsResponse getDriverReviewSettingsByMember() throws APIException {
+        return this.makeRequest(RequestMethod.GET, v5Builder(SETTINGS_BY_MEMBER_EP), (HttpEntity) null,
+                DriverReviewSettingsResponse.class);
+    }
+
+    /**
+     * Uploads the settings of the review page of the account: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/driver-reviews/settings/upload}, with the settings as the JSON body.
+     * The logo goes Base64-encoded in {@code logo_picture}, as the spec says.
+     *
+     * @param settings the logo, the question and the logo background color
+     * @return the stored settings, with the path of the logo
+     * @throws IllegalArgumentException if {@code settings} is {@code null}
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public DriverReviewSettingsResponse uploadDriverReviewSettings(DriverReviewSettingsRequest settings)
+            throws APIException {
+        if (settings == null) {
+            throw new IllegalArgumentException("The settings must not be null");
+        }
+        return this.makeRequest(RequestMethod.POST, v5Builder(SETTINGS_UPLOAD_EP), this.gson.toJson(settings),
+                DriverReviewSettingsResponse.class);
     }
 }
