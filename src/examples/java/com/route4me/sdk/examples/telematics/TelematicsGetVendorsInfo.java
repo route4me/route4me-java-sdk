@@ -1,20 +1,15 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.route4me.sdk.examples.telematics;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.telematics.TelematicsManager;
 import com.route4me.sdk.services.telematics.TelematicsVendorInfo;
-import com.route4me.sdk.services.telematics.TelematicsVendorsInfo;
+import com.route4me.sdk.services.telematics.TelematicsVendorsV5Response;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- *
- * @author Route4Me
+ * Lists the whole telematics vendor catalog with {@link TelematicsManager#getTelematicsVendorsV5()}
+ * ({@code GET https://wh.route4me.com/modules/api/v5.0/telematics/vendors/all}).
  */
 public class TelematicsGetVendorsInfo {
 
@@ -23,15 +18,12 @@ public class TelematicsGetVendorsInfo {
         TelematicsManager manager = new TelematicsManager(apiKey);
 
         try {
-            TelematicsVendorsInfo vendors = manager.getTelematicsVendorsInfo();
-            for (TelematicsVendorInfo vendor : vendors.getVendors()) {
+            TelematicsVendorsV5Response vendors = manager.getTelematicsVendorsV5();
+            for (TelematicsVendorInfo vendor : vendors.getData()) {
                 System.out.println(vendor);
-
             }
         } catch (APIException ex) {
-            Logger.getLogger(TelematicsRegisterMember.class.getName()).log(Level.INFO, ex.toString());
+            Logger.getLogger(TelematicsGetVendorsInfo.class.getName()).log(Level.INFO, ex.toString());
         }
-
     }
-
 }
