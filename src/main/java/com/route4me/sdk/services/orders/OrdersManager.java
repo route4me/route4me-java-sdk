@@ -61,11 +61,11 @@ public class OrdersManager extends Manager {
     }
 
     /**
-     * Searches orders on {@code order.php}.
+     * Searches orders: {@code GET https://api.route4me.com/api.v4/order.php}, or {@code POST} to the same URL when the
+     * request has a filter.
      *
-     * <p>Without a filter the request is a {@code GET} with the parameters in the query.
-     * With a filter it is a {@code POST} with the parameters, filter included, as the JSON
-     * body, which is how the API takes a filter.
+     * <p>Without a filter the parameters go in the query. With a filter they go, filter included, in the JSON body,
+     * which is how the API takes a filter.
      *
      * @param request the search parameters
      * @return the matching orders

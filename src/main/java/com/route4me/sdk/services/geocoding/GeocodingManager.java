@@ -210,8 +210,9 @@ public class GeocodingManager extends Manager {
     }
 
     /**
-     * Sends one geocoding request, retrying on errors, with the retry count of the last
-     * {@link #bulkGeocoder} call (0 until then, which means one attempt).
+     * Sends one geocoding request, {@code GET} of the given URL (the bulk geocoder uses
+     * {@code https://api.route4me.com/api/address.php?address=...}), retrying on errors, with the retry count of the
+     * last {@link #bulkGeocoder} call (0 until then, which means one attempt).
      *
      * @param builder the request URL; it is not changed, so it can be sent again
      * @param clazz   the response type, such as {@code Geocodings[].class}
@@ -225,11 +226,11 @@ public class GeocodingManager extends Manager {
     }
 
     /**
-     * Sends one geocoding request, retrying on errors.
+     * Sends one geocoding request, {@code GET} of the given URL (the bulk geocoder uses
+     * {@code https://api.route4me.com/api/address.php?address=...}), retrying on errors.
      *
-     * <p>A response that says the address was not found ({@code {"status": ...,
-     * "results": ...}}) ends the attempts at once. Attempts are 200 ms apart. If the thread is interrupted while it
-     * waits, it gives up and keeps its
+     * <p>A response that says the address was not found ({@code {"status": ..., "results": ...}}) ends the attempts at
+     * once. Attempts are 200 ms apart. If the thread is interrupted while it waits, it gives up and keeps its
      * interrupt flag set.
      *
      * @param builder    the request URL; it is not changed, so it can be sent again
