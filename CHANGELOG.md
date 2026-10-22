@@ -88,5 +88,6 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 
 ### Internal
 - 716 offline unit tests (there were none in the repo): every request is checked against an endpoint registry built from the Route4Me OpenAPI specs, with the host, the scheme and the key placement. JaCoCo enforces a coverage floor.
+- The unit tests fail closed: a connection to any host but the loopback address fails the test (a default `ProxySelector` that the surefire listener and `MockHttp` install), so a manager a test forgot to mock, or the WebSocket geocoder, cannot reach the network. The key check also reads the SDK's Log4j 2 events at every level and its `java.util.logging` records down to `FINE`, `MockHttp` accepts only managers built with its placeholder key, and a guard failure is reported even when the test is then skipped.
 - Checkstyle 9.3 with zero violations, `javac -Xlint:all -Werror`, and Javadoc doclint on every build. Every public type, method and field has Javadoc.
 - CI: JDK 8, 11, 17 and 21; Actions pinned to commit SHAs; `permissions: contents: read`; a gitleaks job. The Travis config is removed.

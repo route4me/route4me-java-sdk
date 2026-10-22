@@ -26,6 +26,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,10 +47,13 @@ import static org.junit.Assert.fail;
  *     .assertNoBody();
  * }</pre>
  *
- * <p>{@link #toString()} masks the {@code api_key} query parameter, so failure messages
- * never print the key.
+ * <p>{@link #toString()} masks the value of every {@code api_key} query parameter, whatever
+ * the key, and {@link MockHttp#API_KEY} anywhere else, so failure messages never print a key.
  */
 public final class CapturedRequest {
+
+    /** An {@code api_key} query parameter and its value, which {@link #toString()} masks. */
+    private static final Pattern API_KEY_VALUE = Pattern.compile("([?&]api_key=)[^&#]*");
 
     private final String method;
     private final URI uri;
@@ -549,6 +553,7 @@ public final class CapturedRequest {
     /** @return {@code METHOD url}, with the {@code api_key} value masked */
     @Override
     public String toString() {
-        return (method + " " + uri).replace(MockHttp.API_KEY, "<api_key>");
+        return API_KEY_VALUE.matcher(method + " " + uri).replaceAll("$1<api_key>")
+                .replace(MockHttp.API_KEY, "<api_key>");
     }
 }
