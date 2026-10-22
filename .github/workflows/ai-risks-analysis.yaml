@@ -29,11 +29,13 @@ jobs:
       # 2. Get changed Java files and generate diff
       - name: Get changed files and diff
         id: changed
+        # Event values reach the script as environment variables, never spliced into it:
+        # any base branch is allowed, and a branch name could hold shell syntax.
+        env:
+          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
-          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
-          BASE_SHA="${{ github.event.pull_request.base.sha }}"
-          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
-
           echo "Base branch: $BASE_BRANCH"
           echo "Base SHA: $BASE_SHA"
           echo "Head SHA: $HEAD_SHA"
