@@ -31,7 +31,8 @@ public enum RequestMethod {
     public HttpRequestBase create(URI uri) {
         try {
             return this.clazz.getConstructor(URI.class).newInstance(uri);
-        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException | IllegalArgumentException | InvocationTargetException ex) {
+        } catch (NoSuchMethodException | SecurityException | InstantiationException | IllegalAccessException
+                | IllegalArgumentException | InvocationTargetException ex) {
             //(almost) unreachable path
             throw new RuntimeException(ex);
         }

@@ -121,7 +121,8 @@ public class DriversSkills {
         address.setTags(skills2);
         addresses.add(address);
 
-        address = new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211", 38.251923, -85.800034, 300, 62000, 85000);
+        address = new Address("650 SOUTH 29TH ST UNIT 315, Louisville, KY, 40211", 38.251923, -85.800034, 300, 62000,
+                85000);
         address.setTags(skills2);
         addresses.add(address);
 

@@ -76,7 +76,8 @@ public class PersistentLocation {
 
         //Persistent Location: "4738 BELLEVUE AVE, Louisville, KY, 40215"
 
-        Address persistentLocationAddress = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", "DEPOT END LOCATION",  38.179806, -85.775558, 300);
+        Address persistentLocationAddress = new Address("4738 BELLEVUE AVE, Louisville, KY, 40215",
+                "DEPOT END LOCATION",  38.179806, -85.775558, 300);
 
         List<Object> locationsSequence = Arrays.asList("", persistentLocationAddress);
 

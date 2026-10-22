@@ -76,7 +76,8 @@ public class SingleDepotMultipleDriverByTerritoryAddressesIDs {
                 e.printStackTrace();
             }
         } catch (APIException ex) {
-            Logger.getLogger(SingleDepotMultipleDriverByTerritoryAddressesIDs.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(SingleDepotMultipleDriverByTerritoryAddressesIDs.class.getName()).log(Level.SEVERE, null,
+                    ex);
         }
     }
 }

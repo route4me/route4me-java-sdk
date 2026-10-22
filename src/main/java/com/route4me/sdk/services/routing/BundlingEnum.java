@@ -93,7 +93,8 @@ public class BundlingEnum {
                 = new HashMap<>();
 
         static {
-            for (BundlingEnum.BundlingAdditionalItemMode s : EnumSet.allOf(BundlingEnum.BundlingAdditionalItemMode.class)) {
+            for (BundlingEnum.BundlingAdditionalItemMode s
+                    : EnumSet.allOf(BundlingEnum.BundlingAdditionalItemMode.class)) {
                 lookup.put(s.getValue(), s);
             }
         }

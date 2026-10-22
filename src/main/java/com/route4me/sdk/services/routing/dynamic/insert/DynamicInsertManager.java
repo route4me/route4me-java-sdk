@@ -68,7 +68,8 @@ public class DynamicInsertManager extends Manager {
      * @return the matching routes, best first
      * @throws APIException if the request fails
      */
-    public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode, RecommendedBy recommendedBy, Integer limit, List<String> routeIDs) throws APIException {
+    public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode,
+            RecommendedBy recommendedBy, Integer limit, List<String> routeIDs) throws APIException {
         URIBuilder builder = this.getURI(ROUTE_DYNAMIC_INSERT);
         DynamicInsert body = new DynamicInsert();
         body.setRouteInfoServer("v5");
@@ -85,11 +86,13 @@ public class DynamicInsertManager extends Manager {
 
     }
 
-    public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode, RecommendedBy recommendedBy, Integer limit) throws APIException {
+    public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode,
+            RecommendedBy recommendedBy, Integer limit) throws APIException {
         return this.lookForNewDestination(scheduledFor, lat, lng, insertMode, recommendedBy, limit, null);
     }
 
-    public List<MatchedRoute> lookForNewDestination(Double lat, Double lng, InsertMode insertMode, RecommendedBy recommendedBy, Integer limit, List<String> routeIDs) throws APIException {
+    public List<MatchedRoute> lookForNewDestination(Double lat, Double lng, InsertMode insertMode,
+            RecommendedBy recommendedBy, Integer limit, List<String> routeIDs) throws APIException {
         return this.lookForNewDestination(null, lat, lng, insertMode, recommendedBy, limit, routeIDs);
     }
 }

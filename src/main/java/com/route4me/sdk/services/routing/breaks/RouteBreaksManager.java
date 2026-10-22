@@ -24,7 +24,8 @@ public class RouteBreaksManager extends Manager {
         return builder;
     }
 
-    private Object insertBreak(Integer duration, Integer amount, String type, boolean replaceExisting, String[] routeIDs) throws APIException {
+    private Object insertBreak(Integer duration, Integer amount, String type, boolean replaceExisting,
+            String[] routeIDs) throws APIException {
         if (amount == null) {
             throw new IllegalArgumentException("The break amount (" + type + ") must not be null");
         }
@@ -59,8 +60,10 @@ public class RouteBreaksManager extends Manager {
      * @throws IllegalArgumentException if {@code travelTime} is {@code null} or no route ID is given
      * @throws APIException             if the request fails
      */
-    public Object insertBreakAfterCertainTravelTime(Integer duration, Integer travelTime, boolean replaceExisting, String... routeIDs) throws APIException {
-        return this.insertBreak(duration, travelTime, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_TRAVEL_TIME.getValue(), replaceExisting, routeIDs);
+    public Object insertBreakAfterCertainTravelTime(Integer duration, Integer travelTime, boolean replaceExisting,
+            String... routeIDs) throws APIException {
+        return this.insertBreak(duration, travelTime,
+                RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_TRAVEL_TIME.getValue(), replaceExisting, routeIDs);
     }
 
     /**
@@ -75,8 +78,10 @@ public class RouteBreaksManager extends Manager {
      * @throws IllegalArgumentException if {@code locationsNumber} is {@code null} or no route ID is given
      * @throws APIException             if the request fails
      */
-    public Object insertBreakAfterCertainLocations(Integer duration, Integer locationsNumber, boolean replaceExisting, String... routeIDs) throws APIException {
-        return this.insertBreak(duration, locationsNumber, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_LOCATIONS.getValue(), replaceExisting, routeIDs);
+    public Object insertBreakAfterCertainLocations(Integer duration, Integer locationsNumber, boolean replaceExisting,
+            String... routeIDs) throws APIException {
+        return this.insertBreak(duration, locationsNumber,
+                RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_LOCATIONS.getValue(), replaceExisting, routeIDs);
     }
 
     /**
@@ -91,8 +96,10 @@ public class RouteBreaksManager extends Manager {
      * @throws IllegalArgumentException if {@code serviceTime} is {@code null} or no route ID is given
      * @throws APIException             if the request fails
      */
-    public Object insertBreakAfterCertainServiceTime(Integer duration, Integer serviceTime, boolean replaceExisting, String... routeIDs) throws APIException {
-        return this.insertBreak(duration, serviceTime, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_SERVICE_TIME.getValue(), replaceExisting, routeIDs);
+    public Object insertBreakAfterCertainServiceTime(Integer duration, Integer serviceTime, boolean replaceExisting,
+            String... routeIDs) throws APIException {
+        return this.insertBreak(duration, serviceTime,
+                RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_SERVICE_TIME.getValue(), replaceExisting, routeIDs);
     }
 
     /**
@@ -107,8 +114,11 @@ public class RouteBreaksManager extends Manager {
      * @throws IllegalArgumentException if {@code elapsedTime} is {@code null} or no route ID is given
      * @throws APIException             if the request fails
      */
-    public Object insertBreakAfterCertainElapsed(Integer duration, Integer elapsedTime, boolean replaceExisting, String... routeIDs) throws APIException {
-        return this.insertBreak(duration, elapsedTime, RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_TOTAL_ELAPSED_TIME.getValue(), replaceExisting, routeIDs);
+    public Object insertBreakAfterCertainElapsed(Integer duration, Integer elapsedTime, boolean replaceExisting,
+            String... routeIDs) throws APIException {
+        return this.insertBreak(duration, elapsedTime,
+                RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_TOTAL_ELAPSED_TIME.getValue(), replaceExisting,
+                routeIDs);
     }
 
 

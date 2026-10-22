@@ -22,7 +22,8 @@ public class TelematicsDeleteVendorConnection {
         TelematicsManager manager = new TelematicsManager(apiKey);
         try {
 
-            TelematicsConnection connection = manager.deleteTelematicsConnection("11111111111111111111111111111111", "7DltI9rWz11HAZPL4tZPL4tz4pthRPLu3AvuM");
+            TelematicsConnection connection = manager.deleteTelematicsConnection("11111111111111111111111111111111",
+                    "7DltI9rWz11HAZPL4tZPL4tz4pthRPLu3AvuM");
             System.out.println(connection);
         } catch (IllegalAccessException ex) {
             Logger.getLogger(TelematicsDeleteVendorConnection.class.getName()).log(Level.SEVERE, null, ex);

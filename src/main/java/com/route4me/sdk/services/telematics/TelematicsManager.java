@@ -104,7 +104,8 @@ public class TelematicsManager extends Manager {
 
     }
 
-    private TelematicsVendorsInfo searchVendor(String country, String size, String keyWord, String feature, String page, String perPage) throws APIException {
+    private TelematicsVendorsInfo searchVendor(String country, String size, String keyWord, String feature,
+            String page, String perPage) throws APIException {
         URIBuilder builder = getTelemaricsVendorURI();
         if (country != null) {
             builder.setParameter("country", country);
@@ -157,7 +158,8 @@ public class TelematicsManager extends Manager {
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
-    public TelematicsVendorsInfo searchVendorByCountry(String country, String page, String perPage) throws APIException {
+    public TelematicsVendorsInfo searchVendorByCountry(String country, String page, String perPage)
+            throws APIException {
         return searchVendor(country, null, null, null, page, perPage);
     }
 
@@ -223,7 +225,8 @@ public class TelematicsManager extends Manager {
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
-    public TelematicsVendorsInfo searchVendorByKeyWord(String keyWord, String page, String perPage) throws APIException {
+    public TelematicsVendorsInfo searchVendorByKeyWord(String keyWord, String page, String perPage)
+            throws APIException {
         return searchVendor(null, null, keyWord, null, page, perPage);
     }
 
@@ -256,7 +259,8 @@ public class TelematicsManager extends Manager {
      *             {@link #getTelematicsVendorsV5(TelematicsVendorsV5Request)}.
      */
     @Deprecated
-    public TelematicsVendorsInfo searchVendorByFeature(String feature, String page, String perPage) throws APIException {
+    public TelematicsVendorsInfo searchVendorByFeature(String feature, String page, String perPage)
+            throws APIException {
         return searchVendor(null, null, null, feature, page, perPage);
     }
 
@@ -266,22 +270,27 @@ public class TelematicsManager extends Manager {
         return makeRequest(RequestMethod.GET, builder, "", TelematicsVendor[].class);
     }
 
-    public TelematicsConnection createTelematicsConnection(String apiToken, TelematicsConnection credentials) throws IllegalAccessException, APIException {
+    public TelematicsConnection createTelematicsConnection(String apiToken, TelematicsConnection credentials)
+            throws IllegalAccessException, APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_CONNECTIONS_V4);
         builder.setParameter("api_token", apiToken);
-        return makeRequest(RequestMethod.POST, builder, convertObjectToParameters(credentials), TelematicsConnection.class);
+        return makeRequest(RequestMethod.POST, builder, convertObjectToParameters(credentials),
+                TelematicsConnection.class);
 
     }
 
-    public TelematicsConnection updateTelematicsConnection(String apiToken, String connectionToken, TelematicsConnection credentials) throws IllegalAccessException, APIException {
+    public TelematicsConnection updateTelematicsConnection(String apiToken, String connectionToken,
+            TelematicsConnection credentials) throws IllegalAccessException, APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_CONNECTIONS_V4);
         builder.setParameter("api_token", apiToken);
         builder.setParameter("connection_token", connectionToken);
-        return makeRequest(RequestMethod.PUT, builder, convertObjectToParameters(credentials), TelematicsConnection.class);
+        return makeRequest(RequestMethod.PUT, builder, convertObjectToParameters(credentials),
+                TelematicsConnection.class);
 
     }
 
-    public TelematicsConnection deleteTelematicsConnection(String apiToken, String connectionToken) throws IllegalAccessException, APIException {
+    public TelematicsConnection deleteTelematicsConnection(String apiToken, String connectionToken)
+            throws IllegalAccessException, APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_CONNECTIONS_V4);
         builder.setParameter("api_token", apiToken);
         builder.setParameter("connection_token", connectionToken);
@@ -289,7 +298,8 @@ public class TelematicsManager extends Manager {
 
     }
 
-    public TelematicsConnection getTelematicsConnection(String apiToken, String connectionToken) throws IllegalAccessException, APIException {
+    public TelematicsConnection getTelematicsConnection(String apiToken, String connectionToken)
+            throws IllegalAccessException, APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_CONNECTIONS_V4);
         builder.setParameter("api_token", apiToken);
         builder.setParameter("connection_token", connectionToken);

@@ -13,7 +13,8 @@ public class GetOptimizationProfiles {
             OptimizationProfilesResponse profiles = manager.getOptimizationProfiles();
             if (profiles.getItems() != null) {
                 for (OptimizationProfile profile : profiles.getItems()) {
-                    System.out.println("Profile: " + profile.getProfileName() + " (ID: " + profile.getOptimizationProfileId() + ")");
+                    System.out.println("Profile: " + profile.getProfileName() + " (ID: "
+                            + profile.getOptimizationProfileId() + ")");
                 }
             }
         } catch (APIException e) {

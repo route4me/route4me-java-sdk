@@ -26,7 +26,8 @@ public class TelematicsUpdateVendorConnection {
         credentials.setValidateRemoteCredentials("false");
         try {
 
-            TelematicsConnection connection = manager.updateTelematicsConnection("11111111111111111111111111111111", "7DltI9rWz11HAZPL4tZPL4tz4pthRPLu3AvuM", credentials);
+            TelematicsConnection connection = manager.updateTelematicsConnection("11111111111111111111111111111111",
+                    "7DltI9rWz11HAZPL4tZPL4tz4pthRPLu3AvuM", credentials);
             System.out.println(connection);
         } catch (IllegalAccessException ex) {
             Logger.getLogger(TelematicsUpdateVendorConnection.class.getName()).log(Level.SEVERE, null, ex);

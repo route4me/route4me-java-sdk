@@ -15,7 +15,8 @@ public class ActivityManager extends Manager {
     }
 
     public Activities getActivities(ActivityRequest request) throws APIException {
-        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(GET_ACTIVITIES_EP), request, Activities.class);
+        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(GET_ACTIVITIES_EP), request,
+                Activities.class);
     }
 
     /**
@@ -33,7 +34,8 @@ public class ActivityManager extends Manager {
         activity.setRouteId(routeId);
         activity.setMessage(message);
         activity.setType(ActivityType.USER_MESSAGE);
-        StatusResponse resp = this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(activity), StatusResponse.class);
+        StatusResponse resp = this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(activity),
+                StatusResponse.class);
         // An empty body or a missing status counts as a failure, like an explicit false.
         if (resp == null || !Boolean.TRUE.equals(resp.getStatus())) {
             throw new APIException("Operation has not succeeded with an unknown error");

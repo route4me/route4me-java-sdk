@@ -12,7 +12,8 @@ public class GetDestinationMarkedAsVisitedActivities {
         String apiKey = System.getenv("R4M_API_KEY");
         ActivityManager manager = new ActivityManager(apiKey);
         try {
-            Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.MARK_DESTINATION_VISITED));
+            Activities activities = manager.getActivities(new ActivityRequest()
+                    .setType(ActivityType.MARK_DESTINATION_VISITED));
             System.out.println(activities.getResults());
         } catch (APIException e) {
             e.printStackTrace();

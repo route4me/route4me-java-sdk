@@ -38,11 +38,14 @@ public class AddressBookManagerV5 extends Manager {
     }
 
     public AddressBookContactsResponse getContacts(AddressBookContactsBodyRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_ALL_EP), this.gson.toJson(request), AddressBookContactsResponse.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_ALL_EP), this.gson.toJson(request),
+                AddressBookContactsResponse.class);
     }
 
-    public AddressBookContactsResponse getContactsPaginated(AddressBookContactsBodyRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_PAGINATED_EP), this.gson.toJson(request), AddressBookContactsResponse.class);
+    public AddressBookContactsResponse getContactsPaginated(AddressBookContactsBodyRequest request)
+            throws APIException {
+        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_PAGINATED_EP), this.gson.toJson(request),
+                AddressBookContactsResponse.class);
     }
 
     public AddressBookContactV5 getContactById(long contactId) throws APIException {
@@ -54,23 +57,28 @@ public class AddressBookManagerV5 extends Manager {
     public AddressBookContactsResponse getContactsByIds(long[] contactIds) throws APIException {
         ContactIdsRequest request = new ContactIdsRequest();
         request.setAddressIds(contactIds);
-        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_SHOW_EP), this.gson.toJson(request), AddressBookContactsResponse.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_SHOW_EP), this.gson.toJson(request),
+                AddressBookContactsResponse.class);
     }
 
     public AddressBookContactV5 addContact(AddressBookContactV5 contact) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_EP), this.gson.toJson(contact), AddressBookContactV5.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_EP), this.gson.toJson(contact),
+                AddressBookContactV5.class);
     }
 
     public AddressBookContactV5 updateContact(long addressId, AddressBookContactV5 contact) throws APIException {
-        return this.makeRequest(RequestMethod.PUT, v5Builder(CONTACTS_EP, addressId), this.gson.toJson(contact), AddressBookContactV5.class);
+        return this.makeRequest(RequestMethod.PUT, v5Builder(CONTACTS_EP, addressId), this.gson.toJson(contact),
+                AddressBookContactV5.class);
     }
 
     public AddressBookContactV5[] batchUpdateContacts(BatchUpdateContactsRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.PUT, v5Builder(CONTACTS_BATCH_UPDATE_EP), this.gson.toJson(request), AddressBookContactV5[].class);
+        return this.makeRequest(RequestMethod.PUT, v5Builder(CONTACTS_BATCH_UPDATE_EP), this.gson.toJson(request),
+                AddressBookContactV5[].class);
     }
 
     public StatusResponse batchCreateContacts(BatchCreateContactsRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_BATCH_CREATE_EP), this.gson.toJson(request), StatusResponse.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_BATCH_CREATE_EP), this.gson.toJson(request),
+                StatusResponse.class);
     }
 
     public boolean deleteContacts(long[] contactIds) throws APIException {
@@ -81,22 +89,27 @@ public class AddressBookManagerV5 extends Manager {
     }
 
     public CustomFieldsResponse getCustomFields() throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_CUSTOM_FIELDS_EP), (HttpEntity) null, CustomFieldsResponse.class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_CUSTOM_FIELDS_EP), (HttpEntity) null,
+                CustomFieldsResponse.class);
     }
 
     public AddressBookContactV5[] getDepots() throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_DEPOTS_EP), (HttpEntity) null, AddressBookContactV5[].class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_DEPOTS_EP), (HttpEntity) null,
+                AddressBookContactV5[].class);
     }
 
     public StatusResponse exportAddresses(AddressExportRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_EP), this.gson.toJson(request), StatusResponse.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_EP), this.gson.toJson(request),
+                StatusResponse.class);
     }
 
     public StatusResponse getJobStatus(String jobId) throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(JOB_STATUS_EP, jobId), (HttpEntity) null, StatusResponse.class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(JOB_STATUS_EP, jobId), (HttpEntity) null,
+                StatusResponse.class);
     }
 
     public StatusResponse getJobResult(String jobId) throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(JOB_RESULT_EP, jobId), (HttpEntity) null, StatusResponse.class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(JOB_RESULT_EP, jobId), (HttpEntity) null,
+                StatusResponse.class);
     }
 }

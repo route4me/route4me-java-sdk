@@ -28,7 +28,8 @@ import java.util.logging.Logger;
 
 public class DriversDifferentWorkingTimeWithTerritories {
 
-    public static List<Address> readAddressesFromCSV(String filename, List<String> territory1, List<String> territory2, List<String> territory3, Integer serviceTime) {
+    public static List<Address> readAddressesFromCSV(String filename, List<String> territory1, List<String> territory2,
+            List<String> territory3, Integer serviceTime) {
         List<Address> addresses = new ArrayList<>();
         try {
             for (String[] nextRecord : CsvRows.read(filename)) {
@@ -151,7 +152,8 @@ public class DriversDifferentWorkingTimeWithTerritories {
         Integer serviceTime = 300;
 
         Path currentPath = Paths.get(System.getProperty("user.dir"));
-        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
+        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk",
+                "examples", "advancedconstraints", "locations.csv");
 
 
         addresses = readAddressesFromCSV(filePath.toString(), territory1, territory2, territory3, serviceTime);

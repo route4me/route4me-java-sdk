@@ -94,7 +94,8 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
             }
 
             AdvancedConstraints schedule1 = new AdvancedConstraints();
-            schedule1.setDepotAddress(new Address("15110 Oakmont St, Overland Park, KS 66221, USA", "DEPOT KS", 38.854268, -94.7333895, 0));
+            schedule1.setDepotAddress(new Address("15110 Oakmont St, Overland Park, KS 66221, USA", "DEPOT KS",
+                    38.854268, -94.7333895, 0));
             schedule1.setTags(zone1);
             schedule1.setMembersCount(1);
             List<List<Integer>> timeWindowsSchedule1 = new ArrayList<>();
@@ -107,7 +108,8 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
             // Time Window Start:  8:00 am EST
             // Time Window End:   12:00 pm EST
             AdvancedConstraints schedule2 = new AdvancedConstraints();
-            schedule2.setDepotAddress(new Address("754 5th Ave, New York, NY 10019, USA", "DEPOT NY", 40.7636197, -73.9744388, 0));
+            schedule2.setDepotAddress(new Address("754 5th Ave, New York, NY 10019, USA", "DEPOT NY", 40.7636197,
+                    -73.9744388, 0));
             schedule2.setTags(zone2);
             schedule2.setMembersCount(1);
             List<List<Integer>> timeWindowsSchedule2 = new ArrayList<>();
@@ -120,7 +122,8 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
             // Time Window Start:  8:00 am EST
             // Time Window End:    01:00 pm EST
             AdvancedConstraints schedule3 = new AdvancedConstraints();
-            schedule3.setDepotAddress(new Address("106 W Columbus Dr, Tampa, FL 33602, USA", "DEPOT FL", 27.9664433, -82.4564934, 0));
+            schedule3.setDepotAddress(new Address("106 W Columbus Dr, Tampa, FL 33602, USA", "DEPOT FL", 27.9664433,
+                    -82.4564934, 0));
 
             schedule3.setTags(zone3);
             schedule3.setMembersCount(1);
@@ -150,7 +153,8 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
                 e.printStackTrace();
             }
         } catch (APIException ex) {
-            Logger.getLogger(OptimizationUsingTerritoriesOrdersDifferentDepot.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(OptimizationUsingTerritoriesOrdersDifferentDepot.class.getName()).log(Level.SEVERE, null,
+                    ex);
         }
     }
 }

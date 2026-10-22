@@ -194,7 +194,8 @@ public class GeocodingManager extends Manager {
      * Sends one geocoding request, retrying on errors.
      *
      * <p>A response that says the address was not found ({@code {"status": ...,
-     * "results": ...}}) ends the attempts at once. Attempts are 200 ms apart. If the thread is interrupted while it waits, it gives up and keeps its
+     * "results": ...}}) ends the attempts at once. Attempts are 200 ms apart. If the thread is interrupted while it
+     * waits, it gives up and keeps its
      * interrupt flag set.
      *
      * @param builder    the request URL; it is not changed, so it can be sent again
@@ -215,7 +216,8 @@ public class GeocodingManager extends Manager {
                     return null;
                 }
                 if (attempt == attempts) {
-                    logger.error("Geocoding failed after {} attempt(s): {}", attempts, Sanitizer.forLog(ex.getMessage()));
+                    logger.error("Geocoding failed after {} attempt(s): {}", attempts,
+                            Sanitizer.forLog(ex.getMessage()));
                     return null;
                 }
                 logger.info("Retrying due to error: {}", Sanitizer.forLog(ex.getMessage()));

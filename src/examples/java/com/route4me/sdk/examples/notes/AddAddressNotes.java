@@ -31,7 +31,8 @@ public class AddAddressNotes {
                 .setLatitude(address.getLatitude())
                 .setLongitude(address.getLongitude())
                 .setDeviceType(Constants.DeviceType.WEB);
-        NotesManager.AddedNote note = notesManager.addAddressNotes(request, noteContent, StatusUpdateType.WRONG_DELIVERY);
+        NotesManager.AddedNote note = notesManager.addAddressNotes(request, noteContent,
+                StatusUpdateType.WRONG_DELIVERY);
         if (note.getStatus()) {
             System.out.println(note);
         }

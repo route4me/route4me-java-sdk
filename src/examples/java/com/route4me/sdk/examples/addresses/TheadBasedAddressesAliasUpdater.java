@@ -51,7 +51,8 @@ public class TheadBasedAddressesAliasUpdater implements Callable {
     private final Address address;
     private final String routeID;
     private final RoutingManager manager;
-    protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(TheadBasedAddressesAliasUpdater.class);
+    protected static final org.apache.logging.log4j.Logger logger = LogManager.getLogger(
+            TheadBasedAddressesAliasUpdater.class);
 
     public TheadBasedAddressesAliasUpdater(RoutingManager manager, String routeID, Address address) {
 
@@ -90,7 +91,8 @@ public class TheadBasedAddressesAliasUpdater implements Callable {
         try {
             Route route = manager.getRoute(new RoutesRequest().setId(routeID));
             for (Address address : route.getAddresses()) {
-                System.out.println("Current Alias: " + address.getAlias() + " Route Destination ID: " + address.getRouteDestinationId());
+                System.out.println("Current Alias: " + address.getAlias() + " Route Destination ID: "
+                        + address.getRouteDestinationId());
 
                 Callable callableWorker = new TheadBasedAddressesAliasUpdater(manager, routeID, address);
                 Future<Address> future = executor.submit(callableWorker);
@@ -104,7 +106,8 @@ public class TheadBasedAddressesAliasUpdater implements Callable {
             for (Future<Address> worker : workers) {
                 try {
                     Address updatedAddress = worker.get(60, TimeUnit.MILLISECONDS);
-                    System.out.println("Updated Alias: " + updatedAddress.getAlias() + " Route Destination ID: " + updatedAddress.getRouteDestinationId());
+                    System.out.println("Updated Alias: " + updatedAddress.getAlias() + " Route Destination ID: "
+                            + updatedAddress.getRouteDestinationId());
                 } catch (InterruptedException | ExecutionException | TimeoutException ex) {
                     logger.error("Thread Execution Exception. " + ex);
                 }

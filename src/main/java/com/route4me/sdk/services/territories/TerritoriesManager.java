@@ -60,7 +60,8 @@ public class TerritoriesManager extends Manager {
         return territoryPolygons;
     }
 
-    public List<Territory> allocateTerritories(TerritoryAllocated territoryAllocated, List<TerritoryPolygon> territoryPolygons) {
+    public List<Territory> allocateTerritories(TerritoryAllocated territoryAllocated,
+            List<TerritoryPolygon> territoryPolygons) {
 
         List<Territory> foundTerritories = new ArrayList<>();
 

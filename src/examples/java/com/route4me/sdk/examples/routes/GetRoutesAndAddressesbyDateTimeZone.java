@@ -30,7 +30,8 @@ public class GetRoutesAndAddressesbyDateTimeZone {
             System.out.println("Route #" + i + " " + r.getRouteID() + " " + r.getRouteName());
             try {
                 for (Address address: routeManager.getRoute(new RoutesRequest().setId(r.getRouteID())).getAddresses()) {
-                    System.out.println("\t " + address.getSequenceNo() + " " + address.getAddress() + " " + address.getAlias());
+                    System.out.println("\t " + address.getSequenceNo() + " " + address.getAddress() + " "
+                            + address.getAlias());
                 }
             } catch (APIException ex) {
                 Logger.getLogger(GetRoutesAndAddressesbyDateTimeZone.class.getName()).log(Level.SEVERE, null, ex);

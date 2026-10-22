@@ -31,7 +31,8 @@ public class GetRoutesAndAddressesbyLocalDateTime {
             System.out.println("Route #" + i + " " + r.getId() + " " + r.getParameters().getRouteName());
             try {
                 for (Address address: routeManager.getRoute(new RoutesRequest().setId(r.getId())).getAddresses()) {
-                    System.out.println("\t " + address.getSequenceNo() + " " + address.getAddress() + " " + address.getAlias());
+                    System.out.println("\t " + address.getSequenceNo() + " " + address.getAddress() + " "
+                            + address.getAlias());
                 }
             } catch (APIException ex) {
                 Logger.getLogger(GetRoutesAndAddressesbyLocalDateTime.class.getName()).log(Level.SEVERE, null, ex);

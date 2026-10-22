@@ -27,7 +27,8 @@ public class AddressBarcodeManager extends Manager {
         return builder;
     }
 
-    public GetAddressBarcodesResponse getAddressBarcodes(String routeId, Long routeDestinationId, Integer limit, String cursor) throws APIException {
+    public GetAddressBarcodesResponse getAddressBarcodes(String routeId, Long routeDestinationId, Integer limit,
+            String cursor) throws APIException {
         URIBuilder builder = v5Builder(ADDRESS_BARCODES_EP);
         if (routeId != null) {
             builder.setParameter("route_id", routeId);

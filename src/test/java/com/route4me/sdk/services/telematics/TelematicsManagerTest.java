@@ -322,7 +322,8 @@ public class TelematicsManagerTest {
     public void getTelematicsVendorV5GetsOneVendor() throws Exception {
         TelematicsManager manager = manager();
         http.respond(200, json("{'id':55,'is_enabled':true,'is_readonly':false,'name':'tomtom','title':'TomTom',"
-                + "'icon':null,'hint':'Use the API key','created_at':'2026-01-01T00:00:00Z','updated_at':'2026-02-01T00:00:00Z',"
+                + "'icon':null,'hint':'Use the API "
+                        + "key','created_at':'2026-01-01T00:00:00Z','updated_at':'2026-02-01T00:00:00Z',"
                 + "'sync_entities':[{'id':'vehicles','alias':'vehicles','title':'Vehicles','default_value':true}],"
                 + "'credentials':[{'name':'api_key','is_required':true,'default':null}]}"));
 

@@ -31,7 +31,8 @@ public class TelematicsCreateVendorConnection {
         credentials.setValidateRemoteCredentials("false");
         try {
 
-            TelematicsConnection connection = manager.createTelematicsConnection("11111111111111111111111111111111", credentials);
+            TelematicsConnection connection = manager.createTelematicsConnection("11111111111111111111111111111111",
+                    credentials);
             System.out.println(connection);
         } catch (IllegalAccessException ex) {
             Logger.getLogger(TelematicsCreateVendorConnection.class.getName()).log(Level.SEVERE, null, ex);

@@ -29,15 +29,18 @@ public class NotesManagerV5 extends Manager {
     }
 
     public RouteNoteResource createNote(NoteStoreRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_EP), this.gson.toJson(request), RouteNoteResource.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_EP), this.gson.toJson(request),
+                RouteNoteResource.class);
     }
 
     public RouteNoteResource getNote(String noteId) throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(NOTES_EP, noteId), (HttpEntity) null, RouteNoteResource.class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(NOTES_EP, noteId), (HttpEntity) null,
+                RouteNoteResource.class);
     }
 
     public RouteNoteResource updateNote(String noteId, NoteUpdateRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_EP, noteId), this.gson.toJson(request), RouteNoteResource.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_EP, noteId), this.gson.toJson(request),
+                RouteNoteResource.class);
     }
 
     public DeleteNoteResponse deleteNote(String noteId) throws APIException {
@@ -55,7 +58,8 @@ public class NotesManagerV5 extends Manager {
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteNoteCollection.class);
     }
 
-    public RouteNoteCollection getNotesByDestination(String routeDestinationId, Integer page, Integer perPage) throws APIException {
+    public RouteNoteCollection getNotesByDestination(String routeDestinationId, Integer page, Integer perPage)
+            throws APIException {
         URIBuilder builder = v5Builder(NOTES_EP + "/destination", routeDestinationId);
         if (page != null) {
             builder.setParameter("page", String.valueOf(page));
@@ -67,14 +71,17 @@ public class NotesManagerV5 extends Manager {
     }
 
     public NoteCustomTypeCollection getNoteCustomTypes() throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(NOTES_CUSTOM_TYPES_EP), (HttpEntity) null, NoteCustomTypeCollection.class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(NOTES_CUSTOM_TYPES_EP), (HttpEntity) null,
+                NoteCustomTypeCollection.class);
     }
 
     public NoteCustomTypeCollection createNoteCustomType(NoteCustomTypeStoreRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_CUSTOM_TYPES_EP), this.gson.toJson(request), NoteCustomTypeCollection.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_CUSTOM_TYPES_EP), this.gson.toJson(request),
+                NoteCustomTypeCollection.class);
     }
 
     public BulkNotesResponse bulkCreateNotes(NoteStoreBulkRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_BULK_CREATE_EP), this.gson.toJson(request), BulkNotesResponse.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(NOTES_BULK_CREATE_EP), this.gson.toJson(request),
+                BulkNotesResponse.class);
     }
 }

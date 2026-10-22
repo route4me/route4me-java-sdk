@@ -31,7 +31,8 @@ import java.util.logging.Logger;
 
 public class DriversScheduleswithTerritoriesV1 {
 
-    public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2, List<String> zone3, Integer serviceTime) {
+    public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2,
+            List<String> zone3, Integer serviceTime) {
         List<Address> addresses = new ArrayList<>();
         try {
             for (String[] nextRecord : CsvRows.read(filename)) {
@@ -85,7 +86,8 @@ public class DriversScheduleswithTerritoriesV1 {
         List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
 
         Path currentPath = Paths.get(System.getProperty("user.dir"));
-        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "schedules.csv");
+        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk",
+                "examples", "advancedconstraints", "schedules.csv");
 
         try {
             for (String[] nextRecord : CsvRows.read(filePath.toString())) {
@@ -125,7 +127,8 @@ public class DriversScheduleswithTerritoriesV1 {
         addresses.add(address);
 
         // Stops
-        filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
+        filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk", "examples",
+                "advancedconstraints", "locations.csv");
 
         Integer serviceTime = 120;
 

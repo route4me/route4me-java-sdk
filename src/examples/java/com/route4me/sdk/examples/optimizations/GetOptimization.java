@@ -18,7 +18,8 @@ public class GetOptimization {
         try {
             List<DataObject> data = manager.getOptimizations(10, 5);
             String optimizationProblemID = data.get(0).getOptimizationProblemId();
-            DataObject optimization = manager.getOptimization(new OptimizationParameters().setProblemId(optimizationProblemID));
+            DataObject optimization = manager.getOptimization(new OptimizationParameters()
+                    .setProblemId(optimizationProblemID));
             System.out.println(optimization);
         } catch (APIException e) {
             //handle exception

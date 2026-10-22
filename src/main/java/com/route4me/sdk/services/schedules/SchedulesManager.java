@@ -12,10 +12,12 @@ public class SchedulesManager extends Manager {
     private static final String SCHEDULES_EP = V5_BASE + "/recurring-routes/schedules";
     private static final String SCHEDULES_PAGINATION_EP = V5_BASE + "/recurring-routes/schedules/pagination";
     private static final String ROUTE_SCHEDULES_EP = V5_BASE + "/recurring-routes/route-schedules";
-    private static final String ROUTE_SCHEDULES_PAGINATION_EP = V5_BASE + "/recurring-routes/route-schedules/pagination";
+    private static final String ROUTE_SCHEDULES_PAGINATION_EP = V5_BASE
+            + "/recurring-routes/route-schedules/pagination";
     private static final String REPLACE_ROUTE_SCHEDULES_EP = V5_BASE + "/recurring-routes/route-schedules/replace";
     private static final String SCHEDULED_ROUTES_IS_COPY_EP = V5_BASE + "/recurring-routes/scheduled-routes/is-copy";
-    private static final String SCHEDULED_ROUTES_GET_COPIES_EP = V5_BASE + "/recurring-routes/scheduled-routes/get-copies";
+    private static final String SCHEDULED_ROUTES_GET_COPIES_EP = V5_BASE
+            + "/recurring-routes/scheduled-routes/get-copies";
     private static final String MASTER_ROUTES_EP = V5_BASE + "/recurring-routes/master-routes";
 
     public SchedulesManager(String apiKey) {
@@ -119,7 +121,8 @@ public class SchedulesManager extends Manager {
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteSchedulePreview.class);
     }
 
-    public RouteScheduleResponse replaceRouteSchedule(String routeId, ReplaceRouteScheduleRequest request) throws APIException {
+    public RouteScheduleResponse replaceRouteSchedule(String routeId, ReplaceRouteScheduleRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(REPLACE_ROUTE_SCHEDULES_EP, routeId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), RouteScheduleResponse.class);
     }
@@ -128,7 +131,8 @@ public class SchedulesManager extends Manager {
 
     public CreateMasterRouteResponse createMasterRoute(CreateMasterRouteRequest request) throws APIException {
         URIBuilder builder = v5Builder(MASTER_ROUTES_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), CreateMasterRouteResponse.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                CreateMasterRouteResponse.class);
     }
 
     // --- Scheduled Routes ---
@@ -138,8 +142,10 @@ public class SchedulesManager extends Manager {
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, StatusResponse.class);
     }
 
-    public RouteScheduleCopiesResponse getRouteScheduleCopies(GetRouteScheduleCopiesRequest request) throws APIException {
+    public RouteScheduleCopiesResponse getRouteScheduleCopies(GetRouteScheduleCopiesRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(SCHEDULED_ROUTES_GET_COPIES_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), RouteScheduleCopiesResponse.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                RouteScheduleCopiesResponse.class);
     }
 }

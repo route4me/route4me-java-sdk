@@ -19,8 +19,10 @@ public class MoveAddressesToRouteAfterDestination {
             Route toRoute = manager.getRoute(new RoutesRequest().setId(routes.get(1).getId()));
             Number routeDestinationId = fromRoute.getAddresses().get(3).getRouteDestinationId();
             Number afterRouteDestinationId = toRoute.getAddresses().get(1).getRouteDestinationId();
-            System.out.println("Moving Destination " + routeDestinationId + " from Route " + fromRoute.getId() + " to Route " + toRoute.getId() + " after Destination " + afterRouteDestinationId);
-            MovedAddressesResponse response = manager.moveAddresses(routeDestinationId, toRoute.getId(), afterRouteDestinationId);
+            System.out.println("Moving Destination " + routeDestinationId + " from Route " + fromRoute.getId()
+                    + " to Route " + toRoute.getId() + " after Destination " + afterRouteDestinationId);
+            MovedAddressesResponse response = manager.moveAddresses(routeDestinationId, toRoute.getId(),
+                    afterRouteDestinationId);
             System.out.println(response);
         } catch (APIException e) {
             //handle exception

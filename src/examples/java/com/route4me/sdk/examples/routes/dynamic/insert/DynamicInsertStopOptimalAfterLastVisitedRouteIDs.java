@@ -51,7 +51,8 @@ public class DynamicInsertStopOptimalAfterLastVisitedRouteIDs {
         List<String> routeIDs = Arrays.asList("A42056A8120AF6EEDFAE3886B9909780", "724E95A9A4773F83B7236E8CA20E8F96");
 
         try {
-            List<MatchedRoute> matchedRoutes = dynamicManager.lookForNewDestination(address.getLatitude(), address.getLongitude(), InsertMode.OPTIMAL_AFTER_LAST_VISITED, RecommendedBy.DISTANCE, 5, routeIDs);
+            List<MatchedRoute> matchedRoutes = dynamicManager.lookForNewDestination(address.getLatitude(),
+                    address.getLongitude(), InsertMode.OPTIMAL_AFTER_LAST_VISITED, RecommendedBy.DISTANCE, 5, routeIDs);
             for (MatchedRoute matchedRoute : matchedRoutes) {
                 System.out.println(matchedRoute);
             }
@@ -65,7 +66,8 @@ public class DynamicInsertStopOptimalAfterLastVisitedRouteIDs {
             routeManager.addAddressesToRoute(matchedRoute.getRouteID(), addresses);
 
         } catch (APIException ex) {
-            Logger.getLogger(DynamicInsertStopOptimalAfterLastVisitedRouteIDs.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DynamicInsertStopOptimalAfterLastVisitedRouteIDs.class.getName()).log(Level.SEVERE, null,
+                    ex);
         }
 
     }

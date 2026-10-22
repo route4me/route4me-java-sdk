@@ -94,7 +94,8 @@ public class AddressBookManager extends Manager {
      */
     public boolean deleteContact(List<Number> addressIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
-        DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(new AddressIds(addressIds)), DeleteResponse.class);
+        DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder,
+                this.gson.toJson(new AddressIds(addressIds)), DeleteResponse.class);
         return response != null && response.isDeleted();
     }
 

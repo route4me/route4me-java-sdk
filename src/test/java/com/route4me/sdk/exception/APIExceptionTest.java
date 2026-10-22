@@ -105,7 +105,8 @@ public class APIExceptionTest {
         assertEquals(Collections.singletonList(
                 "Access denied: the required feature is not enabled on the used Route4Me account"), error.getErrors());
         assertEquals("Invalid status code 403 for GET https://api.route4me.com/api.v4/route.php: "
-                + "Access denied: the required feature is not enabled on the used Route4Me account", error.getMessage());
+                        + "Access denied: the required feature is not enabled on the used Route4Me account",
+                error.getMessage());
         assertEquals(403, error.getStatusCode());
         assertTrue(error.getMessages().isEmpty());
     }

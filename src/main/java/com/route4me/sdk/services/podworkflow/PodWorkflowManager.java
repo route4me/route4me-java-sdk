@@ -27,7 +27,8 @@ public class PodWorkflowManager extends Manager {
         return builder;
     }
 
-    public PodWorkflowsResponse getPodWorkflows(Integer perPage, String cursor, String searchQuery) throws APIException {
+    public PodWorkflowsResponse getPodWorkflows(Integer perPage, String cursor, String searchQuery)
+            throws APIException {
         URIBuilder builder = v5Builder(WORKFLOWS_EP);
         if (perPage != null) {
             builder.setParameter("per_page", String.valueOf(perPage));

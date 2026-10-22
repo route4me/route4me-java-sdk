@@ -62,9 +62,12 @@ public class AddRemoveAddressReOtimizeOptimization {
         // Adding More Addresses to Optimization
         System.out.println("\nAdding More Stops and Reoptimizing");
 
-        optimizationResponse.getAddresses().add(new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300));
-        optimizationResponse.getAddresses().add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300));
-        optimizationResponse.getAddresses().add(new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214", 38.162472, -85.792854, 300));
+        optimizationResponse.getAddresses().add(new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335,
+                -85.815094, 300));
+        optimizationResponse.getAddresses().add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253,
+                -85.785118, 300));
+        optimizationResponse.getAddresses().add(new Address("7305 ROYAL WOODS DR, Louisville, KY, 40214", 38.162472,
+                -85.792854, 300));
 
         optParameters = new OptimizationParameters();
         optParameters.setProblemId(optimizationResponse.getOptimizationProblemId());
@@ -94,10 +97,12 @@ public class AddRemoveAddressReOtimizeOptimization {
 
         Address addressToBeRemoved = optimizationUpdated.getRoutes().get(0).getAddresses().get(5);
 
-        System.out.println("Removing Address: " + addressToBeRemoved.getAddress() + " "  + addressToBeRemoved.getRouteDestinationId());
+        System.out.println("Removing Address: " + addressToBeRemoved.getAddress()
+                + " "  + addressToBeRemoved.getRouteDestinationId());
 
         try {
-            manager.deleteAddressFromOptimization(optimizationUpdated.getOptimizationProblemId(), addressToBeRemoved.getRouteDestinationId());
+            manager.deleteAddressFromOptimization(optimizationUpdated.getOptimizationProblemId(),
+                    addressToBeRemoved.getRouteDestinationId());
         } catch (APIException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -138,8 +143,10 @@ public class AddRemoveAddressReOtimizeOptimization {
         System.out.println("\nAdding Even More Stops and Reoptimizing");
 
 
-        optimizationResponse.getAddresses().add(new Address("4629 HILLSIDE DRIVE, Louisville, KY, 40216", 38.176067, -85.824638, 300));
-        optimizationResponse.getAddresses().add(new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806, -85.775558, 300));
+        optimizationResponse.getAddresses().add(new Address("4629 HILLSIDE DRIVE, Louisville, KY, 40216", 38.176067,
+                -85.824638, 300));
+        optimizationResponse.getAddresses().add(new Address("4738 BELLEVUE AVE, Louisville, KY, 40215", 38.179806,
+                -85.775558, 300));
 
         optParameters = new OptimizationParameters();
         optParameters.setProblemId(optimizationUpdated.getOptimizationProblemId());

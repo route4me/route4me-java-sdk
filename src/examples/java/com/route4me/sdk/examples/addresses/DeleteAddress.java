@@ -31,7 +31,8 @@ public class DeleteAddress {
                     throw new RuntimeException("Cannot find an address for delete operation");
                 }
             }
-            System.out.println("Deleting Address: " + addr.getRouteDestinationId() + " from Route: " + addr.getRouteId());
+            System.out.println("Deleting Address: " + addr.getRouteDestinationId() + " from Route: "
+                    + addr.getRouteId());
             manager.deleteAddress(addr.getRouteId(), addr.getRouteDestinationId());
         } catch (APIException e) {
             //handle exception

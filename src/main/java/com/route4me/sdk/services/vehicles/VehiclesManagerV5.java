@@ -169,7 +169,8 @@ public class VehiclesManagerV5 extends Manager {
 
     // --- Vehicle Capacity Profiles ---
 
-    public VehicleCapacityProfilesResponse getVehicleCapacityProfiles(Integer page, Integer perPage) throws APIException {
+    public VehicleCapacityProfilesResponse getVehicleCapacityProfiles(Integer page, Integer perPage)
+            throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP);
         if (page != null) {
             builder.setParameter("page", String.valueOf(page));
@@ -185,14 +186,18 @@ public class VehiclesManagerV5 extends Manager {
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleCapacityProfileResponse.class);
     }
 
-    public VehicleCapacityProfileResponse createVehicleCapacityProfile(VehicleCapacityProfile profile) throws APIException {
+    public VehicleCapacityProfileResponse createVehicleCapacityProfile(VehicleCapacityProfile profile)
+            throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(profile), VehicleCapacityProfileResponse.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(profile),
+                VehicleCapacityProfileResponse.class);
     }
 
-    public VehicleCapacityProfileResponse updateVehicleCapacityProfile(String profileId, VehicleCapacityProfile profile) throws APIException {
+    public VehicleCapacityProfileResponse updateVehicleCapacityProfile(String profileId, VehicleCapacityProfile profile)
+            throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP, profileId);
-        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(profile), VehicleCapacityProfileResponse.class);
+        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(profile),
+                VehicleCapacityProfileResponse.class);
     }
 
     public VehicleCapacityProfileResponse deleteVehicleCapacityProfile(String profileId) throws APIException {

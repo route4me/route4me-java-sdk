@@ -33,7 +33,8 @@ public class FacilityManager extends Manager {
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, FacilityResource.class);
     }
 
-    public FacilitiesPaginateResource getFacilities(Integer page, Integer perPage, Integer status, Integer facilityTypeId, String searchQuery) throws APIException {
+    public FacilitiesPaginateResource getFacilities(Integer page, Integer perPage, Integer status,
+            Integer facilityTypeId, String searchQuery) throws APIException {
         URIBuilder builder = v5Builder(FACILITIES_EP);
         if (page != null) {
             builder.setParameter("page", String.valueOf(page));

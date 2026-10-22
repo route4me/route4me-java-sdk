@@ -99,7 +99,8 @@ public class RouteDestinationsManagerTest {
     @Test
     public void getDestinationFieldsListsTheFields() throws Exception {
         RouteDestinationsManager manager = manager();
-        http.respond(200, json("{'fields':[{'label':'Name','value':'destination_name','kind':'text','type':'string'}]}"));
+        http.respond(200,
+                json("{'fields':[{'label':'Name','value':'destination_name','kind':'text','type':'string'}]}"));
 
         RouteDestinationFieldsResponse fields = manager.getDestinationFields();
 

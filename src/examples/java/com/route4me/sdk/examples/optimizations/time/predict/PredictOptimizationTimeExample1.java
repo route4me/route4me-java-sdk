@@ -59,7 +59,8 @@ public class PredictOptimizationTimeExample1 {
             OptimizationTimePrediction responseObject = manager.runOptimizationPrediction(optParameters);
 
             for (TimePredictionModel model: responseObject.getTimePrediction()) {
-                System.out.println("Model Name: " + model.getModel().toUpperCase() + ", predicted time, " + model.getValue() + " " + model.getUnit());
+                System.out.println("Model Name: " + model.getModel().toUpperCase() + ", predicted time, "
+                        + model.getValue() + " " + model.getUnit());
             }
 
         } catch (APIException e) {

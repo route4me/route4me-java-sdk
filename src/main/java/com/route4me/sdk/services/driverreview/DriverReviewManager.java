@@ -27,7 +27,8 @@ public class DriverReviewManager extends Manager {
         return builder;
     }
 
-    public DriverReviewsResponse getDriverReviews(Integer rating, Long memberId, String start, String end, Integer page, Integer perPage) throws APIException {
+    public DriverReviewsResponse getDriverReviews(Integer rating, Long memberId, String start, String end,
+            Integer page, Integer perPage) throws APIException {
         URIBuilder builder = v5Builder(DRIVER_REVIEW_EP);
         if (rating != null) {
             builder.setParameter("rating", String.valueOf(rating));

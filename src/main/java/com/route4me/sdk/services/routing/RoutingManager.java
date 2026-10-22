@@ -59,7 +59,8 @@ public class RoutingManager extends Manager {
         super(apiKey, proxyHost, proxyPort, proxySchema);
     }
 
-    public RoutingManager(String apiKey, String proxyHost, int proxyPort, String proxySchema, boolean disableRedirects) {
+    public RoutingManager(String apiKey, String proxyHost, int proxyPort, String proxySchema,
+            boolean disableRedirects) {
         super(apiKey, proxyHost, proxyPort, proxySchema, disableRedirects);
     }
 
@@ -103,14 +104,16 @@ public class RoutingManager extends Manager {
      * @throws APIException           if the request fails
      * @throws IllegalAccessException if the parameters cannot be read
      */
-    public Optimization reOptimizationByOptimizationID(OptimizationParameters parameters) throws APIException, IllegalAccessException {
+    public Optimization reOptimizationByOptimizationID(OptimizationParameters parameters)
+            throws APIException, IllegalAccessException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         List<NameValuePair> params = QueryConverter.convertObjectToParameters(parameters);
         builder.addParameters(params);
         return this.makeRequest(RequestMethod.PUT, builder, (HttpEntity) null, Optimization.class);
     }
 
-    public Optimization reOptimization(OptimizationParameters parameters, DataObject optimization) throws APIException, IllegalAccessException {
+    public Optimization reOptimization(OptimizationParameters parameters, DataObject optimization)
+            throws APIException, IllegalAccessException {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         List<NameValuePair> params = QueryConverter.convertObjectToParameters(parameters);
         builder.addParameters(params);
@@ -129,7 +132,8 @@ public class RoutingManager extends Manager {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         builder.setParameter("limit", Integer.toString(limit));
         builder.setParameter("offset", Integer.toString(offset));
-        GetOptimizationsResponse resp = this.makeRequest(RequestMethod.GET, builder, "", GetOptimizationsResponse.class);
+        GetOptimizationsResponse resp = this.makeRequest(RequestMethod.GET, builder, "",
+                GetOptimizationsResponse.class);
         return resp == null ? null : resp.getOptimizations();
     }
 
@@ -137,15 +141,17 @@ public class RoutingManager extends Manager {
         URIBuilder builder = Manager.defaultBuilder(OPTIMIZATION_EP);
         OptimizationProblemIDs dataObj = new OptimizationProblemIDs();
         dataObj.setOptimizationProblemIDs(optimizationProblemIDs);
-        return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(dataObj), new TypeToken<Map<String, Object>>() {
-        }.getType());
+        return this.makeRequest(RequestMethod.DELETE, builder, this.gson.toJson(dataObj),
+                new TypeToken<Map<String, Object>>() {
+                }.getType());
     }
 
     public DataObject addAddressesToRoute(String routeId, List<Address> addresses) throws APIException {
         return this.addAddressesToRoute(routeId, addresses, false);
     }
 
-    public DataObject addAddressesToRoute(String routeId, List<Address> addresses, Boolean optimalPosition) throws APIException {
+    public DataObject addAddressesToRoute(String routeId, List<Address> addresses, Boolean optimalPosition)
+            throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         builder.setParameter("route_id", routeId);
         DataObject dataObj = new DataObject();
@@ -161,7 +167,8 @@ public class RoutingManager extends Manager {
         return this.makeRequest(RequestMethod.GET, builder, "", Address.class);
     }
 
-    public MovedAddressesResponse moveAddresses(Number routeDestinationId, String toRouteId, Number afterRouteDestinationId) throws APIException {
+    public MovedAddressesResponse moveAddresses(Number routeDestinationId, String toRouteId,
+            Number afterRouteDestinationId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(MOVE_ADDRESS);
         List<NameValuePair> body = new ArrayList<>();
         body.add(new BasicNameValuePair("to_route_id", toRouteId));
@@ -184,14 +191,16 @@ public class RoutingManager extends Manager {
         this.makeRequest(RequestMethod.DELETE, builder, "", null);
     }
 
-    public void deleteAddressFromOptimization(String optimizationProblemId, Number routeDestinationId) throws APIException {
+    public void deleteAddressFromOptimization(String optimizationProblemId, Number routeDestinationId)
+            throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_EP);
         builder.setParameter("optimization_problem_id", optimizationProblemId);
         builder.setParameter("route_destination_id", routeDestinationId.toString());
         this.makeRequest(RequestMethod.DELETE, builder, "", null);
     }
 
-    public Address updateAddressAttribute(String routeId, Number routeDestinationId, Address dataObj) throws APIException {
+    public Address updateAddressAttribute(String routeId, Number routeDestinationId, Address dataObj)
+            throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_EP);
         builder.setParameter("route_id", routeId);
         builder.setParameter("route_destination_id", routeDestinationId.toString());
@@ -202,7 +211,8 @@ public class RoutingManager extends Manager {
         return this.getRoutesbyTimeDate(startTimeDate, endTimeDate, null, null);
     }
 
-    public List<Route> getRoutesbyTimeDate(String startTimeDate, String endTimeDate, Integer limit, Integer offset) throws APIException {
+    public List<Route> getRoutesbyTimeDate(String startTimeDate, String endTimeDate, Integer limit, Integer offset)
+            throws APIException {
         RoutesRequest request = new RoutesRequest();
         if (limit != null) {
             request.setLimit(limit);
@@ -214,11 +224,13 @@ public class RoutingManager extends Manager {
         request.setStartDate(DateTimeUtils.localDateTimeToUTCParser(startTimeDate));
         request.setEndDate(DateTimeUtils.localDateTimeToUTCParser(endTimeDate));
 
-        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ROUTE_EP), request, new TypeToken<ArrayList<Route>>() {
-        }.getType());
+        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ROUTE_EP), request,
+                new TypeToken<ArrayList<Route>>() {
+                }.getType());
     }
 
-    public RouteSearchResult getRoutesbyDateTimeZone(String scheduledForStart, String scheduledForEnd, String timeZone, Integer page, Integer perPage) throws APIException {
+    public RouteSearchResult getRoutesbyDateTimeZone(String scheduledForStart, String scheduledForEnd, String timeZone,
+            Integer page, Integer perPage) throws APIException {
 
         URIBuilder builder = this.getRouteSearchURI(ROUTE_SEARCH_v5_1);
 
@@ -232,13 +244,15 @@ public class RoutingManager extends Manager {
         return this.makeJSONRequest(RequestMethod.POST, builder, request, RouteSearchResult.class);
     }
 
-    public RouteSearchResult getRoutesbyDateTimeZone(String scheduledForStart, String scheduledForEnd, String timeZone) throws APIException {
+    public RouteSearchResult getRoutesbyDateTimeZone(String scheduledForStart, String scheduledForEnd, String timeZone)
+            throws APIException {
         return this.getRoutesbyDateTimeZone(scheduledForStart, scheduledForEnd, timeZone, 1, 30);
     }
 
     public List<Route> getRoutes(RoutesRequest request) throws APIException {
-        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ROUTE_EP), request, new TypeToken<ArrayList<Route>>() {
-        }.getType());
+        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ROUTE_EP), request,
+                new TypeToken<ArrayList<Route>>() {
+                }.getType());
     }
 
     public Route getRoute(RoutesRequest request) throws APIException {

@@ -22,7 +22,8 @@ public class TelematicsGetConnections {
         String apiKey = System.getenv("R4M_API_KEY");
         TelematicsManager manager = new TelematicsManager(apiKey);
         try {
-            List<TelematicsConnection> connections = manager.getTelematicsConnections("11111111111111111111111111111111");
+            List<TelematicsConnection> connections = manager.getTelematicsConnections(
+                    "11111111111111111111111111111111");
             System.out.println(connections);
         } catch (APIException ex) {
             Logger.getLogger(TelematicsGetConnections.class.getName()).log(Level.SEVERE, ex.toString());

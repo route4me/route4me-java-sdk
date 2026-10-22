@@ -140,7 +140,8 @@ public class BundlingByAddressAndProrityConstraint {
         bundling.setModeParams(modeParams);
         ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
         serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingFirstItemMode.USE_CUSTOM_SERVICE_TIME.getValue());
-        serviceTimeRules.setAdditionalItemsMode(BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
+        serviceTimeRules.setAdditionalItemsMode(
+                BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
         ArrayList<Integer> firstItemModeParams = new ArrayList();
         firstItemModeParams.add(900);
         ArrayList<Integer> additionalItemModeParams = new ArrayList();

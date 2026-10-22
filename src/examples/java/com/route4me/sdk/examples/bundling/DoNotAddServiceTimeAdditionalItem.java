@@ -42,7 +42,8 @@ public class DoNotAddServiceTimeAdditionalItem {
 
         serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingFirstItemMode.KEEP_ORIGINAL_SERVICE_TIME.getValue());
 
-        serviceTimeRules.setAdditionalItemsMode(BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
+        serviceTimeRules.setAdditionalItemsMode(
+                BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
         ArrayList<Integer> additionalItemModeParams = new ArrayList<>();
         additionalItemModeParams.add(0);
         serviceTimeRules.setAdditionalItemsModeParams(additionalItemModeParams);

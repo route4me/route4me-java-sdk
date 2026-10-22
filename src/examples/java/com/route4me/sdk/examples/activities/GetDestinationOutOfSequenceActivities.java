@@ -12,7 +12,8 @@ public class GetDestinationOutOfSequenceActivities {
         String apiKey = System.getenv("R4M_API_KEY");
         ActivityManager manager = new ActivityManager(apiKey);
         try {
-            Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.DESTINATION_OUT_SEQUENCE));
+            Activities activities = manager.getActivities(new ActivityRequest()
+                    .setType(ActivityType.DESTINATION_OUT_SEQUENCE));
             System.out.println(activities.getResults());
         } catch (APIException e) {
             e.printStackTrace();

@@ -20,7 +20,8 @@ public class GetLocationsClustering {
             LocationClusteringResource result = manager.getLocationsClustering(request);
             if (result.getClusters() != null) {
                 for (LocationCluster cluster : result.getClusters()) {
-                    System.out.println("Cluster at: " + cluster.getCluster().getLat() + ", " + cluster.getCluster().getLng()
+                    System.out.println("Cluster at: " + cluster.getCluster().getLat() + ", "
+                            + cluster.getCluster().getLng()
                         + " (" + cluster.getCluster().getLocationsCount() + " locations)");
                 }
             }

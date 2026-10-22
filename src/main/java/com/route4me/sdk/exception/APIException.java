@@ -129,7 +129,8 @@ public class APIException extends Exception {
      */
     public static APIException forUnparsableResponse(String method, String url, int statusCode, String responseBody,
                                                      String expectedType, Throwable cause) {
-        String message = String.format("Unexpected server response for %s %s (status %d): the body is not valid JSON for %s",
+        String message = String.format(
+                "Unexpected server response for %s %s (status %d): the body is not valid JSON for %s",
                 method, withoutQuery(url), statusCode, expectedType);
         return new APIException(message, cause, method, url, statusCode, responseBody);
     }

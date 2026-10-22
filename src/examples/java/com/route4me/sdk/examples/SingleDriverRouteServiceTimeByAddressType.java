@@ -99,7 +99,8 @@ public class SingleDriverRouteServiceTimeByAddressType {
             System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
             if (responseObject.getAddresses() != null) {
                 for (Address sequencedAddress : responseObject.getAddresses()) {
-                    System.out.println(sequencedAddress.getSequenceNo() + " - " + sequencedAddress.getAddress() + "  Service Time: " + sequencedAddress.getTime());
+                    System.out.println(sequencedAddress.getSequenceNo() + " - " + sequencedAddress.getAddress()
+                            + "  Service Time: " + sequencedAddress.getTime());
                 }
             }
         } catch (APIException e) {

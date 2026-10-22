@@ -46,14 +46,17 @@ public class RouteDestinationsManager extends Manager {
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteDestinationColumnsResource.class);
     }
 
-    public EditDestinationColumnsResponse editDestinationColumns(EditDestinationColumnsRequest request) throws APIException {
+    public EditDestinationColumnsResponse editDestinationColumns(EditDestinationColumnsRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(COLUMNS_EP);
-        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), EditDestinationColumnsResponse.class);
+        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request),
+                EditDestinationColumnsResponse.class);
     }
 
     public RouteDestinationsListResponse getDestinationsList(GetDestinationsRequest request) throws APIException {
         URIBuilder builder = v5Builder(LIST_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), RouteDestinationsListResponse.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                RouteDestinationsListResponse.class);
     }
 
     public RouteDestinationFieldsResponse getDestinationFields() throws APIException {
@@ -74,6 +77,7 @@ public class RouteDestinationsManager extends Manager {
 
     public DestinationSequenceResponse getDestinationSequence(DestinationSequenceRequest request) throws APIException {
         URIBuilder builder = v5Builder(SEQUENCE_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), DestinationSequenceResponse.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                DestinationSequenceResponse.class);
     }
 }

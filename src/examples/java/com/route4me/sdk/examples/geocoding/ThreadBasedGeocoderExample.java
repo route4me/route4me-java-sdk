@@ -86,7 +86,8 @@ public class ThreadBasedGeocoderExample {
 
         List<Address> geocodedAddresses = manager.bulkGeocoder(addresses, options);
 
-        logger.debug("Processed " + addresses.size() + " - Elapsed Time (seconds): " + (System.currentTimeMillis() - startTime) / 1000f);
+        logger.debug("Processed " + addresses.size() + " - Elapsed Time (seconds): "
+                + (System.currentTimeMillis() - startTime) / 1000f);
         logger.debug("All Threads Finished ");
 
         logger.debug("Addresses Geocoded: " + geocodedAddresses.size());
@@ -94,7 +95,11 @@ public class ThreadBasedGeocoderExample {
         int i = 0;
         for (Address geocodedAddress : geocodedAddresses) {
             i++;
-            logger.debug("ADDRESS: (" + i + ")\t" + geocodedAddress.getAddress() + "\t" + geocodedAddress.getLatitude() + "\t" + geocodedAddress.getLongitude() + "\tGEOCODINGS:\t" + geocodedAddress.getGeocodings().get(0).getType() + "\t" + geocodedAddress.getGeocodings().get(0).getLatitude() + "\t" + geocodedAddress.getGeocodings().get(0).getLongitude());
+            logger.debug("ADDRESS: (" + i + ")\t" + geocodedAddress.getAddress() + "\t" + geocodedAddress.getLatitude()
+                    + "\t" + geocodedAddress.getLongitude() + "\tGEOCODINGS:\t"
+                    + geocodedAddress.getGeocodings().get(0).getType() + "\t"
+                    + geocodedAddress.getGeocodings().get(0).getLatitude() + "\t"
+                    + geocodedAddress.getGeocodings().get(0).getLongitude());
 
         }
 

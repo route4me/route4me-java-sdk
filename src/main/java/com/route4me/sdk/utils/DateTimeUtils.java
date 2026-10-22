@@ -33,7 +33,8 @@ import java.time.format.DateTimeFormatter;
 
 public class DateTimeUtils {
 
-    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss:SSSXXXXX");
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(
+            "uuuu-MM-dd'T'HH:mm:ss:SSSXXXXX");
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd");
 
     public static String localDateTimeToUTCParser(String dateString) {

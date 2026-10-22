@@ -49,7 +49,8 @@ public class NotesManager extends Manager {
      * @return the added note
      * @throws APIException if the request fails
      */
-    public AddedNote addAddressNotes(NoteRequest note, String content, StatusUpdateType updateType) throws APIException {
+    public AddedNote addAddressNotes(NoteRequest note, String content, StatusUpdateType updateType)
+            throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADD_NOTES_EP);
         try {
             builder.addParameters(QueryConverter.convertObjectToParameters(note));

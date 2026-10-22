@@ -73,7 +73,8 @@ public class OrdersManager extends Manager {
      * @return the matching orders, or {@code null} when the answer has no results
      * @throws APIException if the request fails
      */
-    public List<Order> getOrdersByScheduledDate(List<String> scheduledForYYMMDD, Integer limit, Integer offset) throws APIException {
+    public List<Order> getOrdersByScheduledDate(List<String> scheduledForYYMMDD, Integer limit, Integer offset)
+            throws APIException {
         OrderFilter filter = new OrderFilter();
         filter.setScheduledForYYMMDD(scheduledForYYMMDD);
         return this.OrderByFilter(filter, limit, offset);
@@ -129,7 +130,8 @@ public class OrdersManager extends Manager {
      * @return the matching orders, or {@code null} when the answer has no results
      * @throws APIException if the request fails
      */
-    public List<Order> getOrdersByTrackingNumber(List<String> trackingNumbers, Integer limit, Integer offset) throws APIException {
+    public List<Order> getOrdersByTrackingNumber(List<String> trackingNumbers, Integer limit, Integer offset)
+            throws APIException {
         OrderFilter filter = new OrderFilter();
         filter.setTrackingNumbers(trackingNumbers);
         return this.OrderByFilter(filter, limit, offset);
@@ -141,7 +143,8 @@ public class OrdersManager extends Manager {
         request.setLimit(limit);
         request.setOffset(offset);
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
-        GetOrdersResponse response = this.makeJSONRequest(RequestMethod.POST, builder, request, GetOrdersResponse.class);
+        GetOrdersResponse response = this.makeJSONRequest(RequestMethod.POST, builder, request,
+                GetOrdersResponse.class);
         return response == null ? null : response.getResults();
     }
 
@@ -158,7 +161,8 @@ public class OrdersManager extends Manager {
 
     public StatusResponse deleteOrders(long... orderIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
-        return this.makeJSONRequest(RequestMethod.DELETE, builder, new DeleteOrdersRequest(orderIds), StatusResponse.class);
+        return this.makeJSONRequest(RequestMethod.DELETE, builder, new DeleteOrdersRequest(orderIds),
+                StatusResponse.class);
     }
 
     @Getter

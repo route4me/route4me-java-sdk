@@ -38,7 +38,8 @@ public class RouteStatusManager extends Manager {
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), RouteStatusResponse.class);
     }
 
-    public RouteStatusHistoryResponse getRouteStatusHistory(String routeId, String orderBy, Long start, Long end) throws APIException {
+    public RouteStatusHistoryResponse getRouteStatusHistory(String routeId, String orderBy, Long start, Long end)
+            throws APIException {
         URIBuilder builder = v5Builder(ROUTE_STATUS_EP, routeId, "history");
         if (orderBy != null) {
             builder.setParameter("order_by", orderBy);
@@ -61,7 +62,8 @@ public class RouteStatusManager extends Manager {
         URIBuilder builder = v5Builder(ROUTE_STATUS_EP + "/planned");
         UpdateRouteStatusAsPlannedRequest request = new UpdateRouteStatusAsPlannedRequest();
         request.setRouteIds(routeIds);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), UpdateRouteStatusAsPlannedResponse.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                UpdateRouteStatusAsPlannedResponse.class);
     }
 
     public StatusResponse setRouteStopStatus(long[] destinationIds, String status) throws APIException {

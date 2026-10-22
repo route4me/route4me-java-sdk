@@ -31,7 +31,8 @@ import java.util.logging.Logger;
 
 public class DriversSchedulesWithTerritoriesAndRetailLocation {
 
-    public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2, List<String> zone3, Integer serviceTime) {
+    public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2,
+            List<String> zone3, Integer serviceTime) {
         List<Address> addresses = new ArrayList<>();
         try {
             for (String[] nextRecord : CsvRows.read(filename)) {
@@ -57,9 +58,11 @@ public class DriversSchedulesWithTerritoriesAndRetailLocation {
             }
 
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversSchedulesWithTerritoriesAndRetailLocation.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DriversSchedulesWithTerritoriesAndRetailLocation.class.getName()).log(Level.SEVERE, null,
+                    ex);
         } catch (IOException ex) {
-            Logger.getLogger(DriversSchedulesWithTerritoriesAndRetailLocation.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(DriversSchedulesWithTerritoriesAndRetailLocation.class.getName()).log(Level.SEVERE, null,
+                    ex);
         }
 
         return addresses;
@@ -105,7 +108,8 @@ public class DriversSchedulesWithTerritoriesAndRetailLocation {
         List<String> zone = new ArrayList<>();
         List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
 
-        Address retailLocationAddress = new Address("RETAIL LOCATION", "RETAIL LOCATION",  25.8741751, -80.1288583, 300);
+        Address retailLocationAddress = new Address("RETAIL LOCATION", "RETAIL LOCATION",  25.8741751, -80.1288583,
+                300);
 
         List<Object> locationsSequence = Arrays.asList("", retailLocationAddress);
 
@@ -147,7 +151,8 @@ public class DriversSchedulesWithTerritoriesAndRetailLocation {
         Integer serviceTime = 300;
 
         Path currentPath = Paths.get(System.getProperty("user.dir"));
-        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
+        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk",
+                "examples", "advancedconstraints", "locations.csv");
 
 
         addresses = readAddressesFromCSV(filePath.toString(), zone1, zone2, zone3, serviceTime);

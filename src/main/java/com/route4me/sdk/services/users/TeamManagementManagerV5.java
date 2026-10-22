@@ -32,15 +32,18 @@ public class TeamManagementManagerV5 extends Manager {
     }
 
     public TeamMember getTeamMemberById(long userId) throws APIException {
-        return this.makeRequest(RequestMethod.GET, v5Builder(TEAM_USERS_EP, userId), (HttpEntity) null, TeamMember.class);
+        return this.makeRequest(RequestMethod.GET, v5Builder(TEAM_USERS_EP, userId), (HttpEntity) null,
+                TeamMember.class);
     }
 
     public TeamMember createTeamMember(TeamMemberRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.POST, v5Builder(TEAM_USERS_EP), this.gson.toJson(request), TeamMember.class);
+        return this.makeRequest(RequestMethod.POST, v5Builder(TEAM_USERS_EP), this.gson.toJson(request),
+                TeamMember.class);
     }
 
     public TeamMember updateTeamMember(long userId, TeamMemberRequest request) throws APIException {
-        return this.makeRequest(RequestMethod.PUT, v5Builder(TEAM_USERS_EP, userId), this.gson.toJson(request), TeamMember.class);
+        return this.makeRequest(RequestMethod.PUT, v5Builder(TEAM_USERS_EP, userId), this.gson.toJson(request),
+                TeamMember.class);
     }
 
     public TeamMember deleteTeamMember(long userId) throws APIException {

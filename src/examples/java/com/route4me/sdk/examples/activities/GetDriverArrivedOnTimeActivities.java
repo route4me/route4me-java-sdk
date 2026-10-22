@@ -12,7 +12,8 @@ public class GetDriverArrivedOnTimeActivities {
         String apiKey = System.getenv("R4M_API_KEY");
         ActivityManager manager = new ActivityManager(apiKey);
         try {
-            Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.DRIVER_ARRIVED_ON_TIME));
+            Activities activities = manager.getActivities(new ActivityRequest()
+                    .setType(ActivityType.DRIVER_ARRIVED_ON_TIME));
             System.out.println(activities.getResults());
         } catch (APIException e) {
             e.printStackTrace();

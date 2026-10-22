@@ -106,7 +106,8 @@ public class OrderManagerV5 extends Manager {
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), CustomUserFieldResponse.class);
     }
 
-    public CustomUserFieldResponse updateCustomUserField(String fieldUuid, UpdateCustomUserFieldRequest request) throws APIException {
+    public CustomUserFieldResponse updateCustomUserField(String fieldUuid, UpdateCustomUserFieldRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(ORDERS_CUSTOM_FIELDS_EP, fieldUuid);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), CustomUserFieldResponse.class);
     }

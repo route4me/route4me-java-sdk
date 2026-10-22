@@ -213,7 +213,8 @@ public abstract class Manager implements Closeable {
      * @throws APIException if the request fails, the server answers with an error status or
      *                      the response cannot be parsed
      */
-    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, List<NameValuePair> body, Class<T> clazz) throws APIException {
+    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, List<NameValuePair> body, Class<T> clazz)
+            throws APIException {
         return this.makeRequest(method, builder, new UrlEncodedFormEntity(body, StandardCharsets.UTF_8), clazz, null);
     }
 
@@ -230,7 +231,8 @@ public abstract class Manager implements Closeable {
      * @throws APIException if the request fails, the server answers with an error status or
      *                      the response cannot be parsed
      */
-    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, String body, Class<T> clazz) throws APIException {
+    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, String body, Class<T> clazz)
+            throws APIException {
         return this.makeRequest(method, builder, !body.isEmpty() ? jsonEntity(body) : (HttpEntity) null, clazz, null);
     }
 
@@ -251,11 +253,13 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, !body.isEmpty() ? jsonEntity(body) : (HttpEntity) null, type);
     }
 
-    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz) throws APIException {
+    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz)
+            throws APIException {
         return this.makeRequest(method, builder, body, clazz, null);
     }
 
-    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Type type) throws APIException {
+    protected <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Type type)
+            throws APIException {
         return this.makeRequest(method, builder, body, null, type);
     }
 
@@ -263,7 +267,8 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, body, String.class, null);
     }
 
-    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams, Class<T> clazz) throws APIException {
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams,
+            Class<T> clazz) throws APIException {
         if (requestParams != null) {
             List<NameValuePair> params;
             try {
@@ -277,7 +282,8 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), clazz, null);
     }
 
-    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams, Type type) throws APIException {
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams,
+            Type type) throws APIException {
         if (requestParams != null) {
             List<NameValuePair> params;
             try {
@@ -291,7 +297,8 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), null, type);
     }
 
-    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz) throws APIException {
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz)
+            throws APIException {
         if (requestParams != null) {
             try {
                 List<NameValuePair> params = queryParameters(builder, requestParams);
@@ -299,7 +306,8 @@ public abstract class Manager implements Closeable {
                     builder.addParameters(params);
                 }
             } catch (IllegalAccessException e) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName() + " to query parameters.", e);
+                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
+                        + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), clazz, null);
@@ -308,7 +316,8 @@ public abstract class Manager implements Closeable {
         return this.makeRequest(method, builder, (HttpEntity) null, clazz, null);
     }
 
-    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type) throws APIException {
+    protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type)
+            throws APIException {
         if (requestParams != null) {
             try {
                 List<NameValuePair> params = queryParameters(builder, requestParams);
@@ -316,7 +325,8 @@ public abstract class Manager implements Closeable {
                     builder.addParameters(params);
                 }
             } catch (IllegalAccessException e) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName() + " to query parameters.", e);
+                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
+                        + " to query parameters.", e);
             }
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), null, type);
@@ -357,7 +367,8 @@ public abstract class Manager implements Closeable {
         return new StringEntity(json, ContentType.APPLICATION_JSON);
     }
 
-    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type) throws APIException {
+    private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type)
+            throws APIException {
         HttpRequestBase hrb;
         boolean bearer;
         try {

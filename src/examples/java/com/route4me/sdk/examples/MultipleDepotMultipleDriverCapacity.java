@@ -48,7 +48,8 @@ public class MultipleDepotMultipleDriverCapacity {
         List<Address> addresses = new ArrayList<>();
 
         // DEPOT
-        addresses.add(new Address("455 S 4th St, Louisville, KY 40202", true, 38.251698, -85.757308, 300, 28800, 29400));
+        addresses.add(new Address("455 S 4th St, Louisville, KY 40202", true, 38.251698, -85.757308, 300, 28800,
+                29400));
         // Stops
         Address address;
         address = new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", 38.141598, -85.793846, 300);
@@ -139,7 +140,8 @@ public class MultipleDepotMultipleDriverCapacity {
         address.setCube(Math.floor(Math.random() * (1000 - 40 + 1) + 40));
         address.setWeight(Math.floor(Math.random() * (5000 - 1000 + 1) + 1000));
         addresses.add(address);
-        address = new Address("7315 ST ANDREWS WOODS CIRCLE UNIT 104, Louisville, KY, 40214", 38.151072, -85.802867, 300);
+        address = new Address("7315 ST ANDREWS WOODS CIRCLE UNIT 104, Louisville, KY, 40214", 38.151072, -85.802867,
+                300);
         address.setCube(Math.floor(Math.random() * (1000 - 40 + 1) + 40));
         address.setWeight(Math.floor(Math.random() * (5000 - 1000 + 1) + 1000));
         addresses.add(address);

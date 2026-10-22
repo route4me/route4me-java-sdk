@@ -427,7 +427,8 @@ public class ManagerTest {
         http.respond(200, json("{'route_id':'R1'}")).respond(200, json("[{'route_id':'R2'}]"));
 
         Reply reply = manager.makeJSONRequest(RequestMethod.POST, builder(), new Body(), new Params(), Reply.class);
-        List<Reply> replies = manager.makeJSONRequest(RequestMethod.PUT, builder(), new Body(), new Params(), listOfReplies);
+        List<Reply> replies = manager.makeJSONRequest(RequestMethod.PUT, builder(), new Body(), new Params(),
+                listOfReplies);
 
         assertEquals("R1", reply.routeId);
         assertEquals("R2", replies.get(0).routeId);
@@ -798,7 +799,8 @@ public class ManagerTest {
     public void declaredCharsetIsHonoured() throws Exception {
         TestManager manager = manager();
         http.respondWithBytes(200, "Caf\u00e9".getBytes(StandardCharsets.ISO_8859_1), "text/plain; charset=ISO-8859-1")
-                .respondWithBytes(200, "Caf\u00e9".getBytes(StandardCharsets.UTF_8), "text/plain; charset=no-such-charset");
+                .respondWithBytes(200, "Caf\u00e9".getBytes(StandardCharsets.UTF_8),
+                        "text/plain; charset=no-such-charset");
 
         assertEquals("Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
         assertEquals("an unknown charset falls back to UTF-8",
@@ -942,7 +944,8 @@ public class ManagerTest {
                 }));
             }
             start.countDown();
-            Set<CloseableHttpClient> clients = Collections.newSetFromMap(new IdentityHashMap<CloseableHttpClient, Boolean>());
+            Set<CloseableHttpClient> clients =
+                    Collections.newSetFromMap(new IdentityHashMap<CloseableHttpClient, Boolean>());
             for (Future<CloseableHttpClient> result : results) {
                 clients.add(result.get(10, TimeUnit.SECONDS));
             }

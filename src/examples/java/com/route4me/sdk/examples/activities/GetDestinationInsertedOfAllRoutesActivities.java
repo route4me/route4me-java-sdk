@@ -12,7 +12,8 @@ public class GetDestinationInsertedOfAllRoutesActivities {
         String apiKey = System.getenv("R4M_API_KEY");
         ActivityManager manager = new ActivityManager(apiKey);
         try {
-            Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.INSERT_DESTINATION));
+            Activities activities = manager.getActivities(new ActivityRequest()
+                    .setType(ActivityType.INSERT_DESTINATION));
             System.out.println(activities.getResults());
         } catch (APIException e) {
             e.printStackTrace();

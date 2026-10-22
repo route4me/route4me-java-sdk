@@ -49,7 +49,8 @@ public class OptimizationProfileManager extends Manager {
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), OptimizationProfile.class);
     }
 
-    public OptimizationProfile updateOptimizationProfile(String profileId, OptimizationProfileCreateRequest request) throws APIException {
+    public OptimizationProfile updateOptimizationProfile(String profileId, OptimizationProfileCreateRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), OptimizationProfile.class);
     }
@@ -62,12 +63,15 @@ public class OptimizationProfileManager extends Manager {
 
     public OptimizationProfileSaveEntities saveEntities(OptimizationProfileSaveEntities request) throws APIException {
         URIBuilder builder = v5Builder(PROFILES_SAVE_ENTITIES_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), OptimizationProfileSaveEntities.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                OptimizationProfileSaveEntities.class);
     }
 
-    public OptimizationProfileSaveEntities deleteEntities(OptimizationProfileDeleteEntitiesRequest request) throws APIException {
+    public OptimizationProfileSaveEntities deleteEntities(OptimizationProfileDeleteEntitiesRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(PROFILES_DELETE_ENTITIES_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), OptimizationProfileSaveEntities.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                OptimizationProfileSaveEntities.class);
     }
 
     public OptimizationProfileSaveEntities getEntities(String profileId) throws APIException {

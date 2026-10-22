@@ -67,7 +67,8 @@ public class LocationManagerTest {
 
         LocationListResource list = manager.getLocationsList(withFilters(new LocationCombinedRequest()));
 
-        http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/list").assertJson("filters.search_query", "Bakery");
+        http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/list").assertJson("filters.search_query",
+                "Bakery");
         assertEquals("Example Bakery", list.getItems().get(0).getAddressAlias());
     }
 
@@ -175,7 +176,8 @@ public class LocationManagerTest {
         http.request(2).assertEndpoint("GET", HOST, LOCATIONS_EP + "/types/LT-1");
         http.request(3).assertEndpoint("POST", HOST, LOCATIONS_EP + "/types")
                 .assertJson("name", "Store").assertJson("is_child_type", true);
-        http.request(4).assertEndpoint("PUT", HOST, LOCATIONS_EP + "/types/LT-1").assertJson("description", "Retail store");
+        http.request(4).assertEndpoint("PUT", HOST, LOCATIONS_EP + "/types/LT-1").assertJson("description",
+                "Retail store");
         http.request(5).assertEndpoint("DELETE", HOST, LOCATIONS_EP + "/types/LT-1").assertNoBody();
         assertEquals("Store", types.getData().get(0).getName());
         assertTrue(type.getIsChildType());

@@ -31,7 +31,8 @@ import java.util.logging.Logger;
 
 public class DriversScheduleswithTerritoriesV3 {
 
-    public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2, List<String> zone3, Integer serviceTime) {
+    public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2,
+            List<String> zone3, Integer serviceTime) {
         List<Address> addresses = new ArrayList<>();
         try {
             for (String[] nextRecord : CsvRows.read(filename)) {
@@ -138,7 +139,8 @@ public class DriversScheduleswithTerritoriesV3 {
         Integer serviceTime = 300;
 
         Path currentPath = Paths.get(System.getProperty("user.dir"));
-        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
+        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk",
+                "examples", "advancedconstraints", "locations.csv");
 
 
         addresses = readAddressesFromCSV(filePath.toString(), zone1, zone2, zone3, serviceTime);

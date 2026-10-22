@@ -43,9 +43,12 @@ public class BundlingUsingAddressStaticField {
         addresses.add(new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300));
         addresses.add(new Address("1324 BLUEGRASS AVE, Louisville, KY, 40215", 38.179253, -85.785118, 300));
 
-        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", "Bundled Zone", 38.162472, -85.792854, 300));
-        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", "Bundled Zone", 38.162472, -85.792854, 300));
-        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", "Bundled Zone", 38.162472, -85.792854, 300));
+        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", "Bundled Zone", 38.162472, -85.792854,
+                300));
+        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", "Bundled Zone", 38.162472, -85.792854,
+                300));
+        addresses.add(new Address("4805 BELLEVUE AVE, Louisville, KY, 40215", "Bundled Zone", 38.162472, -85.792854,
+                300));
 
         optParameters.setAddresses(addresses);
 
@@ -61,7 +64,8 @@ public class BundlingUsingAddressStaticField {
         bundling.setModeParams(modeParams);
         ServiceTimeRules serviceTimeRules = new ServiceTimeRules();
         serviceTimeRules.setFirstItemMode(BundlingEnum.BundlingFirstItemMode.USE_CUSTOM_SERVICE_TIME.getValue());
-        serviceTimeRules.setAdditionalItemsMode(BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
+        serviceTimeRules.setAdditionalItemsMode(
+                BundlingEnum.BundlingAdditionalItemMode.USE_CUSTOM_SERVICE_TIME_FOR_ADDITIONAL_ITEM.getValue());
         ArrayList<Integer> firstItemModeParams = new ArrayList();
         firstItemModeParams.add(900);
         ArrayList<Integer> additionalItemModeParams = new ArrayList();

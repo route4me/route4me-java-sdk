@@ -145,7 +145,8 @@ public class GeocoderWebSockets {
                 }).on("addresses_bulk", new Listener() {
                     @Override
                     public void call(Object... arg0) {
-                        WebSocketsAddress[] addressesChunk = gson.fromJson(arg0[0].toString(), WebSocketsAddress[].class);
+                        WebSocketsAddress[] addressesChunk = gson.fromJson(arg0[0].toString(),
+                                WebSocketsAddress[].class);
                         addressesParser(addressesChunk);
                         addressesCount += addressesChunk.length;
                         LOG.log(Level.FINE, "Addresses Received: {0}", addressesChunk.length);
@@ -194,7 +195,8 @@ public class GeocoderWebSockets {
     }
 
     private void emitTemporaryAddressesStorageID() {
-        LOG.log(Level.INFO, "Emiting Temporary Addresses StorageID: {0}", Sanitizer.forLog(this.temporaryAddressesStorageID));
+        LOG.log(Level.INFO, "Emiting Temporary Addresses StorageID: {0}",
+                Sanitizer.forLog(this.temporaryAddressesStorageID));
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("temporary_addresses_storage_id", this.temporaryAddressesStorageID);
         try {

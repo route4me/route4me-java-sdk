@@ -46,22 +46,28 @@ public class LocationManager extends Manager {
 
     public LocationClusteringResource getLocationsClustering(LocationClusteringRequest request) throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_CLUSTERING_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationClusteringResource.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                LocationClusteringResource.class);
     }
 
     public LocationHeatmapCollection getLocationsHeatmap(LocationHeatmapRequest request) throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_HEATMAP_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationHeatmapCollection.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                LocationHeatmapCollection.class);
     }
 
-    public LocationTerritoriesCollection getLocationsTerritories(LocationTerritoriesRequest request) throws APIException {
+    public LocationTerritoriesCollection getLocationsTerritories(LocationTerritoriesRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_TERRITORIES_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationTerritoriesCollection.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                LocationTerritoriesCollection.class);
     }
 
-    public LocationExportColumnsResource[] getLocationsExportColumns(LocationCombinedRequest request) throws APIException {
+    public LocationExportColumnsResource[] getLocationsExportColumns(LocationCombinedRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(LOCATIONS_EXPORT_COLUMNS_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationExportColumnsResource[].class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                LocationExportColumnsResource[].class);
     }
 
     public StatusResponse exportLocations(LocationExportRequest request) throws APIException {
@@ -90,7 +96,8 @@ public class LocationManager extends Manager {
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationTypeResource.class);
     }
 
-    public LocationTypeResource updateLocationType(String locationTypeId, StoreLocationTypeRequest request) throws APIException {
+    public LocationTypeResource updateLocationType(String locationTypeId, StoreLocationTypeRequest request)
+            throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), LocationTypeResource.class);
     }

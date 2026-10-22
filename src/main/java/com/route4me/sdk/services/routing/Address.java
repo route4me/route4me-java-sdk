@@ -226,7 +226,8 @@ public class Address {
         this.alias = alias;
     }
 
-    public Address(String address, boolean isDepot, double lat, double lng, long time, long timeWindowStart, long timeWindowEnd) {
+    public Address(String address, boolean isDepot, double lat, double lng, long time, long timeWindowStart,
+            long timeWindowEnd) {
         this(address, isDepot, lat, lng, time);
         this.timeWindowStart = timeWindowStart;
         this.timeWindowEnd = timeWindowEnd;

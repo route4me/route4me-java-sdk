@@ -12,7 +12,8 @@ public class GetDestinationDeletedActivities {
         String apiKey = System.getenv("R4M_API_KEY");
         ActivityManager manager = new ActivityManager(apiKey);
         try {
-            Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.DELETE_DESTINATION));
+            Activities activities = manager.getActivities(new ActivityRequest()
+                    .setType(ActivityType.DELETE_DESTINATION));
             System.out.println(activities.getResults());
         } catch (APIException e) {
             e.printStackTrace();

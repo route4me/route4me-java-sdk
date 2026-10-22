@@ -117,7 +117,8 @@ public class TerritoriesManagerTest {
 
         assertTrue(manager.deleteTerritory("T-POLY"));
 
-        http.request().assertEndpoint("DELETE", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY").assertNoBody();
+        http.request().assertEndpoint("DELETE", HOST, TERRITORY_EP).assertQuery("territory_id",
+                "T-POLY").assertNoBody();
     }
 
     @Test

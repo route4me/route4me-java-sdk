@@ -23,7 +23,8 @@ public class GetAddressNotes {
             for (Route route : routes) {
                 DataObject dataObject = routingManager.getRoute(new RoutesRequest().setId(route.getId()));
                 NotesManager notesManager = new NotesManager(apiKey);
-                List<Note> notes = notesManager.getAddressNotes(route.getId(), Long.toString(dataObject.getAddresses().get(0).getRouteDestinationId()));
+                List<Note> notes = notesManager.getAddressNotes(route.getId(),
+                        Long.toString(dataObject.getAddresses().get(0).getRouteDestinationId()));
                 for (Note note : notes) {
                     System.out.println(note);
                 }

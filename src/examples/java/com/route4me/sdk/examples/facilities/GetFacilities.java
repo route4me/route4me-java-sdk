@@ -13,7 +13,8 @@ public class GetFacilities {
             FacilitiesPaginateResource result = manager.getFacilities(1, 10, null, null, null);
             if (result.getData() != null) {
                 for (FacilityResource facility : result.getData()) {
-                    System.out.println("Facility: " + facility.getFacilityAlias() + " (ID: " + facility.getFacilityId() + ")");
+                    System.out.println("Facility: " + facility.getFacilityAlias() + " (ID: " + facility.getFacilityId()
+                            + ")");
                 }
             }
         } catch (APIException e) {

@@ -66,7 +66,8 @@ public class DriversDifferentWorkingTime {
         advancedConstraintPartTime.setAvailableTimeWindows(timeWindowsPartTime);
 
 
-        List<AdvancedConstraints> advancedConstraints = Arrays.asList(advancedConstraintFullTime, advancedConstraintPartTime);
+        List<AdvancedConstraints> advancedConstraints = Arrays.asList(advancedConstraintFullTime,
+                advancedConstraintPartTime);
 
         parameters.setAdvancedConstraints(advancedConstraints);
 

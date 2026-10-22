@@ -17,7 +17,8 @@ public class GetLocationsList {
             LocationListResource result = manager.getLocationsList(request);
             if (result.getItems() != null) {
                 for (LocationListItem item : result.getItems()) {
-                    System.out.println("Location: " + item.getAddressAlias() + " (" + item.getLat() + ", " + item.getLng() + ")");
+                    System.out.println("Location: " + item.getAddressAlias() + " (" + item.getLat() + ", "
+                            + item.getLng() + ")");
                 }
             }
         } catch (APIException e) {

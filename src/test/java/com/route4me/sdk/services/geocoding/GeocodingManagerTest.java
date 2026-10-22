@@ -36,7 +36,8 @@ public class GeocodingManagerTest {
     private static final String HOST = "api.route4me.com";
     private static final String ADDRESS_EP = "/api/address.php";
     private static final String DETAILED_RESULT =
-            json("[{'name':'100 Example St','type':'street','confidence':'high','coordinates':{'lat':40.1,'lng':-74.1}}]");
+            json("[{'name':'100 Example "
+                    + "St','type':'street','confidence':'high','coordinates':{'lat':40.1,'lng':-74.1}}]");
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -263,7 +264,8 @@ public class GeocodingManagerTest {
         GeocodingManager manager = manager();
         http.respondToAll(200, DETAILED_RESULT);
 
-        List<Address> results = manager.bulkGeocoder(Collections.singletonList("100 Example St"), new GeocoderOptions());
+        List<Address> results = manager.bulkGeocoder(Collections.singletonList("100 Example St"),
+                new GeocoderOptions());
 
         assertEquals(1, http.requestCount());
         assertEquals(40.1, results.get(0).getLatitude(), 0.0);
@@ -295,7 +297,8 @@ public class GeocodingManagerTest {
         http.respondToAll(200, DETAILED_RESULT);
         GeocoderOptions options = new GeocoderOptions(3);
 
-        List<Address> results = manager.bulkGeocoder(Arrays.asList("x", "100 Example St", null, "200 Sample Ave"), options);
+        List<Address> results = manager.bulkGeocoder(Arrays.asList("x", "100 Example St", null, "200 Sample Ave"),
+                options);
 
         assertEquals(4, results.size());
         assertEquals("x", results.get(0).getAddress());
@@ -358,7 +361,8 @@ public class GeocodingManagerTest {
         GeocodingManager manager = manager();
         http.respondToAll(200, "[null]");
 
-        List<Address> results = manager.bulkGeocoder(Collections.singletonList("100 Example St"), new GeocoderOptions(1));
+        List<Address> results = manager.bulkGeocoder(Collections.singletonList("100 Example St"),
+                new GeocoderOptions(1));
 
         assertEquals(1, results.size());
         assertEquals("invalid", results.get(0).getGeocodings().get(0).getType());

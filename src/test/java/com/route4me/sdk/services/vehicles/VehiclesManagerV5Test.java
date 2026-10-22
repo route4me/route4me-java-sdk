@@ -22,7 +22,8 @@ public class VehiclesManagerV5Test {
     private static final String PROFILES_EP = "/modules/api/v5.0/vehicle-profiles";
     private static final String CAPACITY_EP = "/modules/api/v5.0/vehicle-capacity-profiles";
     private static final String VEHICLE = json("{'vehicle_id':'VEH-1','member_id':1001,'vehicle_alias':'Van 1',"
-            + "'vehicle_make':'Ford','vehicle_model':'Transit','vehicle_model_year':2023,'vehicle_license_plate':'EX-123',"
+            + "'vehicle_make':'Ford','vehicle_model':'Transit','vehicle_model_year':2023,"
+            + "'vehicle_license_plate':'EX-123',"
             + "'fuel_type':'diesel','mpg_city':18.5}");
     private static final String PROFILE = json("{'vehicle_profile_id':3,'name':'Box truck','height':3.5,"
             + "'width':2.4,'length':7.0,'weight':7500,'is_default':false}");
