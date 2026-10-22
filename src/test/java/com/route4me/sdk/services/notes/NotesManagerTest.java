@@ -5,6 +5,7 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.List;
 
 import static org.junit.Assert.assertNull;
@@ -84,6 +85,87 @@ public class NotesManagerTest {
         manager.addAddressNotes(new NoteRequest().setRouteId("ROUTE-A1").setAddressId("5002"), "Hello", null);
 
         http.request().assertForm("strUpdateType", "unclassified");
+    }
+
+    @Test
+    public void getAllCustomNoteTypesReadsAList() throws Exception {
+        NotesManager manager = manager();
+        http.respond(200, json("[{'note_custom_type_id':7,'note_custom_type':'Reason','root_owner_member_id':1001,"
+                + "'note_custom_field_type':1,'note_custom_type_values':['Closed','Moved']}]"));
+
+        List<CustomNoteType> types = manager.getAllCustomNoteTypes();
+
+        http.request().assertEndpoint("GET", HOST, "/api.v4/note_custom_types.php").assertApiKeyInQuery()
+                .assertNoBody();
+        assertEquals(Long.valueOf(7), types.get(0).getNoteCustomTypeId());
+        assertEquals("Reason", types.get(0).getNoteCustomType());
+        assertEquals(Long.valueOf(1001), types.get(0).getRootOwnerMemberId());
+        assertEquals(Integer.valueOf(1), types.get(0).getNoteCustomFieldType());
+        assertEquals("Moved", types.get(0).getNoteCustomTypeValues().get(1));
+    }
+
+    @Test
+    public void getAllCustomNoteTypesReadsADataObjectAndAnEmptyAnswer() throws Exception {
+        NotesManager manager = manager();
+        http.respond(200, json("{'data':[{'note_custom_type_id':8,'note_custom_type':'Gate'}]}"))
+                .respond(200, "").respond(200, json("{'data':null}"));
+
+        assertEquals("Gate", manager.getAllCustomNoteTypes().get(0).getNoteCustomType());
+        assertTrue(manager.getAllCustomNoteTypes().isEmpty());
+        assertTrue(manager.getAllCustomNoteTypes().isEmpty());
+    }
+
+    @Test
+    public void getAllCustomNoteTypesRejectsAnotherShape() {
+        final NotesManager manager = manager();
+        http.respond(200, json("{'data':'none'}"));
+
+        http.expectApiException(() -> manager.getAllCustomNoteTypes());
+    }
+
+    @Test
+    public void addCustomNoteTypePostsTheSpecFields() throws Exception {
+        NotesManager manager = manager();
+        http.respond(200, json("{'result':'OK','affected':1,'data':{'note_custom_type_id':7,"
+                + "'note_custom_type':'Reason','note_custom_type_values':['Closed','Moved']}}"));
+        CustomNoteTypeRequest request = new CustomNoteTypeRequest();
+        request.setNoteCustomType("Reason");
+        request.setNoteCustomTypeValues(Arrays.asList("Closed", "Moved"));
+
+        CustomNoteTypeResponse added = manager.addCustomNoteType(request);
+
+        http.request().assertEndpoint("POST", HOST, "/api.v4/note_custom_types.php").assertApiKeyInQuery()
+                .assertContentType("application/json")
+                .assertJson("note_custom_type", "Reason")
+                .assertJson("note_custom_type_values[1]", "Moved")
+                .assertJsonLacks("note_custom_field_type", "type", "values");
+        assertEquals("OK", added.getResult());
+        assertEquals(Integer.valueOf(1), added.getAffected());
+        assertEquals(Long.valueOf(7), added.getData().getNoteCustomTypeId());
+    }
+
+    @Test
+    public void addCustomNoteTypeRequiresTheName() {
+        final NotesManager manager = manager();
+        final CustomNoteTypeRequest unnamed = new CustomNoteTypeRequest();
+        unnamed.setNoteCustomTypeValues(Arrays.asList("Closed"));
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.addCustomNoteType(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.addCustomNoteType(unnamed));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void removeCustomNoteTypeSendsTheIdInTheBody() throws Exception {
+        NotesManager manager = manager();
+        http.respond(200, json("{'result':'OK','affected':1}"));
+
+        CustomNoteTypeResponse removed = manager.removeCustomNoteType(7L);
+
+        http.request().assertEndpoint("DELETE", HOST, "/api.v4/note_custom_types.php").assertApiKeyInQuery()
+                .assertNoQuery("id")
+                .assertJson("id", 7);
+        assertEquals("OK", removed.getResult());
     }
 
     @Test

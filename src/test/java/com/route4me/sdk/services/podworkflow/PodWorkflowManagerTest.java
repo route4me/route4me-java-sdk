@@ -4,10 +4,12 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -74,6 +76,68 @@ public class PodWorkflowManagerTest {
         http.request(3).assertEndpoint("DELETE", HOST, WORKFLOWS_EP + "/WF-1").assertNoBody();
         assertEquals("Delivery", fetched.getData().getTitle());
         assertTrue(deleted.getStatus());
+    }
+
+    @Test
+    public void getPodWorkflowsSendsTheOrderWithBrackets() throws Exception {
+        PodWorkflowManager manager = manager();
+        http.respondToAll(200, "{\"data\":[],\"total_items_count\":0}");
+
+        manager.getPodWorkflows(10, null, null,
+                Arrays.asList(Arrays.asList("title", "asc"), Arrays.asList("workflow_id", "desc")));
+        manager.getPodWorkflows(null, null, null, null);
+
+        http.request(0).assertEndpoint("GET", HOST, WORKFLOWS_EP).assertQuery("per_page", "10")
+                .assertQueryValues("order_by[0][]", "title", "asc")
+                .assertQueryValues("order_by[1][]", "workflow_id", "desc")
+                .assertNoQuery("order_by")
+                .assertNoQuery("cursor");
+        http.request(1).assertNoQuery("order_by[0][]");
+    }
+
+    @Test
+    public void createAndUpdateRequireTheSpecFields() {
+        final PodWorkflowManager manager = manager();
+        final PodWorkflow noId = workflow();
+        noId.setWorkflowId("");
+        final PodWorkflow noTitle = workflow();
+        noTitle.setTitle(null);
+        final PodWorkflow noEnabled = workflow();
+        noEnabled.setIsEnabled(null);
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createPodWorkflow(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createPodWorkflow(noId));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createPodWorkflow(noTitle));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updatePodWorkflow("WF-1", noEnabled));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void deletePodWorkflowAcceptsANoContentReply() throws Exception {
+        PodWorkflowManager manager = manager();
+        http.respondWithoutBody(204);
+
+        StatusResponse deleted = manager.deletePodWorkflow("WF-1");
+
+        http.request().assertEndpoint("DELETE", HOST, WORKFLOWS_EP + "/WF-1").assertNoBody();
+        assertNull(deleted);
+    }
+
+    @Test
+    public void workflowIdsAreRejectedWhenEmptyAndEncodedAsOneSegment() throws Exception {
+        final PodWorkflowManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getPodWorkflow(""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updatePodWorkflow(null, workflow()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deletePodWorkflow(""));
+        http.assertNoRequests();
+
+        http.respondToAll(200, "{\"data\":" + WORKFLOW + "}");
+        manager.updatePodWorkflow("a/b", workflow());
+        manager.deletePodWorkflow("a/b");
+
+        assertEquals(WORKFLOWS_EP + "/a%2Fb", http.request(0).getUri().getRawPath());
+        assertEquals(WORKFLOWS_EP + "/a%2Fb", http.request(1).getUri().getRawPath());
     }
 
     @Test

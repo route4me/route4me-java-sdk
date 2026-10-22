@@ -26,11 +26,18 @@ public class Activity {
     /** Parent route name ({@code route_name}). */
     @SerializedName("route_name")
     private String routeName;
-    /**
-     * The ID of the route destination. It is read from {@code route_destination_od}, not {@code route_destination_id}.
-     */
-    @SerializedName("route_destination_od")
+    /** The ID of the route destination the activity is about ({@code route_destination_id}). */
+    @SerializedName("route_destination_id")
     private String routeDestinationId;
+    /** The name of the destination ({@code destination_name}). */
+    @SerializedName("destination_name")
+    private String destinationName;
+    /** The alias of the destination ({@code destination_alias}). */
+    @SerializedName("destination_alias")
+    private String destinationAlias;
+    /** The ID of the member who did the activity ({@code member_id}). */
+    @SerializedName("member_id")
+    private String memberId;
     /** Note ID ({@code note_id}). */
     @SerializedName("note_id")
     private String noteId;
