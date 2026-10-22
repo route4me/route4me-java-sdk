@@ -5,6 +5,10 @@
  */
 package com.route4me.sdk.services.geocoding;
 
+/**
+ * The options of {@link GeocodingManager#bulkGeocoder(List, GeocoderOptions)}: the answer format and detail, the
+ * number of threads, the attempts per address and the timeout.
+ */
 public class GeocoderOptions {
 
     /** The default of {@link #getMaxTimeout()}, in milliseconds; the read timeout of a request. */
@@ -16,17 +20,29 @@ public class GeocoderOptions {
     private int maxRetries = 0;
     private long maxTimeout = DEFAULT_MAX_TIMEOUT_MS;
 
+    /**
+     * Creates the default options: detailed JSON answers, one thread per processor plus one, one attempt, and
+     * {@link #DEFAULT_MAX_TIMEOUT_MS}.
+     */
     public GeocoderOptions() {
 
     }
 
+    /**
+     * Creates the default options with another thread count.
+     *
+     * @param maxThreads the maximum number of requests at once
+     */
     public GeocoderOptions(int maxThreads) {
         this.maxThreads = maxThreads;
     }
 
 
+    /** Whether the geocoder answers with every match ({@code detailed=true}) or only coordinates. */
     public enum GeocoderDetails {
+        /** Coordinates only ({@code detailed=false}). */
         SIMPLE("false"),
+        /** Every match, with its type and confidence ({@code detailed=true}). */
         DETAILED("true");
 
         private final String value;
@@ -49,7 +65,9 @@ public class GeocoderOptions {
 
     }
 
+    /** The format of the geocoder answer. */
     public enum GeocoderResponseFormat {
+        /** JSON ({@code format=json}). */
         JSON("json");
 
         private final String value;
@@ -73,58 +91,72 @@ public class GeocoderOptions {
     }
 
     /**
-     * @return the responseFormat
+     * Returns the format of the answers.
+     *
+     * @return the format; {@link GeocoderResponseFormat#JSON} by default
      */
     public GeocoderResponseFormat getResponseFormat() {
         return responseFormat;
     }
 
     /**
-     * @param responseFormat the responseFormat to set
+     * Sets the format of the answers.
+     *
+     * @param responseFormat the format
      */
     public void setResponseFormat(GeocoderResponseFormat responseFormat) {
         this.responseFormat = responseFormat;
     }
 
     /**
-     * @return the detailed
+     * Returns the detail level of the answers.
+     *
+     * @return the detail level; {@link GeocoderDetails#DETAILED} by default
      */
     public GeocoderDetails getDetailed() {
         return detailed;
     }
 
     /**
-     * @param detailed the detailed to set
+     * Sets the detail level of the answers.
+     *
+     * @param detailed the detail level
      */
     public void setDetailed(GeocoderDetails detailed) {
         this.detailed = detailed;
     }
 
     /**
-     * @return the maxThreads
+     * Returns how many requests may run at once.
+     *
+     * @return the thread count; the number of processors plus one by default
      */
     public int getMaxThreads() {
         return maxThreads;
     }
 
     /**
-     * @param maxThreads the maxThreads to set
+     * Sets how many requests may run at once.
+     *
+     * @param maxThreads the thread count
      */
     public void setMaxThreads(int maxThreads) {
         this.maxThreads = maxThreads;
     }
 
     /**
-     * @return the maximum number of attempts per address; 0 (the default) and 1 both mean
-     * one attempt
+     * Returns how many times an address may be tried.
+     *
+     * @return the maximum number of attempts per address; 0 (the default) and 1 both mean one attempt
      */
     public int getMaxRetries() {
         return maxRetries;
     }
 
     /**
-     * @param maxRetries the maximum number of attempts per address; 0 and 1 both mean one
-     *                   attempt
+     * Sets how many times an address may be tried.
+     *
+     * @param maxRetries the maximum number of attempts per address; 0 and 1 both mean one attempt
      */
     public void setMaxRetries(int maxRetries) {
         this.maxRetries = maxRetries;

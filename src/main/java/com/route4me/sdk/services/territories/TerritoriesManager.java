@@ -15,17 +15,35 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * Manages territories and avoidance zones through the V4 API ({@code https://api.route4me.com/api.v4/territory.php} and
+ * {@code https://api.route4me.com/api.v4/avoidance.php}), and finds the territories that contain a point.
+ */
 public class TerritoriesManager extends Manager {
 
+    /** The path of the avoidance zones, on {@code api.route4me.com}. */
     public static final String AVOIDANCE_EP = "/api.v4/avoidance.php";
+    /** The path of the territories, on {@code api.route4me.com}. */
     public static final String TERRITORY_EP = "/api.v4/territory.php";
 
     private static final int FACTOR = 1000000;
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as the {@code api_key} query parameter
+     */
     public TerritoriesManager(String apiKey) {
         super(apiKey);
     }
 
+    /**
+     * Reads the territories with {@link #getTerritories()} and turns each polygon territory into a
+     * {@link java.awt.Polygon} of its coordinates (multiplied by 1,000,000 and truncated to integers). Circle and
+     * rectangle territories are skipped. If the request fails, the error is logged and the list is empty.
+     *
+     * @return the polygon of each polygon territory
+     */
     public List<TerritoryPolygon> getPolygonsFromTerritories() {
         List<TerritoryPolygon> territoryPolygons = new ArrayList<>();
         try {
@@ -63,6 +81,13 @@ public class TerritoriesManager extends Manager {
         return territoryPolygons;
     }
 
+    /**
+     * Finds the territories whose polygon contains a point.
+     *
+     * @param territoryAllocated the point, by its latitude and longitude; {@code null} finds nothing
+     * @param territoryPolygons the polygons, from {@link #getPolygonsFromTerritories()}
+     * @return the territories that contain the point
+     */
     public List<Territory> allocateTerritories(TerritoryAllocated territoryAllocated,
             List<TerritoryPolygon> territoryPolygons) {
 
@@ -84,6 +109,14 @@ public class TerritoriesManager extends Manager {
 
     }
 
+    /**
+     * Creates an avoidance zone: {@code POST https://api.route4me.com/api.v4/avoidance.php}, with the zone as the JSON
+     * body.
+     *
+     * @param territory the zone
+     * @return the created zone
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Territory addAvoidanceZone(Territory territory) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(AVOIDANCE_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(territory), Territory.class);
@@ -119,18 +152,39 @@ public class TerritoriesManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, territory, Territory.class);
     }
 
+    /**
+     * Lists the avoidance zones: {@code GET https://api.route4me.com/api.v4/avoidance.php}.
+     *
+     * @return the zones
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public List<Territory> getAvoidanceZones() throws APIException {
         URIBuilder builder = Manager.defaultBuilder(AVOIDANCE_EP);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Territory>>() {
         }.getType());
     }
 
+    /**
+     * Gets one avoidance zone: {@code GET https://api.route4me.com/api.v4/avoidance.php?territory_id=...}.
+     *
+     * @param territoryId the zone ID
+     * @return the zone
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Territory getAvoidanceZone(String territoryId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(AVOIDANCE_EP);
         builder.setParameter("territory_id", territoryId);
         return this.makeRequest(RequestMethod.GET, builder, "", Territory.class);
     }
 
+    /**
+     * Creates a territory: {@code POST https://api.route4me.com/api.v4/territory.php}, with the territory as the JSON
+     * body.
+     *
+     * @param territory the territory
+     * @return the created territory
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Territory addTerritory(Territory territory) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TERRITORY_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(territory), Territory.class);
@@ -166,20 +220,49 @@ public class TerritoriesManager extends Manager {
         return this.makeJSONRequest(RequestMethod.PUT, builder, territory, Territory.class);
     }
 
+    /**
+     * Lists the territories: {@code GET https://api.route4me.com/api.v4/territory.php}.
+     *
+     * @return the territories
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public List<Territory> getTerritories() throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TERRITORY_EP);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Territory>>() {
         }.getType());
     }
 
+    /**
+     * Gets one territory: {@code GET https://api.route4me.com/api.v4/territory.php?territory_id=...}.
+     *
+     * @param territoryId the territory ID
+     * @return the territory
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Territory getTerritory(String territoryId) throws APIException {
         return this.getTerritory(territoryId, false, false);
     }
 
+    /**
+     * Gets one territory with the orders in it: {@code GET
+     * https://api.route4me.com/api.v4/territory.php?territory_id=...&orders=1}.
+     *
+     * @param territoryId the territory ID
+     * @return the territory, with its order IDs
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Territory getOrdersInTerritory(String territoryId) throws APIException {
         return this.getTerritory(territoryId, false, true);
     }
 
+    /**
+     * Gets one territory with the addresses in it:
+     * {@code GET https://api.route4me.com/api.v4/territory.php?territory_id=...&addresses=1}.
+     *
+     * @param territoryId the territory ID
+     * @return the territory, with its address IDs
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Territory getAddressesInTerritory(String territoryId) throws APIException {
         return this.getTerritory(territoryId, true, false);
     }

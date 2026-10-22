@@ -10,9 +10,11 @@ import lombok.Data;
  * and open the template in the editor.
  */
 
+/** The answer of the geocoder for an address it cannot find. */
 @Data
 public class GeocoderAddressNotFound {
 
+    /** The status of the answer ({@code status}). */
     @SerializedName("status")
     private String status;
 

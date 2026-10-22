@@ -6,15 +6,14 @@ import lombok.Data;
 
 import java.util.List;
 
-/**
- *
- * @author juan
- */
+/** The shape of a {@link Territory}. */
 @Data
 public class TerritoryData {
 
+    /** Territory type (circle, rectangle, polygon) ({@code type}). */
     @SerializedName("type")
     private String type;
+    /** Territory shape data ({@code data}). */
     @SerializedName("data")
     private List<String> data;
 }

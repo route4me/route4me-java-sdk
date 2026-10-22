@@ -16,8 +16,10 @@ import java.util.List;
 import org.apache.http.client.utils.URIBuilder;
 
 /**
- *
- * @author Route4Me
+ * Manages telematics integrations: the member registration and the vendor connections through the V4 API
+ * ({@code https://api.route4me.com/api.v4/telematics}), and the vendor catalog through the V5 API ({@code
+ * https://wh.route4me.com/modules/api/v5.0/telematics/vendors}).
+ * The methods of the retired {@code telematics.route4me.com} host are deprecated.
  */
 public class TelematicsManager extends Manager {
 
@@ -29,14 +31,23 @@ public class TelematicsManager extends Manager {
      */
     @Deprecated
     public static final String TELEMATICS_VENDORS_V4 = "/api/vendors.php";
+    /** The path that registers a member for telematics, on {@code api.route4me.com}. */
     public static final String TELEMATICS_REGISTER_V4 = "/api.v4/telematics/register.php";
+    /** The path of the telematics connections, on {@code api.route4me.com}. */
     public static final String TELEMATICS_CONNECTIONS_V4 = "/api.v4/telematics/connections.php";
+    /** The path of the telematics vendors of a member, on {@code api.route4me.com}. */
     public static final String TELEMATICS_VENDORS_INFO_V4 = "/api.v4/telematics/vendors.php";
     /** One vendor on the V5 API: {@code GET ...?vendor_id=...}. */
     public static final String TELEMATICS_VENDORS_V5 = "/modules/api/v5.0/telematics/vendors";
     /** The vendor catalog on the V5 API. */
     public static final String TELEMATICS_VENDORS_ALL_V5 = "/modules/api/v5.0/telematics/vendors/all";
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as a bearer token to the V5 API and as the {@code api_key} query
+     *     parameter to the V4 API
+     */
     public TelematicsManager(String apiKey) {
         super(apiKey);
     }
@@ -50,6 +61,14 @@ public class TelematicsManager extends Manager {
         return builder;
     }
 
+    /**
+     * Registers a member for telematics: {@code GET
+     * https://api.route4me.com/api.v4/telematics/register.php?member_id=...}.
+     *
+     * @param memberID the member ID
+     * @return the registration, with the telematics API token of the member
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public TelematicsMemberRegister registerMember(Integer memberID) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_REGISTER_V4);
         builder.setParameter("member_id", memberID.toString());
@@ -264,12 +283,31 @@ public class TelematicsManager extends Manager {
         return searchVendor(null, null, null, feature, page, perPage);
     }
 
+    /**
+     * Lists the telematics vendors available to a member: {@code GET
+     * https://api.route4me.com/api.v4/telematics/vendors.php?api_token=...}.
+     *
+     * @param apiToken the telematics API token of the member
+     * @return the vendors
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public TelematicsVendor[] getTelematicsVendor(String apiToken) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_VENDORS_INFO_V4);
         builder.setParameter("api_token", apiToken);
         return makeRequest(RequestMethod.GET, builder, "", TelematicsVendor[].class);
     }
 
+    /**
+     * Connects a member to a telematics vendor: {@code POST
+     * https://api.route4me.com/api.v4/telematics/connections.php?api_token=...}, with
+     * the connection as a form.
+     *
+     * @param apiToken the telematics API token of the member
+     * @param credentials the vendor, the credentials and the options of the connection
+     * @return the created connection
+     * @throws IllegalAccessException if the connection cannot be read for the form
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public TelematicsConnection createTelematicsConnection(String apiToken, TelematicsConnection credentials)
             throws IllegalAccessException, APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_CONNECTIONS_V4);
@@ -279,6 +317,19 @@ public class TelematicsManager extends Manager {
 
     }
 
+    /**
+     * Updates a telematics connection:
+     * {@code PUT https://api.route4me.com/api.v4/telematics/connections.php?api_token=...&connection_token=...}, with
+     * the connection as a
+     * form.
+     *
+     * @param apiToken the telematics API token of the member
+     * @param connectionToken the token of the connection
+     * @param credentials the new values
+     * @return the updated connection
+     * @throws IllegalAccessException if the connection cannot be read for the form
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public TelematicsConnection updateTelematicsConnection(String apiToken, String connectionToken,
             TelematicsConnection credentials) throws IllegalAccessException, APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_CONNECTIONS_V4);
@@ -289,6 +340,16 @@ public class TelematicsManager extends Manager {
 
     }
 
+    /**
+     * Deletes a telematics connection:
+     * {@code DELETE https://api.route4me.com/api.v4/telematics/connections.php?api_token=...&connection_token=...}.
+     *
+     * @param apiToken the telematics API token of the member
+     * @param connectionToken the token of the connection
+     * @return the deleted connection
+     * @throws IllegalAccessException never; declared for compatibility
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public TelematicsConnection deleteTelematicsConnection(String apiToken, String connectionToken)
             throws IllegalAccessException, APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_CONNECTIONS_V4);
@@ -298,6 +359,16 @@ public class TelematicsManager extends Manager {
 
     }
 
+    /**
+     * Gets one telematics connection:
+     * {@code GET https://api.route4me.com/api.v4/telematics/connections.php?api_token=...&connection_token=...}.
+     *
+     * @param apiToken the telematics API token of the member
+     * @param connectionToken the token of the connection
+     * @return the connection
+     * @throws IllegalAccessException never; declared for compatibility
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public TelematicsConnection getTelematicsConnection(String apiToken, String connectionToken)
             throws IllegalAccessException, APIException {
         URIBuilder builder = Manager.defaultBuilder(TELEMATICS_CONNECTIONS_V4);
