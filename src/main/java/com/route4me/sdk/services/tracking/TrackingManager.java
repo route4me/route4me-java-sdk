@@ -12,7 +12,8 @@ import org.apache.http.client.utils.URIBuilder;
 
 /**
  * Records and reads GPS positions through the V4 API ({@code https://api.route4me.com}): positions of routes, the
- * location history of devices, the last positions of users, and device licenses.
+ * location history of devices, the last positions of users, the status of a tracked order or asset, and device
+ * licenses.
  */
 public class TrackingManager extends Manager {
     /** The path that reads a route with its tracking history, on {@code api.route4me.com}. */
@@ -22,6 +23,7 @@ public class TrackingManager extends Manager {
     private static final String DEVICE_LOCATION_EP = "/api/track/get_device_location.php";
     private static final String USER_LOCATIONS_EP = "/api/track/view_user_locations.php";
     private static final String VERIFY_DEVICE_LICENSE_EP = "/api/device/verify_device_license.php";
+    private static final String ASSET_TRACKING_EP = "/api.v4/status.php";
 
     /**
      * Creates a manager that sends its requests with an API key.
@@ -135,6 +137,23 @@ public class TrackingManager extends Manager {
             builder.setParameter("query", query);
         }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, UserLocation[].class);
+    }
+
+    /**
+     * Finds an order or asset by its tracking number: where it is, its status history and the branding of its
+     * tracking page: {@code GET https://api.route4me.com/api.v4/status.php?tracking=...}, as C#
+     * {@code Route4MeManager.FindAsset} sends it. The older {@code /api/asset/find_route.php} answers 404.
+     *
+     * @param tracking the tracking number ({@code tracking}); the API answers 400 for a missing or unknown one
+     * @return the location and status of the order or asset
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public FindAssetResponse findAsset(String tracking) throws APIException {
+        URIBuilder builder = Manager.defaultBuilder(ASSET_TRACKING_EP);
+        if (tracking != null) {
+            builder.setParameter("tracking", tracking);
+        }
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, FindAssetResponse.class);
     }
 
     /**

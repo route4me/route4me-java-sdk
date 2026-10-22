@@ -258,6 +258,43 @@ public class TrackingManagerTest {
     }
 
     @Test
+    public void findAssetSendsTheTrackingNumber() throws Exception {
+        TrackingManager manager = manager();
+        http.respond(200, json("{'tracking_number':'TRK-1','driver_name':'Alex','route_started':true,"
+                + "'delivered':false,'destination_address_1':'100 Example St','timestamp_last_visited':1761040000,"
+                + "'status_history':[{'unix_timestamp':1761000000,'info':'Picked up'}],"
+                + "'locations':[{'is_destination':true,'lat':40.5,'lng':-74.5,'anchor':[12,24],'info':'Destination'}],"
+                + "'arrival':[{'from_unix_timestamp':1761040000,'to_unix_timestamp':1761043600}],"
+                + "'custom_data':{'gate':'A1'}}"));
+
+        FindAssetResponse asset = manager.findAsset("TRK-1");
+
+        http.request().assertEndpoint("GET", HOST, "/api.v4/status.php").assertApiKeyInQuery()
+                .assertQuery("tracking", "TRK-1")
+                .assertNoBody();
+        assertEquals("TRK-1", asset.getTrackingNumber());
+        assertEquals("Alex", asset.getDriverName());
+        assertTrue(asset.getRouteStarted());
+        assertEquals(Boolean.FALSE, asset.getDelivered());
+        assertEquals(Long.valueOf(1761040000L), asset.getTimestampLastVisited());
+        assertEquals("Picked up", asset.getStatusHistory().get(0).getInfo());
+        assertTrue(asset.getLocations().get(0).getIsDestination());
+        assertEquals(Integer.valueOf(24), asset.getLocations().get(0).getAnchor().get(1));
+        assertEquals(Long.valueOf(1761043600L), asset.getArrival().get(0).getToUnixTimestamp());
+        assertEquals("A1", asset.getCustomData().get("gate"));
+    }
+
+    @Test
+    public void findAssetOfAnUnknownNumberBecomesApiException() {
+        final TrackingManager manager = manager();
+        http.respond(400, json("{'errors':['Please enter a valid tracking number.'],'timestamp':1761040000}"));
+
+        http.expectApiException(() -> manager.findAsset(null));
+
+        http.request().assertNoQuery("tracking");
+    }
+
+    @Test
     public void errorBecomesApiException() {
         final TrackingManager manager = manager();
         http.respondWithFixture(400, "error_400.json");
