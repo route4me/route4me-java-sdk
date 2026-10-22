@@ -4,6 +4,8 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.services.routing.BundledItem;
+import com.route4me.sdk.services.routing.Route;
 import com.route4me.sdk.services.routing.OptimizationParameters;
 import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.orders.OrderV5;
@@ -302,5 +304,63 @@ public class ModelSerializationTest {
         assertEquals(40.0, address.getLatitude(), 0.0001);
         assertEquals(-74.0, address.getLongitude(), 0.0001);
         assertEquals(Long.valueOf(600L), address.getTime());
+    }
+
+    @Test
+    public void testRouteReadsTheMemberApprovalAndBundleFields() {
+        String json = "{\"route_id\":\"R1\",\"user_route_rating\":4,\"member_first_name\":\"Alex\","
+                + "\"member_last_name\":\"Driver\",\"channel_name\":\"ch-1\",\"member_picture\":\"pic.png\","
+                + "\"member_tracking_subheadline\":\"On the way\",\"approved_for_execution\":true,"
+                + "\"scheduled_start_timestamp\":1761040000,\"dispatched_timestamp\":1761043600,"
+                + "\"approved_revisions_counter\":2,\"geofence_polygon_type\":\"circle\",\"geofence_polygon_size\":50,"
+                + "\"original_route\":{\"route_id\":\"R0\",\"member_first_name\":\"Sam\"},"
+                + "\"bundle_items\":[{\"cube\":1.5,\"revenue\":10,\"pieces\":3,\"weight\":2.5,\"cost\":1,"
+                + "\"service_time\":120,\"time_window_start\":3600,\"time_window_end\":7200,"
+                + "\"custom_data\":{\"k\":\"v\"},\"addresses_id\":[11,12]}],"
+                + "\"facility_ids\":[\"F1\",\"F2\"]}";
+
+        Route route = gson.fromJson(json, Route.class);
+
+        assertEquals(Long.valueOf(4), route.getUserRouteRating());
+        assertEquals("Alex", route.getMemberFirstName());
+        assertEquals("Driver", route.getMemberLastName());
+        assertEquals("ch-1", route.getChannelName());
+        assertEquals("pic.png", route.getMemberPicture());
+        assertEquals("On the way", route.getMemberTrackingSubheadline());
+        assertEquals(Boolean.TRUE, route.getApprovedForExecution());
+        assertEquals(Long.valueOf(1761040000L), route.getScheduledStartTimestamp());
+        assertEquals(Long.valueOf(1761043600L), route.getDispatchedTimestamp());
+        assertEquals(Long.valueOf(2), route.getApprovedRevisionsCounter());
+        assertEquals("circle", route.getGeofencePolygonType());
+        assertEquals(Long.valueOf(50), route.getGeofencePolygonSize());
+        assertEquals("R0", route.getOriginalRoute().getId());
+        assertEquals("Sam", route.getOriginalRoute().getMemberFirstName());
+        BundledItem bundle = route.getBundleItems().get(0);
+        assertEquals(1.5, bundle.getCube(), 0.0);
+        assertEquals(10.0, bundle.getRevenue(), 0.0);
+        assertEquals(Integer.valueOf(3), bundle.getPieces());
+        assertEquals(2.5, bundle.getWeight(), 0.0);
+        assertEquals(1.0, bundle.getCost(), 0.0);
+        assertEquals(Integer.valueOf(120), bundle.getServiceTime());
+        assertEquals(Integer.valueOf(3600), bundle.getTimeWindowStart());
+        assertEquals(Integer.valueOf(7200), bundle.getTimeWindowEnd());
+        assertEquals("v", ((Map<?, ?>) bundle.getCustomData()).get("k"));
+        assertEquals(Arrays.asList(11L, 12L), bundle.getAddressesId());
+        assertEquals(Arrays.asList("F1", "F2"), route.getFacilityIds());
+    }
+
+    @Test
+    public void testRouteWritesTheNewFieldsWithTheirApiNames() {
+        Route route = new Route();
+        route.setMemberFirstName("Alex");
+        route.setApprovedForExecution(false);
+        route.setFacilityIds(Collections.singletonList("F1"));
+
+        JsonObject obj = gson.toJsonTree(route).getAsJsonObject();
+
+        assertEquals("Alex", obj.get("member_first_name").getAsString());
+        assertFalse(obj.get("approved_for_execution").getAsBoolean());
+        assertEquals("F1", obj.getAsJsonArray("facility_ids").get(0).getAsString());
+        assertFalse("unset fields are not sent", obj.has("dispatched_timestamp"));
     }
 }

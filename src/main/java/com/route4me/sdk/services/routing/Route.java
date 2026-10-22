@@ -82,5 +82,50 @@ public class Route extends DataObject {
     private List<GeoCoordinates> path;
     @SerializedName("unique_destination_count")
     private Integer uniqueDestinationCount;
+    /** The rating the user gave the route. */
+    @SerializedName("user_route_rating")
+    private Long userRouteRating;
+    /** The first name of the member the route belongs to. */
+    @SerializedName("member_first_name")
+    private String memberFirstName;
+    /** The last name of the member the route belongs to. */
+    @SerializedName("member_last_name")
+    private String memberLastName;
+    /** The real-time channel of the route. Read-only. */
+    @SerializedName("channel_name")
+    private String channelName;
+    /** The picture of the member the route belongs to. */
+    @SerializedName("member_picture")
+    private String memberPicture;
+    /** The tracking subheadline of the member the route belongs to. */
+    @SerializedName("member_tracking_subheadline")
+    private String memberTrackingSubheadline;
+    /** Whether the route is approved for execution; {@code null} leaves it unchanged on update. */
+    @SerializedName("approved_for_execution")
+    private Boolean approvedForExecution;
+    /** The scheduled start of the route, as a Unix timestamp in seconds. */
+    @SerializedName("scheduled_start_timestamp")
+    private Long scheduledStartTimestamp;
+    /** When the route was dispatched, as a Unix timestamp in seconds. */
+    @SerializedName("dispatched_timestamp")
+    private Long dispatchedTimestamp;
+    /** How many times the route was approved. Read-only. */
+    @SerializedName("approved_revisions_counter")
+    private Long approvedRevisionsCounter;
+    /** The geofence shape of the route's stops, such as {@code circle}. */
+    @SerializedName("geofence_polygon_type")
+    private String geofencePolygonType;
+    /** The geofence size of the route's stops, in meters. */
+    @SerializedName("geofence_polygon_size")
+    private Long geofencePolygonSize;
+    /** The route before its last change, when the API returns it. Read-only. */
+    @SerializedName("original_route")
+    private Route originalRoute;
+    /** The bundles of the route. Read-only. */
+    @SerializedName("bundle_items")
+    private List<BundledItem> bundleItems;
+    /** The IDs of the facilities of the route. */
+    @SerializedName("facility_ids")
+    private List<String> facilityIds;
 
 }
