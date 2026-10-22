@@ -97,6 +97,8 @@ jobs:
           fi
 
       # 3. Install Gemini CLI
+      # TODO: pin an exact version (@google/gemini-cli@x.y.z). No pinned version is used
+      # anywhere in this repository or its history to copy from.
       - name: Install Gemini CLI
         run: npm install -g @google/gemini-cli
 
