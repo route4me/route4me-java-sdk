@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.customers;
 
+import com.google.gson.JsonArray;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,6 +10,7 @@ import java.util.Collections;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Unit tests for {@link CustomerManager}: customers on the V5 API.
@@ -44,6 +46,7 @@ public class CustomerManagerTest {
         contract.setExpiration("2026-12-31");
         CustomerStoreRequest request = new CustomerStoreRequest();
         request.setName("Example Bakery");
+        request.setAccountablePersonId(1001L);
         request.setExternalId("EXT-1");
         request.setCurrency("USD");
         request.setStatus(1);
@@ -66,7 +69,7 @@ public class CustomerManagerTest {
         parameters.setFilters(filters);
         parameters.setPage(1);
         parameters.setPerPage(25);
-        parameters.setOrderBy(Arrays.asList("name", "asc"));
+        parameters.setOrderBy(Arrays.asList(new String[] {"name", "asc"}, new String[] {"created_timestamp", "desc"}));
 
         CustomerListResponse response = manager.getCustomersList(parameters);
 
@@ -75,7 +78,10 @@ public class CustomerManagerTest {
                 .assertJson("filters.status[1]", 2)
                 .assertJson("page", 1)
                 .assertJson("per_page", 25)
-                .assertJson("order_by[0]", "name");
+                .assertJson("order_by[0][0]", "name")
+                .assertJson("order_by[0][1]", "asc")
+                .assertJson("order_by[1][0]", "created_timestamp")
+                .assertJson("order_by[1][1]", "desc");
         assertEquals("Alex Sample", response.getItems().get(0).getContacts().get(0).getName());
     }
 
@@ -103,6 +109,7 @@ public class CustomerManagerTest {
 
         http.request(0).assertEndpoint("POST", HOST, CUSTOMERS_EP)
                 .assertJson("name", "Example Bakery")
+                .assertJson("accountable_person_id", 1001)
                 .assertJson("external_id", "EXT-1")
                 .assertJson("contacts[0].first_name", "Alex")
                 .assertJson("addresses[0].address", "100 Example St")
@@ -110,6 +117,62 @@ public class CustomerManagerTest {
                 .assertJson("facility_ids[0]", "FAC-1");
         http.request(1).assertEndpoint("PUT", HOST, CUSTOMERS_EP + "/CUST-1").assertJson("currency", "USD");
         assertEquals("CUST-1", created.getCustomerId());
+    }
+
+    /** Regression: {@code order_by} was a flat list; the spec wants {@code [field, direction]} pairs. */
+    @Test
+    public void getCustomersListSendsOrderByAsPairs() throws Exception {
+        CustomerManager manager = manager();
+        http.respond(200, json("{'items':[]}"));
+        CustomerListParameters parameters = new CustomerListParameters();
+        parameters.setOrderBy(Collections.singletonList(new String[] {"name", "desc"}));
+
+        manager.getCustomersList(parameters);
+
+        JsonArray orderBy = http.request().jsonAt("order_by").getAsJsonArray();
+        assertEquals(1, orderBy.size());
+        assertTrue(orderBy.get(0).isJsonArray());
+        assertEquals("[\"name\",\"desc\"]", orderBy.get(0).toString());
+        http.request().assertNoQuery("order_by").assertNoQuery("order_by[0][]");
+    }
+
+    @Test
+    public void createCustomerNeedsNameAndAccountablePerson() {
+        final CustomerManager manager = manager();
+        final CustomerStoreRequest noName = storeRequest();
+        noName.setName(null);
+        final CustomerStoreRequest noPerson = storeRequest();
+        noPerson.setAccountablePersonId(null);
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createCustomer(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createCustomer(noName));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createCustomer(noPerson));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void customerIdsAreRejectedWhenEmptyAndStayInOneSegment() throws Exception {
+        final CustomerManager manager = manager();
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomer("", storeRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteCustomer(null));
+        http.assertNoRequests();
+        http.respondToAll(200, CUSTOMER);
+
+        manager.updateCustomer("CUST/1", storeRequest());
+        manager.deleteCustomer("CUST/1");
+
+        assertEquals(CUSTOMERS_EP + "/CUST%2F1", http.request(0).getUri().getRawPath());
+        assertEquals(CUSTOMERS_EP + "/CUST%2F1", http.request(1).getUri().getRawPath());
+    }
+
+    @Test
+    public void deleteCustomerAcceptsNoContent() throws Exception {
+        CustomerManager manager = manager();
+        http.respondWithoutBody(204);
+
+        manager.deleteCustomer("CUST-1");
+
+        http.request().assertEndpoint("DELETE", HOST, CUSTOMERS_EP + "/CUST-1").assertNoBody();
     }
 
     @Test
