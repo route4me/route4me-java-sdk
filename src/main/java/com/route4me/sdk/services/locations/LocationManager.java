@@ -3,6 +3,9 @@ package com.route4me.sdk.services.locations;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.queryconverter.QueryConverter;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -141,9 +144,11 @@ public class LocationManager extends Manager {
     /**
      * Starts an export of locations to a file: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/address-book/locations/export}, with the request as the JSON body.
+     * The API builds the file in a background job and answers {@code 202 Accepted} with no body; the
+     * {@code Location} header of that answer, the link to the export status, is not exposed by this SDK.
      *
      * @param request the locations, the columns, the file name and the format
-     * @return whether the export started
+     * @return the status in the answer, or {@code null} when the answer has no body (the job was queued)
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public StatusResponse exportLocations(LocationExportRequest request) throws APIException {
@@ -154,17 +159,40 @@ public class LocationManager extends Manager {
     /**
      * Lists the location types, one page at a time: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/address-book/locations/types}. Every {@code null} argument is left out
-     * of
-     * the query.
+     * of the query. Same as {@link #getLocationTypes(LocationTypeFilters, Integer, Integer)} without filters.
      *
      * @param page the page number, from 1 ({@code page})
-     * @param perPage the number of types per page
-     *     ({@code per_page})
+     * @param perPage the number of types per page ({@code per_page})
      * @return the page of location types
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public LocationTypeCollection getLocationTypes(Integer page, Integer perPage) throws APIException {
+        return this.getLocationTypes(null, page, perPage);
+    }
+
+    /**
+     * Lists the location types that match filters, one page at a time: {@code GET
+     * https://wh.route4me.com/modules/api/v5.0/address-book/locations/types}. The spec describes the filters and the
+     * page as a body; since a GET has no body, they are sent in the query, the filters as
+     * {@code filters[is_parent_type]=1}. Every {@code null} argument or filter is left out.
+     *
+     * @param filters the filters, or {@code null} for all the types
+     * @param page the page number, from 1 ({@code page})
+     * @param perPage the number of types per page ({@code per_page})
+     * @return the page of location types
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public LocationTypeCollection getLocationTypes(LocationTypeFilters filters, Integer page, Integer perPage)
+            throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP);
+        if (filters != null) {
+            Map<String, Object> values = new LinkedHashMap<>();
+            values.put("is_parent_type", filters.getIsParentType());
+            values.put("is_child_type", filters.getIsChildType());
+            values.put("only_custom_types", filters.getOnlyCustomTypes());
+            values.put("search_query", filters.getSearchQuery());
+            builder.addParameters(QueryConverter.toBracketedParameters("filters", values));
+        }
         if (page != null) {
             builder.setParameter("page", String.valueOf(page));
         }
@@ -181,6 +209,7 @@ public class LocationManager extends Manager {
      * @param locationTypeId the location type ID
      * @return the location type
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null} or empty; nothing is sent
      */
     public LocationTypeResource getLocationTypeById(String locationTypeId) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
@@ -191,11 +220,13 @@ public class LocationManager extends Manager {
      * Creates a location type: {@code POST https://wh.route4me.com/modules/api/v5.0/address-book/locations/types}, with
      * the request as the JSON body.
      *
-     * @param request the location type
+     * @param request the location type; {@code name}, {@code is_parent_type} and {@code is_child_type} are required
      * @return the created location type
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if a required field is missing; nothing is sent
      */
     public LocationTypeResource createLocationType(StoreLocationTypeRequest request) throws APIException {
+        checkLocationType(request);
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationTypeResource.class);
     }
@@ -206,13 +237,16 @@ public class LocationManager extends Manager {
      * JSON body.
      *
      * @param locationTypeId the location type ID
-     * @param request the new values
+     * @param request the new values; {@code name}, {@code is_parent_type} and {@code is_child_type} are required
      * @return the updated location type
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null} or empty, or a required field is
+     *     missing; nothing is sent
      */
     public LocationTypeResource updateLocationType(String locationTypeId, StoreLocationTypeRequest request)
             throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
+        checkLocationType(request);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), LocationTypeResource.class);
     }
 
@@ -223,9 +257,23 @@ public class LocationManager extends Manager {
      * @param locationTypeId the location type ID
      * @return whether it was deleted
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null} or empty; nothing is sent
      */
     public DeleteLocationTypeResponse deleteLocationType(String locationTypeId) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
         return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteLocationTypeResponse.class);
+    }
+
+    /** Checks the fields the spec requires in a location type, before any request is sent. */
+    private static void checkLocationType(StoreLocationTypeRequest request) {
+        if (request == null || request.getName() == null || request.getName().isEmpty()) {
+            throw new IllegalArgumentException("name is required");
+        }
+        if (request.getIsParentType() == null) {
+            throw new IllegalArgumentException("is_parent_type is required");
+        }
+        if (request.getIsChildType() == null) {
+            throw new IllegalArgumentException("is_child_type is required");
+        }
     }
 }

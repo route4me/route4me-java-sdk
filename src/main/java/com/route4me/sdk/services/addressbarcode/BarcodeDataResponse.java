@@ -33,8 +33,11 @@ public class BarcodeDataResponse {
     @SerializedName("lat")
     private Double latitude;
 
-    /** The longitude where the barcode was scanned. The API names it {@code lan}. */
-    @SerializedName("lan")
+    /**
+     * The longitude where the barcode was scanned ({@code lng}). An answer that names it {@code lan}, as the C# SDK
+     * reads it, is read too.
+     */
+    @SerializedName(value = "lng", alternate = {"lan"})
     private Double longitude;
 
     /** The time of the scan on the device, as a Unix timestamp in seconds ({@code timestamp_date}). */

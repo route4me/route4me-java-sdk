@@ -30,6 +30,10 @@ public class LocationCombinedRequest {
     @SerializedName("group_by")
     private String groupBy;
 
+    /** The fields to return for each location ({@code fields}). */
+    @SerializedName("fields")
+    private List<String> fields;
+
     /** Array of field names to include in the response ({@code selected_fields}). */
     @SerializedName("selected_fields")
     private List<String> selectedFields;

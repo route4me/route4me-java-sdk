@@ -13,9 +13,12 @@ public class CustomerListParameters {
     @SerializedName("filters")
     private CustomerListFilters filters;
 
-    /** The sort order of the list ({@code order_by}). */
+    /**
+     * The sort order of the list, as {@code [field, direction]} pairs, such as {@code [["name", "asc"]]}; the
+     * direction is {@code asc} or {@code desc} ({@code order_by}).
+     */
     @SerializedName("order_by")
-    private List<String> orderBy;
+    private List<String[]> orderBy;
 
     /** The page number, from 1 ({@code page}). */
     @SerializedName("page")

@@ -71,11 +71,18 @@ public class CustomerManager extends Manager {
      * Creates a customer: {@code POST https://wh.route4me.com/modules/api/v5.0/customers}, with the request as the JSON
      * body.
      *
-     * @param request the customer
+     * @param request the customer; {@code name} and {@code accountable_person_id} are required
      * @return the created customer
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if a required field is missing; nothing is sent
      */
     public CustomerResource createCustomer(CustomerStoreRequest request) throws APIException {
+        if (request == null || request.getName() == null || request.getName().isEmpty()) {
+            throw new IllegalArgumentException("name is required");
+        }
+        if (request.getAccountablePersonId() == null) {
+            throw new IllegalArgumentException("accountable_person_id is required");
+        }
         URIBuilder builder = v5Builder(CUSTOMERS_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), CustomerResource.class);
     }
@@ -95,7 +102,8 @@ public class CustomerManager extends Manager {
     }
 
     /**
-     * Deletes a customer: {@code DELETE https://wh.route4me.com/modules/api/v5.0/customers/{customerId}}.
+     * Deletes a customer: {@code DELETE https://wh.route4me.com/modules/api/v5.0/customers/{customerId}}. The API
+     * answers {@code 204 No Content}.
      *
      * @param customerId the customer ID
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
