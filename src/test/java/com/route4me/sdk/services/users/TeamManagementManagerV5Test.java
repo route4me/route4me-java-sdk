@@ -18,6 +18,7 @@ public class TeamManagementManagerV5Test {
 
     private static final String HOST = "wh.route4me.com";
     private static final String USERS_EP = "/modules/api/v5.0/team/users";
+    private static final String BULK_INSERT_EP = "/modules/api/v5.0/team/bulk-insert";
     private static final String MEMBER = json("{'member_id':1002,'member_email':'driver@example.com',"
             + "'member_type':'SUB_ACCOUNT_DRIVER','member_first_name':'Sam','member_last_name':'Driver',"
             + "'custom_data':{'shift':'am'}}");
@@ -135,7 +136,7 @@ public class TeamManagementManagerV5Test {
         manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member()}, "overwrite");
         manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member()}, null);
 
-        http.request(0).assertEndpoint("POST", HOST, USERS_EP + "/bulk-insert")
+        http.request(0).assertEndpoint("POST", HOST, BULK_INSERT_EP)
                 .assertJson("users[0].member_email", "driver@example.com")
                 .assertJson("users[0].OWNER_MEMBER_ID", 1001)
                 .assertJson("conflicts", "overwrite");
@@ -149,7 +150,7 @@ public class TeamManagementManagerV5Test {
 
         manager.bulkCreateTeamMembers(new TeamMemberRequest[] {member()}, "skip");
 
-        http.request().assertEndpoint("POST", HOST, USERS_EP + "/bulk-insert");
+        http.request().assertEndpoint("POST", HOST, BULK_INSERT_EP);
     }
 
     @Test

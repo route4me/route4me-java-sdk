@@ -10,7 +10,8 @@ import org.apache.http.client.utils.URIBuilder;
 public class TeamManagementManagerV5 extends Manager {
     private static final String V5_BASE = "/modules/api/v5.0";
     private static final String TEAM_USERS_EP = V5_BASE + "/team/users";
-    private static final String TEAM_BULK_INSERT_EP = TEAM_USERS_EP + "/bulk-insert";
+    /** The bulk insert route, as C# has it; the spec's {@code /team/users/bulk-insert} answers 405. */
+    private static final String TEAM_BULK_INSERT_EP = V5_BASE + "/team/bulk-insert";
     /** The most members one bulk insert takes, as the spec says. */
     private static final int MAX_BULK_MEMBERS = 100;
 
@@ -132,8 +133,8 @@ public class TeamManagementManagerV5 extends Manager {
 
     /**
      * Creates up to 100 team members in one request: {@code POST
-     * https://wh.route4me.com/modules/api/v5.0/team/users/bulk-insert}, with the members and the conflict rule as the
-     * JSON body. The path is the one of the V5 spec; the C# SDK posts to {@code /team/bulk-insert}.
+     * https://wh.route4me.com/modules/api/v5.0/team/bulk-insert}, with the members and the conflict rule as the
+     * JSON body. This is the path the C# SDK uses; the spec's {@code /team/users/bulk-insert} answers 405.
      *
      * <p>The API creates the members in a background job. It answers with an empty object, and with the job's status
      * URL in its {@code Location} header, which this method does not return; list the members with
