@@ -423,13 +423,15 @@ public abstract class Manager implements Closeable {
      *
      * @param method  the HTTP method
      * @param builder the request URL; it is not changed
-     * @param body    the JSON text, sent as {@code application/json; charset=UTF-8}; an empty string sends no body
+     * @param body    the JSON text, sent as {@code application/json; charset=UTF-8}; {@code null} or an empty string
+     *                sends no body
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
      * @see #makeJobRequest(RequestMethod, URIBuilder, HttpEntity)
      */
     protected AsyncJob makeJobRequest(RequestMethod method, URIBuilder builder, String body) throws APIException {
-        return this.makeJobRequest(method, builder, !body.isEmpty() ? jsonEntity(body) : (HttpEntity) null);
+        HttpEntity entity = body != null && !body.isEmpty() ? jsonEntity(body) : null;
+        return this.makeJobRequest(method, builder, entity);
     }
 
     /**

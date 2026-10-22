@@ -858,6 +858,17 @@ public class ManagerTest {
     }
 
     @Test
+    public void jobRequestWithANullStringBodySendsNoBody() throws Exception {
+        TestManager manager = manager();
+        http.respondWithHeaders(202, null, "X-Job-Id", "JOB-2");
+
+        AsyncJob job = manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), (String) null);
+
+        http.request().assertNoBody();
+        assertEquals("JOB-2", job.getJobId());
+    }
+
+    @Test
     public void jobRequestToTheV5ApiSendsTheBearerTokenAndNoApiKey() throws Exception {
         TestManager manager = manager();
         http.respondWithHeaders(202, null, "X-Job-Id", "JOB-1");
