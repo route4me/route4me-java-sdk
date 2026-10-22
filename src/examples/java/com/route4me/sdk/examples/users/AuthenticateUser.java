@@ -16,6 +16,10 @@ public class AuthenticateUser {
         try {
             MemberResponse session = manager.userAuthentication(System.getenv("R4M_MEMBER_EMAIL"),
                     System.getenv("R4M_MEMBER_PASSWORD"));
+            if (session.getSessionGuid() == null || session.getMemberId() == null) {
+                System.out.println("The login failed: the answer has no session");
+                return;
+            }
             System.out.println("Logged in as member " + session.getMemberId());
             MemberResponse check = manager.validateSession(session.getSessionGuid(), session.getMemberId());
             System.out.println("Session valid: " + check.getAuthenticated());
