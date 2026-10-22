@@ -9,6 +9,7 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.http.Route4MeRedirectStrategy;
 import com.route4me.sdk.queryconverter.QueryConverter;
+import com.route4me.sdk.utils.LenientBooleanAdapter;
 import com.route4me.sdk.utils.Sanitizer;
 import java.io.Closeable;
 import java.io.IOException;
@@ -120,13 +121,14 @@ public abstract class Manager implements Closeable {
 
     /**
      * Creates a manager that sends its requests with an API key, as a bearer token to the V5 API and as the
-     * {@code api_key} query parameter to the V4 API. Its JSON mapper serializes every field.
+     * {@code api_key} query parameter to the V4 API. Its JSON mapper serializes every field, and reads
+     * booleans that the API sends as {@code 1}/{@code 0} (see {@link LenientBooleanAdapter}).
      *
      * @param apiKey the Route4Me API key; {@code null} sends no key
      */
     public Manager(String apiKey) {
         this.apiKey = apiKey;
-        this.gson = new Gson();
+        this.gson = LenientBooleanAdapter.register(new GsonBuilder()).create();
     }
 
     /**
@@ -155,14 +157,15 @@ public abstract class Manager implements Closeable {
 
     /**
      * Creates a manager with its own JSON mapper. The mapper skips, when it serializes, every field without
-     * {@code @SerializedName}.
+     * {@code @SerializedName}, and reads booleans sent as {@code 1}/{@code 0}.
      *
      * @param apiKey the Route4Me API key; {@code null} sends no key
-     * @param builder the builder of the mapper; this constructor adds an exclusion strategy to it
+     * @param builder the builder of the mapper; this constructor adds an exclusion strategy and
+     *     {@link LenientBooleanAdapter} to it
      */
     public Manager(String apiKey, GsonBuilder builder) {
         this.apiKey = apiKey;
-        this.gson = builder.addSerializationExclusionStrategy(new ExclusionStrategy() {
+        this.gson = LenientBooleanAdapter.register(builder).addSerializationExclusionStrategy(new ExclusionStrategy() {
             @Override
             public boolean shouldSkipField(FieldAttributes fieldAttributes) {
                 //skip fields without SerializedName

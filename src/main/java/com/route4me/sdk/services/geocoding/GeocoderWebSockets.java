@@ -6,7 +6,9 @@
 package com.route4me.sdk.services.geocoding;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.utils.LenientBooleanAdapter;
 import com.route4me.sdk.utils.Sanitizer;
 import io.socket.client.IO;
 import io.socket.client.Socket;
@@ -42,7 +44,7 @@ public class GeocoderWebSockets {
     private List<Address> geocodedAddresses;
     /** The JSON mapper of the socket messages. */
     @SuppressWarnings("checkstyle:VisibilityModifier") // protected API: kept for subclasses
-    protected Gson gson = new Gson();
+    protected Gson gson = LenientBooleanAdapter.register(new GsonBuilder()).create();
 
     private int addressesCount = 0;
     private int totalAddresses = 0;

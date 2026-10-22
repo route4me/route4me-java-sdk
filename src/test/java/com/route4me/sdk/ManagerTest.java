@@ -166,6 +166,22 @@ public class ManagerTest {
         assertEquals("/api.v4/order.php", builder.getPath());
     }
 
+    /** A reply with a boolean that the API sends as a number. */
+    static final class FlagReply {
+        @SerializedName("is_predefined")
+        private Boolean predefined;
+    }
+
+    @Test
+    public void bothMappersReadBooleansSentAsNumbers() throws Exception {
+        http.respondToAll(200, json("{'is_predefined':1}"));
+        TestManager plain = manager();
+        TestManager custom = http.install(new TestManager(MockHttp.API_KEY, new GsonBuilder()));
+
+        assertTrue(plain.makeRequest(RequestMethod.GET, builder(), "", FlagReply.class).predefined);
+        assertTrue(custom.makeRequest(RequestMethod.GET, builder(), "", FlagReply.class).predefined);
+    }
+
     @Test
     public void getSendsApiKeyQueryAndUserAgentAndParsesTheJson() throws Exception {
         TestManager manager = manager();
