@@ -47,8 +47,12 @@ public class VehiclesManagerV5 extends Manager {
 
     public VehicleV5[] getVehicles(Integer page, Integer perPage) throws APIException {
         URIBuilder builder = v5Builder(VEHICLES_EP);
-        if (page != null) builder.setParameter("page", String.valueOf(page));
-        if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
+        if (page != null) {
+            builder.setParameter("page", String.valueOf(page));
+        }
+        if (perPage != null) {
+            builder.setParameter("per_page", String.valueOf(perPage));
+        }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleV5[].class);
     }
 
@@ -134,8 +138,12 @@ public class VehiclesManagerV5 extends Manager {
 
     public VehicleProfilesResponse getVehicleProfiles(Integer page, Integer perPage) throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP);
-        if (page != null) builder.setParameter("page", String.valueOf(page));
-        if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
+        if (page != null) {
+            builder.setParameter("page", String.valueOf(page));
+        }
+        if (perPage != null) {
+            builder.setParameter("per_page", String.valueOf(perPage));
+        }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleProfilesResponse.class);
     }
 
@@ -163,8 +171,12 @@ public class VehiclesManagerV5 extends Manager {
 
     public VehicleCapacityProfilesResponse getVehicleCapacityProfiles(Integer page, Integer perPage) throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP);
-        if (page != null) builder.setParameter("page", String.valueOf(page));
-        if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
+        if (page != null) {
+            builder.setParameter("page", String.valueOf(page));
+        }
+        if (perPage != null) {
+            builder.setParameter("per_page", String.valueOf(perPage));
+        }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, VehicleCapacityProfilesResponse.class);
     }
 

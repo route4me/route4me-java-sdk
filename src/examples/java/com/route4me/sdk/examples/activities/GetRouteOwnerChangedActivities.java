@@ -14,7 +14,7 @@ public class GetRouteOwnerChangedActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.ROUTE_OWNER_CHANGED));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

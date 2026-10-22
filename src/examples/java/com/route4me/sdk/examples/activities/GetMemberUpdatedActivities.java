@@ -14,7 +14,7 @@ public class GetMemberUpdatedActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.MEMBER_MODIFIED));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

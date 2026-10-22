@@ -29,17 +29,17 @@ package com.route4me.sdk.services.routing.balance;
  */
 public enum BalanceMode {
 
-        DESTINATIONS_COUNT("destinations_count");
+    DESTINATIONS_COUNT("destinations_count");
 
-        private final String value;
+    private final String value;
 
-        BalanceMode(String value) {
-            this.value = value;
-        }
+    BalanceMode(String value) {
+        this.value = value;
+    }
 
-        @Override
-        public String toString() {
-            return this.value;
-        }
+    @Override
+    public String toString() {
+        return this.value;
+    }
 
 }

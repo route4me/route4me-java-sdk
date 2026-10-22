@@ -14,7 +14,7 @@ public class GetDestinationInsertedOfAllRoutesActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.INSERT_DESTINATION));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

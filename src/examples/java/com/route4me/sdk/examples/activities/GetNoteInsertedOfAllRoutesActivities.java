@@ -14,7 +14,7 @@ public class GetNoteInsertedOfAllRoutesActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.NOTE_INSERT));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

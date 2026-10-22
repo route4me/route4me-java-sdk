@@ -21,7 +21,7 @@ public class Constants {
 
         private final String value;
 
-        private MemberType(String value) {
+        MemberType(String value) {
             this.value = value;
         }
 
@@ -45,7 +45,7 @@ public class Constants {
 
         private final String value;
 
-        private MemberPropertyValue(String value) {
+        MemberPropertyValue(String value) {
             this.value = value;
         }
 
@@ -87,7 +87,7 @@ public class Constants {
 
         private final String value;
 
-        private AlgorithmType(String value) {
+        AlgorithmType(String value) {
             this.value = value;
         }
 
@@ -119,7 +119,7 @@ public class Constants {
 
         private final String value;
 
-        private TypeofMatrix(String value) {
+        TypeofMatrix(String value) {
             this.value = value;
         }
 
@@ -149,7 +149,7 @@ public class Constants {
 
         private final String value;
 
-        private DirectionsMethod(String value) {
+        DirectionsMethod(String value) {
             this.value = value;
         }
 
@@ -198,7 +198,7 @@ public class Constants {
 
         private final String value;
 
-        private DistanceUnit(String value) {
+        DistanceUnit(String value) {
             this.value = value;
         }
 
@@ -220,7 +220,7 @@ public class Constants {
 
         private final String value;
 
-        private Avoid(String value) {
+        Avoid(String value) {
             this.value = value;
         }
 
@@ -238,7 +238,7 @@ public class Constants {
 
         private final String value;
 
-        private Optimize(String value) {
+        Optimize(String value) {
             this.value = value;
         }
 
@@ -266,7 +266,7 @@ public class Constants {
             }
         }
 
-        private Metric(int value) {
+        Metric(int value) {
             this.value = value;
         }
 
@@ -298,7 +298,7 @@ public class Constants {
 
         private final String value;
 
-        private DeviceType(String value) {
+        DeviceType(String value) {
             this.value = value;
         }
 
@@ -316,7 +316,7 @@ public class Constants {
 
         private final String value;
 
-        private Format(String value) {
+        Format(String value) {
             this.value = value;
         }
 
@@ -344,7 +344,7 @@ public class Constants {
             }
         }
 
-        private OptimizationState(int value) {
+        OptimizationState(int value) {
             this.value = value;
         }
 
@@ -368,7 +368,7 @@ public class Constants {
 
         private final String value;
 
-        private RoutePathOutput(String value) {
+        RoutePathOutput(String value) {
             this.value = value;
         }
 
@@ -393,7 +393,7 @@ public class Constants {
             }
         }
 
-        private UTurn(int value) {
+        UTurn(int value) {
             this.value = value;
         }
 
@@ -426,7 +426,7 @@ public class Constants {
             }
         }
 
-        private LeftTurn(int value) {
+        LeftTurn(int value) {
             this.value = value;
         }
 
@@ -461,7 +461,7 @@ public class Constants {
 
         private final String value;
 
-        private TruckHazardousGoods(String value) {
+        TruckHazardousGoods(String value) {
             this.value = value;
         }
 
@@ -479,7 +479,7 @@ public class Constants {
 
         private final String value;
 
-        private TerritoryType(String value) {
+        TerritoryType(String value) {
             this.value = value;
         }
 
@@ -505,7 +505,7 @@ public class Constants {
             }
         }
 
-        private RightTurn(int value) {
+        RightTurn(int value) {
             this.value = value;
         }
 
@@ -533,7 +533,7 @@ public class Constants {
 
         private final String value;
 
-        private AddressStopType(String value) {
+        AddressStopType(String value) {
             this.value = value;
         }
 

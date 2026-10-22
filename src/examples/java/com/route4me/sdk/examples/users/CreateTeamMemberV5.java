@@ -16,6 +16,8 @@ public class CreateTeamMemberV5 {
             request.setMemberType("SUB_ACCOUNT_DRIVER");
             TeamMember result = manager.createTeamMember(request);
             System.out.println("Created: " + result.getMemberId());
-        } catch (APIException e) { e.printStackTrace(); }
+        } catch (APIException e) {
+            e.printStackTrace();
+        }
     }
 }

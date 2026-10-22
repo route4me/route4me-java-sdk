@@ -14,7 +14,7 @@ public class GetMemberCreatedActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.MEMBER_CREATED));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

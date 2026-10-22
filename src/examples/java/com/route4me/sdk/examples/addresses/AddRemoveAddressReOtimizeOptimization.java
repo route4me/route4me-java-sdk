@@ -121,11 +121,11 @@ public class AddRemoveAddressReOtimizeOptimization {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-       // Getting Updated Optimization
-       System.out.println("\nGetting Updated Optimization");
+        // Getting Updated Optimization
+        System.out.println("\nGetting Updated Optimization");
 
-       optParameters = new OptimizationParameters();
-       optParameters.setProblemId(optimizationResponse.getOptimizationProblemId());
+        optParameters = new OptimizationParameters();
+        optParameters.setProblemId(optimizationResponse.getOptimizationProblemId());
         try {
             optimizationResponse = manager.getOptimization(optParameters);
         } catch (APIException ex) {

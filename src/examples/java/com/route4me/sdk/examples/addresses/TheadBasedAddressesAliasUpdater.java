@@ -99,6 +99,7 @@ public class TheadBasedAddressesAliasUpdater implements Callable {
             executor.shutdown();
             System.out.println("\nUpdating Address in Parallel...\n");
             while (!executor.isTerminated()) {
+                // Wait until every update has finished.
             }
             for (Future<Address> worker : workers) {
                 try {

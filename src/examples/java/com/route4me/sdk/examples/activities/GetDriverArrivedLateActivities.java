@@ -14,7 +14,7 @@ public class GetDriverArrivedLateActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.DRIVER_ARRIVED_LATE));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

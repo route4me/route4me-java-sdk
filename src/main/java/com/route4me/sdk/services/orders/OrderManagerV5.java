@@ -87,8 +87,12 @@ public class OrderManagerV5 extends Manager {
 
     public OrderHistoryResponse getOrderHistory(String orderUuid, String trackingNumber) throws APIException {
         URIBuilder builder = v5Builder(ORDERS_HISTORY_EP);
-        if (orderUuid != null) builder.setParameter("order_uuid", orderUuid);
-        if (trackingNumber != null) builder.setParameter("tracking_number", trackingNumber);
+        if (orderUuid != null) {
+            builder.setParameter("order_uuid", orderUuid);
+        }
+        if (trackingNumber != null) {
+            builder.setParameter("tracking_number", trackingNumber);
+        }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, OrderHistoryResponse.class);
     }
 

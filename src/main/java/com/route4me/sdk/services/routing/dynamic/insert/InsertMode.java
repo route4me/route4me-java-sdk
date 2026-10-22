@@ -35,7 +35,7 @@ public enum InsertMode {
 
     private final String value;
 
-    private InsertMode(String value) {
+    InsertMode(String value) {
         this.value = value;
     }
 

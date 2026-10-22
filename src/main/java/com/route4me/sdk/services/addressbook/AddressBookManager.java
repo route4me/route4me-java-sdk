@@ -23,7 +23,7 @@ public class AddressBookManager extends Manager {
         super(apiKey);
     }
 
-    private URIBuilder getAPIV5URI(String endpoint){
+    private URIBuilder getAPIV5URI(String endpoint) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
         builder.setHost("wh.route4me.com");
@@ -98,8 +98,8 @@ public class AddressBookManager extends Manager {
         return response != null && response.isDeleted();
     }
 
-    public List<Contact> getDepotsFromAddressBook() throws APIException{
-         URIBuilder builder = this.getAPIV5URI(ADDRESS_BOOK_DEPOTS);
+    public List<Contact> getDepotsFromAddressBook() throws APIException {
+        URIBuilder builder = this.getAPIV5URI(ADDRESS_BOOK_DEPOTS);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Contact>>() {
         }.getType());
     }

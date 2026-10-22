@@ -14,7 +14,7 @@ public class GetRouteOptimizedActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.ROUTE_OPTIMIZED));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

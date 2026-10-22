@@ -19,7 +19,7 @@ public class GetUser {
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");
         UsersManager manager = new UsersManager(apiKey);
-            User user;
+        User user;
         try {
             user = manager.getUser("1");
             System.out.println(user);

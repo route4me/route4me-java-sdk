@@ -11,7 +11,7 @@ import java.util.List;
 import lombok.Data;
 
 @Data
-public class Optimization extends DataObject{
+public class Optimization extends DataObject {
     @SerializedName("routes")
     @QueryParameter("routes")
     private List<Route> routes;

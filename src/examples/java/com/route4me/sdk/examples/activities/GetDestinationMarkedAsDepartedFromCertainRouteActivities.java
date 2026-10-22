@@ -14,7 +14,7 @@ public class GetDestinationMarkedAsDepartedFromCertainRouteActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.MARK_DESTINATION_DEPARTED).setRouteId("5C15E83A4BE005BCD1537955D28D51D7"));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

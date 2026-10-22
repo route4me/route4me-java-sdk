@@ -14,7 +14,7 @@ public class GetGeofenceEnteredActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.GEOFENCE_ENTERED));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

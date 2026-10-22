@@ -85,22 +85,22 @@ public class DriversScheduleswithTerritoriesV1 {
         List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
 
         Path currentPath = Paths.get(System.getProperty("user.dir"));
-        Path filePath = Paths.get(currentPath.toString(),"src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "schedules.csv");
+        Path filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "schedules.csv");
 
         try {
             for (String[] nextRecord : CsvRows.read(filePath.toString())) {
 
-            schedule = new AdvancedConstraints();
-            int group = Integer.parseInt(nextRecord[2]);
-            Integer timeStart = Integer.parseInt(nextRecord[0]);
-            Integer timeEnd = Integer.parseInt(nextRecord[1]);
+                schedule = new AdvancedConstraints();
+                int group = Integer.parseInt(nextRecord[2]);
+                Integer timeStart = Integer.parseInt(nextRecord[0]);
+                Integer timeEnd = Integer.parseInt(nextRecord[1]);
 
-            schedule.setMembersCount(1);
-            List<List<Integer>> timeWindowsSchedule = new ArrayList<>();
-            List<Integer> timeWindowSchedule = Arrays.asList(timeStart, timeEnd);
-            timeWindowsSchedule.add(timeWindowSchedule);
-            schedule.setAvailableTimeWindows(timeWindowsSchedule);
-            advancedConstraints.add(schedule);
+                schedule.setMembersCount(1);
+                List<List<Integer>> timeWindowsSchedule = new ArrayList<>();
+                List<Integer> timeWindowSchedule = Arrays.asList(timeStart, timeEnd);
+                timeWindowsSchedule.add(timeWindowSchedule);
+                schedule.setAvailableTimeWindows(timeWindowsSchedule);
+                advancedConstraints.add(schedule);
 
             }
 
@@ -125,7 +125,7 @@ public class DriversScheduleswithTerritoriesV1 {
         addresses.add(address);
 
         // Stops
-        filePath = Paths.get(currentPath.toString(),"src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
+        filePath = Paths.get(currentPath.toString(), "src", "examples", "java", "com", "route4me", "sdk", "examples", "advancedconstraints", "locations.csv");
 
         Integer serviceTime = 120;
 

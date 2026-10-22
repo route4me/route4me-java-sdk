@@ -14,6 +14,8 @@ public class GetNotesByRouteV5 {
                     System.out.println("Note: " + note.getContents());
                 }
             }
-        } catch (APIException e) { e.printStackTrace(); }
+        } catch (APIException e) {
+            e.printStackTrace();
+        }
     }
 }

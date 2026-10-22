@@ -21,7 +21,7 @@ public class TelematicsVendors {
         String apiKey = System.getenv("R4M_API_KEY");
         TelematicsManager manager = new TelematicsManager(apiKey);
         try {
-            TelematicsVendor vendors[] = manager.getTelematicsVendor("11111111111111111111111111111111");
+            TelematicsVendor[] vendors = manager.getTelematicsVendor("11111111111111111111111111111111");
             for (TelematicsVendor vendor : vendors) {
                 System.out.println(vendor);
             }

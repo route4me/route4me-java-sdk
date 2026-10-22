@@ -29,12 +29,24 @@ public class DriverReviewManager extends Manager {
 
     public DriverReviewsResponse getDriverReviews(Integer rating, Long memberId, String start, String end, Integer page, Integer perPage) throws APIException {
         URIBuilder builder = v5Builder(DRIVER_REVIEW_EP);
-        if (rating != null) builder.setParameter("rating", String.valueOf(rating));
-        if (memberId != null) builder.setParameter("member_id", String.valueOf(memberId));
-        if (start != null) builder.setParameter("start", start);
-        if (end != null) builder.setParameter("end", end);
-        if (page != null) builder.setParameter("page", String.valueOf(page));
-        if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
+        if (rating != null) {
+            builder.setParameter("rating", String.valueOf(rating));
+        }
+        if (memberId != null) {
+            builder.setParameter("member_id", String.valueOf(memberId));
+        }
+        if (start != null) {
+            builder.setParameter("start", start);
+        }
+        if (end != null) {
+            builder.setParameter("end", end);
+        }
+        if (page != null) {
+            builder.setParameter("page", String.valueOf(page));
+        }
+        if (perPage != null) {
+            builder.setParameter("per_page", String.valueOf(perPage));
+        }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, DriverReviewsResponse.class);
     }
 

@@ -32,7 +32,7 @@ public class BundlingEnum {
             }
         }
 
-        private BundlingMode(int value) {
+        BundlingMode(int value) {
             this.value = value;
         }
 
@@ -65,7 +65,7 @@ public class BundlingEnum {
             }
         }
 
-        private BundlingFirstItemMode(int value) {
+        BundlingFirstItemMode(int value) {
             this.value = value;
         }
 
@@ -98,7 +98,7 @@ public class BundlingEnum {
             }
         }
 
-        private BundlingAdditionalItemMode(int value) {
+        BundlingAdditionalItemMode(int value) {
             this.value = value;
         }
 
@@ -130,7 +130,7 @@ public class BundlingEnum {
             }
         }
 
-        private BundledItemsMode(int value) {
+        BundledItemsMode(int value) {
             this.value = value;
         }
 

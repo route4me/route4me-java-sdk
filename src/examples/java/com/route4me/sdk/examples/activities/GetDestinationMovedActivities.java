@@ -14,7 +14,7 @@ public class GetDestinationMovedActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.MOVE_DESTINATION));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

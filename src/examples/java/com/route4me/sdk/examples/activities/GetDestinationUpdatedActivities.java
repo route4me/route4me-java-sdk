@@ -14,7 +14,7 @@ public class GetDestinationUpdatedActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.UPDATE_DESTINATIONS));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

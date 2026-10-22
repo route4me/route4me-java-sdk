@@ -45,7 +45,7 @@ public class SingleDriverRouteServiceTimeByAddressType {
             {"STOP_TYPE_1", 60},
             {"STOP_TYPE_2", 120},
             {"STOP_TYPE_3", 180},
-            {"STOP_TYPE_4", 300},}).collect(Collectors.toMap(data -> (String) data[0], data -> (Integer) data[1]));
+            {"STOP_TYPE_4", 300}}).collect(Collectors.toMap(data -> (String) data[0], data -> (Integer) data[1]));
 
         //DEPOT
         addresses.add(new Address("1604 PARKRIDGE PKWY, Louisville, KY, 40214", true, 38.141598, -85.793846, 0));

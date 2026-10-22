@@ -11,6 +11,8 @@ public class GetTeamMembersV5 {
             for (TeamMember m : members) {
                 System.out.println("Member: " + m.getMemberFirstName() + " " + m.getMemberLastName());
             }
-        } catch (APIException e) { e.printStackTrace(); }
+        } catch (APIException e) {
+            e.printStackTrace();
+        }
     }
 }

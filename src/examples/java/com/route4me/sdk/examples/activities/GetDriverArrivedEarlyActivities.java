@@ -14,7 +14,7 @@ public class GetDriverArrivedEarlyActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.DRIVER_ARRIVED_EARLY));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

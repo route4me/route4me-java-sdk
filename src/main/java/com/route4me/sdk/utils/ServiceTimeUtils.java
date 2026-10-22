@@ -31,9 +31,9 @@ import java.util.Map;
  */
 public class ServiceTimeUtils {
 
-    public static Long getServiceTimeByAddressType(String key, Map<String, Integer> serviceTimeMap){
+    public static Long getServiceTimeByAddressType(String key, Map<String, Integer> serviceTimeMap) {
         Integer value  = serviceTimeMap.get(key);
-        return value != null ? value.longValue(): null;
+        return value != null ? value.longValue() : null;
 
     }
 

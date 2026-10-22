@@ -10,7 +10,7 @@ public class RouteBreaksEnum {
 
         private final String value;
 
-        private RouteBreaksType(String value) {
+        RouteBreaksType(String value) {
             this.value = value;
         }
 

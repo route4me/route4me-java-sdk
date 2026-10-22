@@ -20,7 +20,7 @@ public class GetAddressNotes {
         RoutingManager routingManager = new RoutingManager(apiKey);
         try {
             List<Route> routes = routingManager.getRoutes(new RoutesRequest().setLimit(2));
-            for(Route route : routes) {
+            for (Route route : routes) {
                 DataObject dataObject = routingManager.getRoute(new RoutesRequest().setId(route.getId()));
                 NotesManager notesManager = new NotesManager(apiKey);
                 List<Note> notes = notesManager.getAddressNotes(route.getId(), Long.toString(dataObject.getAddresses().get(0).getRouteDestinationId()));

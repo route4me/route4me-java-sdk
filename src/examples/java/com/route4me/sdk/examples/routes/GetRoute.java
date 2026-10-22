@@ -22,7 +22,7 @@ public class GetRoute {
             Route r = routeManager.getRoute(new RoutesRequest().setNotes(Boolean.TRUE).setId(routes.get(0).getId()));
             System.out.println(r);
             for (Address address : r.getAddresses()) {
-                    System.out.println("Address: " + address.getAddress() + " Running Distance: " + address.getManifest().get("running_distance"));
+                System.out.println("Address: " + address.getAddress() + " Running Distance: " + address.getManifest().get("running_distance"));
             }
         } catch (APIException e) {
             //handle exceptions

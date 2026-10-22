@@ -13,7 +13,7 @@ public class GetAreaRemovedActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.AREA_REMOVED));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

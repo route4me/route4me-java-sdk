@@ -38,11 +38,11 @@ public class Vehicles {
         STERLING("Sterling"),
         TOYOTA("Toyota"),
         VOLVO("Volvo"),
-        WESTERN_STAR("Western Star" );
+        WESTERN_STAR("Western Star");
 
         private final String value;
 
-        private VehicleMake(String value) {
+        VehicleMake(String value) {
             this.value = value;
         }
 

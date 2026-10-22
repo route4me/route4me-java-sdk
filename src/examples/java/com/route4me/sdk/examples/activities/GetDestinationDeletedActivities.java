@@ -14,7 +14,7 @@ public class GetDestinationDeletedActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.DELETE_DESTINATION));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

@@ -22,6 +22,8 @@ public class BatchCreateContactsV5 {
             request.setData(contacts);
             StatusResponse response = manager.batchCreateContacts(request);
             System.out.println("Status: " + response.getStatus());
-        } catch (APIException e) { e.printStackTrace(); }
+        } catch (APIException e) {
+            e.printStackTrace();
+        }
     }
 }

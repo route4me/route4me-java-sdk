@@ -14,7 +14,7 @@ public class GetDriverArrivedOnTimeActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.DRIVER_ARRIVED_ON_TIME));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

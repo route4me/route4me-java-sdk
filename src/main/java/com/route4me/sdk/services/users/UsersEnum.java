@@ -16,7 +16,7 @@ public class UsersEnum {
 
         private final String value;
 
-        private Plan(String value) {
+        Plan(String value) {
             this.value = value;
         }
 

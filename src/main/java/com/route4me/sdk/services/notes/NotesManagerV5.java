@@ -12,8 +12,13 @@ public class NotesManagerV5 extends Manager {
     private static final String NOTES_CUSTOM_TYPES_EP = NOTES_EP + "/custom-types";
     private static final String NOTES_BULK_CREATE_EP = NOTES_EP + "/bulk-create";
 
-    public NotesManagerV5(String apiKey) { super(apiKey); }
-    public NotesManagerV5(String apiKey, boolean disableRedirects) { super(apiKey, disableRedirects); }
+    public NotesManagerV5(String apiKey) {
+        super(apiKey);
+    }
+
+    public NotesManagerV5(String apiKey, boolean disableRedirects) {
+        super(apiKey, disableRedirects);
+    }
 
     private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
@@ -41,15 +46,23 @@ public class NotesManagerV5 extends Manager {
 
     public RouteNoteCollection getNotesByRoute(String routeId, Integer page, Integer perPage) throws APIException {
         URIBuilder builder = v5Builder(NOTES_EP + "/route", routeId);
-        if (page != null) builder.setParameter("page", String.valueOf(page));
-        if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
+        if (page != null) {
+            builder.setParameter("page", String.valueOf(page));
+        }
+        if (perPage != null) {
+            builder.setParameter("per_page", String.valueOf(perPage));
+        }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteNoteCollection.class);
     }
 
     public RouteNoteCollection getNotesByDestination(String routeDestinationId, Integer page, Integer perPage) throws APIException {
         URIBuilder builder = v5Builder(NOTES_EP + "/destination", routeDestinationId);
-        if (page != null) builder.setParameter("page", String.valueOf(page));
-        if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
+        if (page != null) {
+            builder.setParameter("page", String.valueOf(page));
+        }
+        if (perPage != null) {
+            builder.setParameter("per_page", String.valueOf(perPage));
+        }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, RouteNoteCollection.class);
     }
 

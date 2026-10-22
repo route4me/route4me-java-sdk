@@ -75,7 +75,7 @@ public class OptimizationUsingTerritoriesAddresses {
             Address address;
 
             Territory territory = territoriesManager.getAddressesInTerritory(zone1.get(0));
-            for (Integer contactId:  territory.getAddresses()){
+            for (Integer contactId:  territory.getAddresses()) {
                 address = new Address();
                 address.setContactId(contactId);
                 address.setTags(zone1);
@@ -83,7 +83,7 @@ public class OptimizationUsingTerritoriesAddresses {
             }
 
             territory = territoriesManager.getAddressesInTerritory(zone2.get(0));
-            for (Integer contactId:  territory.getAddresses()){
+            for (Integer contactId:  territory.getAddresses()) {
                 address = new Address();
                 address.setContactId(contactId);
                 address.setTags(zone2);
@@ -91,7 +91,7 @@ public class OptimizationUsingTerritoriesAddresses {
             }
 
             territory = territoriesManager.getAddressesInTerritory(zone3.get(0));
-            for (Integer contactId:  territory.getAddresses()){
+            for (Integer contactId:  territory.getAddresses()) {
                 address = new Address();
                 address.setTags(zone3);
                 address.setContactId(contactId);
@@ -102,7 +102,7 @@ public class OptimizationUsingTerritoriesAddresses {
             schedule1.setTags(zone1);
             schedule1.setMembersCount(3);
             List<List<Integer>> timeWindowsSchedule1 = new ArrayList<>();
-            List<Integer> timeWindowSchedule1 = Arrays.asList((8 + 5) * 3600 , (11 + 5) * 3600);
+            List<Integer> timeWindowSchedule1 = Arrays.asList((8 + 5) * 3600, (11 + 5) * 3600);
             timeWindowsSchedule1.add(timeWindowSchedule1);
             schedule1.setAvailableTimeWindows(timeWindowsSchedule1);
 
@@ -114,7 +114,7 @@ public class OptimizationUsingTerritoriesAddresses {
             schedule2.setTags(zone2);
             schedule2.setMembersCount(4);
             List<List<Integer>> timeWindowsSchedule2 = new ArrayList<>();
-            List<Integer> timeWindowSchedule2 = Arrays.asList((8 + 5) * 3600 , (12 + 5) * 3600);
+            List<Integer> timeWindowSchedule2 = Arrays.asList((8 + 5) * 3600, (12 + 5) * 3600);
             timeWindowsSchedule2.add(timeWindowSchedule2);
             schedule2.setAvailableTimeWindows(timeWindowsSchedule2);
 
@@ -126,7 +126,7 @@ public class OptimizationUsingTerritoriesAddresses {
             schedule3.setTags(zone3);
             schedule3.setMembersCount(3);
             List<List<Integer>> timeWindowsSchedule3 = new ArrayList<>();
-            List<Integer> timeWindowSchedule3 = Arrays.asList((8 + 5) * 3600 , (13 + 5) * 3600);
+            List<Integer> timeWindowSchedule3 = Arrays.asList((8 + 5) * 3600, (13 + 5) * 3600);
             timeWindowsSchedule3.add(timeWindowSchedule3);
             schedule3.setAvailableTimeWindows(timeWindowsSchedule3);
 

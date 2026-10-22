@@ -14,7 +14,7 @@ public class GetGeofenceLeftActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.GEOFENCE_LEFT));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

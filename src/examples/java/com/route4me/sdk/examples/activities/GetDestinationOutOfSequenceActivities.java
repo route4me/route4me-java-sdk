@@ -14,7 +14,7 @@ public class GetDestinationOutOfSequenceActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.DESTINATION_OUT_SEQUENCE));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

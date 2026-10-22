@@ -27,10 +27,10 @@ public class GetRoutesAndAddressesbyLocalDateTime {
         }
         int i = 0;
         for (Route r : routes) {
-                i++;
-                System.out.println("Route #" + i + " " + r.getId() + " " + r.getParameters().getRouteName());
+            i++;
+            System.out.println("Route #" + i + " " + r.getId() + " " + r.getParameters().getRouteName());
             try {
-                for (Address address: routeManager.getRoute(new RoutesRequest().setId(r.getId())).getAddresses()){
+                for (Address address: routeManager.getRoute(new RoutesRequest().setId(r.getId())).getAddresses()) {
                     System.out.println("\t " + address.getSequenceNo() + " " + address.getAddress() + " " + address.getAlias());
                 }
             } catch (APIException ex) {

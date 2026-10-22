@@ -47,7 +47,7 @@ public class SingleDepotMultipleDriverByOrderTag {
             optParameters.setParameters(parameters);
             List<Address> addresses = new ArrayList<>();
             List<Order> orders = ordersManager.getOrdersByCustomField("CustomDataKey", "CustomDataValue");
-            for (Order order:  orders){
+            for (Order order:  orders) {
                 Address address = new Address();
                 address.setOrderId(order.getId().intValue());
                 addresses.add(address);

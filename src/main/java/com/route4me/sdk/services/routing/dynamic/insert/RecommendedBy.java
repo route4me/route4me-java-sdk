@@ -34,7 +34,7 @@ public enum RecommendedBy {
 
     private final String value;
 
-    private RecommendedBy(String value) {
+    RecommendedBy(String value) {
         this.value = value;
     }
 

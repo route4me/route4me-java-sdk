@@ -71,8 +71,12 @@ public class LocationManager extends Manager {
 
     public LocationTypeCollection getLocationTypes(Integer page, Integer perPage) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP);
-        if (page != null) builder.setParameter("page", String.valueOf(page));
-        if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
+        if (page != null) {
+            builder.setParameter("page", String.valueOf(page));
+        }
+        if (perPage != null) {
+            builder.setParameter("per_page", String.valueOf(perPage));
+        }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, LocationTypeCollection.class);
     }
 

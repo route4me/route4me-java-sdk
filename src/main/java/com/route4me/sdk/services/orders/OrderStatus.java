@@ -62,7 +62,7 @@ public enum OrderStatus {
         }
     }
 
-    private OrderStatus(int value) {
+    OrderStatus(int value) {
         this.value = value;
     }
 

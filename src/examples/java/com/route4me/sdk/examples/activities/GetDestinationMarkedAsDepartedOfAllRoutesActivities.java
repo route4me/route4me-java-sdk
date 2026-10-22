@@ -14,7 +14,7 @@ public class GetDestinationMarkedAsDepartedOfAllRoutesActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.MARK_DESTINATION_DEPARTED));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

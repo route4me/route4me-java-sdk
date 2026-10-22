@@ -27,8 +27,8 @@ public class GetRoutesbyDate {
         }
         int i = 0;
         for (Route r : routes) {
-                i++;
-                System.out.println("Route #" + i + " " + r.getId());
+            i++;
+            System.out.println("Route #" + i + " " + r.getId());
         }
 
 

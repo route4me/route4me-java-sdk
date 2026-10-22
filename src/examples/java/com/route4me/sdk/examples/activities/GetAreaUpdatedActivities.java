@@ -14,7 +14,7 @@ public class GetAreaUpdatedActivities {
         try {
             Activities activities = manager.getActivities(new ActivityRequest().setType(ActivityType.AREA_UPDATED));
             System.out.println(activities.getResults());
-        }catch(APIException e) {
+        } catch (APIException e) {
             e.printStackTrace();
         }
     }

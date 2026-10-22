@@ -54,7 +54,7 @@ public class SingleDepotMultipleDriverByTerritoryAddressesIDs {
 
 
             Territory territory = territoriesManager.getAddressesInTerritory("04F6ADD89DB67371E9008A6688B750C0");
-            for (Integer contactId:  territory.getAddresses()){
+            for (Integer contactId:  territory.getAddresses()) {
                 Address address = new Address();
                 address.setContactId(contactId);
                 addresses.add(address);

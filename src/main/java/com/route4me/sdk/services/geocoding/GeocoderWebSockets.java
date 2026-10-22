@@ -24,7 +24,7 @@ import org.json.JSONObject;
 
 public class GeocoderWebSockets {
 
-    private final static Logger LOG = Logger.getLogger(GeocoderWebSockets.class.getName());
+    private static final Logger LOG = Logger.getLogger(GeocoderWebSockets.class.getName());
 
     /**
      * The connection of this geocoder; {@code null} until {@link #startGeocoding} connects.

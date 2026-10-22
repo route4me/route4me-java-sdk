@@ -10,25 +10,25 @@ package com.route4me.sdk.services.routing;
  * @author Route4Me
  */
 public enum SourceType {
-        DEPOTS("depots"),
-        ADDRESSES("input_addresses");
+    DEPOTS("depots"),
+    ADDRESSES("input_addresses");
 
-        private final String value;
+    private final String value;
 
-        private SourceType(String value) {
-            this.value = value;
-        }
+    SourceType(String value) {
+        this.value = value;
+    }
 
-        @Override
-        public String toString() {
-            return this.value;
-        }
+    @Override
+    public String toString() {
+        return this.value;
+    }
 
-        /**
-         * @return the value
-         */
-        public String getValue() {
-            return value;
-        }
+    /**
+     * @return the value
+     */
+    public String getValue() {
+        return value;
+    }
 
 }

@@ -18,6 +18,8 @@ public class GetContactsV5 {
                     System.out.println("Contact: " + c.getAddressAlias());
                 }
             }
-        } catch (APIException e) { e.printStackTrace(); }
+        } catch (APIException e) {
+            e.printStackTrace();
+        }
     }
 }

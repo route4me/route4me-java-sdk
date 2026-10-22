@@ -35,11 +35,21 @@ public class FacilityManager extends Manager {
 
     public FacilitiesPaginateResource getFacilities(Integer page, Integer perPage, Integer status, Integer facilityTypeId, String searchQuery) throws APIException {
         URIBuilder builder = v5Builder(FACILITIES_EP);
-        if (page != null) builder.setParameter("page", String.valueOf(page));
-        if (perPage != null) builder.setParameter("per_page", String.valueOf(perPage));
-        if (status != null) builder.setParameter("status", String.valueOf(status));
-        if (facilityTypeId != null) builder.setParameter("facility_type_id", String.valueOf(facilityTypeId));
-        if (searchQuery != null) builder.setParameter("search_query", searchQuery);
+        if (page != null) {
+            builder.setParameter("page", String.valueOf(page));
+        }
+        if (perPage != null) {
+            builder.setParameter("per_page", String.valueOf(perPage));
+        }
+        if (status != null) {
+            builder.setParameter("status", String.valueOf(status));
+        }
+        if (facilityTypeId != null) {
+            builder.setParameter("facility_type_id", String.valueOf(facilityTypeId));
+        }
+        if (searchQuery != null) {
+            builder.setParameter("search_query", searchQuery);
+        }
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, FacilitiesPaginateResource.class);
     }
 

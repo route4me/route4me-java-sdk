@@ -14,6 +14,8 @@ public class CreateNoteV5 {
             request.setDeviceType("web");
             RouteNoteResource result = manager.createNote(request);
             System.out.println("Created note: " + result.getNoteId());
-        } catch (APIException e) { e.printStackTrace(); }
+        } catch (APIException e) {
+            e.printStackTrace();
+        }
     }
 }

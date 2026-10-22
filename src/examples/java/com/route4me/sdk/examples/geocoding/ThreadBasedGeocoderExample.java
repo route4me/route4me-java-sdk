@@ -79,7 +79,7 @@ public class ThreadBasedGeocoderExample {
         options.setDetailed(GeocoderDetails.DETAILED);
         options.setMaxThreads(40);
         options.setMaxRetries(10);
-        options.setMaxTimeout(500l);
+        options.setMaxTimeout(500L);
 
         logger.debug("Running Geocoder with " + options.getMaxThreads() + " Threads.");
         long startTime = System.currentTimeMillis();

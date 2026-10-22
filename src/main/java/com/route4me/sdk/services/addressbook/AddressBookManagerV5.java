@@ -21,8 +21,13 @@ public class AddressBookManagerV5 extends Manager {
     private static final String JOB_STATUS_EP = V5_BASE + "/job-tracker/status";
     private static final String JOB_RESULT_EP = V5_BASE + "/job-tracker/result";
 
-    public AddressBookManagerV5(String apiKey) { super(apiKey); }
-    public AddressBookManagerV5(String apiKey, boolean disableRedirects) { super(apiKey, disableRedirects); }
+    public AddressBookManagerV5(String apiKey) {
+        super(apiKey);
+    }
+
+    public AddressBookManagerV5(String apiKey, boolean disableRedirects) {
+        super(apiKey, disableRedirects);
+    }
 
     private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();

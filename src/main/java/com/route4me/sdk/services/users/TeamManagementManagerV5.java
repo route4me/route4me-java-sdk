@@ -11,8 +11,13 @@ public class TeamManagementManagerV5 extends Manager {
     private static final String TEAM_USERS_EP = V5_BASE + "/team/users";
     private static final String TEAM_BULK_INSERT_EP = V5_BASE + "/team/bulk-insert";
 
-    public TeamManagementManagerV5(String apiKey) { super(apiKey); }
-    public TeamManagementManagerV5(String apiKey, boolean disableRedirects) { super(apiKey, disableRedirects); }
+    public TeamManagementManagerV5(String apiKey) {
+        super(apiKey);
+    }
+
+    public TeamManagementManagerV5(String apiKey, boolean disableRedirects) {
+        super(apiKey, disableRedirects);
+    }
 
     private static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();

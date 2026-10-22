@@ -36,13 +36,13 @@ public class RouteCustomDataManager extends Manager {
 
     public Map<String, String> getRouteCustomData(String routeId) throws APIException {
         URIBuilder builder = v5Builder(ROUTES_CUSTOM_DATA_EP, routeId, "custom-data");
-        Type type = new TypeToken<HashMap<String, String>>() {}.getType();
+        Type type = new TypeToken<HashMap<String, String>>() { }.getType();
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, type);
     }
 
     public Map<String, String> updateRouteCustomData(String routeId, Map<String, String> customData) throws APIException {
         URIBuilder builder = v5Builder(ROUTES_CUSTOM_DATA_EP, routeId, "custom-data");
-        Type type = new TypeToken<HashMap<String, String>>() {}.getType();
+        Type type = new TypeToken<HashMap<String, String>>() { }.getType();
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(customData), type);
     }
 

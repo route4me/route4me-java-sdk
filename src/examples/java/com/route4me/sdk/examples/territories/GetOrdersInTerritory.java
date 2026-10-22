@@ -16,7 +16,7 @@ public class GetOrdersInTerritory {
     public static void main(String[] args) {
         try {
             String apiKey = System.getenv("R4M_API_KEY");
-            TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);;
+            TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
             List<Territory> territories = territoriesManager.getTerritories();
             String territoryID;
             territoryID = territories.get(0).getTerritoryId();

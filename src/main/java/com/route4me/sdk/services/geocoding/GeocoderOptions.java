@@ -31,7 +31,7 @@ public class GeocoderOptions {
 
         private final String value;
 
-        private GeocoderDetails(String value) {
+        GeocoderDetails(String value) {
             this.value = value;
         }
 
@@ -54,7 +54,7 @@ public class GeocoderOptions {
 
         private final String value;
 
-        private GeocoderResponseFormat(String value) {
+        GeocoderResponseFormat(String value) {
             this.value = value;
         }
 
