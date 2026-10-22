@@ -5,12 +5,11 @@
  */
 package com.route4me.sdk.services.routing;
 
-/**
- *
- * @author Route4Me
- */
+/** The kinds of source of an address; {@code toString()} and {@link #getValue()} give the API value. */
 public enum SourceType {
+    /** A depot ({@code depots}). */
     DEPOTS("depots"),
+    /** An input address ({@code input_addresses}). */
     ADDRESSES("input_addresses");
 
     private final String value;
@@ -25,7 +24,9 @@ public enum SourceType {
     }
 
     /**
-     * @return the value
+     * Returns the API value.
+     *
+     * @return the value, such as {@code depots}
      */
     public String getValue() {
         return value;

@@ -9,24 +9,27 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
 import lombok.Data;
 
-/**
- *
- * @author Route4Me
- */
+/** Where an address comes from ({@code source}). */
 @Data
 public class AddressSource {
 
-
+    /** Where the address comes from ({@code source}). */
     @SerializedName("source")
     @QueryParameter("source")
     private Source source;
 
+    /** Creates an empty source. */
     public AddressSource() {
     }
 
+    /**
+     * Creates a source.
+     *
+     * @param sourceID the ID of the source object
+     * @param sourceType the kind of source
+     */
     public AddressSource(Integer sourceID, SourceType sourceType) {
         this.source = new Source(sourceID, sourceType.getValue());
     }
-
 
 }

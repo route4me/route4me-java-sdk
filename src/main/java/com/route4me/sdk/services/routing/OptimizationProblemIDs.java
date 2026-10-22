@@ -9,15 +9,11 @@ import com.google.gson.annotations.SerializedName;
 import java.util.List;
 import lombok.Data;
 
-/**
- *
- * @author juan
- */
-
+/** The body of {@link RoutingManager#deleteOptimization(List)}. */
 @Data
 public class OptimizationProblemIDs {
+    /** The IDs of the optimizations to delete ({@code optimization_problem_ids}). */
     @SerializedName("optimization_problem_ids")
     private List<String> optimizationProblemIDs;
-
 
 }

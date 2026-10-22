@@ -11,6 +11,7 @@ import java.util.List;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 
+/** An optimization with its routes, as {@link RoutingManager#getOptimization(OptimizationParameters)} returns it. */
 @Data
 // equals and hashCode compare the fields of this class only, as they always have.
 @EqualsAndHashCode(callSuper = false)

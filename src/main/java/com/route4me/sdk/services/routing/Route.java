@@ -11,6 +11,10 @@ import lombok.Setter;
 
 import java.util.List;
 
+/**
+ * A route of an optimization, as the V4 route API takes and returns it: its parameters, addresses, directions and
+ * tracking history.
+ */
 @Data
 // equals and hashCode compare the fields of this class only, as they always have.
 @EqualsAndHashCode(callSuper = false)
@@ -139,29 +143,36 @@ public class Route extends DataObject {
     private List<String> facilityIds;
 
     /**
-     * @return whether the route is unrouted; {@code false} when the value is not set
+     * Returns whether the route holds the unrouted addresses of an optimization.
+     *
+     * @return the value; {@code false} when it is not set
      */
     public boolean isUnrouted() {
         return Boolean.TRUE.equals(this.isUnrouted);
     }
 
     /**
-     * @return {@code is_unrouted}, or {@code null} when it is not set and so not sent
+     * Returns {@code is_unrouted} as it is sent.
+     *
+     * @return the value, or {@code null} when it is not set and so not sent
      */
     public Boolean getUnrouted() {
         return this.isUnrouted;
     }
 
     /**
-     * @param unrouted whether the route is unrouted
+     * Sets whether the route holds the unrouted addresses of an optimization.
+     *
+     * @param unrouted the value
      */
     public void setUnrouted(boolean unrouted) {
         this.isUnrouted = unrouted;
     }
 
     /**
-     * @param unrouted whether the route is unrouted; {@code null} leaves
-     *                 {@code is_unrouted} out of the request
+     * Sets whether the route holds the unrouted addresses of an optimization.
+     *
+     * @param unrouted the value; {@code null} leaves {@code is_unrouted} out of the request
      */
     public void setUnrouted(Boolean unrouted) {
         this.isUnrouted = unrouted;
