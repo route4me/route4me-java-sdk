@@ -71,7 +71,7 @@ public class OrdersManager extends Manager {
      */
     public List<Order> getOrdersByScheduledDate(List<String> scheduledForYYMMDD, Integer limit, Integer offset) throws APIException {
         OrderFilter filter = new OrderFilter();
-        filter.setScheduled_for_YYMMDD(scheduledForYYMMDD);
+        filter.setScheduledForYYMMDD(scheduledForYYMMDD);
         return this.OrderByFilter(filter, limit, offset);
     }
 
