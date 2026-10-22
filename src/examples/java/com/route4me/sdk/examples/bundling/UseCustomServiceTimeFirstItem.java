@@ -2,8 +2,17 @@
 package com.route4me.sdk.examples.bundling;
 
 import com.route4me.sdk.exception.APIException;
-import com.route4me.sdk.services.routing.Constants.*;
-import com.route4me.sdk.services.routing.*;
+import com.route4me.sdk.services.routing.Constants.AlgorithmType;
+import com.route4me.sdk.services.routing.Constants.OptimizationState;
+import com.route4me.sdk.services.routing.Constants.TravelMode;
+import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.services.routing.Bundling;
+import com.route4me.sdk.services.routing.BundlingEnum;
+import com.route4me.sdk.services.routing.DataObject;
+import com.route4me.sdk.services.routing.OptimizationParameters;
+import com.route4me.sdk.services.routing.Parameters;
+import com.route4me.sdk.services.routing.RoutingManager;
+import com.route4me.sdk.services.routing.ServiceTimeRules;
 import java.util.ArrayList;
 import java.util.List;
 

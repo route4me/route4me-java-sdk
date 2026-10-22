@@ -6,8 +6,6 @@ import com.route4me.sdk.exception.APIException;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
-import java.util.List;
-
 public class SchedulesManager extends Manager {
 
     private static final String V5_BASE = "/modules/api/v5.0";

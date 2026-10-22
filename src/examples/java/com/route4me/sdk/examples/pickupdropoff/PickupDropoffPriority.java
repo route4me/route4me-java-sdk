@@ -3,7 +3,14 @@ package com.route4me.sdk.examples.pickupdropoff;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
-import com.route4me.sdk.services.routing.Constants.*;
+import com.route4me.sdk.services.routing.Constants.AddressStopType;
+import com.route4me.sdk.services.routing.Constants.AlgorithmType;
+import com.route4me.sdk.services.routing.Constants.DistanceUnit;
+import com.route4me.sdk.services.routing.Constants.LeftTurn;
+import com.route4me.sdk.services.routing.Constants.OptimizationState;
+import com.route4me.sdk.services.routing.Constants.Optimize;
+import com.route4me.sdk.services.routing.Constants.TravelMode;
+import com.route4me.sdk.services.routing.Constants.UTurn;
 import com.route4me.sdk.services.routing.DataObject;
 import com.route4me.sdk.services.routing.OptimizationParameters;
 import com.route4me.sdk.services.routing.Parameters;

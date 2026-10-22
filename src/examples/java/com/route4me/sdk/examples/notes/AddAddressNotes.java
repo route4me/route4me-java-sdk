@@ -4,7 +4,11 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.notes.NoteRequest;
 import com.route4me.sdk.services.notes.NotesManager;
 import com.route4me.sdk.services.notes.StatusUpdateType;
-import com.route4me.sdk.services.routing.*;
+import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.services.routing.Constants;
+import com.route4me.sdk.services.routing.Route;
+import com.route4me.sdk.services.routing.RoutesRequest;
+import com.route4me.sdk.services.routing.RoutingManager;
 
 import java.util.List;
 

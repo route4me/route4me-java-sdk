@@ -6,7 +6,11 @@ import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.StatusResponse;
 import java.util.HashMap;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.Data;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
+import lombok.Setter;
 import org.apache.http.client.utils.URIBuilder;
 
 import java.util.List;

@@ -3,7 +3,6 @@ package com.route4me.sdk.services.locations;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import java.util.List;
-import java.util.Map;
 
 @Data
 public class LocationCombinedData {
