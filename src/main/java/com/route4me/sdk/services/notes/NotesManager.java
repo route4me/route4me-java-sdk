@@ -108,7 +108,8 @@ public class NotesManager extends Manager {
 
     /**
      * Adds a custom note type: {@code POST https://api.route4me.com/api.v4/note_custom_types.php}, with the type as
-     * the JSON body. The C# SDK ({@code AddCustomNoteType}) sends the same request.
+     * the JSON body. The JSON names are those of the V4 spec; the C# and PHP SDKs send {@code type} and
+     * {@code values} instead.
      *
      * @param request the name, the values and the kind of field of the type; {@code note_custom_type} is required
      * @return {@code result} {@code OK} and the number of types added

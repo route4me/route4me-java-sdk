@@ -54,14 +54,16 @@ Some V5 calls start a background job and answer `202 Accepted`, for example the 
 
 ```java
 AsyncJob job = vehicles.deleteVehicles(vehicleIds);
-VehicleJobResponse status = vehicles.getVehicleJobStatus(job.getJobId());
+if (job.getJobId() != null) {
+    VehicleJobResponse status = vehicles.getVehicleJobStatus(job.getJobId());
+}
 ```
 
 ### Examples
 `src/examples/java` has a runnable example for each manager method, by area; each one says what it does and which method it calls. They read the key from `R4M_API_KEY`, are compiled by every build, and are not part of the jar. Run one from your IDE, or with `mvn test-compile` and the test classpath.
 
 ### Deprecated methods
-Methods on retired Route4Me hosts are marked `@Deprecated` and name their replacement: the telematics vendor methods on `telematics.route4me.com` (use `TelematicsManager.getTelematicsVendorsV5`) and `RoutingManager.resequenceReoptimizeRoute` (use `updateRoute` with `reoptimize`). They will be removed in the next major version. See `CHANGELOG.md`.
+Methods on retired Route4Me hosts or obsolete endpoints are marked `@Deprecated` and name their replacement: the telematics vendor methods on the retired `telematics.route4me.com` host (use `TelematicsManager.getTelematicsVendorsV5`; they throw without sending a request) and `RoutingManager.resequenceReoptimizeRoute`, on the obsolete V3 endpoint `/api.v3/route/reoptimize_2.php` (use `updateRoute` with `reoptimize`). They will be removed in the next major version. See `CHANGELOG.md`.
 
 ### Development
 ```bash

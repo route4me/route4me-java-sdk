@@ -332,10 +332,10 @@ public class AddressBookManager extends Manager {
     @Getter
     static class ContactsResponse {
 
-        /** An array of the Order type objects ({@code results}). */
+        /** The contacts ({@code results}). */
         @SerializedName("results")
         private List<Contact> results;
-        /** Total number of the returned orders ({@code total}). */
+        /** The total number of matching contacts ({@code total}). */
         @SerializedName("total")
         private int total;
     }

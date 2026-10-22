@@ -12,8 +12,8 @@ If you have committed a Route4Me API key anywhere, even in a private repository,
 
 | Version | Supported |
 |---|---|
-| Latest release (1.16.x) | Yes |
-| Older releases | No. Upgrade to the latest release |
+| 2.0.x | Yes |
+| 1.16.x and older | No. Upgrade to the latest release |
 
 The SDK supports Java 8 and newer. Every change is built and tested on Java 8, 11, 17 and 21.
 

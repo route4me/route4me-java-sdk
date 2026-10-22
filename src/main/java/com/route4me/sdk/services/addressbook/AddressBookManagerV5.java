@@ -76,7 +76,8 @@ public class AddressBookManagerV5 extends Manager {
      * Lists the contacts that match query parameters: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/index/all}.
      *
-     * @param query the fields, filters and range; {@code null} for all the contacts
+     * @param query the fields, filters and range; an empty {@link AddressBookContactsQuery} (or {@code null} cast to
+     *     it) for all the contacts
      * @return the contacts
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
@@ -103,7 +104,8 @@ public class AddressBookManagerV5 extends Manager {
      * Lists the contacts that match query parameters, one page at a time: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/index/pagination}.
      *
-     * @param query the fields, filters and page; {@code null} for the first page of all the contacts
+     * @param query the fields, filters and page; an empty {@link AddressBookContactsPaginatedQuery} (or {@code null}
+     *     cast to it) for the first page of all the contacts
      * @return the page of contacts
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
@@ -133,7 +135,8 @@ public class AddressBookManagerV5 extends Manager {
      * Groups the contacts that match query parameters into map clusters: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/index/clustering}.
      *
-     * @param query the search text and display filters; {@code null} for all the contacts
+     * @param query the search text and display filters; an empty {@link AddressBookClusteringQuery} (or {@code null}
+     *     cast to it) for all the contacts
      * @return the clusters
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */

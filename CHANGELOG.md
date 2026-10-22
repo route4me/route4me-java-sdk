@@ -14,6 +14,8 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 
 **Source and binary compatibility**
 - **The SDK enums are immutable.** `setValue()` is removed from every enum, and their value fields are final (#40). No SDK code called the setters.
+- `Constants.AlgorithmType`, `TypeofMatrix` and `DirectionsMethod`: `toString()` returns the API value (for example `"1"` instead of `"TSP"`), like the other `Constants` enums, and Gson writes that value. Use `name()` for the constant name.
+- **The examples are no longer in the jar.** The 1.16.x jars shipped them as public classes in `com.route4me.sdk.examples` (and the 1.16.x pom brought OpenCSV for them). They now live in `src/examples/java`; see **Examples**.
 - **`setGPS` returns the new `SetGpsResponse`** instead of `void` (#39). Callers compile unchanged but must be recompiled: the change is binary-incompatible.
 - **The public static `GeocoderWebSockets.geocoderWebSocket` is removed.** Each `GeocoderWebSockets` now has its own socket, so two geocoders no longer share, and close, one connection.
 - `OrderFilter` is now public, with chained setters. Its field `scheduled_for_YYMMDD` is renamed `scheduledForYYMMDD`, so the accessors change.
@@ -47,7 +49,7 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - `getContact` sends the plain ID (#33) and returns `null` when nothing matches.
 - In classes of 1.16.1:
   - `Activity` reads `route_destination_id` (it mapped the typo `route_destination_od`), and `ActivityRequest` sends its type filter as `activity_type`, as C#, PHP and Node do (it sent `type`).
-  - **`Order.getCustomUserFields()` returns `List<OrderCustomUserField>`** (it was typed with a class that only existed as commented-out code).
+  - **`Order.getCustomUserFields()` returns `List<OrderCustomUserField>`** (it was typed with the package-private `OrderCustomUserFields`, which code outside the package could not use; that class is removed, and `OrderCustomFieldTypeInfo` is now public).
   - `RouteBreaksManager` rejects a `null` break duration, and `DynamicInsertManager` a `null` latitude or longitude, with `IllegalArgumentException` before sending; the API refused those requests anyway.
   - `RoutingManager.updateRoute(Route)`, and `assignDriver` and `assignVehicle`, which call it, reject a `null` route or a `null` or empty route ID with `IllegalArgumentException` before sending: `updateRoute` threw a `NullPointerException` for a `null` route, and sent a bare `route_id` for a missing ID.
   - `QueryConverter.convertObjectToParameters` leaves out `null` items of array and list fields; it threw a `NullPointerException`.
@@ -77,11 +79,11 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - `Route`: the 15 fields C# has and Java lacked, such as `member_first_name`, `approved_for_execution` and `facility_ids`; `original_route` is typed as `Route`; new `BundledItem` (#17).
 - `Address`: `required_skills` and 8 more fields from C#; new `OrderInventory` (#18).
 - Telematics V5: `getTelematicsVendorsV5()`, `getTelematicsVendorsV5(TelematicsVendorsV5Request)`, `getTelematicsVendorV5(long)`.
-- `forwardGeocode(builder, clazz, maxRetries)`.
+- `forwardGeocode(builder, clazz, maxAttempts)`.
 
 ### Deprecated
 - The 11 `TelematicsManager` methods on `telematics.route4me.com`, which is retired (it answers 301 to the marketing site), and `TELEMATICS_VENDORS_V4`. They throw an `APIException` without sending a request. Use the V5 vendor methods. Removal comes in the next major version.
-- `RoutingManager.resequenceReoptimizeRoute` (`/api.v3/route/reoptimize_2.php`, `[Obsolete]` in C#): use `updateRoute(Route, RouteUpdateParameters)` with `reoptimize`.
+- `RoutingManager.resequenceReoptimizeRoute` (`/api.v3/route/reoptimize_2.php`, `[Obsolete]` in C#): use `updateRoute(Route, RouteUpdateParameters)` with `reoptimize`. It is new in 2.0.0, added for C# parity and deprecated at once.
 - Not added, with the reason in the issue comments: the rapid street-data service (404), the retired hosts `oa.route4me.com`, `telematics.route4me.com` and `apps.route4me.com/depots`, the obsolete route fallback endpoints (404), web-session calls, and endpoints that are not Route4Me's (Chamberlain MyQ, an OCR service over plain HTTP).
 
 ### Fixed
@@ -91,8 +93,8 @@ This release fixes every open bug report (#16–#19, #31–#41), adds 27 manager
 - `GeocoderWebSockets` unsubscribes from `addresses_bulk` on close, and sizes its download chunks from the job size.
 
 ### Examples
-- The examples moved to `src/examples/java` and compile with every build (they were excluded before), but are not in the jar. Each has a class comment saying what it shows and which method it calls, and reads the key from `R4M_API_KEY`.
-- 369 examples, one for each new method; the example issues (#105–#109) each get theirs.
+- The examples moved from `src/main/java` to `src/examples/java` and compile with every build. They are no longer in the jar: the `com.route4me.sdk.examples` classes that the 1.16.x jars contained are gone. Each has a class comment saying what it shows and which method it calls, and reads the key from `R4M_API_KEY`.
+- 368 runnable examples, one for each new method, plus the `CsvRows` helper; the example issues (#105–#109) each get theirs.
 
 ### Internal
 - 716 offline unit tests (there were none in the repo): every request is checked against an endpoint registry built from the Route4Me OpenAPI specs, with the host, the scheme and the key placement. JaCoCo enforces a coverage floor.

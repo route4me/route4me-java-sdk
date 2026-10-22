@@ -6,11 +6,11 @@ import lombok.Data;
 /** The answer of the batch methods of {@link OrderManagerV5} that may run in the background. */
 @Data
 public class AsyncStatusResponse {
-    /** If true, an optimization removed from database ({@code status}). */
+    /** Whether the request was accepted ({@code status}). */
     @SerializedName("status")
     private Boolean status;
 
-    /** If true, a background job removes the optimizations ({@code async}). */
+    /** Whether a background job does the work ({@code async}). */
     @SerializedName("async")
     private Boolean async;
 }
