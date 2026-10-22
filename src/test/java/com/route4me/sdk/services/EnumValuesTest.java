@@ -3,6 +3,7 @@ package com.route4me.sdk.services;
 import com.google.gson.Gson;
 import com.route4me.sdk.services.activities.ActivityType;
 import com.route4me.sdk.services.geocoding.GeocoderOptions;
+import com.route4me.sdk.services.notes.Note;
 import com.route4me.sdk.services.notes.StatusUpdateType;
 import com.route4me.sdk.services.orders.OrderRequest;
 import com.route4me.sdk.services.orders.OrderStatus;
@@ -161,6 +162,22 @@ public class EnumValuesTest {
         assertEquals("\"3\"", gson.toJson(Constants.DirectionsMethod.TRUCKING));
         assertSame(Constants.AlgorithmType.ADVANCED_CVRP_TW, gson.fromJson("\"9\"", Constants.AlgorithmType.class));
         assertEquals("101", Constants.AlgorithmType.ALG_LEGACY_DISTRIBUTED.toString());
+    }
+
+    @Test
+    public void deviceTypeSerialisesWithItsApiValue() {
+        Gson gson = new Gson();
+        for (Constants.DeviceType type : Constants.DeviceType.values()) {
+            assertEquals("\"" + type + "\"", gson.toJson(type));
+            assertSame(type, gson.fromJson("\"" + type + "\"", Constants.DeviceType.class));
+        }
+
+        Note received = gson.fromJson("{\"device_type\":\"web\"}", Note.class);
+        Note sent = new Note();
+        sent.setDeviceType(Constants.DeviceType.ANDROID_PHONE);
+
+        assertSame(Constants.DeviceType.WEB, received.getDeviceType());
+        assertEquals("{\"device_type\":\"android_phone\"}", gson.toJson(sent));
     }
 
     /** Asserts that each constant's {@code toString()} equals its String {@code getValue()}. */

@@ -285,10 +285,15 @@ public class Constants {
 
     public enum DeviceType {
 
+        @SerializedName("web")
         WEB("web"),
+        @SerializedName("iphone")
         IPHONE("iphone"),
+        @SerializedName("ipad")
         IPAD("ipad"),
+        @SerializedName("android_phone")
         ANDROID_PHONE("android_phone"),
+        @SerializedName("android_tablet")
         ANDROID_TABLET("android_tablet");
 
         private final String value;
