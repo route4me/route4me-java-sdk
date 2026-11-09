@@ -81,6 +81,21 @@ public class RouteCustomDataManagerTest {
     }
 
     @Test
+    public void missingCustomDataOrRouteIdsAreRejectedBeforeSending() {
+        final RouteCustomDataManager manager = manager();
+
+        IllegalArgumentException noData = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateRouteCustomData("ROUTE-A1", null));
+        IllegalArgumentException noIds = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.getBulkRouteCustomData(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getBulkRouteCustomData(new String[0]));
+
+        http.assertNoRequests();
+        assertEquals("The custom data is required", noData.getMessage());
+        assertEquals("At least one route ID is required", noIds.getMessage());
+    }
+
+    @Test
     public void routeIdsWithASlashStayInOneSegment() throws Exception {
         RouteCustomDataManager manager = manager();
         http.respondToAll(200, json("{'region':'north'}"));

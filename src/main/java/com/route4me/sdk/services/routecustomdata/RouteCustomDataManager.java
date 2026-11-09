@@ -68,12 +68,17 @@ public class RouteCustomDataManager extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/routes/{routeId}/custom-data}, with the pairs as the JSON body.
      *
      * @param routeId the route ID
-     * @param customData the key-value pairs
+     * @param customData the key-value pairs; required
      * @return the custom data of the route after the update
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code customData} is {@code null}, or the route ID is {@code null} or
+     *                                  empty; nothing is sent
      */
     public Map<String, String> updateRouteCustomData(String routeId, Map<String, String> customData)
             throws APIException {
+        if (customData == null) {
+            throw new IllegalArgumentException("The custom data is required");
+        }
         URIBuilder builder = v5Builder(ROUTES_CUSTOM_DATA_EP, routeId, "custom-data");
         Type type = new TypeToken<HashMap<String, String>>() { }.getType();
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(customData), type);
@@ -84,11 +89,15 @@ public class RouteCustomDataManager extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/routes/custom-data/bulk}, with {@code {"route_ids": [...]}} as
      * the JSON body.
      *
-     * @param routeIds the route IDs
+     * @param routeIds the route IDs; at least one
      * @return the custom data of each route
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if no route ID is given: the API requires {@code route_ids}; nothing is sent
      */
     public RouteCustomDataCollection getBulkRouteCustomData(String[] routeIds) throws APIException {
+        if (routeIds == null || routeIds.length == 0) {
+            throw new IllegalArgumentException("At least one route ID is required");
+        }
         URIBuilder builder = v5Builder(BULK_CUSTOM_DATA_EP);
         BulkRouteCustomDataRequest request = new BulkRouteCustomDataRequest();
         request.setRouteIds(routeIds);
