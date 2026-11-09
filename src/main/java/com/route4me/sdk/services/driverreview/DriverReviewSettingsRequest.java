@@ -2,6 +2,7 @@ package com.route4me.sdk.services.driverreview;
 
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
+import lombok.ToString;
 
 /**
  * The settings to upload, the body of
@@ -11,8 +12,9 @@ import lombok.Data;
 public class DriverReviewSettingsRequest {
     /**
      * The logo image, Base64-encoded (the spec's {@code format: byte}); see {@link java.util.Base64}
-     * ({@code logo_picture}).
+     * ({@code logo_picture}). It can be hundreds of kilobytes, so {@code toString()} leaves it out.
      */
+    @ToString.Exclude
     @SerializedName("logo_picture")
     private String logoPicture;
 
