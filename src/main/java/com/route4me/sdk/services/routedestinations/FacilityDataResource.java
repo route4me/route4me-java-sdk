@@ -1,8 +1,10 @@
 package com.route4me.sdk.services.routedestinations;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.services.facilities.FacilityCoordinates;
@@ -16,7 +18,7 @@ import java.util.List;
  *
  * <p>The destinations spec types {@code facility_id} as an integer and {@code coordinates} as a {@code "lat,lng"}
  * string, while the facilities API and the C# SDK use a 32-character hex ID and a {@code {"lat", "lng"}} object.
- * Both shapes are read.
+ * Both shapes are read, and coordinates also from a {@code [lat, lng]} array.
  */
 @Data
 public class FacilityDataResource {
@@ -40,8 +42,9 @@ public class FacilityDataResource {
     private String statusCode;
 
     /**
-     * The coordinates of the facility ({@code coordinates}), read from a {@code {"lat", "lng"}} object or from a
-     * {@code "lat,lng"} string; {@code null} when the text is not two numbers or the API sends an empty array.
+     * The coordinates of the facility ({@code coordinates}), read from a {@code {"lat", "lng"}} object, a
+     * {@code "lat,lng"} string or a {@code [lat, lng]} array; {@code null} for any other value, such as {@code false},
+     * a number, an empty array or text that is not two numbers.
      */
     @SerializedName("coordinates")
     @JsonAdapter(CoordinatesReader.class)
@@ -56,8 +59,9 @@ public class FacilityDataResource {
     private List<FacilityType> facilityTypes;
 
     /**
-     * Reads {@code coordinates} from a {@code {"lat", "lng"}} object or a {@code "lat,lng"} string, and an empty array
-     * as {@code null}. Writing is Gson's own.
+     * Reads {@code coordinates} from a {@code {"lat", "lng"}} object, a {@code "lat,lng"} string or a
+     * {@code [lat, lng]} array, and any other value as {@code null}, so that one odd facility does not fail the
+     * whole reply. Writing is Gson's own.
      */
     static final class CoordinatesReader implements JsonDeserializer<FacilityCoordinates> {
         @Override
@@ -65,10 +69,40 @@ public class FacilityDataResource {
             if (json.isJsonPrimitive() && json.getAsJsonPrimitive().isString()) {
                 return parse(json.getAsString());
             }
-            if (json.isJsonArray() && json.getAsJsonArray().size() == 0) {
+            if (json.isJsonArray()) {
+                return pair(json.getAsJsonArray());
+            }
+            if (!json.isJsonObject()) {
+                // false (a PHP "none"), a number or null
                 return null;
             }
-            return context.deserialize(json, FacilityCoordinates.class);
+            try {
+                return context.deserialize(json, FacilityCoordinates.class);
+            } catch (JsonParseException | IllegalStateException | NumberFormatException ex) {
+                // Gson's Double reader throws the last two for a lat or lng that is text or an object.
+                return null;
+            }
+        }
+
+        /**
+         * Reads {@code [lat, lng]}.
+         *
+         * @param array the array
+         * @return the coordinates, or {@code null} when the array is not two numbers
+         */
+        private static FacilityCoordinates pair(JsonArray array) {
+            if (array.size() != 2 || !isNumber(array.get(0)) || !isNumber(array.get(1))) {
+                return null;
+            }
+            FacilityCoordinates coordinates = new FacilityCoordinates();
+            coordinates.setLat(array.get(0).getAsDouble());
+            coordinates.setLng(array.get(1).getAsDouble());
+            return coordinates;
+        }
+
+        /** Tells whether an element is a JSON number. */
+        private static boolean isNumber(JsonElement element) {
+            return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
         }
 
         /**

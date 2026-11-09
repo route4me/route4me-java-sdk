@@ -87,11 +87,36 @@ public class RouteDestinationsManagerTest {
     }
 
     @Test
-    public void facilityCoordinatesOfAnotherShapeFailTheAnswer() {
-        final RouteDestinationsManager manager = manager();
-        http.respond(200, json("{'facilities':[{'facility_id':101,'coordinates':49.8}]}"));
+    public void facilityCoordinatesAreReadFromALatLngArray() throws Exception {
+        RouteDestinationsManager manager = manager();
+        http.respond(200, json("{'facilities':[{'facility_id':101,'coordinates':[49.8397,24.0297]}]}"));
 
-        http.expectApiException(() -> manager.getDestination("5002"));
+        FacilityDataResource facility = manager.getDestination("5002").getFacilities().get(0);
+
+        assertEquals(49.8397, facility.getCoordinates().getLat(), 0.0);
+        assertEquals(24.0297, facility.getCoordinates().getLng(), 0.0);
+    }
+
+    @Test
+    public void facilityCoordinatesOfAnotherShapeAreReadAsNull() throws Exception {
+        RouteDestinationsManager manager = manager();
+        String[] shapes = {"false", "true", "0", "49.8", "[49.8]", "[49.8,24.0,1]", "['49.8','24.0']", "[[1,2],[3,4]]",
+            "{'lat':'north','lng':24.0}", "{'lat':{},'lng':24.0}"};
+        StringBuilder facilities = new StringBuilder();
+        for (String shape : shapes) {
+            facilities.append(facilities.length() == 0 ? "" : ",").append("{'facility_id':101,'coordinates':")
+                    .append(shape).append('}');
+        }
+        http.respond(200, json("{'route_destination_id':5002,'facilities':[" + facilities + "]}"));
+
+        RouteDestinationResource destination = manager.getDestination("5002");
+
+        assertEquals("one odd facility does not fail the reply", 5002L,
+                destination.getRouteDestinationId().longValue());
+        for (int i = 0; i < shapes.length; i++) {
+            assertEquals(shapes[i], "101", destination.getFacilities().get(i).getFacilityId());
+            assertNull(shapes[i], destination.getFacilities().get(i).getCoordinates());
+        }
     }
 
     @Test
