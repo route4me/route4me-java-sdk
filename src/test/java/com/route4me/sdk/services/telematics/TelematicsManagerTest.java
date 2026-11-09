@@ -206,7 +206,7 @@ public class TelematicsManagerTest {
     }
 
     @Test
-    public void updateTelematicsConnectionV5PutsTheTokenInTheQuery() throws Exception {
+    public void updateTelematicsConnectionV5PatchesWithTheTokenInTheQuery() throws Exception {
         TelematicsManager manager = manager();
         http.respondToAll(200, json("{'connection_token':'CONNECTION-1','is_enabled':false}"));
         TelematicsConnection change = new TelematicsConnection();
@@ -225,7 +225,8 @@ public class TelematicsManagerTest {
         manager.updateTelematicsConnectionV5("CONNECTION-1", off);
         manager.updateTelematicsConnectionV5("CONNECTION-1", new TelematicsConnection());
 
-        http.request(0).assertEndpoint("PUT", WH, "/modules/api/v5.0/telematics/connections").assertApiKeyAsBearer()
+        // PATCH is the spec's partial update; its PUT requires the five credential fields.
+        http.request(0).assertEndpoint("PATCH", WH, "/modules/api/v5.0/telematics/connections").assertApiKeyAsBearer()
                 .assertQuery("connection_token", "CONNECTION-1")
                 .assertJson("is_enabled", false).assertJson("validate_remote_credentials", true)
                 .assertJsonLacks("vendor_api_key", "name", "metadata");

@@ -410,10 +410,12 @@ public class TelematicsManager extends Manager {
     }
 
     /**
-     * Updates a telematics connection:
-     * {@code PUT https://wh.route4me.com/modules/api/v5.0/telematics/connections?connection_token=...}, with the new
-     * values as the JSON body, built as in {@link #createTelematicsConnectionV5(TelematicsConnection)}. Fields that are
-     * not set keep their stored values, except {@code is_enabled}, which the API sets to true when it is not sent.
+     * Updates part of a telematics connection:
+     * {@code PATCH https://wh.route4me.com/modules/api/v5.0/telematics/connections?connection_token=...}, with the new
+     * values as the JSON body, built as in {@link #createTelematicsConnectionV5(TelematicsConnection)}. Only the
+     * fields that are set are sent. The spec describes {@code PATCH} as the partial update of a connection; its
+     * {@code PUT} replaces the connection and requires {@code vendor_id}, {@code name}, {@code account_id},
+     * {@code username} and {@code password}.
      *
      * @param connectionToken the token of the connection
      * @param connection the new values
@@ -430,7 +432,7 @@ public class TelematicsManager extends Manager {
         requireConnection(connection);
         URIBuilder builder = v5Builder(TELEMATICS_CONNECTIONS_V5);
         builder.setParameter("connection_token", connectionToken);
-        return makeRequest(RequestMethod.PUT, builder, this.gson.toJson(connectionBodyV5(connection)),
+        return makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(connectionBodyV5(connection)),
                 TelematicsConnection.class);
     }
 
