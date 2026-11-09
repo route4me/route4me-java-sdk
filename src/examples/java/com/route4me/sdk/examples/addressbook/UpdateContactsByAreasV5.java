@@ -21,9 +21,9 @@ public class UpdateContactsByAreasV5 {
         BoundingBox box = boundingBox(System.getenv("CONTACTS_BOUNDING_BOX"));
         String group = System.getenv("ADDRESS_GROUP");
         if (box == null || group == null || group.isEmpty()) {
-            System.err.println("Set CONTACTS_BOUNDING_BOX to top,left,bottom,right of an area of a test account and"
-                    + " ADDRESS_GROUP to a group name; this example moves every contact inside the area to that"
-                    + " group.");
+            System.err.println("Set CONTACTS_BOUNDING_BOX to top,left,bottom,right in degrees of an area of a test"
+                    + " account, such as 40.80,-74.05,40.70,-73.90, and ADDRESS_GROUP to a group name; this example"
+                    + " moves every contact inside the area to that group.");
             return;
         }
         String apiKey = System.getenv("R4M_API_KEY");
@@ -51,7 +51,8 @@ public class UpdateContactsByAreasV5 {
      * Reads a rectangle written as {@code top,left,bottom,right}.
      *
      * @param text the four edges in degrees, separated by commas
-     * @return the rectangle, or {@code null} when the text is missing or is not four numbers
+     * @return the rectangle, or {@code null} when the text is missing, is not four numbers, or is not a rectangle on
+     *     the map: latitudes within -90..90 with top above bottom, longitudes within -180..180 with left west of right
      */
     private static BoundingBox boundingBox(String text) {
         if (text == null) {
@@ -61,15 +62,27 @@ public class UpdateContactsByAreasV5 {
         if (edges.length != 4) {
             return null;
         }
+        double top;
+        double left;
+        double bottom;
+        double right;
         try {
-            BoundingBox box = new BoundingBox();
-            box.setTop(Double.valueOf(edges[0].trim()));
-            box.setLeft(Double.valueOf(edges[1].trim()));
-            box.setBottom(Double.valueOf(edges[2].trim()));
-            box.setRight(Double.valueOf(edges[3].trim()));
-            return box;
+            top = Double.parseDouble(edges[0].trim());
+            left = Double.parseDouble(edges[1].trim());
+            bottom = Double.parseDouble(edges[2].trim());
+            right = Double.parseDouble(edges[3].trim());
         } catch (NumberFormatException e) {
             return null;
         }
+        // Comparisons with NaN are false, so NaN fails here too.
+        if (!(top <= 90 && bottom >= -90 && top > bottom && left >= -180 && right <= 180 && left < right)) {
+            return null;
+        }
+        BoundingBox box = new BoundingBox();
+        box.setTop(top);
+        box.setLeft(left);
+        box.setBottom(bottom);
+        box.setRight(right);
+        return box;
     }
 }
