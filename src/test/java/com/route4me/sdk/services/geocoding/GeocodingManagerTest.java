@@ -4,7 +4,9 @@ import com.route4me.sdk.ManagerTestAccess;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.GeoCoordinates;
 import com.route4me.sdk.services.routing.Geocodings;
+import com.route4me.sdk.testsupport.Log4jCapture;
 import com.route4me.sdk.testsupport.MockHttp;
+import org.apache.logging.log4j.Level;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -20,6 +22,7 @@ import java.util.List;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -453,7 +456,8 @@ public class GeocodingManagerTest {
             GeocoderWebSockets geocoder = manager.websocketsGeocoder(new ArrayList<Address>());
 
             assertNull("no socket may be opened in a unit test", socket.get(geocoder));
-            assertNull(geocoder.getAddresses());
+            assertFalse(geocoder.isStarted());
+            assertTrue(geocoder.getAddresses().isEmpty());
             geocoder.closeGeoCodeSocketIO();
         }
         assertEquals(3, http.requestCount());
@@ -464,13 +468,26 @@ public class GeocodingManagerTest {
         GeocodingManager manager = manager();
         http.respondWithFixture(400, "error_400.json");
 
-        GeocoderWebSockets geocoder = manager.websocketsGeocoder(new ArrayList<Address>());
+        GeocoderWebSockets geocoder;
+        Log4jCapture log = Log4jCapture.start();
+        try {
+            geocoder = manager.websocketsGeocoder(new ArrayList<Address>());
+        } finally {
+            log.stop();
+        }
 
+        boolean logged = false;
+        for (Log4jCapture.Event event : log.events()) {
+            assertFalse(String.valueOf(event.getMessage()).contains(MockHttp.API_KEY));
+            logged |= event.getLevel() == Level.ERROR && event.getMessage().contains("upload failed");
+        }
+        assertTrue("the failure is logged through Log4j 2, like the rest of the manager", logged);
         http.request().assertPath("/actions/upload/json-geocode.php");
         Field socket = GeocoderWebSockets.class.getDeclaredField("geocoderWebSocket");
         socket.setAccessible(true);
         assertNull("no socket may be opened in a unit test", socket.get(geocoder));
-        assertNull(geocoder.getAddresses());
+        assertFalse(geocoder.isStarted());
+        assertTrue(geocoder.getAddresses().isEmpty());
         assertEquals(0, geocoder.getAddressesCount());
         assertEquals(0, geocoder.getTotalAddresses());
         assertTrue(geocoder.isCompleted());

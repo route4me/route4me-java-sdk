@@ -23,8 +23,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import lombok.Getter;
 import lombok.Setter;
 import org.apache.http.HttpEntity;
@@ -127,9 +125,11 @@ public class GeocodingManager extends Manager {
 
     /**
      * Uploads addresses with {@link #jsonUploadGeocoder(List)} and starts geocoding them over a websocket to
-     * {@code https://validator.route4me.com}. The call returns at once; poll {@link GeocoderWebSockets#isCompleted()}
-     * and read {@link GeocoderWebSockets#getAddresses()}. If the upload fails, or its reply has no storage ID or
-     * address count, the error is logged and the geocoder returned has not started.
+     * {@code https://validator.route4me.com}. The call returns at once; check {@link GeocoderWebSockets#isStarted()},
+     * then poll {@link GeocoderWebSockets#isCompleted()}, with a deadline, and read
+     * {@link GeocoderWebSockets#getAddresses()}. If the upload fails, or its reply has no storage ID or address count,
+     * the error is logged and the geocoder returned has not started: {@code isStarted()} is {@code false} and its
+     * address list is empty.
      *
      * @param addresses the addresses to geocode
      * @return the geocoder of the job
@@ -139,14 +139,15 @@ public class GeocodingManager extends Manager {
         try {
             GeocoderResponse job = jsonUploadGeocoder(addresses);
             if (job == null || job.getTemporaryAddressesStorageID() == null || job.getAddressCount() == null) {
-                Logger.getLogger(GeocodingManager.class.getName()).log(Level.SEVERE,
-                        "The address upload returned no storage ID or address count; the geocoder was not started");
+                logger.error("The address upload returned no storage ID or address count; "
+                        + "the geocoder was not started");
                 return geocoder;
             }
             String temporaryAddressesStorageID = job.getTemporaryAddressesStorageID();
             geocoder.startGeocoding(temporaryAddressesStorageID, job.getAddressCount());
         } catch (APIException ex) {
-            Logger.getLogger(GeocodingManager.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error("The address upload failed; the geocoder was not started: {}",
+                    Sanitizer.forLog(ex.getMessage()));
         }
         return geocoder;
     }
