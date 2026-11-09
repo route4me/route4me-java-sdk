@@ -385,6 +385,19 @@ public class OrderManagerV5Test {
     }
 
     @Test
+    public void getOrderCustomFieldsReadsAnEmptyTypeInfoArrayAsNull() throws Exception {
+        OrderManagerV5 manager = manager();
+        http.respond(200, json("{'data':[{'data':{'order_custom_field_id':42,'order_custom_field_type':'text',"
+                + "'order_custom_field_type_info':[]}},{'order_custom_field_id':43,"
+                + "'order_custom_field_type':'checkbox','order_custom_field_type_info':{'short_label':'Dock'}}]}"));
+
+        List<OrderCustomUserField> fields = manager.getOrderCustomFields();
+
+        assertNull(fields.get(0).getOrderCustomFieldTypeInfo());
+        assertEquals("Dock", fields.get(1).getOrderCustomFieldTypeInfo().getShortLabel());
+    }
+
+    @Test
     public void getOrderCustomFieldsRejectsItemsOfTheWrongShape() {
         final OrderManagerV5 manager = manager();
         http.respond(200, json("{'data':[[1]]}"));
