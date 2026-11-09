@@ -10,6 +10,7 @@ import java.util.Collections;
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 /**
  * Unit tests for {@link RouteDestinationsManager}: route destinations, their list columns
@@ -45,6 +46,43 @@ public class RouteDestinationsManagerTest {
         assertEquals("Example Bakery", destination.getDestinationName());
         assertEquals("CUST-1", destination.getCustomerId());
         assertEquals("Hub", destination.getFacilities().get(0).getFacilityTypes().get(0).getFacilityTypeAlias());
+        assertEquals("7", destination.getFacilities().get(0).getFacilityId());
+    }
+
+    @Test
+    public void facilitiesAreReadInTheShapesOfTheSpecAndOfTheFacilitiesApi() throws Exception {
+        RouteDestinationsManager manager = manager();
+        http.respond(200, json("{'route_destination_id':5002,'facilities':["
+                + "{'facility_id':101,'status_code':'A','coordinates':'49.8397, 24.0297'},"
+                + "{'facility_id':'C0FFEE0000000000000000000000000A','status_code':1,"
+                + "'coordinates':{'lat':40.1,'lng':-74.1}},"
+                + "{'facility_id':102,'coordinates':'unknown'},"
+                + "{'facility_id':103,'coordinates':[]},"
+                + "{'facility_id':104,'coordinates':null}]}"));
+
+        RouteDestinationResource destination = manager.getDestination("5002");
+
+        FacilityDataResource spec = destination.getFacilities().get(0);
+        assertEquals("101", spec.getFacilityId());
+        assertEquals("A", spec.getStatusCode());
+        assertEquals(49.8397, spec.getCoordinates().getLat(), 0.0);
+        assertEquals(24.0297, spec.getCoordinates().getLng(), 0.0);
+        FacilityDataResource facilitiesApi = destination.getFacilities().get(1);
+        assertEquals("C0FFEE0000000000000000000000000A", facilitiesApi.getFacilityId());
+        assertEquals("1", facilitiesApi.getStatusCode());
+        assertEquals(40.1, facilitiesApi.getCoordinates().getLat(), 0.0);
+        assertEquals(-74.1, facilitiesApi.getCoordinates().getLng(), 0.0);
+        assertNull("text that is not lat,lng", destination.getFacilities().get(2).getCoordinates());
+        assertNull("PHP sends an empty map as []", destination.getFacilities().get(3).getCoordinates());
+        assertNull(destination.getFacilities().get(4).getCoordinates());
+    }
+
+    @Test
+    public void facilityCoordinatesOfAnotherShapeFailTheAnswer() {
+        final RouteDestinationsManager manager = manager();
+        http.respond(200, json("{'facilities':[{'facility_id':101,'coordinates':49.8}]}"));
+
+        http.expectApiException(() -> manager.getDestination("5002"));
     }
 
     @Test
