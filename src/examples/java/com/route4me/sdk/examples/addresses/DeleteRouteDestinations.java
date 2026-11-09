@@ -14,7 +14,10 @@ public class DeleteRouteDestinations {
 
     public static void main(String[] args) {
         List<Long> ids = ExampleInput.toLongs("ROUTE_DESTINATION_IDS", System.getenv("ROUTE_DESTINATION_IDS"));
-        if (ids == null || ids.isEmpty()) {
+        if (ids == null) {
+            return;
+        }
+        if (ids.isEmpty()) {
             System.err.println("Set ROUTE_DESTINATION_IDS to the comma-separated IDs of stops of a test account;"
                     + " this example deletes them.");
             return;

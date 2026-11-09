@@ -5,6 +5,7 @@
  */
 package com.route4me.sdk.examples.advancedconstraints;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.Constants.AlgorithmType;
@@ -32,9 +33,11 @@ import java.util.logging.Logger;
 public class OptimizationUsingTerritoriesOrdersDifferentDepot {
 
     public static void main(String[] args) {
-        String territoryIds = System.getenv("TERRITORY_IDS");
-        String[] ids = territoryIds == null ? new String[0] : territoryIds.trim().split("\\s*,\\s*");
-        if (ids.length != 3 || ids[0].isEmpty() || ids[1].isEmpty() || ids[2].isEmpty()) {
+        List<String> ids = ExampleInput.toList("TERRITORY_IDS", System.getenv("TERRITORY_IDS"));
+        if (ids == null) {
+            return;
+        }
+        if (ids.size() != 3) {
             System.err.println("Set TERRITORY_IDS to the comma-separated IDs of three of your territories; this"
                     + " example optimizes routes to their orders.");
             return;
@@ -63,9 +66,9 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
 
             // Territories
             // **********************
-            List<String> zone1 = Arrays.asList(ids[0]);
-            List<String> zone2 = Arrays.asList(ids[1]);
-            List<String> zone3 = Arrays.asList(ids[2]);
+            List<String> zone1 = Arrays.asList(ids.get(0));
+            List<String> zone2 = Arrays.asList(ids.get(1));
+            List<String> zone3 = Arrays.asList(ids.get(2));
 
             List<Address> addresses = new ArrayList<>();
 

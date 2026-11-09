@@ -15,7 +15,10 @@ import java.util.List;
 public class BatchUpdateContactsV5 {
     public static void main(String[] args) {
         List<Long> contactIds = ExampleInput.toLongs("CONTACT_IDS", System.getenv("CONTACT_IDS"));
-        if (contactIds == null || contactIds.isEmpty()) {
+        if (contactIds == null) {
+            return;
+        }
+        if (contactIds.isEmpty()) {
             System.err.println("Set CONTACT_IDS to the comma-separated IDs of contacts of a test account;"
                     + " this example changes them.");
             return;

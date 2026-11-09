@@ -45,7 +45,10 @@ import java.util.logging.Logger;
 public class DynamicInsertStopOptimalAfterLastVisitedRouteIDs {
 
     public static void main(String[] args) {
-        List<String> routeIDs = ExampleInput.toList(System.getenv("ROUTE_IDS"));
+        List<String> routeIDs = ExampleInput.toList("ROUTE_IDS", System.getenv("ROUTE_IDS"));
+        if (routeIDs == null) {
+            return;
+        }
         if (routeIDs.isEmpty()) {
             System.err.println("Set ROUTE_IDS to the IDs of routes of a test account, separated by commas; this example"
                     + " adds a stop to one of them.");

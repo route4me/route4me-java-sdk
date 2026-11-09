@@ -15,7 +15,10 @@ import java.util.List;
 public class SearchVehiclesV5 {
     public static void main(String[] args) {
         String text = args.length > 0 ? String.join(",", args) : System.getenv("VEHICLE_IDS");
-        List<String> ids = ExampleInput.toList(text);
+        List<String> ids = ExampleInput.toList(args.length > 0 ? "The argument list" : "VEHICLE_IDS", text);
+        if (ids == null) {
+            return;
+        }
         if (ids.isEmpty()) {
             System.err.println("Pass vehicle IDs as arguments or set VEHICLE_IDS to the comma-separated IDs of some"
                     + " of your vehicles; this example finds how far they are from a location.");

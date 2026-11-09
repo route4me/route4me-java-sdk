@@ -15,7 +15,10 @@ import java.util.List;
  */
 public class GetBulkRouteCustomData {
     public static void main(String[] args) {
-        List<String> routeIds = ExampleInput.toList(System.getenv("ROUTE_IDS"));
+        List<String> routeIds = ExampleInput.toList("ROUTE_IDS", System.getenv("ROUTE_IDS"));
+        if (routeIds == null) {
+            return;
+        }
         if (routeIds.isEmpty()) {
             System.err.println("Set ROUTE_IDS to the comma-separated IDs of some of your routes; this example reads"
                     + " their custom data.");

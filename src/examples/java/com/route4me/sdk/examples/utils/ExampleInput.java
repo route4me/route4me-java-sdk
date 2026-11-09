@@ -5,7 +5,8 @@ import java.util.List;
 
 /**
  * Checks the targets that the examples read from their arguments or environment variables. A malformed value prints
- * what is wrong and gives {@code null}, so the example stops before it sends a request. It sends no request itself.
+ * what is wrong and gives {@code null}, so the example returns on {@code null} without a second message and stops
+ * before it sends a request. It sends no request itself.
  */
 public final class ExampleInput {
 
@@ -52,36 +53,47 @@ public final class ExampleInput {
     }
 
     /**
-     * Splits a comma-separated list, trims each item and drops the empty ones, so {@code " A, ,B,"} gives
-     * {@code [A, B]}.
+     * Splits a comma-separated list and trims each item, so {@code " A, B "} gives {@code [A, B]}. An empty item, as
+     * in {@code "A,,B"} or {@code "A,B,"}, is a malformed list: a typo there could leave out a target.
      *
+     * @param name the variable that holds the list, named in the message
      * @param value the list, or {@code null}
-     * @return the items; an empty list for {@code null} or a value with no items
+     * @return the items (an empty list for {@code null} or a blank value), or {@code null} after printing that
+     *     {@code name} has an empty item
      */
-    public static List<String> toList(String value) {
+    public static List<String> toList(String name, String value) {
         List<String> items = new ArrayList<>();
-        if (value != null) {
-            for (String item : value.split(",")) {
-                if (!item.trim().isEmpty()) {
-                    items.add(item.trim());
-                }
+        if (value == null || value.trim().isEmpty()) {
+            return items;
+        }
+        // The limit -1 keeps trailing empty items, so "A,B," is caught too.
+        for (String item : value.split(",", -1)) {
+            if (item.trim().isEmpty()) {
+                System.err.println(name + " has an empty item: " + value);
+                return null;
             }
+            items.add(item.trim());
         }
         return items;
     }
 
     /**
-     * Reads a comma-separated list of numbers, such as stop or contact IDs, as {@link #toList(String)} splits it.
+     * Reads a comma-separated list of numbers, such as stop or contact IDs, as {@link #toList(String, String)} splits
+     * it.
      *
      * @param name the variable that holds the value, named in the message
      * @param value the list, or {@code null}
-     * @return the numbers (an empty list for {@code null} or a value with no items), or {@code null} after printing
-     *     that {@code name} must be comma-separated numbers
+     * @return the numbers (an empty list for {@code null} or a blank value), or {@code null} after printing that
+     *     {@code name} has an empty item or must be comma-separated numbers
      */
     public static List<Long> toLongs(String name, String value) {
+        List<String> items = toList(name, value);
+        if (items == null) {
+            return null;
+        }
         List<Long> numbers = new ArrayList<>();
         try {
-            for (String item : toList(value)) {
+            for (String item : items) {
                 numbers.add(Long.valueOf(item));
             }
         } catch (NumberFormatException e) {

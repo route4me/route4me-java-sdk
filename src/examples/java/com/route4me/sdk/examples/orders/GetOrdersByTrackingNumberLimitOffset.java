@@ -15,7 +15,10 @@ import java.util.List;
  */
 public class GetOrdersByTrackingNumberLimitOffset {
     public static void main(String[] args) {
-        List<String> trackingNumbers = ExampleInput.toList(System.getenv("TRACKING_NUMBERS"));
+        List<String> trackingNumbers = ExampleInput.toList("TRACKING_NUMBERS", System.getenv("TRACKING_NUMBERS"));
+        if (trackingNumbers == null) {
+            return;
+        }
         if (trackingNumbers.isEmpty()) {
             System.err.println("Set TRACKING_NUMBERS to the comma-separated tracking numbers of some of your orders;"
                     + " this example finds those orders.");

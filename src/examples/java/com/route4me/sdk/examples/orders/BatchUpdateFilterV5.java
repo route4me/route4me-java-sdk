@@ -17,7 +17,10 @@ import java.util.List;
  */
 public class BatchUpdateFilterV5 {
     public static void main(String[] args) {
-        List<String> orderIds = ExampleInput.toList(System.getenv("ORDER_IDS"));
+        List<String> orderIds = ExampleInput.toList("ORDER_IDS", System.getenv("ORDER_IDS"));
+        if (orderIds == null) {
+            return;
+        }
         if (orderIds.isEmpty()) {
             System.err.println("Set ORDER_IDS to the comma-separated IDs of orders of a test account; this example"
                     + " colors them red.");

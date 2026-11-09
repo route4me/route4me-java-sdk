@@ -14,7 +14,10 @@ import java.util.List;
 public class MergeRoutes {
 
     public static void main(String[] args) {
-        List<String> routeIds = ExampleInput.toList(System.getenv("ROUTE_IDS"));
+        List<String> routeIds = ExampleInput.toList("ROUTE_IDS", System.getenv("ROUTE_IDS"));
+        if (routeIds == null) {
+            return;
+        }
         if (routeIds.size() < 2) {
             System.err.println("Set ROUTE_IDS to the comma-separated IDs of two or more routes of a test account;"
                     + " this example merges them.");
