@@ -77,8 +77,9 @@ public final class ExampleInput {
     /**
      * Reads a rectangle on the map written as {@code top,left,bottom,right}, in degrees, such as
      * {@code 40.80,-74.05,40.70,-73.90}. The latitudes must be within -90..90 with the top edge north of the bottom
-     * one, and the longitudes within -180..180 and different. A left edge east of the right edge, as in
-     * {@code 20,170,10,-170}, is a box that crosses the 180th meridian, and is accepted.
+     * one, and the longitudes within -180..180 with the left edge west of the right one. A box that crosses the
+     * 180th meridian (left edge east of the right one, as in {@code 20,170,10,-170}) is refused: the API does not
+     * document how it reads one, and a server that sorts the two longitudes would act on the other side of the world.
      *
      * @param name the variable that holds the value, named in the message
      * @param value the four edges separated by commas, surrounding spaces allowed, or {@code null}
@@ -92,9 +93,9 @@ public final class ExampleInput {
                 double left = Double.parseDouble(edges[1].trim());
                 double bottom = Double.parseDouble(edges[2].trim());
                 double right = Double.parseDouble(edges[3].trim());
-                // Comparisons with NaN are false, so NaN fails here too. Left > right crosses the 180th meridian.
-                if (top <= 90 && bottom >= -90 && top > bottom && left >= -180 && left <= 180 && right >= -180
-                        && right <= 180 && left != right) {
+                // Comparisons with NaN are false, so NaN fails here too. Left >= right (a box across the 180th
+                // meridian, or no width) is refused.
+                if (top <= 90 && bottom >= -90 && top > bottom && left >= -180 && right <= 180 && left < right) {
                     BoundingBox box = new BoundingBox();
                     box.setTop(top);
                     box.setLeft(left);
@@ -107,8 +108,8 @@ public final class ExampleInput {
             }
         }
         System.err.println(name + " must be top,left,bottom,right in degrees: latitudes from -90 to 90 with top above"
-                + " bottom, and two different longitudes from -180 to 180 (left east of right crosses the 180th"
-                + " meridian): " + value);
+                + " bottom, and longitudes from -180 to 180 with left west of right (a box across the 180th meridian"
+                + " is refused; split it in two): " + value);
         return null;
     }
 

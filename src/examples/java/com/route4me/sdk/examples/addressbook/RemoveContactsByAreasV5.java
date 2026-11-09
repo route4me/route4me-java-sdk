@@ -14,8 +14,8 @@ import com.route4me.sdk.services.addressbook.JobStatusResponse;
  * {@link AddressBookManagerV5#getJobStatus}. It deletes real data: set {@code CONTACTS_BOUNDING_BOX} to
  * {@code top,left,bottom,right}, in degrees, of an area of a test account, and optionally {@code CONTACTS_QUERY} to a
  * text that narrows the contacts to delete. Without the rectangle, or with a malformed one, the example stops. A
- * rectangle whose left edge is east of its right edge, such as {@code 20,170,10,-170}, crosses the 180th meridian; the
- * API does not document how it treats one, so try it on a test account first.
+ * rectangle that crosses the 180th meridian (left edge east of the right one) is refused: the API does not document
+ * how it reads one, and a server that sorts the longitudes would delete the contacts on the other side of the world.
  */
 public class RemoveContactsByAreasV5 {
     public static void main(String[] args) {
