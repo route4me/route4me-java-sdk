@@ -30,10 +30,10 @@ import lombok.Data;
 @Data
 public class MovedAddressesResponse {
 
-    /** Whether legs for this vendor were recomputed and persisted ({@code success}). */
+    /** Whether the destination was moved ({@code success}). */
     @SerializedName("success")
     private Boolean success;
-    /** Human-readable error message when `success=false` ({@code error}). */
+    /** The error message when {@code success} is {@code false} ({@code error}). */
     @SerializedName("error")
     private String error;
 

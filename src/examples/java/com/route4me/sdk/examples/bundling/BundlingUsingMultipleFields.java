@@ -85,7 +85,8 @@ public class BundlingUsingMultipleFields {
         try {
             DataObject responseObject = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-            System.out.println("State:" + Constants.OptimizationState.get(responseObject.getState().intValue()));
+            System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                    : Constants.OptimizationState.get(responseObject.getState().intValue())));
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();
@@ -142,9 +143,6 @@ public class BundlingUsingMultipleFields {
             {"BUNDLING_KEY", "ZONE001"},
             {"LOCATION_ID", "FLOOR003"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
         addresses.add(address);
-        address.setCustom_fields(Stream.of(new String[][]{
-            {"BUNDLING_KEY", "FLOOR001"},
-            {"LOCATION_ID", "Doe"}}).collect(Collectors.toMap(data -> data[0], data -> data[1])));
         address = new Address("318 SO. 39TH STREET, Louisville, KY, 40212", 38.259335, -85.815094, 300);
         address.setCustom_fields(Stream.of(new String[][]{
             {"BUNDLING_KEY", "ZONE002"},

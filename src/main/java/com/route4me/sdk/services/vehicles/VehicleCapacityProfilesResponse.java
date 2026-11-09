@@ -7,7 +7,10 @@ import java.util.List;
 /** The answer of {@link VehiclesManagerV5#getVehicleCapacityProfiles(Integer, Integer)}. */
 @Data
 public class VehicleCapacityProfilesResponse {
-    /** The data object containing a vehicle capacity profile ({@code data}). */
+    /** The vehicle capacity profiles of the page ({@code data}). */
     @SerializedName("data")
     private List<VehicleCapacityProfile> data;
+    /** The paging data ({@code meta}). */
+    @SerializedName("meta")
+    private VehiclePageMeta meta;
 }

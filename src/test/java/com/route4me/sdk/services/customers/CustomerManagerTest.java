@@ -69,7 +69,7 @@ public class CustomerManagerTest {
         parameters.setFilters(filters);
         parameters.setPage(1);
         parameters.setPerPage(25);
-        parameters.setOrderBy(Arrays.asList(new String[] {"name", "asc"}, new String[] {"created_timestamp", "desc"}));
+        parameters.setOrderBy(Arrays.asList(Arrays.asList("name", "asc"), Arrays.asList("created_timestamp", "desc")));
 
         CustomerListResponse response = manager.getCustomersList(parameters);
 
@@ -97,6 +97,8 @@ public class CustomerManagerTest {
         assertEquals("Sam", customer.getAccountablePersonFirstName());
         assertEquals(Integer.valueOf(2), customer.getCustomerLocationCount());
         assertEquals("100 Example St", customer.getAddresses().get(0).getAddress());
+        assertTrue(customer.toString().contains("customerId=CUST-1"));
+        assertTrue(customer.toString().contains("customerLocationCount=2"));
     }
 
     @Test
@@ -125,7 +127,7 @@ public class CustomerManagerTest {
         CustomerManager manager = manager();
         http.respond(200, json("{'items':[]}"));
         CustomerListParameters parameters = new CustomerListParameters();
-        parameters.setOrderBy(Collections.singletonList(new String[] {"name", "desc"}));
+        parameters.setOrderBy(Collections.singletonList(Arrays.asList("name", "desc")));
 
         manager.getCustomersList(parameters);
 
@@ -134,6 +136,31 @@ public class CustomerManagerTest {
         assertTrue(orderBy.get(0).isJsonArray());
         assertEquals("[\"name\",\"desc\"]", orderBy.get(0).toString());
         http.request().assertNoQuery("order_by").assertNoQuery("order_by[0][]");
+    }
+
+    /** Regression: member IDs were {@code Integer}, so an ID above 2^31-1 failed the whole list. */
+    @Test
+    public void memberIdsAboveTheIntRangeAreRead() throws Exception {
+        CustomerManager manager = manager();
+        http.respond(200, json("{'items':[{'customer_id':'CUST-1','root_member_id':3000000001,"
+                + "'created_by_member_id':3000000002}]}"));
+
+        CustomerListResource customer = manager.getCustomersList(new CustomerListParameters()).getItems().get(0);
+
+        assertEquals(Long.valueOf(3000000001L), customer.getRootMemberId());
+        assertEquals(Long.valueOf(3000000002L), customer.getCreatedByMemberId());
+    }
+
+    /** Regression: {@code List<String[]>} compared the pairs by identity, so equal parameters were not equal. */
+    @Test
+    public void parametersWithTheSameOrderAreEqual() {
+        CustomerListParameters first = new CustomerListParameters();
+        first.setOrderBy(Collections.singletonList(Arrays.asList("name", "asc")));
+        CustomerListParameters second = new CustomerListParameters();
+        second.setOrderBy(Collections.singletonList(Arrays.asList("name", "asc")));
+
+        assertEquals(first, second);
+        assertEquals(first.hashCode(), second.hashCode());
     }
 
     @Test
@@ -150,19 +177,31 @@ public class CustomerManagerTest {
         http.assertNoRequests();
     }
 
+    /** Regression: a {@code null} body was sent as the JSON text {@code null}. */
+    @Test
+    public void aNullRequestIsRejectedBeforeSending() {
+        final CustomerManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getCustomersList(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomer("CUST-1", null));
+        http.assertNoRequests();
+    }
+
     @Test
     public void customerIdsAreRejectedWhenEmptyAndStayInOneSegment() throws Exception {
         final CustomerManager manager = manager();
         http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomer("", storeRequest()));
         http.expectThrows(IllegalArgumentException.class, () -> manager.deleteCustomer(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomer("CUST/1", storeRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteCustomer("..\\CUST"));
         http.assertNoRequests();
         http.respondToAll(200, CUSTOMER);
 
-        manager.updateCustomer("CUST/1", storeRequest());
-        manager.deleteCustomer("CUST/1");
+        manager.updateCustomer("CUST 1", storeRequest());
+        manager.deleteCustomer("CUST?1");
 
-        assertEquals(CUSTOMERS_EP + "/CUST%2F1", http.request(0).getUri().getRawPath());
-        assertEquals(CUSTOMERS_EP + "/CUST%2F1", http.request(1).getUri().getRawPath());
+        assertEquals(CUSTOMERS_EP + "/CUST%201", http.request(0).getUri().getRawPath());
+        assertEquals(CUSTOMERS_EP + "/CUST%3F1", http.request(1).getUri().getRawPath());
     }
 
     @Test

@@ -8,11 +8,14 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Creates an address book contact with {@link AddressBookManager#createContact} and deletes it with
- * {@link AddressBookManager#deleteContact}.
+ * Creates an address book contact with the deprecated {@link AddressBookManager#createContact} and deletes it with the
+ * deprecated {@link AddressBookManager#deleteContact}. New code uses {@code AddressBookManagerV5.addContact} and
+ * {@code deleteContacts}; see {@link CreateAddressBookContact} and {@link DeleteContactsV5}.
  */
 public class DeleteAddressBookContact {
 
+    // Shows a deprecated V4 address_book.php method (obsolete in the C# SDK) until it is removed.
+    @SuppressWarnings("deprecation")
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");
         AddressBookManager addressBookManager = new AddressBookManager(apiKey);

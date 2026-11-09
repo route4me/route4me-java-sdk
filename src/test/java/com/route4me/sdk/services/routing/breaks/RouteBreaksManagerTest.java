@@ -10,7 +10,6 @@ import java.util.Map;
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 
 /**
  * Unit tests for {@link RouteBreaksManager}: inserting breaks into routes on the V5
@@ -90,18 +89,22 @@ public class RouteBreaksManagerTest {
     }
 
     @Test
-    public void nullAmountDoesNotThrowNullPointerException() throws Exception {
-        RouteBreaksManager manager = manager();
-        http.respond(200, json("{'status':true}"));
+    public void breaksNeedADuration() {
+        final RouteBreaksManager manager = manager();
 
-        try {
-            manager.insertBreakAfterCertainTravelTime(900, null, true, "ROUTE-A1");
-        } catch (IllegalArgumentException rejected) {
-            assertTrue("a clear validation error is fine", rejected.getMessage() != null);
-            return;
-        } catch (NullPointerException npe) {
-            fail("null amount must be rejected clearly or handled, not cause an NPE");
-        }
-        http.request().assertPath(BREAKS_EP);
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.insertBreakAfterCertainElapsed(null, 3600, false, "ROUTE-A1"));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void nullAmountIsRefusedBeforeSending() {
+        final RouteBreaksManager manager = manager();
+
+        IllegalArgumentException refused = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.insertBreakAfterCertainTravelTime(900, null, true, "ROUTE-A1"));
+
+        assertTrue(refused.getMessage(), refused.getMessage().contains("amount"));
+        http.assertNoRequests();
     }
 }

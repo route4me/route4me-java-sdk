@@ -3,6 +3,7 @@ package com.route4me.sdk.services.addressbarcode;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.responses.StatusResponse;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -12,7 +13,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class AddressBarcodeManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String ADDRESS_BARCODES_EP = V5_BASE + "/address-barcodes";
 
     /**
@@ -32,14 +32,6 @@ public class AddressBarcodeManager extends Manager {
      */
     public AddressBarcodeManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
     }
 
     /**
@@ -84,9 +76,7 @@ public class AddressBarcodeManager extends Manager {
      * @throws IllegalArgumentException if a required field is missing; nothing is sent
      */
     public StatusResponse saveAddressBarcodes(SaveAddressBarcodesRequest request) throws APIException {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
+        requireRequest(request);
         requireText(request.getRouteId(), "route_id");
         if (request.getRouteDestinationId() == null) {
             throw new IllegalArgumentException("route_destination_id is required");

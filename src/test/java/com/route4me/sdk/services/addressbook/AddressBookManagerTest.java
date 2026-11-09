@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.addressbook;
 
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -44,6 +45,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void createContactPostsTheContact() throws Exception {
         AddressBookManager manager = manager();
         http.respondWithFixture(200, "contact.json");
@@ -60,6 +62,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void updateContactPutsTheContact() throws Exception {
         AddressBookManager manager = manager();
         http.respondWithFixture(200, "contact.json");
@@ -79,8 +82,7 @@ public class AddressBookManagerTest {
 
         Contact contact = manager.getContact(12345);
 
-        http.request().assertEndpoint("GET", HOST, ADDRESS_BOOK_EP).assertNoBody();
-        assertTrue(http.request().query("address_id").contains("12345"));
+        http.request().assertEndpoint("GET", HOST, ADDRESS_BOOK_EP).assertNoBody().assertQuery("address_id", "12345");
         assertEquals("Example Bakery", contact.getAddressAlias());
     }
 
@@ -95,12 +97,24 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void emptyResponsesDoNotThrow() throws Exception {
         AddressBookManager manager = manager();
         http.respondWithoutBody(200).respondWithoutBody(200);
 
         assertNull(manager.getContacts(new ContactsRequest()));
         assertFalse(manager.deleteContact(Arrays.<Number>asList(12345)));
+    }
+
+    /** Regression: a {@code null} ID threw a {@code NullPointerException} with no message. */
+    @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
+    public void aMissingIdOrRequestIsRejectedBeforeSending() {
+        final AddressBookManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getContact(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getContacts(null));
+        http.assertNoRequests();
     }
 
     @Test
@@ -114,6 +128,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void getContactsSendsIdsAndQueryParameters() throws Exception {
         AddressBookManager manager = manager();
         http.respondWithFixture(200, "contacts.json").respondWithFixture(200, "contacts.json");
@@ -139,6 +154,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void deleteContactSendsTheIdsInTheBody() throws Exception {
         AddressBookManager manager = manager();
         http.respond(200, json("{'status':true}"));
@@ -162,6 +178,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void createContactSendsTheMemberId() throws Exception {
         AddressBookManager manager = manager();
         http.respondWithFixture(200, "contact.json");
@@ -198,6 +215,19 @@ public class AddressBookManagerTest {
         assertEquals("200 Example Ave", ((List<?>) rows.getResults().get(1)).get(1));
         assertEquals(12345.0, ((List<?>) rows.getResults().get(0)).get(0));
         assertEquals("100 Example St", ((Map<?, ?>) objects.getResults().get(0)).get("address_1"));
+    }
+
+    @Test
+    public void searchesAndNewGroupsRejectMissingInputBeforeSending() {
+        final AddressBookManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.searchAddressBookContactsByFilter(null, 0, 10));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.searchAddressBookContactsByFilter(new AddressBookFilterSearchRequest(), 0, 10));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.searchAddressBookLocation(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.addAddressBookGroup(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.addAddressBookGroup(new AddressBookGroup()));
+        http.assertNoRequests();
     }
 
     @Test
@@ -326,6 +356,7 @@ public class AddressBookManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
     public void errorBecomesApiException() {
         final AddressBookManager manager = manager();
         http.respondWithFixture(400, "error_400.json");

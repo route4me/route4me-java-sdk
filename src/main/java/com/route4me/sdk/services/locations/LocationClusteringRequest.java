@@ -3,6 +3,7 @@ package com.route4me.sdk.services.locations;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * The body of {@link LocationManager#getLocationsClustering(LocationClusteringRequest)}: the location filters and
@@ -10,6 +11,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class LocationClusteringRequest extends LocationCombinedRequest {
     /** Clustering configuration parameters ({@code clustering}). */
     @SerializedName("clustering")

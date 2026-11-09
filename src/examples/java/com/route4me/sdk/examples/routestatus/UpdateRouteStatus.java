@@ -5,13 +5,20 @@ import com.route4me.sdk.services.routestatus.RouteStatusManager;
 import com.route4me.sdk.services.routestatus.RouteStatusRequest;
 import com.route4me.sdk.services.routestatus.RouteStatusResponse;
 
-/** Changes the status of a route with {@link RouteStatusManager#updateRouteStatus}. */
+/**
+ * Marks a route as started with {@link RouteStatusManager#updateRouteStatus}. Set {@code ROUTE_ID} to a route of a
+ * test account: the example changes its status.
+ */
 public class UpdateRouteStatus {
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        if (routeId == null || routeId.isEmpty()) {
+            System.err.println("Set ROUTE_ID to the ID of a route of a test account; this example changes its status.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RouteStatusManager manager = new RouteStatusManager(apiKey);
         try {
-            String routeId = "ROUTE_ID_HERE";
             RouteStatusRequest request = new RouteStatusRequest();
             request.setStatus("started");
             request.setLatitude(40.7128);

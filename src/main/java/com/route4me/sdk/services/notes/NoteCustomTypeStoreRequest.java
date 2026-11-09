@@ -9,4 +9,9 @@ public class NoteCustomTypeStoreRequest {
     @SerializedName("note_custom_type") private String noteCustomType;
     /** Note custom type values (required) ({@code note_custom_type_values}). */
     @SerializedName("note_custom_type_values") private List<String> noteCustomTypeValues;
+    /**
+     * The kind of field: {@code 1} select, {@code 2} text, {@code 3} numeric, {@code 4} integer
+     * ({@code note_custom_field_type}).
+     */
+    @SerializedName("note_custom_field_type") private Integer noteCustomFieldType;
 }

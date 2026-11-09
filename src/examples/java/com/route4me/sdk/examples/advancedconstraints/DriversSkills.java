@@ -5,6 +5,7 @@
  */
 package com.route4me.sdk.examples.advancedconstraints;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.Constants.AlgorithmType;
@@ -26,7 +27,8 @@ import java.util.List;
 
 /**
  * Optimizes routes where stops need driver skills (advanced constraints with tags), with {@link
- * RoutingManager#runOptimization}.
+ * RoutingManager#runOptimization}. Set {@code MEMBER_IDS} to the comma-separated member IDs of drivers of a test
+ * account: the example assigns them to both fleets of the optimization. Without them, the example stops.
  */
 public class DriversSkills {
 
@@ -35,6 +37,16 @@ public class DriversSkills {
     //**********************************************************************
 
     public static void main(String[] args) {
+        //Drivers IDs
+        List<Integer> route4meMembersID = ExampleInput.toIntegers("MEMBER_IDS", System.getenv("MEMBER_IDS"));
+        if (route4meMembersID == null) {
+            return;
+        }
+        if (route4meMembersID.isEmpty()) {
+            System.err.println("Set MEMBER_IDS to the comma-separated member IDs of drivers of a test account; this"
+                    + " example assigns them to the fleets of an optimization.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         OptimizationParameters optParameters = new OptimizationParameters();
@@ -57,9 +69,6 @@ public class DriversSkills {
         //Tags
         List<String> skills1 = Arrays.asList("Class A CDL");
         List<String> skills2 = Arrays.asList("Class B CDL");
-
-        //Drivers IDs
-        List<Integer> route4meMembersID = Arrays.asList(1459842, 1481916, 1481918);
 
         // Feets
         // AdvancedConstraintsExample 1
@@ -136,7 +145,8 @@ public class DriversSkills {
         try {
             DataObject responseObject = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-            System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+            System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                    : OptimizationState.get(responseObject.getState().intValue())));
             if (responseObject.getAddresses() != null) {
                 for (Iterator<Address> it = responseObject.getAddresses().iterator(); it.hasNext();) {
                     address = it.next();

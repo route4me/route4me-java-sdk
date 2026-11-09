@@ -4,6 +4,7 @@ import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
 import java.util.List;
+import java.util.Map;
 
 /** The body of {@link RouteDestinationsManager#getDestinationsList(GetDestinationsRequest)}. */
 @Data
@@ -40,4 +41,19 @@ public class GetDestinationsRequest {
      */
     @SerializedName("fields")
     private List<String> fields;
+
+    /**
+     * Negation filters, combined with {@code filters}: only destinations that match none of the values, by field
+     * name, such as {@code address_stop_type} or {@code stop_status_id}; each value is one value or a list
+     * ({@code not_filters}).
+     */
+    @SerializedName("not_filters")
+    private Map<String, Object> notFilters;
+
+    /**
+     * Route-level filters, as in the route lists: {@code query}, {@code search_query}, {@code filters},
+     * {@code exclude_ids}, {@code timezone}, {@code group_by} and {@code exist_fields} ({@code route}).
+     */
+    @SerializedName("route")
+    private Map<String, Object> route;
 }

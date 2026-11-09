@@ -36,6 +36,14 @@ public class ThreadBasedGeocoding implements Callable<Address> {
         this.options = options;
     }
 
+    /**
+     * Returns a new builder for a path on {@code https://api.route4me.com}, as
+     * {@link com.route4me.sdk.Manager}'s own {@code defaultBuilder} does. The API key is added
+     * by the manager when the request is sent.
+     *
+     * @param endpoint the path, such as {@code /api/address.php}
+     * @return a new builder
+     */
     protected static URIBuilder defaultBuilder(String endpoint) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
@@ -76,8 +84,10 @@ public class ThreadBasedGeocoding implements Callable<Address> {
                 if (geocodes != null && geocodes.length > 0 && geocodes[0] != null) {
                     geocodes = fixGeocodings(geocodes);
                     geocodedAddress.setGeocodings(Arrays.asList(geocodes));
-                    geocodedAddress.setLatitude(geocodes[0].getCoordinates().getLatitude());
-                    geocodedAddress.setLongitude(geocodes[0].getCoordinates().getLongitude());
+                    // fixGeocodings copied the coordinates, when there are any, to the
+                    // latitude and longitude of each geocoding.
+                    geocodedAddress.setLatitude(geocodes[0].getLatitude());
+                    geocodedAddress.setLongitude(geocodes[0].getLongitude());
                 }
                 break;
             case SIMPLE:
@@ -95,12 +105,21 @@ public class ThreadBasedGeocoding implements Callable<Address> {
         return geocodedAddress;
     }
 
+    /**
+     * Copies the {@code coordinates} of each geocoding to its latitude and longitude, as
+     * 1.16.1 did. A geocoding without {@code coordinates} ({@link Geocodings#getCoordinates()}
+     * then answers 0, 0) keeps the latitude and longitude it came with, instead of losing them.
+     */
     private Geocodings[] fixGeocodings(Geocodings[] geocodes) {
         // This is done to maintain the backward compatibility
         for (Geocodings g : geocodes) {
-            if (g != null) {
-                g.setLatitude(g.getCoordinates().getLatitude());
-                g.setLongitude(g.getCoordinates().getLongitude());
+            if (g == null) {
+                continue;
+            }
+            GeoCoordinates coordinates = g.getCoordinates();
+            if (coordinates.getLatitude() != 0.0 || coordinates.getLongitude() != 0.0) {
+                g.setLatitude(coordinates.getLatitude());
+                g.setLongitude(coordinates.getLongitude());
             }
         }
         return geocodes;

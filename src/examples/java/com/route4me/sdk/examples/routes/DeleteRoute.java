@@ -1,22 +1,25 @@
 package com.route4me.sdk.examples.routes;
 
 import com.route4me.sdk.exception.APIException;
-import com.route4me.sdk.services.routing.Route;
 import com.route4me.sdk.services.routing.RouteDeletedResponse;
-import com.route4me.sdk.services.routing.RoutesRequest;
 import com.route4me.sdk.services.routing.RoutingManager;
 
-import java.util.List;
-
-/** Takes a route from {@link RoutingManager#getRoutes} and deletes it with {@link RoutingManager#deleteRoutes}. */
+/**
+ * Deletes one route with {@link RoutingManager#deleteRoutes}. Set {@code ROUTE_ID} to a route of a test account: the
+ * example deletes it.
+ */
 public class DeleteRoute {
 
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        if (routeId == null || routeId.isEmpty()) {
+            System.err.println("Set ROUTE_ID to the ID of a route of a test account; this example deletes it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
         try {
-            List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(3).setOffset(0));
-            RouteDeletedResponse deleted = routeManager.deleteRoutes(routes.get(0).getId());
+            RouteDeletedResponse deleted = routeManager.deleteRoutes(routeId);
             System.out.println(deleted);
         } catch (APIException e) {
             //handle exceptions

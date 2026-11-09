@@ -40,7 +40,9 @@ jobs:
         run: |
           VERSION="${GITHUB_REF_NAME#v}"
           echo "Releasing version: $VERSION"
-          mvn versions:set -DnewVersion="$VERSION" -DgenerateBackupPom=false -B
+          # An exact plugin version: the job holds the signing key and the Central credentials,
+          # so it must not resolve whatever release is newest.
+          mvn -B org.codehaus.mojo:versions-maven-plugin:2.21.0:set -DnewVersion="$VERSION" -DgenerateBackupPom=false
 
       - name: Build and Deploy to Maven Central
         run: mvn clean deploy -DskipTests -B
