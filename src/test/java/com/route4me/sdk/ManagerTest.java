@@ -796,6 +796,21 @@ public class ManagerTest {
     }
 
     @Test
+    public void anErrorBodyThatQuotesAUrlKeepsItsErrors() {
+        final TestManager manager = manager();
+        http.respond(401, json("{'error':'bad key for https://api.route4me.com/x?api_key=OTHER-KEY',"
+                + "'errors':['Invalid key'],'status':false}"));
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals(Arrays.asList("Invalid key", "bad key for https://api.route4me.com/x?api_key=REDACTED"),
+                error.getErrors());
+        assertTrue(error.getMessage(), error.getMessage().endsWith(": Invalid key"));
+        assertFalse(error.getResponseBody(), error.getResponseBody().contains("OTHER-KEY"));
+    }
+
+    @Test
     public void closingTheManagerDuringARequestGivesAnApiException() throws Exception {
         final TestManager manager = manager();
         http.answerNextRequest(request -> {
