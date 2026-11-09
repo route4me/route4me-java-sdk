@@ -5,20 +5,32 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
 import com.route4me.sdk.services.addressbook.AddressExportRequest;
 
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Exports some contacts to a spreadsheet, in a background job, with {@link AddressBookManagerV5#exportAddresses}, then
  * follows the job with {@link AddressBookManagerV5#getExportStatus} and downloads the file with
- * {@link AddressBookManagerV5#getExportResult}.
+ * {@link AddressBookManagerV5#getExportResult}. Set {@code CONTACT_IDS} to the comma-separated IDs of some of your
+ * contacts.
  */
 public class ExportAddressesV5 {
     public static void main(String[] args) {
+        String ids = System.getenv("CONTACT_IDS");
+        if (ids == null || ids.trim().isEmpty()) {
+            System.err.println("Set CONTACT_IDS to the comma-separated IDs of some of your contacts; this example"
+                    + " exports them.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         AddressBookManagerV5 manager = new AddressBookManagerV5(apiKey);
         try {
             AddressExportRequest request = new AddressExportRequest();
-            request.setIds(Arrays.asList(12345L, 12346L));
+            List<Long> contactIds = new ArrayList<>();
+            for (String id : ids.trim().split("\\s*,\\s*")) {
+                contactIds.add(Long.valueOf(id));
+            }
+            request.setIds(contactIds);
             request.setFilename("contacts");
             request.setExtension("xlsx");
             request.setTimezone("America/New_York");

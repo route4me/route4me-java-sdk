@@ -4,13 +4,18 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.orders.Order;
 import com.route4me.sdk.services.orders.OrdersManager;
 
-/** Gets one order with {@link OrdersManager#getOrder}. */
+/** Gets one order with {@link OrdersManager#getOrder}. Set {@code ORDER_ID} to the ID of one of your orders. */
 public class GetOrderById {
     public static void main(String[] args) {
+        String orderId = System.getenv("ORDER_ID");
+        if (orderId == null || orderId.isEmpty()) {
+            System.err.println("Set ORDER_ID to the ID of one of your orders; this example reads it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrdersManager manager = new OrdersManager(apiKey);
         try {
-            Order order = manager.getOrder(1317);
+            Order order = manager.getOrder(Long.parseLong(orderId));
             System.out.println(order);
         } catch (APIException e) {
             //handle exception

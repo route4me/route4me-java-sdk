@@ -7,17 +7,22 @@ import com.route4me.sdk.services.orders.UpdateCustomUserFieldRequest;
 
 /**
  * Renames an order custom field of {@code /orders/custom-fields} with {@link OrderManagerV5#updateOrderCustomField}.
- * Set {@code ORDER_CUSTOM_FIELD_ID} to the ID of one of your fields.
+ * Set {@code ORDER_CUSTOM_FIELD_ID} to the ID of a field of a test account: the example renames it.
  */
 public class UpdateOrderCustomFieldV5 {
     public static void main(String[] args) {
+        String fieldId = System.getenv("ORDER_CUSTOM_FIELD_ID");
+        if (fieldId == null || fieldId.isEmpty()) {
+            System.err.println("Set ORDER_CUSTOM_FIELD_ID to the ID of an order custom field of a test account; this"
+                    + " example renames it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrderManagerV5 manager = new OrderManagerV5(apiKey);
         UpdateCustomUserFieldRequest request = new UpdateCustomUserFieldRequest();
         request.setOrderCustomFieldLabel("Gate access code");
         try {
-            OrderCustomFieldResource updated = manager.updateOrderCustomField(
-                    Long.parseLong(System.getenv("ORDER_CUSTOM_FIELD_ID")), request);
+            OrderCustomFieldResource updated = manager.updateOrderCustomField(Long.parseLong(fieldId), request);
             System.out.println("Updated field: " + updated.getData().getOrderCustomFieldLabel());
         } catch (APIException e) {
             e.printStackTrace();

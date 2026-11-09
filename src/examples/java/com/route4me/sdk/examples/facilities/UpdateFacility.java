@@ -10,10 +10,15 @@ import java.util.Collections;
 
 /**
  * Updates a facility with {@link FacilityManager#updateFacility}; the alias, address, coordinates and types are
- * required. Set {@code FACILITY_ID} to one of your facilities.
+ * required. Set {@code FACILITY_ID} to a facility of a test account: the example changes it.
  */
 public class UpdateFacility {
     public static void main(String[] args) {
+        String facilityId = System.getenv("FACILITY_ID");
+        if (facilityId == null || facilityId.isEmpty()) {
+            System.err.println("Set FACILITY_ID to the ID of a facility of a test account; this example changes it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         FacilityManager manager = new FacilityManager(apiKey);
         FacilityCoordinates coordinates = new FacilityCoordinates();
@@ -28,7 +33,7 @@ public class UpdateFacility {
         request.setCoordinates(coordinates);
         request.setFacilityTypes(Collections.singletonList(type));
         try {
-            FacilityResource updated = manager.updateFacility(System.getenv("FACILITY_ID"), request);
+            FacilityResource updated = manager.updateFacility(facilityId, request);
             System.out.println("Updated facility: " + updated.getFacilityAlias());
         } catch (APIException e) {
             e.printStackTrace();
