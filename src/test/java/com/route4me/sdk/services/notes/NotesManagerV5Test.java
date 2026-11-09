@@ -34,7 +34,7 @@ public class NotesManagerV5Test {
     private static NoteStoreRequest storeRequest() {
         NoteStoreRequest request = new NoteStoreRequest();
         request.setRouteId("ROUTE-A1");
-        request.setAddressId(5002);
+        request.setAddressId(5002L);
         request.setNoteContents("Left at the door");
         request.setDeviceType("web");
         request.setLat(40.5);
@@ -71,7 +71,23 @@ public class NotesManagerV5Test {
         http.request(3).assertEndpoint("DELETE", HOST, NOTES_EP + "/9001").assertNoBody();
         assertEquals("NOTE-UUID-1", created.getNoteUuid());
         assertEquals("64-bit stop IDs", Long.valueOf(3000000002L), created.getRouteDestinationId());
-        assertEquals(Integer.valueOf(9001), deleted.getNoteId());
+        assertEquals(Long.valueOf(9001), deleted.getNoteId());
+    }
+
+    @Test
+    public void noteAndAddressIdsBeyondTheIntRangeAreRead() throws Exception {
+        NotesManagerV5 manager = manager();
+        http.respond(200, json("{'note_id':3000000001,'route_destination_id':3000000002}"))
+                .respond(200, json("{'status':true,'note_id':3000000001}"));
+        NoteStoreRequest request = storeRequest();
+        request.setAddressId(3000000002L);
+
+        RouteNoteResource created = manager.createNote(request);
+        DeleteNoteResponse deleted = manager.deleteNote("3000000001");
+
+        http.request(0).assertJson("address_id", 3000000002L);
+        assertEquals(Long.valueOf(3000000001L), created.getNoteId());
+        assertEquals(Long.valueOf(3000000001L), deleted.getNoteId());
     }
 
     @Test

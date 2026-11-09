@@ -7,5 +7,5 @@ public class DeleteNoteResponse {
     /** Status of deletion ({@code status}). */
     @SerializedName("status") private Boolean status;
     /** Deleted note ID ({@code note_id}). */
-    @SerializedName("note_id") private Integer noteId;
+    @SerializedName("note_id") private Long noteId;
 }
