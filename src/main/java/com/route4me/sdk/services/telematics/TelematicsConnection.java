@@ -5,73 +5,192 @@
  */
 package com.route4me.sdk.services.telematics;
 
+import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 import com.route4me.sdk.queryconverter.QueryParameter;
+import com.route4me.sdk.utils.LenientBooleanAdapter;
+import com.route4me.sdk.utils.LenientMapAdapterFactory;
+import java.io.IOException;
 import java.util.Map;
 import lombok.Data;
 import lombok.ToString;
 
 /**
- *
- * @author Route4Me
+ * A connection between a member and a telematics vendor, with the vendor credentials. The credential fields are
+ * left out of {@code toString()}.
  */
 @Data
 public class TelematicsConnection {
 
+    /** The name of the connection ({@code name}). */
     @QueryParameter("name")
     @SerializedName("name")
     private String name;
+    /** The name of the telematics vendor ({@code vendor}). */
     @QueryParameter("vendor")
     @SerializedName("vendor")
     private String vendor;
+    /** The host or server of the vendor, for vendors that need one ({@code host}). */
     @QueryParameter("host")
     @SerializedName("host")
     private String host;
+    /**
+     * The API key at the vendor, for vendors that need one; do not log it ({@code api_key}). The V4 connection
+     * methods refuse a connection that has one, since their request carries the Route4Me API key as {@code api_key};
+     * {@link TelematicsManager#createTelematicsConnectionV5(TelematicsConnection)} and
+     * {@link TelematicsManager#updateTelematicsConnectionV5(String, TelematicsConnection)} send it as
+     * {@code vendor_api_key}.
+     */
     @ToString.Exclude
     @QueryParameter("api_key")
     @SerializedName("api_key")
     private String apiKey;
+    /** The account ID at the vendor, for vendors that need one ({@code account_id}). */
     @QueryParameter("account_id")
     @SerializedName("account_id")
     private String accountID;
+    /** The user name at the vendor, for vendors that need one ({@code username}). */
     @QueryParameter("username")
     @SerializedName("username")
     private String username;
+    /** The password at the vendor, for vendors that need one; do not log it ({@code password}). */
     @ToString.Exclude
     @QueryParameter("password")
     @SerializedName("password")
     private String password;
+    /** The token of the connection; a credential, so do not log it ({@code connection_token}). */
     @ToString.Exclude
     @QueryParameter("connection_token")
     @SerializedName("connection_token")
     private String connectionToken;
+    /** The ID of the telematics vendor ({@code vendor_id}). */
     @QueryParameter("vendor_id")
     @SerializedName("vendor_id")
     private Integer vendorID;
+    /**
+     * Whether vehicle tracking through this connection is on, as {@code 1} or {@code 0} ({@code is_enabled}). A
+     * reply that sends it as {@code true} or {@code false}, as the V5 API does, is read as {@code 1} or {@code 0}.
+     */
     @QueryParameter("is_enabled")
     @SerializedName("is_enabled")
+    @JsonAdapter(EnabledFlagAdapter.class)
     private Integer isEnabled;
+    /** Vehicle tracking interval in seconds ({@code vehicle_position_refresh_rate}). */
     @QueryParameter("vehicle_position_refresh_rate")
     @SerializedName("vehicle_position_refresh_rate")
     private Integer vehiclePositionRefreshRate;
+    /** Maximum idle time in seconds ({@code max_idle_time}). */
     @SerializedName("max_idle_time")
     private Integer maxIdleTime;
+    /** Synchronized vehicles count ({@code synced_vehicles_count}). */
     @SerializedName("synced_vehicles_count")
     private Integer syncedVehiclesCount;
+    /** Total vehicles count ({@code total_vehicles_count}). */
     @SerializedName("total_vehicles_count")
     private Integer totalVehiclesCount;
+    /** Total addresses count ({@code total_addresses_count}). */
     @SerializedName("total_addresses_count")
     private Integer totalAddressesCount;
+    /** When the vehicles were last reloaded, as a Unix timestamp ({@code last_vehicles_reload}). */
     @SerializedName("last_vehicles_reload")
     private String lastVehiclesReload;
+    /** When the addresses were last reloaded, as a Unix timestamp ({@code last_addresses_reload}). */
     @SerializedName("last_addresses_reload")
     private String lastAddressesReload;
+    /** When the positions were last reloaded, as a Unix timestamp ({@code last_position_reload}). */
     @SerializedName("last_position_reload")
     private String lastPositionReload;
-    @QueryParameter("metadata")
+    /**
+     * Metadata, custom key-value storage ({@code metadata}). The connection methods send it as the text of a JSON
+     * object, as the telematics API reads it; a key whose value is {@code null} is sent as {@code null}, which an
+     * update reads as "remove this key". A whole number is read as a {@code Long} and any other number as a
+     * {@code Double}, so that metadata read from the API and sent back keeps {@code 12345} as {@code 12345}; an
+     * empty JSON array reads as an empty map.
+     */
     @SerializedName("metadata")
+    @JsonAdapter(MetadataAdapter.class)
     private Map<String, Object> metadata;
+    /**
+     * Whether to check the credentials with the vendor before saving ({@code validate_remote_credentials}), such as
+     * {@code "true"} or {@code "1"}.
+     */
     @QueryParameter("validate_remote_credentials")
-    String validateRemoteCredentials;
+    private String validateRemoteCredentials;
 
+    /**
+     * Reads {@code is_enabled} from a number, a boolean ({@code true} is {@code 1}) or a string, and writes it as a
+     * number. A whole number, or a string of one, is kept as it is; any other number or string reads as {@code 1} or
+     * {@code 0}: a number unless it is 0, and a string as {@link LenientBooleanAdapter#readString(String)} reads it.
+     * An object or an array is skipped and reads as {@code null}. So a flag never fails the reply.
+     */
+    static final class EnabledFlagAdapter extends TypeAdapter<Integer> {
+
+        @Override
+        public void write(JsonWriter out, Integer value) throws IOException {
+            if (value == null) {
+                out.nullValue();
+            } else {
+                out.value(value);
+            }
+        }
+
+        @Override
+        public Integer read(JsonReader in) throws IOException {
+            JsonToken token = in.peek();
+            if (token == JsonToken.NULL) {
+                in.nextNull();
+                return null;
+            }
+            if (token == JsonToken.BOOLEAN) {
+                return in.nextBoolean() ? 1 : 0;
+            }
+            if (token == JsonToken.NUMBER) {
+                double number = in.nextDouble();
+                if (number == (int) number) {
+                    return (int) number;
+                }
+                return number != 0 ? 1 : 0;
+            }
+            if (token == JsonToken.BEGIN_OBJECT || token == JsonToken.BEGIN_ARRAY) {
+                in.skipValue();
+                return null;
+            }
+            String text = in.nextString().trim();
+            try {
+                return Integer.valueOf(text);
+            } catch (NumberFormatException ex) {
+                return LenientBooleanAdapter.readString(text) ? 1 : 0;
+            }
+        }
+    }
+
+    /**
+     * Reads {@code metadata} with whole numbers as {@code Long} and other numbers as {@code Double}, and an empty
+     * JSON array as an empty map; Gson's default reads every number of an {@code Object} value as a
+     * {@code Double}. Writing is Gson's own.
+     */
+    static final class MetadataAdapter extends TypeAdapter<Map<String, Object>> {
+        /** Gson's map adapter, with the number policy and the empty-array rule. */
+        private static final TypeAdapter<Map<String, Object>> MAPS = LenientMapAdapterFactory.register(
+                new GsonBuilder().setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE))
+                .create().getAdapter(new TypeToken<Map<String, Object>>() {
+                });
+
+        @Override
+        public void write(JsonWriter out, Map<String, Object> value) throws IOException {
+            MAPS.write(out, value);
+        }
+
+        @Override
+        public Map<String, Object> read(JsonReader in) throws IOException {
+            return MAPS.read(in);
+        }
+    }
 }

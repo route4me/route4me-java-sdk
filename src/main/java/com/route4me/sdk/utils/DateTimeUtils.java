@@ -23,19 +23,27 @@
  */
 package com.route4me.sdk.utils;
 
-/**
- *
- * @author route4me
- */
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
 import java.time.format.DateTimeFormatter;
 
+/** Date conversions for the route API. */
 public class DateTimeUtils {
 
-    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss:SSSXXXXX");
+    /** Parses a local date and time with its offset, such as {@code 2026-10-22T08:00:00:000+02:00}. */
+    public static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern(
+            "uuuu-MM-dd'T'HH:mm:ss:SSSXXXXX");
+    /** Formats a date as {@code YYYY-MM-DD}. */
     public static final DateTimeFormatter DATE_FORMATTER = DateTimeFormatter.ofPattern("uuuu-MM-dd");
 
+    /**
+     * Converts a local date and time to the UTC date the route API takes.
+     *
+     * @param dateString a date and time in {@link #DATE_TIME_FORMATTER} format, such as
+     *     {@code 2026-10-22T08:00:00:000+02:00}
+     * @return the UTC date of that instant, as {@code YYYY-MM-DD}
+     * @throws java.time.format.DateTimeParseException if the text is not in that format
+     */
     public static String localDateTimeToUTCParser(String dateString) {
         OffsetDateTime odtInstanceAtOffset = OffsetDateTime.parse(dateString, DATE_TIME_FORMATTER);
         OffsetDateTime odtInstanceAtUTC = odtInstanceAtOffset.withOffsetSameInstant(ZoneOffset.UTC);

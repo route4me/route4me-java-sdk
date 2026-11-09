@@ -6,7 +6,8 @@ import lombok.Data;
 /**
  * The answer to {@link TrackingManager#setGPS(GPSPosition)}.
  *
- * <p>Matches {@code SetGpsResponse} of the C# SDK.
+ * <p>Matches {@code SetGpsResponse} of the C# SDK. When the server answers in another format than JSON,
+ * {@code status} and {@code txId} are {@code null} and {@code answerText} holds the answer.
  */
 @Data
 public class SetGpsResponse {
@@ -22,4 +23,10 @@ public class SetGpsResponse {
      */
     @SerializedName("tx_id")
     private String txId;
+
+    /**
+     * The answer as the server sent it, when it is not a JSON object (for example with {@code format} {@code csv},
+     * {@code serialized} or {@code xml}); {@code null} when the answer was JSON. It is never sent or read as JSON.
+     */
+    private transient String answerText;
 }

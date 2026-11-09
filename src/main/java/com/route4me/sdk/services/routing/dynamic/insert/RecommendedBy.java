@@ -23,18 +23,17 @@
  */
 package com.route4me.sdk.services.routing.dynamic.insert;
 
-/**
- *
- * @author route4me
- */
+/** What the ranking of the matched routes minimises; {@code toString()} and {@link #getValue()} give the API value. */
 public enum RecommendedBy {
 
+    /** The added distance ({@code distance}). */
     DISTANCE("distance"),
+    /** The added duration ({@code duration}). */
     DURATION("duration");
 
     private final String value;
 
-    private RecommendedBy(String value) {
+    RecommendedBy(String value) {
         this.value = value;
     }
 
@@ -44,7 +43,9 @@ public enum RecommendedBy {
     }
 
     /**
-     * @return the value
+     * Returns the API value of the metric.
+     *
+     * @return the value, such as {@code distance}
      */
     public String getValue() {
         return value;

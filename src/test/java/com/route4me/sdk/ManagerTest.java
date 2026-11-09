@@ -5,24 +5,35 @@ import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.http.Route4MeRedirectStrategy;
 import com.route4me.sdk.queryconverter.QueryParameter;
+import com.route4me.sdk.testsupport.EndpointRegistry;
 import com.route4me.sdk.testsupport.MockHttp;
 import com.route4me.sdk.utils.Sanitizer;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpVersion;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.RedirectException;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.message.BasicStatusLine;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.sun.net.httpserver.HttpServer;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
+import java.net.URI;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -31,8 +42,10 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -40,8 +53,10 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -92,27 +107,27 @@ public class ManagerTest {
     /** Query parameters, converted by {@code QueryConverter}. */
     static final class Params {
         @QueryParameter("limit")
-        Integer limit = 5;
+        private Integer limit = 5;
         @QueryParameter("active")
-        Boolean active = Boolean.TRUE;
+        private Boolean active = Boolean.TRUE;
         @QueryParameter("skipped")
-        String skipped;
+        private String skipped;
     }
 
     /** V5 query parameters: a list, a one-element array, a nested list, a map and a flag. */
     static final class ArrayParams {
         @QueryParameter("ids")
-        List<String> ids = Arrays.asList("1", "2");
+        private List<String> ids = Arrays.asList("1", "2");
         @QueryParameter("one")
-        String[] one = {"only"};
+        private String[] one = {"only"};
         @QueryParameter("order_by")
-        List<List<String>> orderBy = Collections.singletonList(Arrays.asList("name", "asc"));
+        private List<List<String>> orderBy = Collections.singletonList(Arrays.asList("name", "asc"));
         @QueryParameter("filters")
-        Map<String, Object> filters = new LinkedHashMap<>();
+        private Map<String, Object> filters = new LinkedHashMap<>();
         @QueryParameter("active")
-        Boolean active = Boolean.FALSE;
+        private Boolean active = Boolean.FALSE;
         @QueryParameter("page")
-        Integer page = 2;
+        private Integer page = 2;
 
         ArrayParams() {
             filters.put("status", Arrays.asList(1, 2));
@@ -123,22 +138,22 @@ public class ManagerTest {
     /** A list query parameter only. */
     static final class ListParams {
         @QueryParameter("ids")
-        List<String> ids = Arrays.asList("1", "2");
+        private List<String> ids = Arrays.asList("1", "2");
     }
 
     /** A request body with one annotated and one plain field. */
     static final class Body {
         @SerializedName("route_name")
-        String routeName = "Morning";
-        String internalNote = "plain field";
+        private String routeName = "Morning";
+        private String internalNote = "plain field";
     }
 
     /** A response type. */
     static final class Reply {
         @SerializedName("route_id")
-        String routeId;
+        private String routeId;
         @SerializedName("count")
-        int count;
+        private int count;
     }
 
     /** Returns a builder for {@link #PATH} on the V4 API host. */
@@ -164,6 +179,54 @@ public class ManagerTest {
         assertEquals("https", builder.getScheme());
         assertEquals("api.route4me.com", builder.getHost());
         assertEquals("/api.v4/order.php", builder.getPath());
+    }
+
+    @Test
+    public void v5BuilderTargetsTheV5ApiHostOverHttpsAndEncodesSegments() throws Exception {
+        URIBuilder builder = Manager.v5Builder(Manager.V5_BASE + "/vehicles", "a..b c?d#e");
+        assertEquals("https", builder.getScheme());
+        assertEquals("wh.route4me.com", builder.getHost());
+        assertEquals("https://wh.route4me.com/modules/api/v5.0/vehicles/a..b%20c%3Fd%23e", builder.build().toString());
+        assertEquals("/modules/api/v5.0/orders", Manager.v5Builder(Manager.V5_BASE + "/orders").getPath());
+        http.expectThrows(IllegalArgumentException.class, () -> Manager.v5Builder(Manager.V5_BASE + "/vehicles", ".."));
+    }
+
+    @Test
+    public void v5BuilderRefusesASegmentWithASlashOrBackslash() {
+        // Some front ends decode %2F and %5C before they resolve "..", so encoding is not enough.
+        for (String id : new String[] {"a/../b", "../users", "a/b", "/", "a\\..\\b", "..\\users", "\\"}) {
+            IllegalArgumentException error = http.expectThrows(IllegalArgumentException.class,
+                    () -> Manager.v5Builder(Manager.V5_BASE + "/vehicles", "V1", id));
+            assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid value for a URL path segment"));
+        }
+        http.assertNoRequests();
+    }
+
+    /** Regression: {@code ..;x} went out unencoded, and servers that drop {@code ;params} read it as {@code ..}. */
+    @Test
+    public void v5BuilderRefusesASegmentWithASemicolon() {
+        for (String id : new String[] {"..;x", ".;", "..;", ";", "a;b", "V1;jsessionid=1"}) {
+            IllegalArgumentException error = http.expectThrows(IllegalArgumentException.class,
+                    () -> Manager.v5Builder(Manager.V5_BASE + "/vehicles", "V1", id));
+            assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid value for a URL path segment"));
+        }
+        http.assertNoRequests();
+    }
+
+    /** A reply with a boolean that the API sends as a number. */
+    static final class FlagReply {
+        @SerializedName("is_predefined")
+        private Boolean predefined;
+    }
+
+    @Test
+    public void bothMappersReadBooleansSentAsNumbers() throws Exception {
+        http.respondToAll(200, json("{'is_predefined':1}"));
+        TestManager plain = manager();
+        TestManager custom = http.install(new TestManager(MockHttp.API_KEY, new GsonBuilder()));
+
+        assertTrue(plain.makeRequest(RequestMethod.GET, builder(), "", FlagReply.class).predefined);
+        assertTrue(custom.makeRequest(RequestMethod.GET, builder(), "", FlagReply.class).predefined);
     }
 
     @Test
@@ -246,19 +309,65 @@ public class ManagerTest {
     }
 
     @Test
-    public void otherRequestsKeepTheKeyInTheQuery() throws Exception {
+    public void otherRequestsToTheApiHostsKeepTheKeyInTheQuery() throws Exception {
         TestManager manager = manager();
         http.respondToAll(200, "{}");
-        URIBuilder rapid = new URIBuilder().setScheme("https").setHost("rapid.route4me.com").setPath("/timezone");
 
         manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
         manager.makeRequest(RequestMethod.GET, wh("/modules/api/vehicles"), "", Reply.class);
         manager.makeRequest(RequestMethod.GET, wh("/api.v4/note_custom_types.php"), "", Reply.class);
-        manager.makeRequest(RequestMethod.GET, rapid, "", Reply.class);
 
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < 3; i++) {
             http.request(i).assertApiKeyInQuery();
         }
+    }
+
+    @Test
+    public void requestsToOtherHostsCarryNoKey() throws Exception {
+        TestManager manager = manager();
+        http.respondToAll(200, "{}");
+        URIBuilder rapid = new URIBuilder().setScheme("https").setHost("rapid.route4me.com").setPath("/timezone");
+
+        manager.makeRequest(RequestMethod.GET, rapid, "", Reply.class);
+        manager.makeRequest(RequestMethod.POST, rapid, "{}", Reply.class);
+
+        for (int i = 0; i < 2; i++) {
+            http.request(i).assertNoQuery("api_key");
+            assertNull(http.request(i).header("Authorization"));
+        }
+    }
+
+    @Test
+    public void onlyTheRoute4MeApiHostsReceiveTheKey() {
+        assertTrue(Manager.takesApiKey("https", "api.route4me.com", -1));
+        assertTrue(Manager.takesApiKey("https", "WH.route4me.com", 443));
+        assertFalse(Manager.takesApiKey("https", "telematics.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("https", "rapid.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("https", "api.route4me.com.example.com", -1));
+        assertFalse(Manager.takesApiKey("https", null, -1));
+    }
+
+    @Test
+    public void theKeyHostsAndTheRedirectHostsAreOneList() {
+        assertEquals("widening this list sends the key to another host: check SECURITY.md first",
+                Arrays.asList("api.route4me.com", "wh.route4me.com"), Route4MeRedirectStrategy.ALLOWED_HOSTS);
+        assertTrue("URLs are built on a key host", Manager.takesApiKey("https", builder().getHost(), -1));
+        assertTrue("URLs are built on a key host", Manager.takesApiKey("https", wh("/x").getHost(), -1));
+        List<String> hosts = new ArrayList<>(EndpointRegistry.load().getAllowedHosts());
+        hosts.addAll(Arrays.asList("telematics.route4me.com", "route4me.com", "API.Route4Me.com", "example.com"));
+        for (String host : hosts) {
+            assertEquals(host, Route4MeRedirectStrategy.isAllowed(URI.create("https://" + host + "/x")),
+                    Manager.takesApiKey("https", host, -1));
+        }
+    }
+
+    @Test
+    public void theKeyIsNeverSentWithoutTlsOrOnAnotherPort() {
+        assertFalse(Manager.takesApiKey("http", "api.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("http", "wh.route4me.com", 80));
+        assertFalse(Manager.takesApiKey(null, "api.route4me.com", -1));
+        assertFalse(Manager.takesApiKey("https", "api.route4me.com", 8443));
+        assertFalse(Manager.takesApiKey("https", "wh.route4me.com", 80));
     }
 
     @Test
@@ -427,7 +536,8 @@ public class ManagerTest {
         http.respond(200, json("{'route_id':'R1'}")).respond(200, json("[{'route_id':'R2'}]"));
 
         Reply reply = manager.makeJSONRequest(RequestMethod.POST, builder(), new Body(), new Params(), Reply.class);
-        List<Reply> replies = manager.makeJSONRequest(RequestMethod.PUT, builder(), new Body(), new Params(), listOfReplies);
+        List<Reply> replies = manager.makeJSONRequest(RequestMethod.PUT, builder(), new Body(), new Params(),
+                listOfReplies);
 
         assertEquals("R1", reply.routeId);
         assertEquals("R2", replies.get(0).routeId);
@@ -438,6 +548,26 @@ public class ManagerTest {
                     .assertNoQuery("skipped")
                     .assertContentType("application/json; charset=UTF-8")
                     .assertJson("route_name", "Morning");
+        }
+    }
+
+    @Test
+    public void jsonRequestsDoNotChangeTheCallersBuilder() throws Exception {
+        TestManager manager = manager();
+        Type listOfReplies = new TypeToken<ArrayList<Reply>>() {
+        }.getType();
+        http.respond(200, "{}").respond(200, "[]").respond(200, "{}").respond(200, "[]");
+        URIBuilder builder = builder().setParameter("route_id", "R1");
+
+        manager.makeJSONRequest(RequestMethod.POST, builder, new Body(), new Params(), Reply.class);
+        manager.makeJSONRequest(RequestMethod.PUT, builder, new Body(), new Params(), listOfReplies);
+        manager.makeJSONRequest(RequestMethod.GET, builder, new Params(), Reply.class);
+        manager.makeJSONRequest(RequestMethod.GET, builder, new Params(), listOfReplies);
+
+        assertEquals("[route_id=R1]", builder.getQueryParams().toString());
+        for (int i = 0; i < 4; i++) {
+            http.request(i).assertQuery("route_id", "R1").assertQueryValues("limit", "5")
+                    .assertQueryValues("active", "1");
         }
     }
 
@@ -464,6 +594,33 @@ public class ManagerTest {
         for (int i = 0; i < 2; i++) {
             http.request(i).assertMethod("GET").assertQuery("limit", "5").assertQuery("active", "1").assertNoBody();
         }
+    }
+
+    /** A request object whose query field fails when it is read; Gson skips it, being transient. */
+    static final class UnreadableQuery {
+        @QueryParameter("ids")
+        private transient Iterable<String> ids = () -> {
+            throw new IllegalStateException("the query fields were read");
+        };
+        @SerializedName("route_name")
+        private String routeName = "Morning";
+    }
+
+    @Test
+    public void jsonPostAndPutDoNotReadTheQueryFields() throws Exception {
+        final TestManager manager = manager();
+        http.respondToAll(200, "{}");
+
+        manager.makeJSONRequest(RequestMethod.POST, builder(), new UnreadableQuery(), Reply.class);
+        manager.makeJSONRequest(RequestMethod.PUT, builder(), new UnreadableQuery(), (Type) Reply.class);
+        IllegalStateException onGet = http.expectThrows(IllegalStateException.class,
+                () -> manager.makeJSONRequest(RequestMethod.GET, builder(), new UnreadableQuery(), Reply.class));
+
+        for (int i = 0; i < 2; i++) {
+            http.request(i).assertJson("route_name", "Morning").assertNoQuery("ids");
+        }
+        assertEquals("the query fields were read", onGet.getMessage());
+        assertEquals("only the GET reads the query fields, and fails before sending", 2, http.requestCount());
     }
 
     @Test
@@ -685,6 +842,92 @@ public class ManagerTest {
     }
 
     @Test
+    public void errorBodiesHideCredentialMembers() {
+        final TestManager manager = manager();
+        http.respond(422, json("{'errors':['bad connection'],'connection_token':'TOKEN-9',"
+                + "'vendor':{'password':'pw-9'}}")).respond(200, json("{'session_guid':'GUID-7','member_id':"));
+
+        APIException status = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+        APIException unparsable = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals(json("{'errors':['bad connection'],'connection_token':'REDACTED',"
+                + "'vendor':{'password':'REDACTED'}}"), status.getResponseBody());
+        assertEquals(Collections.singletonList("bad connection"), status.getErrors());
+        assertEquals(json("{'session_guid':'REDACTED','member_id':"), unparsable.getResponseBody());
+    }
+
+    @Test
+    public void anErrorBodyThatQuotesAUrlKeepsItsErrors() {
+        final TestManager manager = manager();
+        http.respond(401, json("{'error':'bad key for https://api.route4me.com/x?api_key=OTHER-KEY',"
+                + "'errors':['Invalid key'],'status':false}"));
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals(Arrays.asList("Invalid key", "bad key for https://api.route4me.com/x?api_key=REDACTED"),
+                error.getErrors());
+        assertTrue(error.getMessage(), error.getMessage().endsWith(": Invalid key"));
+        assertFalse(error.getResponseBody(), error.getResponseBody().contains("OTHER-KEY"));
+    }
+
+    @Test
+    public void closingTheManagerDuringARequestGivesAnApiException() throws Exception {
+        final TestManager manager = manager();
+        http.answerNextRequest(request -> {
+            manager.close();
+            throw new IllegalStateException("Connection pool shut down");
+        });
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals("GET https://api.route4me.com" + PATH + " failed: the manager was closed while the request ran",
+                error.getMessage());
+        assertTrue(error.getCause().getCause() instanceof IllegalStateException);
+        assertEquals("close() closed the client", 1, http.closeCount());
+    }
+
+    @Test
+    public void closingTheManagerWhileTheReplyIsReadGivesTheSameReason() throws Exception {
+        final TestManager manager = manager();
+        final CloseableHttpResponse reply = Mockito.mock(CloseableHttpResponse.class);
+        Mockito.when(reply.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+        // The pool shutdown of close() closes the socket that the body is read from.
+        Mockito.when(reply.getEntity()).thenReturn(new InputStreamEntity(new InputStream() {
+            @Override
+            public int read() throws IOException {
+                manager.close();
+                throw new SocketException("Socket closed");
+            }
+        }));
+        http.answerNextRequest(request -> reply);
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals("GET https://api.route4me.com" + PATH + " failed: the manager was closed while the request ran",
+                error.getMessage());
+        assertTrue(error.getCause().getCause() instanceof SocketException);
+    }
+
+    @Test
+    public void anUncheckedClientFailureGivesAnApiException() throws Exception {
+        final TestManager manager = manager();
+        http.answerNextRequest(request -> {
+            throw new IllegalStateException("Connection is still allocated");
+        });
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: Connection is still allocated"));
+        assertTrue(error.getCause().getCause() instanceof IllegalStateException);
+    }
+
+    @Test
     public void networkFailureBecomesApiException() {
         final TestManager manager = manager();
         http.failNextRequest(new IOException("connection timed out"));
@@ -735,7 +978,8 @@ public class ManagerTest {
 
         Reply reply = manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
 
-        assertEquals("R1", reply == null ? null : reply.routeId);
+        assertNotNull("the result is kept although close() failed", reply);
+        assertEquals("R1", reply.routeId);
     }
 
     @Test
@@ -745,7 +989,7 @@ public class ManagerTest {
 
         String result = manager.makeRequest(RequestMethod.DELETE, builder(), "", String.class);
 
-        assertTrue("expected no content, got: " + result, result == null || result.isEmpty());
+        assertEquals("a 204 reads as an empty text, not null", "", result);
     }
 
     @Test
@@ -798,11 +1042,266 @@ public class ManagerTest {
     public void declaredCharsetIsHonoured() throws Exception {
         TestManager manager = manager();
         http.respondWithBytes(200, "Caf\u00e9".getBytes(StandardCharsets.ISO_8859_1), "text/plain; charset=ISO-8859-1")
-                .respondWithBytes(200, "Caf\u00e9".getBytes(StandardCharsets.UTF_8), "text/plain; charset=no-such-charset");
+                .respondWithBytes(200, "Caf\u00e9".getBytes(StandardCharsets.UTF_8),
+                        "text/plain; charset=no-such-charset");
 
         assertEquals("Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
         assertEquals("an unknown charset falls back to UTF-8",
                 "Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+    }
+
+    @Test
+    public void illegalCharsetNameFallsBackToUtf8() throws Exception {
+        TestManager manager = manager();
+        http.respondWithBytes(200, "Caf\u00e9".getBytes(StandardCharsets.UTF_8), "text/plain; charset=bad name!");
+
+        assertEquals("Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+    }
+
+    @Test
+    public void byteArrayResponseIsReturnedUnchanged() throws Exception {
+        TestManager manager = manager();
+        // The start of an .xls file: not valid UTF-8, so a text round trip would change it.
+        byte[] xls = {(byte) 0xD0, (byte) 0xCF, 0x11, (byte) 0xE0, (byte) 0xA1, (byte) 0xB1, 0x1A, (byte) 0xE1, 0x00};
+        http.respondWithBytes(200, xls, "application/vnd.ms-excel")
+                .respondWithoutBody(200);
+
+        assertArrayEquals(xls, manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
+        assertArrayEquals(new byte[0], manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
+    }
+
+    /** Answers the next request with a 200 whose body is a stream, which records whether it was closed. */
+    private boolean[] respondWithStream(byte[] body, long declaredLength) {
+        return respondWithStream(200, body, declaredLength);
+    }
+
+    /** Answers the next request with a status and a body that is a stream, which records whether it was closed. */
+    private boolean[] respondWithStream(int status, byte[] body, long declaredLength) {
+        final boolean[] closed = new boolean[1];
+        final CloseableHttpResponse reply = Mockito.mock(CloseableHttpResponse.class);
+        Mockito.when(reply.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, status, null));
+        Mockito.when(reply.getEntity()).thenReturn(new InputStreamEntity(new ByteArrayInputStream(body) {
+            @Override
+            public void close() {
+                closed[0] = true;
+            }
+        }, declaredLength));
+        http.answerNextRequest(request -> reply);
+        return closed;
+    }
+
+    @Test
+    public void theMaxResponseSizeDefaultsToTheLargestArrayAndRefusesOtherValues() {
+        final TestManager manager = new TestManager(MockHttp.API_KEY);
+
+        assertEquals(Integer.MAX_VALUE - 8, Manager.DEFAULT_MAX_RESPONSE_SIZE);
+        assertEquals(Manager.DEFAULT_MAX_RESPONSE_SIZE, manager.getMaxResponseSize());
+        http.expectThrows(IllegalArgumentException.class, () -> manager.setMaxResponseSize(-1));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.setMaxResponseSize(Manager.DEFAULT_MAX_RESPONSE_SIZE + 1));
+        assertEquals(Manager.DEFAULT_MAX_RESPONSE_SIZE, manager.getMaxResponseSize());
+        manager.setMaxResponseSize(0);
+        assertEquals(0, manager.getMaxResponseSize());
+    }
+
+    @Test
+    public void aReplyThatDeclaresMoreThanTheMaxResponseSizeFailsBeforeItIsRead() throws Exception {
+        final TestManager manager = manager();
+        manager.setMaxResponseSize(4);
+        http.respondWithBytes(200, new byte[] {1, 2, 3, 4}, "application/octet-stream")
+                .respondWithBytes(200, new byte[] {1, 2, 3, 4, 5}, "application/octet-stream");
+
+        assertArrayEquals(new byte[] {1, 2, 3, 4}, manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
+
+        assertEquals("GET https://api.route4me.com" + PATH + " failed: The response declares 5 bytes, more than the"
+                + " maximum response size of 4 bytes; see Manager.setMaxResponseSize", error.getMessage());
+        assertEquals(0, error.getStatusCode());
+    }
+
+    @Test
+    public void aReplyOfUnknownLengthOverTheMaxResponseSizeFailsWhileItIsRead() throws Exception {
+        final TestManager manager = manager();
+        manager.setMaxResponseSize(4);
+        boolean[] within = respondWithStream("abcd".getBytes(StandardCharsets.UTF_8), -1);
+        boolean[] over = respondWithStream("abcde".getBytes(StandardCharsets.UTF_8), -1);
+        // A Content-Length that understates the body does not get past the count either.
+        boolean[] understated = respondWithStream("abcde".getBytes(StandardCharsets.UTF_8), 2);
+
+        assertEquals("abcd", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+        APIException understatedError = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
+
+        String reason = "The response is larger than the maximum response size of 4 bytes;"
+                + " see Manager.setMaxResponseSize";
+        assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: " + reason));
+        assertTrue(understatedError.getMessage(), understatedError.getMessage().endsWith(" failed: " + reason));
+        assertTrue("a body read to its end is closed", within[0]);
+        assertFalse("closing would read the rest of the body; the response close drops the connection", over[0]);
+        assertFalse(understated[0]);
+    }
+
+    /** Regression: an error reply over the max response size lost its status, so the exception had status 0. */
+    @Test
+    public void anErrorReplyOverTheMaxResponseSizeKeepsItsStatusWithoutItsBody() throws Exception {
+        final TestManager manager = manager();
+        manager.setMaxResponseSize(4);
+        // A proxy's HTML error page, with a Content-Length, and a body of unknown length.
+        http.respond(404, "<html><body>Not Found</body></html>", "text/html");
+        boolean[] streamed = respondWithStream(503, "{\"errors\":[\"Down\"]}".getBytes(StandardCharsets.UTF_8), -1);
+        http.respond(500, "{}");
+
+        APIException declared = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+        APIException unknown = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+        APIException within = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals("Invalid status code 404 for GET https://api.route4me.com" + PATH, declared.getMessage());
+        assertEquals(404, declared.getStatusCode());
+        assertNull(declared.getResponseBody());
+        assertEquals(503, unknown.getStatusCode());
+        assertNull(unknown.getResponseBody());
+        assertTrue(unknown.getErrors().isEmpty());
+        assertFalse("closing would read the rest of the body; the response close drops the connection", streamed[0]);
+        assertEquals("a body within the limit is kept", 500, within.getStatusCode());
+        assertEquals("{}", within.getResponseBody());
+    }
+
+    @Test
+    public void aZeroMaxResponseSizeTakesOnlyEmptyReplies() throws Exception {
+        final TestManager manager = manager();
+        manager.setMaxResponseSize(0);
+        http.respondWithoutBody(204).respond(200, "{}");
+
+        assertNull(manager.makeRequest(RequestMethod.DELETE, builder(), "", Reply.class));
+        http.expectApiException(() -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+    }
+
+    @Test
+    public void aFailureToCloseTheBodyAfterAReadFailureIsKeptAsSuppressed() throws Exception {
+        final TestManager manager = manager();
+        final CloseableHttpResponse reply = Mockito.mock(CloseableHttpResponse.class);
+        Mockito.when(reply.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+        Mockito.when(reply.getEntity()).thenReturn(new InputStreamEntity(new InputStream() {
+            @Override
+            public int read() throws IOException {
+                throw new SocketException("Connection reset");
+            }
+
+            @Override
+            public void close() throws IOException {
+                throw new IOException("close failed");
+            }
+        }));
+        http.answerNextRequest(request -> reply);
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: Connection reset"));
+        Throwable cause = error.getCause();
+        assertEquals(1, cause.getSuppressed().length);
+        assertEquals("close failed", cause.getSuppressed()[0].getMessage());
+    }
+
+    // ------------------------------------------------------------------ background jobs
+
+    /** The V5 bulk endpoint the job tests post to. */
+    private static final String JOB_PATH = "/modules/api/v5.0/vehicles/bulk/activate";
+    /** A job status URL, as the API puts it in the {@code Location} header. */
+    private static final String JOB_STATUS_URL =
+            "https://wh.route4me.com/modules/api/v5.0/vehicles/job-tracker/status/C0FFEE0000000000000000000000000A";
+
+    @Test
+    public void jobRequestReturnsTheStatusHeadersAndBody() throws Exception {
+        TestManager manager = manager();
+        http.respondWithHeaders(202, null, "X-Job-Id", "JOB-1", "Location", JOB_STATUS_URL)
+                .respondWithHeaders(202, "{}", "location", JOB_STATUS_URL)
+                .respondWithHeaders(200, json("{'status':true}"));
+
+        AsyncJob byHeader = manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), json("{'vehicle_ids':['V1']}"));
+        AsyncJob byLocation = manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), "");
+        AsyncJob done = manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), (HttpEntity) null);
+
+        http.request(0).assertEndpoint("POST", "wh.route4me.com", JOB_PATH).assertContentType("application/json")
+                .assertJson("vehicle_ids[0]", "V1");
+        http.request(1).assertNoBody();
+        http.request(2).assertNoBody();
+        assertEquals(202, byHeader.getStatusCode());
+        assertEquals("JOB-1", byHeader.getJobId());
+        assertEquals(JOB_STATUS_URL, byHeader.getLocation());
+        assertEquals("", byHeader.getBody());
+        assertEquals("C0FFEE0000000000000000000000000A", byLocation.getJobId());
+        assertEquals("{}", byLocation.getBody());
+        assertEquals(200, done.getStatusCode());
+        assertNull(done.getJobId());
+        assertEquals(json("{'status':true}"), done.getBody());
+    }
+
+    @Test
+    public void jobRequestWithANullStringBodySendsNoBody() throws Exception {
+        TestManager manager = manager();
+        http.respondWithHeaders(202, null, "X-Job-Id", "JOB-2");
+
+        AsyncJob job = manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), (String) null);
+
+        http.request().assertNoBody();
+        assertEquals("JOB-2", job.getJobId());
+    }
+
+    @Test
+    public void jobRequestToTheV5ApiSendsTheBearerTokenAndNoApiKey() throws Exception {
+        TestManager manager = manager();
+        http.respondWithHeaders(202, null, "X-Job-Id", "JOB-1");
+
+        manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), "{}");
+
+        http.request().assertApiKeyAsBearer().assertNoQuery("api_key")
+                .assertHeader("Accept", "application/json, */*;q=0.8")
+                .assertHeader("User-Agent", "Route4Me Java SDK");
+    }
+
+    @Test
+    public void jobRequestToTheV4ApiKeepsTheKeyInTheQuery() throws Exception {
+        TestManager manager = http.install(new TestManager(MockHttp.API_KEY, true));
+        http.respondWithHeaders(202, null, "Location", JOB_STATUS_URL);
+
+        AsyncJob job = manager.makeJobRequest(RequestMethod.PUT, builder(), "{}");
+
+        http.request().assertApiKeyInQuery().assertQuery("redirect", "0");
+        assertFalse(http.request().getRequestConfig().isRedirectsEnabled());
+        assertEquals("C0FFEE0000000000000000000000000A", job.getJobId());
+    }
+
+    @Test
+    public void jobRequestWithAnErrorStatusThrowsApiException() {
+        final TestManager manager = manager();
+        http.respondWithHeaders(422, json("{'status':false,'messages':{'vehicle_ids':['Required.']}}"),
+                "X-Job-Id", "JOB-1");
+
+        APIException error = http.expectApiException(
+                () -> manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), "{}"));
+
+        assertEquals(422, error.getStatusCode());
+        assertEquals(Collections.singletonList("Required."), error.getMessages().get("vehicle_ids"));
+        assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid status code 422 for POST "
+                + "https://wh.route4me.com" + JOB_PATH));
+    }
+
+    @Test
+    public void jobRequestNetworkFailureThrowsApiException() {
+        final TestManager manager = manager();
+        http.failNextRequest(new IOException("connection reset"));
+
+        APIException error = http.expectApiException(
+                () -> manager.makeJobRequest(RequestMethod.POST, wh(JOB_PATH), "{}"));
+
+        assertEquals("POST https://wh.route4me.com" + JOB_PATH + " failed: connection reset", error.getMessage());
     }
 
     // ------------------------------------------------------------------ client life cycle
@@ -942,7 +1441,8 @@ public class ManagerTest {
                 }));
             }
             start.countDown();
-            Set<CloseableHttpClient> clients = Collections.newSetFromMap(new IdentityHashMap<CloseableHttpClient, Boolean>());
+            Set<CloseableHttpClient> clients =
+                    Collections.newSetFromMap(new IdentityHashMap<CloseableHttpClient, Boolean>());
             for (Future<CloseableHttpClient> result : results) {
                 clients.add(result.get(10, TimeUnit.SECONDS));
             }
@@ -956,7 +1456,9 @@ public class ManagerTest {
     @Test
     public void theDefaultClientRefusesRedirectsAwayFromRoute4Me() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+        final List<String> seen = new CopyOnWriteArrayList<>();
         server.createContext("/", exchange -> {
+            seen.add(exchange.getRequestURI() + " " + exchange.getRequestHeaders().entrySet());
             String target = exchange.getRequestURI().getPath().endsWith("/plain")
                     ? "http://api.route4me.com/api.v4/route.php" : "https://example.com/collect";
             exchange.getResponseHeaders().add("Location", target);
@@ -980,6 +1482,15 @@ public class ManagerTest {
                 }
                 assertTrue("expected a RedirectException in " + error, cause != null);
                 assertTrue(cause.getMessage(), cause.getMessage().startsWith("Refused to follow a redirect to "));
+            }
+            // The first request went over plain http to a host that is not Route4Me: it carried no key.
+            assertEquals("each path was requested once, and no redirect was followed", 2, seen.size());
+            for (int i = 0; i < seen.size(); i++) {
+                String request = seen.get(i);
+                assertFalse("request " + i + " carried the API key", request.contains(MockHttp.API_KEY));
+                assertFalse("request " + i + " carried an api_key parameter", request.contains("api_key"));
+                assertFalse("request " + i + " carried an Authorization header",
+                        request.toLowerCase(Locale.ROOT).contains("authorization"));
             }
         } finally {
             server.stop(0);

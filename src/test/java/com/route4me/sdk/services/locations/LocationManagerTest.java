@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.locations;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -9,6 +10,7 @@ import java.util.Collections;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -21,6 +23,9 @@ public class LocationManagerTest {
     private static final String LOCATIONS_EP = "/modules/api/v5.0/address-book/locations";
     private static final String LOCATION_TYPE = json("{'location_type_id':'LT-1','name':'Store',"
             + "'description':'Retail store','is_parent_type':false,'is_child_type':true,'root_member_id':1000}");
+    private static final String JOB_ID = "C0FFEE0000000000000000000000000E";
+    private static final String EXPORT_STATUS_URL =
+            "https://" + HOST + "/modules/api/v5.0/address-book/job-tracker/status/" + JOB_ID;
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -67,7 +72,8 @@ public class LocationManagerTest {
 
         LocationListResource list = manager.getLocationsList(withFilters(new LocationCombinedRequest()));
 
-        http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/list").assertJson("filters.search_query", "Bakery");
+        http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/list").assertJson("filters.search_query",
+                "Bakery");
         assertEquals("Example Bakery", list.getItems().get(0).getAddressAlias());
     }
 
@@ -102,8 +108,69 @@ public class LocationManagerTest {
         LocationHeatmapCollection heatmap = manager.getLocationsHeatmap(request);
 
         http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/heatmap").assertJson("zoom", 8);
-        assertEquals(3.0, heatmap.getData().get(0)[2], 0.0);
+        assertEquals(Arrays.asList(40.1, -74.1, 3.0), heatmap.getData().get(0));
         assertEquals("weight", heatmap.getFields().get(2));
+    }
+
+    /** Regression: address and member IDs were {@code Integer}, so an ID above 2^31-1 failed the whole answer. */
+    @Test
+    public void idsAboveTheIntRangeAreReadAndSent() throws Exception {
+        LocationManager manager = manager();
+        http.respond(200, json("{'items':[{'address_id':3000000001}],'total_items_count':1}"))
+                .respond(200, json("{'data':[{'location_type_id':'LT-1','root_member_id':3000000002}]}"))
+                .respondWithHeaders(202, null, "Location", EXPORT_STATUS_URL);
+        LocationFilters filters = new LocationFilters();
+        filters.setAddressId(Collections.singletonList(3000000001L));
+        LocationCombinedRequest request = new LocationCombinedRequest();
+        request.setFilters(filters);
+        LocationExportRequest export = new LocationExportRequest();
+        export.setAddressIds(Collections.singletonList(3000000001L));
+        export.setExcludedIds(Collections.singletonList(3000000003L));
+
+        LocationListResource list = manager.getLocationsList(request);
+        LocationTypeCollection types = manager.getLocationTypes(null, null);
+        manager.exportLocations(export);
+
+        http.request(0).assertJson("filters.address_id[0]", 3000000001L);
+        http.request(2).assertJson("address_ids[0]", 3000000001L).assertJson("excluded_ids[0]", 3000000003L);
+        assertEquals(Long.valueOf(3000000001L), list.getItems().get(0).getAddressId());
+        assertEquals(Long.valueOf(3000000002L), types.getData().get(0).getRootMemberId());
+    }
+
+    /** Regression: {@code List<double[]>} failed the whole heat map when one number was {@code null}. */
+    @Test
+    public void heatmapKeepsANullNumber() throws Exception {
+        LocationManager manager = manager();
+        http.respond(200, json("{'data':[[40.1,-74.1,null]],'fields':['lat','lng','weight']}"));
+
+        LocationHeatmapCollection heatmap = manager.getLocationsHeatmap(new LocationHeatmapRequest());
+
+        assertEquals(Arrays.asList(40.1, -74.1, null), heatmap.getData().get(0));
+    }
+
+    /** Regression: the request subclasses left the fields of {@link LocationCombinedRequest} out of toString. */
+    @Test
+    public void requestToStringIncludesTheInheritedFields() {
+        LocationCombinedRequest[] requests = {new LocationClusteringRequest(), new LocationExportRequest(),
+            new LocationHeatmapRequest(), new LocationTerritoriesRequest()};
+        for (LocationCombinedRequest request : requests) {
+            request.setGroupBy("customer_id");
+            assertTrue(request.toString(), request.toString().contains("groupBy=customer_id"));
+        }
+    }
+
+    /** Regression: {@code List<String[]>} compared the pairs by identity, so equal requests were not equal. */
+    @Test
+    public void requestsWithTheSameOrderAreEqual() {
+        LocationTerritoriesRequest first = new LocationTerritoriesRequest();
+        first.setOrderBy(Collections.singletonList(Arrays.asList("address_1", "asc")));
+        first.setTerritoriesOrderBy(Collections.singletonList(Arrays.asList("territory_name", "desc")));
+        LocationTerritoriesRequest second = new LocationTerritoriesRequest();
+        second.setOrderBy(Collections.singletonList(Arrays.asList("address_1", "asc")));
+        second.setTerritoriesOrderBy(Collections.singletonList(Arrays.asList("territory_name", "desc")));
+
+        assertEquals(first, second);
+        assertEquals(first.hashCode(), second.hashCode());
     }
 
     @Test
@@ -129,16 +196,16 @@ public class LocationManagerTest {
     public void exportColumnsAndExport() throws Exception {
         LocationManager manager = manager();
         http.respond(200, json("[{'field_name':'address_1','field_title':'Address','group':'main','allowed':true}]"))
-                .respond(200, json("{'status':true}"));
+                .respondWithHeaders(202, null, "X-Job-Id", JOB_ID, "Location", EXPORT_STATUS_URL);
         LocationExportRequest export = withFilters(new LocationExportRequest());
         export.setColumns(Arrays.asList("address_1", "address_alias"));
         export.setFilename("locations.csv");
         export.setFormat("csv");
         export.setTimezone("UTC");
-        export.setAddressIds(Collections.singletonList(12345));
+        export.setAddressIds(Collections.singletonList(12345L));
 
         LocationExportColumnsResource[] columns = manager.getLocationsExportColumns(new LocationCombinedRequest());
-        StatusResponse status = manager.exportLocations(export);
+        AsyncJob job = manager.exportLocations(export);
 
         http.request(0).assertEndpoint("POST", HOST, LOCATIONS_EP + "/export/columns");
         http.request(1).assertEndpoint("POST", HOST, LOCATIONS_EP + "/export")
@@ -148,7 +215,10 @@ public class LocationManagerTest {
                 .assertJson("tz", "UTC")
                 .assertJson("address_ids[0]", 12345);
         assertEquals("Address", columns[0].getFieldTitle());
-        assertTrue(status.getStatus());
+        assertEquals(202, job.getStatusCode());
+        assertEquals(JOB_ID, job.getJobId());
+        assertEquals(EXPORT_STATUS_URL, job.getLocation());
+        assertEquals("", job.getBody());
     }
 
     @Test
@@ -160,6 +230,7 @@ public class LocationManagerTest {
         StoreLocationTypeRequest store = new StoreLocationTypeRequest();
         store.setName("Store");
         store.setDescription("Retail store");
+        store.setIsParentType(false);
         store.setIsChildType(true);
 
         LocationTypeCollection types = manager.getLocationTypes(1, 20);
@@ -174,12 +245,126 @@ public class LocationManagerTest {
         http.request(1).assertNoQuery("page").assertNoQuery("per_page");
         http.request(2).assertEndpoint("GET", HOST, LOCATIONS_EP + "/types/LT-1");
         http.request(3).assertEndpoint("POST", HOST, LOCATIONS_EP + "/types")
-                .assertJson("name", "Store").assertJson("is_child_type", true);
-        http.request(4).assertEndpoint("PUT", HOST, LOCATIONS_EP + "/types/LT-1").assertJson("description", "Retail store");
+                .assertJson("name", "Store").assertJson("is_parent_type", false).assertJson("is_child_type", true);
+        http.request(4).assertEndpoint("PUT", HOST, LOCATIONS_EP + "/types/LT-1").assertJson("description",
+                "Retail store");
         http.request(5).assertEndpoint("DELETE", HOST, LOCATIONS_EP + "/types/LT-1").assertNoBody();
         assertEquals("Store", types.getData().get(0).getName());
         assertTrue(type.getIsChildType());
         assertTrue(deleted.getStatus());
+    }
+
+    @Test
+    public void getLocationTypesSendsTheFiltersInBrackets() throws Exception {
+        LocationManager manager = manager();
+        http.respondToAll(200, json("{'data':[]}"));
+        LocationTypeFilters filters = new LocationTypeFilters();
+        filters.setIsParentType(true);
+        filters.setOnlyCustomTypes(false);
+        filters.setSearchQuery("Store");
+
+        manager.getLocationTypes(filters, 2, 10);
+        manager.getLocationTypes(new LocationTypeFilters(), null, null);
+
+        http.request(0).assertEndpoint("GET", HOST, LOCATIONS_EP + "/types").assertNoBody()
+                .assertQuery("filters[is_parent_type]", "1")
+                .assertQuery("filters[only_custom_types]", "0")
+                .assertQuery("filters[search_query]", "Store")
+                .assertNoQuery("filters[is_child_type]")
+                .assertQuery("page", "2")
+                .assertQuery("per_page", "10");
+        assertTrue(http.request(1).getQueryParameters().isEmpty());
+    }
+
+    @Test
+    public void locationTypeRequiredFieldsAreCheckedBeforeSending() {
+        final LocationManager manager = manager();
+        final StoreLocationTypeRequest noName = new StoreLocationTypeRequest();
+        noName.setIsParentType(true);
+        noName.setIsChildType(false);
+        final StoreLocationTypeRequest noParent = new StoreLocationTypeRequest();
+        noParent.setName("Store");
+        noParent.setIsChildType(false);
+        final StoreLocationTypeRequest noChild = new StoreLocationTypeRequest();
+        noChild.setName("Store");
+        noChild.setIsParentType(true);
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createLocationType(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createLocationType(noName));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createLocationType(noParent));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateLocationType("LT-1", noChild));
+        http.assertNoRequests();
+    }
+
+    /** Regression: a {@code null} body was sent as the JSON text {@code null}. */
+    @Test
+    public void aNullRequestIsRejectedBeforeSending() {
+        final LocationManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsCombined(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsList(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsClustering(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsHeatmap(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsTerritories(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsExportColumns(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.exportLocations(null));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void locationTypeIdsAreRejectedWhenEmptyAndStayInOneSegment() throws Exception {
+        final LocationManager manager = manager();
+        final StoreLocationTypeRequest store = new StoreLocationTypeRequest();
+        store.setName("Store");
+        store.setIsParentType(false);
+        store.setIsChildType(true);
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationTypeById(""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateLocationType(null, store));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteLocationType(""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateLocationType("LT/1", store));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteLocationType("LT\\1"));
+        http.assertNoRequests();
+        http.respondToAll(200, LOCATION_TYPE);
+
+        manager.updateLocationType("LT 1", store);
+        manager.deleteLocationType("LT?1");
+
+        assertEquals(LOCATIONS_EP + "/types/LT%201", http.request(0).getUri().getRawPath());
+        assertEquals(LOCATIONS_EP + "/types/LT%3F1", http.request(1).getUri().getRawPath());
+    }
+
+    @Test
+    public void exportLocationsAcceptsAnEmptyAcceptedReply() throws Exception {
+        LocationManager manager = manager();
+        http.respondWithoutBody(202);
+
+        AsyncJob job = manager.exportLocations(withFilters(new LocationExportRequest()));
+
+        http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/export").assertJson("page", 1);
+        assertEquals(202, job.getStatusCode());
+        assertNull(job.getJobId());
+        assertNull(job.getLocation());
+        assertEquals("", job.getBody());
+    }
+
+    @Test
+    public void combinedFieldsAndClusterThresholdAreSent() throws Exception {
+        LocationManager manager = manager();
+        http.respondToAll(200, "{}");
+        LocationCombinedRequest list = new LocationCombinedRequest();
+        list.setFields(Arrays.asList("address_id", "address_1"));
+        list.setOrderBy(Collections.singletonList(Arrays.asList("address_1", "asc")));
+        ClusteringParameters clustering = new ClusteringParameters();
+        clustering.setZoom(5);
+        clustering.setCountThreshold(3);
+        LocationClusteringRequest clusters = new LocationClusteringRequest();
+        clusters.setClustering(clustering);
+
+        manager.getLocationsList(list);
+        manager.getLocationsClustering(clusters);
+
+        http.request(0).assertJson("fields[1]", "address_1").assertJson("order_by[0][1]", "asc");
+        http.request(1).assertJson("clustering.count_threshold", 3).assertJson("clustering.zoom", 5);
     }
 
     @Test

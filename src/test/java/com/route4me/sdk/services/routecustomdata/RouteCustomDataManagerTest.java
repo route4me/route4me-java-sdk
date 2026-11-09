@@ -4,6 +4,7 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Map;
 
@@ -34,7 +35,8 @@ public class RouteCustomDataManagerTest {
         http.respondToAll(200, json("{'region':'north','shift':'am'}"));
 
         Map<String, String> data = manager.getRouteCustomData("ROUTE-A1");
-        Map<String, String> updated = manager.updateRouteCustomData("ROUTE-A1", Collections.singletonMap("region", "north"));
+        Map<String, String> updated = manager.updateRouteCustomData("ROUTE-A1",
+                Collections.singletonMap("region", "north"));
 
         http.request(0).assertEndpoint("GET", HOST, ROUTES_EP + "/ROUTE-A1/custom-data").assertApiKeyAsBearer()
                 .assertNoBody();
@@ -64,6 +66,44 @@ public class RouteCustomDataManagerTest {
 
         http.request().assertEndpoint("GET", HOST, ROUTES_EP + "/custom-data/keys");
         assertArrayEquals(new String[] {"region", "shift"}, keys);
+    }
+
+    @Test
+    public void emptyRouteIdsAreRejectedBeforeSending() {
+        final RouteCustomDataManager manager = manager();
+        final Map<String, String> data = Collections.singletonMap("region", "north");
+
+        for (final String id : Arrays.asList(null, "")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteCustomData(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteCustomData(id, data));
+        }
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void missingCustomDataOrRouteIdsAreRejectedBeforeSending() {
+        final RouteCustomDataManager manager = manager();
+
+        IllegalArgumentException noData = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateRouteCustomData("ROUTE-A1", null));
+        IllegalArgumentException noIds = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.getBulkRouteCustomData(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getBulkRouteCustomData(new String[0]));
+
+        http.assertNoRequests();
+        assertEquals("The custom data is required", noData.getMessage());
+        assertEquals("At least one route ID is required", noIds.getMessage());
+    }
+
+    @Test
+    public void routeIdsWithASlashAreRefused() throws Exception {
+        final RouteCustomDataManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateRouteCustomData("../secret", Collections.singletonMap("region", "north")));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteCustomData("..\\secret"));
+
+        http.assertNoRequests();
     }
 
     @Test

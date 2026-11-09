@@ -11,6 +11,7 @@ import java.util.Arrays;
 import java.util.Collections;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
@@ -105,7 +106,8 @@ public class APIExceptionTest {
         assertEquals(Collections.singletonList(
                 "Access denied: the required feature is not enabled on the used Route4Me account"), error.getErrors());
         assertEquals("Invalid status code 403 for GET https://api.route4me.com/api.v4/route.php: "
-                + "Access denied: the required feature is not enabled on the used Route4Me account", error.getMessage());
+                        + "Access denied: the required feature is not enabled on the used Route4Me account",
+                error.getMessage());
         assertEquals(403, error.getStatusCode());
         assertTrue(error.getMessages().isEmpty());
     }
@@ -164,6 +166,90 @@ public class APIExceptionTest {
     }
 
     @Test
+    public void keepsAtMost50ErrorsAndMessagesEachCutTo300Characters() {
+        StringBuilder long400 = new StringBuilder();
+        for (int i = 0; i < 40; i++) {
+            long400.append("0123456789");
+        }
+        StringBuilder body = new StringBuilder("{\"errors\":[");
+        for (int i = 0; i < 60; i++) {
+            body.append(i == 0 ? "" : ",").append('"').append(i).append(long400).append('"');
+        }
+        body.append("],\"error\":\"one more\",\"messages\":{");
+        for (int i = 0; i < 60; i++) {
+            body.append(i == 0 ? "" : ",").append("\"field").append(i).append("\":[\"a\",\"b\"]");
+        }
+        body.append("}}");
+
+        APIException error = APIException.forErrorStatus("POST", URL, 422, body.toString());
+
+        assertEquals(50, error.getErrors().size());
+        for (String text : error.getErrors()) {
+            assertEquals(300, text.length());
+            assertTrue(text, text.endsWith("..."));
+        }
+        assertEquals("0" + long400.substring(0, 296) + "...", error.getErrors().get(0));
+        assertEquals("25 fields with 2 messages each", 25, error.getMessages().size());
+        assertEquals(Arrays.asList("a", "b"), error.getMessages().get("field24"));
+        assertEquals(APIException.MAX_BODY_LENGTH, error.getResponseBody().length());
+    }
+
+    @Test
+    public void messagesKeepAtMost50FieldsAndCutTheirNames() {
+        StringBuilder name = new StringBuilder();
+        for (int i = 0; i < 40; i++) {
+            name.append("abcdefghij");
+        }
+        StringBuilder body = new StringBuilder("{\"messages\":{\"").append(name).append("\":\"long name\"");
+        for (int i = 0; i < 60; i++) {
+            body.append(",\"empty").append(i).append("\":[]");
+        }
+        body.append("}}");
+        StringBuilder list = new StringBuilder("{\"messages\":[");
+        for (int i = 0; i < 70; i++) {
+            list.append(i == 0 ? "" : ",").append('"').append(i).append('"');
+        }
+        list.append("]}");
+
+        APIException map = APIException.forErrorStatus("POST", URL, 422, body.toString());
+        APIException plain = APIException.forErrorStatus("POST", URL, 422, list.toString());
+
+        assertEquals(50, map.getMessages().size());
+        assertEquals(Collections.singletonList("long name"), map.getMessages().get(name.substring(0, 297) + "..."));
+        assertEquals(50, plain.getMessages().get("").size());
+        assertEquals("49", plain.getMessages().get("").get(49));
+    }
+
+    @Test
+    public void theWholeBodyIsParsedAlthoughOnlyItsStartIsKept() {
+        StringBuilder filler = new StringBuilder();
+        for (int i = 0; i < 300; i++) {
+            filler.append("0123456789");
+        }
+        String body = "{\"trace\":\"" + filler + "\",\"code\":422,\"errors\":[\"Late error\"],"
+                + "\"messages\":{\"route_id\":[\"Required\"]}}";
+
+        APIException error = APIException.forErrorStatus("PUT", URL, 422, body);
+
+        assertEquals(Collections.singletonList("Late error"), error.getErrors());
+        assertEquals(Integer.valueOf(422), error.getCode());
+        assertEquals(Collections.singletonList("Required"), error.getMessages().get("route_id"));
+        assertTrue(error.getMessage(), error.getMessage().endsWith(": Late error"));
+        assertEquals(APIException.MAX_BODY_LENGTH, error.getResponseBody().length());
+    }
+
+    @Test
+    public void ioFailureNeedsACause() {
+        try {
+            APIException.forIOException("GET", URL, null);
+        } catch (NullPointerException expected) {
+            assertEquals("cause", expected.getMessage());
+            return;
+        }
+        throw new AssertionError("expected a NullPointerException");
+    }
+
+    @Test
     public void unparsableResponseKeepsTheCauseAndTheExpectedType() {
         IllegalStateException cause = new IllegalStateException("Expected BEGIN_ARRAY");
 
@@ -184,6 +270,21 @@ public class APIExceptionTest {
         assertEquals("POST https://api.route4me.com/api.v4/route.php failed: IOException", error.getMessage());
         assertEquals(0, error.getStatusCode());
         assertSame(cause, error.getCause());
+    }
+
+    @Test
+    public void ioFailureKeepsARedactedCopyOfACauseThatQuotesACredential() {
+        IOException redirect = new IOException("Invalid redirect URI: https://example.com/?api_key=SECRET-KEY");
+        IOException cause = new IOException(redirect.toString(), redirect);
+
+        APIException error = APIException.forIOException("GET", URL, cause);
+
+        assertFalse(error.getMessage(), error.getMessage().contains("SECRET-KEY"));
+        assertTrue(error.getCause() instanceof IOException);
+        for (Throwable link = error.getCause(); link != null; link = link.getCause()) {
+            assertFalse(String.valueOf(link), String.valueOf(link).contains("SECRET-KEY"));
+        }
+        assertTrue(error.getCause().getCause().getMessage().contains("api_key=REDACTED"));
     }
 
     @Test

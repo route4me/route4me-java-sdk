@@ -7,12 +7,9 @@ package com.route4me.sdk.services.territories;
 
 import java.awt.Polygon;
 
-/**
- *
- * @author juan
- */
+/** A territory and its polygon, from {@link TerritoriesManager#getPolygonsFromTerritories()}. */
 public class TerritoryPolygon {
-    
+
     private Polygon polygon;
     private Territory territory;
 
@@ -22,20 +19,26 @@ public class TerritoryPolygon {
     }
 
     /**
-     * @return the polygon
+     * Returns the polygon of the territory.
+     *
+     * @return the polygon, in coordinates multiplied by 1,000,000
      */
     public Polygon getPolygon() {
         return polygon;
     }
 
     /**
-     * @param polygon the polygon to set
+     * Sets the polygon of the territory.
+     *
+     * @param polygon the polygon, in coordinates multiplied by 1,000,000
      */
     public void setPolygon(Polygon polygon) {
         this.polygon = polygon;
     }
 
     /**
+     * Returns the territory.
+     *
      * @return the territory
      */
     public Territory getTerritory() {
@@ -43,10 +46,12 @@ public class TerritoryPolygon {
     }
 
     /**
-     * @param territory the territory to set
+     * Sets the territory.
+     *
+     * @param territory the territory
      */
     public void setTerritory(Territory territory) {
         this.territory = territory;
     }
-    
+
 }

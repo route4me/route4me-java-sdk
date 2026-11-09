@@ -28,53 +28,74 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 
-/**
- *
- * @author Route4Me
- */
+/** The status codes of an order ({@code order_status_id}); {@link #getValue()} gives the code. */
 public enum OrderStatus {
 
+    /** New ({@code 0}). */
     NEW(0),
+    /** Inbound scan ({@code 1}). */
     INBOUND_SCAN(1),
+    /** Sorted by territory ({@code 2}). */
     SORTED_BY_TERRITORY(2),
+    /** Loaded ({@code 3}). */
     LOADED(3),
+    /** Missing ({@code 4}). */
     MISSING(4),
+    /** Damaged ({@code 5}). */
     DAMAGED(5),
+    /** Manually loaded ({@code 6}). */
     MANUALLY_LOADED(6),
+    /** Routed ({@code 7}). */
     ROUTED(7),
+    /** Unrouted ({@code 8}). */
     UNROUTED(8),
+    /** Sorted by route ({@code 9}). */
     SORTED_BY_ROUTE(9),
+    /** Route started ({@code 10}). */
     ROUTE_STARTED(10),
+    /** Failed ({@code 11}). */
     FAILED(11),
+    /** Skipped ({@code 12}). */
     SKIPPED(12),
+    /** Done ({@code 13}). */
     DONE(13),
+    /** Cancelled ({@code 14}). */
     CANCELLED(14),
+    /** Scheduled ({@code 15}). */
     SCHEDULED(15);
 
     private final int value;
-    private static final Map<Integer, OrderStatus> lookup
+    private static final Map<Integer, OrderStatus> LOOKUP
             = new HashMap<>();
 
     static {
         for (Iterator<OrderStatus> it = EnumSet.allOf(OrderStatus.class).iterator(); it.hasNext();) {
             OrderStatus s = it.next();
-            lookup.put(s.getValue(), s);
+            LOOKUP.put(s.getValue(), s);
         }
     }
 
-    private OrderStatus(int value) {
+    OrderStatus(int value) {
         this.value = value;
     }
 
     /**
-     * @return the value
+     * Returns the status code.
+     *
+     * @return the code, such as {@code 0} for {@link #NEW}
      */
     public int getValue() {
         return value;
     }
 
+    /**
+     * Returns the status of a code.
+     *
+     * @param code the status code
+     * @return the status, or {@code null} for an unknown code
+     */
     public static OrderStatus get(int code) {
-        return lookup.get(code);
+        return LOOKUP.get(code);
     }
 
 }

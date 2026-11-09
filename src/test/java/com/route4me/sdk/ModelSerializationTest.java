@@ -1,8 +1,9 @@
 package com.route4me.sdk;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonSyntaxException;
 import com.route4me.sdk.queryconverter.QueryConverter;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.BundledItem;
@@ -10,30 +11,62 @@ import com.route4me.sdk.services.routing.Route;
 import com.route4me.sdk.services.routing.OptimizationParameters;
 import com.route4me.sdk.services.routing.OrderInventory;
 import com.route4me.sdk.services.routing.Parameters;
+import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.orders.OrderV5;
 import com.route4me.sdk.services.vehicles.VehicleV5;
 import com.route4me.sdk.services.customers.CustomerStoreRequest;
 import com.route4me.sdk.services.facilities.FacilityResource;
 import com.route4me.sdk.services.facilities.FacilityCoordinates;
 import com.route4me.sdk.services.schedules.Schedule;
+import com.route4me.sdk.services.schedules.ScheduleBlacklistItem;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 
+/**
+ * Checks how the models are written to and read from JSON, with the mapper the managers use.
+ */
 public class ModelSerializationTest {
 
     private Gson gson;
 
     @Before
     public void setUp() {
-        gson = new GsonBuilder().create();
+        // The mapper of a manager: every SDK manager is built with Manager(String), which adds
+        // LenientBooleanAdapter and LenientMapAdapterFactory. A plain Gson has neither.
+        gson = new RoutingManager(null).gson;
+    }
+
+    /** Asserts that a model is written as exactly the given JSON (member order aside). */
+    private void assertWritten(String expectedJson, Object model) {
+        assertEquals(JsonParser.parseString(expectedJson), gson.toJsonTree(model));
+    }
+
+    @Test
+    public void testTheManagersMapperReadsTheApisBooleansAndEmptyMaps() {
+        String json = "{\"is_depot\":1,\"custom_fields\":[],\"manifest\":{\"k\":\"v\"}}";
+
+        Address address = gson.fromJson(json, Address.class);
+
+        assertTrue(address.getDepot());
+        assertTrue(address.getCustom_fields().isEmpty());
+        assertEquals("v", address.getManifest().get("k"));
+        assertFalse(gson.fromJson("{\"is_depot\":\"0\"}", Address.class).getDepot());
+        try {
+            new Gson().fromJson(json, Address.class);
+            fail("a plain Gson rejects is_depot: 1, so these tests must use the managers' mapper");
+        } catch (JsonSyntaxException expected) {
+            // the reason the tests use the managers' mapper
+        }
     }
 
     @Test
@@ -64,12 +97,7 @@ public class ModelSerializationTest {
         address.setLatitude(40.0);
         address.setLongitude(-74.0);
 
-        String json = gson.toJson(address);
-        JsonObject obj = gson.fromJson(json, JsonObject.class);
-
-        assertTrue(obj.has("route_destination_id"));
-        assertTrue(obj.has("lat"));
-        assertTrue(obj.has("lng"));
+        assertWritten("{\"route_destination_id\":12345,\"lat\":40.0,\"lng\":-74.0}", address);
     }
 
     @Test
@@ -95,11 +123,7 @@ public class ModelSerializationTest {
         params.setRouteName("Test");
         params.setDistanceUnit("mi");
 
-        String json = gson.toJson(params);
-        JsonObject obj = gson.fromJson(json, JsonObject.class);
-
-        assertTrue(obj.has("route_name"));
-        assertTrue(obj.has("distance_unit"));
+        assertWritten("{\"route_name\":\"Test\",\"distance_unit\":\"mi\"}", params);
     }
 
     @Test
@@ -146,11 +170,7 @@ public class ModelSerializationTest {
         order.setAddress1("test");
         order.setFirstName("Jane");
 
-        String json = gson.toJson(order);
-        JsonObject obj = gson.fromJson(json, JsonObject.class);
-
-        assertTrue(obj.has("address_1"));
-        assertTrue(obj.has("first_name"));
+        assertWritten("{\"address_1\":\"test\",\"first_name\":\"Jane\"}", order);
     }
 
     @Test
@@ -178,11 +198,7 @@ public class ModelSerializationTest {
         vehicle.setVehicleAlias("Test");
         vehicle.setVehicleLicensePlate("XYZ");
 
-        String json = gson.toJson(vehicle);
-        JsonObject obj = gson.fromJson(json, JsonObject.class);
-
-        assertTrue(obj.has("vehicle_alias"));
-        assertTrue(obj.has("vehicle_license_plate"));
+        assertWritten("{\"vehicle_alias\":\"Test\",\"vehicle_license_plate\":\"XYZ\"}", vehicle);
     }
 
     @Test
@@ -210,11 +226,7 @@ public class ModelSerializationTest {
         request.setExternalId("ext");
         request.setTaxId("tax");
 
-        String json = gson.toJson(request);
-        JsonObject obj = gson.fromJson(json, JsonObject.class);
-
-        assertTrue(obj.has("external_id"));
-        assertTrue(obj.has("tax_id"));
+        assertWritten("{\"external_id\":\"ext\",\"tax_id\":\"tax\"}", request);
     }
 
     @Test
@@ -246,11 +258,7 @@ public class ModelSerializationTest {
         facility.setFacilityId("test");
         facility.setFacilityAlias("test");
 
-        String json = gson.toJson(facility);
-        JsonObject obj = gson.fromJson(json, JsonObject.class);
-
-        assertTrue(obj.has("facility_id"));
-        assertTrue(obj.has("facility_alias"));
+        assertWritten("{\"facility_id\":\"test\",\"facility_alias\":\"test\"}", facility);
     }
 
     @Test
@@ -260,7 +268,8 @@ public class ModelSerializationTest {
         schedule.setAdvanceInterval(7);
         schedule.setAdvanceScheduleIntervalDays(1);
         schedule.setTimezone("America/New_York");
-        schedule.setScheduleBlacklist(Arrays.asList("2023-12-25", "2024-01-01"));
+        schedule.setScheduleBlacklist(Arrays.asList(new ScheduleBlacklistItem(true, "2023-12-25", "2023-12-26"),
+                new ScheduleBlacklistItem(false, "2024-01-01", "2024-01-01")));
 
         String json = gson.toJson(schedule);
         Schedule deserialized = gson.fromJson(json, Schedule.class);
@@ -270,6 +279,7 @@ public class ModelSerializationTest {
         assertEquals(Integer.valueOf(1), deserialized.getAdvanceScheduleIntervalDays());
         assertEquals("America/New_York", deserialized.getTimezone());
         assertEquals(2, deserialized.getScheduleBlacklist().size());
+        assertEquals("2023-12-26", deserialized.getScheduleBlacklist().get(0).getEnd());
     }
 
     @Test
@@ -278,11 +288,7 @@ public class ModelSerializationTest {
         schedule.setScheduleUid("uid-123");
         schedule.setAdvanceInterval(7);
 
-        String json = gson.toJson(schedule);
-        JsonObject obj = gson.fromJson(json, JsonObject.class);
-
-        assertTrue(obj.has("schedule_uid"));
-        assertTrue(obj.has("advance_interval"));
+        assertWritten("{\"schedule_uid\":\"uid-123\",\"advance_interval\":7}", schedule);
     }
 
     @Test
@@ -290,11 +296,7 @@ public class ModelSerializationTest {
         Address address = new Address();
         address.setAddress("Test");
 
-        String json = gson.toJson(address);
-        JsonObject obj = gson.fromJson(json, JsonObject.class);
-
-        assertTrue(obj.has("address"));
-        assertFalse(obj.has("route_destination_id"));
+        assertWritten("{\"address\":\"Test\"}", address);
     }
 
     @Test

@@ -25,6 +25,10 @@ public class OrdersManagerTest {
 
     private static final String HOST = "api.route4me.com";
     private static final String ORDERS_EP = "/api.v4/order.php";
+    private static final String CUSTOM_FIELDS_EP = "/api.v4/order_custom_user_fields.php";
+    private static final String CUSTOM_FIELD = json("{'order_custom_field_id':42,'order_custom_field_name':'gate',"
+            + "'order_custom_field_label':'Gate code','order_custom_field_type':'dropdown','root_owner_member_id':1001,"
+            + "'order_custom_field_type_info':{'short_label':'Gate','allowed_values':['A1','B2']}}");
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -114,8 +118,21 @@ public class OrdersManagerTest {
 
         manager.getOrders(request);
 
-        String sent = http.request().query("filter");
-        assertFalse("filter=" + sent, sent != null && sent.startsWith("OrderFilter("));
+        http.request().assertEndpoint("POST", HOST, ORDERS_EP).assertNoQuery("filter")
+                .assertJson("filter.display", "all");
+    }
+
+    @Test
+    public void getOrdersWithoutARequestListsOrdersWithAPlainGet() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, ordersPage());
+
+        List<Order> orders = manager.getOrders(null);
+
+        http.request().assertEndpoint("GET", HOST, ORDERS_EP).assertApiKeyInQuery()
+                .assertNoQuery("filter").assertNoQuery("limit").assertNoBody();
+        assertEquals(1, http.request().getQueryParameters().size());
+        assertEquals(1, orders.size());
     }
 
     @Test
@@ -189,7 +206,8 @@ public class OrdersManagerTest {
 
         http.request(0).assertJson("filter.statuses[0]", 0).assertJson("filter.statuses[1]", 7);
         http.request(1).assertJson("filter.tracking_numbers[0]", "TRK-1").assertJson("limit", 30);
-        http.request(2).assertJson("filter.tracking_numbers[0]", "TRK-2").assertJson("limit", 1).assertJson("offset", 2);
+        http.request(2).assertJson("filter.tracking_numbers[0]", "TRK-2").assertJson("limit", 1).assertJson("offset",
+                2);
     }
 
     @Test
@@ -215,6 +233,153 @@ public class OrdersManagerTest {
                 .assertJson("order_ids[0]", 7001)
                 .assertJson("order_ids[1]", 7002);
         assertTrue(status.getStatus());
+    }
+
+    /** Builds a sample V4 order custom field with fake data. */
+    private static OrderCustomUserField customField() {
+        OrderCustomFieldTypeInfo info = new OrderCustomFieldTypeInfo();
+        info.setShortLabel("Gate");
+        info.setAllowedValues(Arrays.asList("A1", "B2"));
+        OrderCustomUserField field = new OrderCustomUserField();
+        field.setOrderCustomFieldName("gate");
+        field.setOrderCustomFieldLabel("Gate code");
+        field.setOrderCustomFieldType("dropdown");
+        field.setOrderCustomFieldTypeInfo(info);
+        return field;
+    }
+
+    @Test
+    public void getOrderCustomUserFieldsReadsTheDataList() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, "{\"data\":[" + CUSTOM_FIELD + "]}");
+
+        List<OrderCustomUserField> fields = manager.getOrderCustomUserFields();
+
+        http.request().assertEndpoint("GET", HOST, CUSTOM_FIELDS_EP).assertApiKeyInQuery().assertNoBody();
+        assertEquals(Long.valueOf(42L), fields.get(0).getOrderCustomFieldId());
+        assertEquals(Long.valueOf(1001L), fields.get(0).getRootOwnerMemberId());
+        assertEquals("B2", fields.get(0).getOrderCustomFieldTypeInfo().getAllowedValues().get(1));
+    }
+
+    @Test
+    public void getOrderCustomUserFieldsAlsoReadsABareArray() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, "[" + CUSTOM_FIELD + "]").respond(200, json("{'result':'OK'}")).respondWithoutBody(200);
+
+        List<OrderCustomUserField> fields = manager.getOrderCustomUserFields();
+
+        assertEquals("gate", fields.get(0).getOrderCustomFieldName());
+        assertNull(manager.getOrderCustomUserFields());
+        assertNull(manager.getOrderCustomUserFields());
+    }
+
+    @Test
+    public void getOrderCustomUserFieldsReadsAnEmptyTypeInfoArrayAsNull() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, json("{'data':[{'order_custom_field_id':43,'order_custom_field_name':'notes',"
+                + "'order_custom_field_type':'text','order_custom_field_type_info':[]},"
+                + "{'order_custom_field_id':44,'order_custom_field_type_info':null}," + CUSTOM_FIELD + "]}"));
+
+        List<OrderCustomUserField> fields = manager.getOrderCustomUserFields();
+
+        assertEquals(3, fields.size());
+        assertEquals("notes", fields.get(0).getOrderCustomFieldName());
+        assertNull("PHP sends an empty map as []", fields.get(0).getOrderCustomFieldTypeInfo());
+        assertNull(fields.get(1).getOrderCustomFieldTypeInfo());
+        assertEquals("Gate", fields.get(2).getOrderCustomFieldTypeInfo().getShortLabel());
+    }
+
+    @Test
+    public void getOrderCustomUserFieldsRejectsANonEmptyTypeInfoArray() {
+        final OrdersManager manager = manager();
+        http.respond(200, json("[{'order_custom_field_id':43,'order_custom_field_type_info':['A1']}]"));
+
+        http.expectApiException(manager::getOrderCustomUserFields);
+    }
+
+    @Test
+    public void getOrderCustomUserFieldsRejectsAListOfTheWrongShape() {
+        final OrdersManager manager = manager();
+        http.respond(200, "[1, 2]");
+
+        http.expectApiException(manager::getOrderCustomUserFields);
+    }
+
+    @Test
+    public void createOrderCustomUserFieldPostsTheField() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, "{\"result\":\"OK\",\"affected\":1,\"data\":" + CUSTOM_FIELD + "}");
+
+        OrderCustomUserFieldResponse response = manager.createOrderCustomUserField(customField());
+
+        http.request().assertEndpoint("POST", HOST, CUSTOM_FIELDS_EP).assertApiKeyInQuery()
+                .assertContentType("application/json")
+                .assertJson("order_custom_field_name", "gate")
+                .assertJson("order_custom_field_label", "Gate code")
+                .assertJson("order_custom_field_type", "dropdown")
+                .assertJson("order_custom_field_type_info.short_label", "Gate")
+                .assertJson("order_custom_field_type_info.allowed_values[0]", "A1")
+                .assertJsonLacks("order_custom_field_id", "root_owner_member_id", "order_custom_field_value");
+        assertEquals("OK", response.getResult());
+        assertEquals(Integer.valueOf(1), response.getAffected());
+        assertEquals(Long.valueOf(42L), response.getData().getOrderCustomFieldId());
+    }
+
+    @Test
+    public void customUserFieldWritesRequireTheField() {
+        final OrdersManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createOrderCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateOrderCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateOrderCustomUserField(new OrderCustomUserField()));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void updateOrderCustomUserFieldPutsTheField() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, "{\"result\":\"OK\",\"affected\":1,\"data\":" + CUSTOM_FIELD + "}");
+        OrderCustomUserField field = customField();
+        field.setOrderCustomFieldId(42L);
+        field.setOrderCustomFieldValue("A1");
+
+        manager.updateOrderCustomUserField(field);
+
+        http.request().assertEndpoint("PUT", HOST, CUSTOM_FIELDS_EP).assertApiKeyInQuery()
+                .assertJson("order_custom_field_id", 42)
+                .assertJson("order_custom_field_value", "A1")
+                .assertJson("order_custom_field_label", "Gate code");
+    }
+
+    @Test
+    public void removeOrderCustomUserFieldSendsOnlyTheId() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, json("{'result':'OK','affected':1}"));
+
+        OrderCustomUserFieldResponse response = manager.removeOrderCustomUserField(42L);
+
+        http.request().assertEndpoint("DELETE", HOST, CUSTOM_FIELDS_EP).assertApiKeyInQuery()
+                .assertJson("order_custom_field_id", 42);
+        assertEquals(Collections.singleton("order_custom_field_id"), http.request().jsonKeys());
+        assertEquals(Integer.valueOf(1), response.getAffected());
+    }
+
+    @Test
+    public void getOrdersUpdatesSendsTheLastKnownTimestamp() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, json("{'data':[{'order_id':7001,'updated_timestamp':'1761040000',"
+                + "'EXT_FIELD_custom_data':{'gate':'A1'}},{'order_id':7002,'EXT_FIELD_custom_data':[]}]}"));
+
+        OrdersUpdatesResponse updates = manager.getOrdersUpdates(1761000000L);
+
+        http.request().assertEndpoint("GET", HOST, "/api.v4/orders/changes.php").assertApiKeyInQuery()
+                .assertQuery("last_known_ts", "1761000000")
+                .assertNoBody();
+        assertEquals(Long.valueOf(7001L), updates.getData().get(0).getOrderId());
+        assertEquals("1761040000", updates.getData().get(0).getUpdatedTimestamp());
+        assertEquals("A1", updates.getData().get(0).getCustomData().get("gate"));
+        assertTrue("PHP sends an empty map as []", updates.getData().get(1).getCustomData().isEmpty());
     }
 
     @Test

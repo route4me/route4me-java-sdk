@@ -6,21 +6,58 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.StatusResponse;
 import org.apache.http.client.utils.URIBuilder;
 
+/**
+ * Reads and posts the activities of the account (its activity feed) through the V4 API ({@code
+ * https://api.route4me.com}).
+ */
 public class ActivityManager extends Manager {
+    /** The path that lists activities, on {@code api.route4me.com}. */
     public static final String GET_ACTIVITIES_EP = "/api/get_activities.php";
+    /** The path that posts to the activity feed, on {@code api.route4me.com}. */
     public static final String ACTIVITY_FEED_EP = "/api.v4/activity_feed.php";
 
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as the {@code api_key} query parameter
+     */
     public ActivityManager(String apiKey) {
         super(apiKey);
     }
 
+    /**
+     * Lists activities: {@code GET https://api.route4me.com/api/get_activities.php}, with the request as the query.
+     *
+     * @param request the type, the route, the member, the period and the page
+     * @return the activities
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
     public Activities getActivities(ActivityRequest request) throws APIException {
-        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(GET_ACTIVITIES_EP), request, Activities.class);
+        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(GET_ACTIVITIES_EP), request,
+                Activities.class);
+    }
+
+    /**
+     * Reads the activity feed: {@code GET https://api.route4me.com/api.v4/activity_feed.php}, with the request as the
+     * query. Set the {@code routeId} of the request for the activities of one route, and its {@code type} for one
+     * type of activity, such as {@link ActivityType#INSERT_DESTINATION}.
+     *
+     * <p>{@link #getActivities(ActivityRequest)} reads the same activities from another V4 endpoint,
+     * {@code /api/get_activities.php}.
+     *
+     * @param request the route, the type, the member, the period and the page; {@code null} sends no filter
+     * @return the activities and their number
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public Activities getActivityFeed(ActivityRequest request) throws APIException {
+        return this.makeJSONRequest(RequestMethod.GET, Manager.defaultBuilder(ACTIVITY_FEED_EP), request,
+                Activities.class);
     }
 
     /**
      * Posts a user message to the activity feed of a route:
-     * {@code POST /api.v4/activity_feed.php}.
+     * {@code POST https://api.route4me.com/api.v4/activity_feed.php}, with {@code activity_type=user_message}, the
+     * message and the route ID as the JSON body.
      *
      * @param message the message
      * @param routeId the route ID
@@ -33,7 +70,8 @@ public class ActivityManager extends Manager {
         activity.setRouteId(routeId);
         activity.setMessage(message);
         activity.setType(ActivityType.USER_MESSAGE);
-        StatusResponse resp = this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(activity), StatusResponse.class);
+        StatusResponse resp = this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(activity),
+                StatusResponse.class);
         // An empty body or a missing status counts as a failure, like an explicit false.
         if (resp == null || !Boolean.TRUE.equals(resp.getStatus())) {
             throw new APIException("Operation has not succeeded with an unknown error");

@@ -35,7 +35,8 @@ public class ActivityManagerTest {
 
         http.request().assertEndpoint("GET", HOST, "/api/get_activities.php").assertApiKeyInQuery()
                 .assertQuery("route_id", "ROUTE-A1")
-                .assertQuery("type", "user_message")
+                .assertQuery("activity_type", "user_message")
+                .assertNoQuery("type")
                 .assertQuery("limit", "10")
                 .assertQuery("offset", "0")
                 .assertQuery("team", "1")
@@ -49,6 +50,48 @@ public class ActivityManagerTest {
         assertEquals(ActivityType.ROUTE_OPTIMIZED, activities.getResults().get(1).getType());
         assertEquals("Driver is running late", activities.getResults().get(0).getMessage());
         assertEquals(2, activities.getTotal().intValue());
+    }
+
+    @Test
+    public void getActivityFeedReadsTheV4FeedWithTheFilters() throws Exception {
+        ActivityManager manager = manager();
+        http.respondToAll(200, json("{'results':[{'activity_id':'ACT-3','activity_type':'insert-destination',"
+                + "'activity_timestamp':1761040200,'route_id':'ROUTE-A1','route_destination_id':5002,"
+                + "'destination_name':'North hub','destination_alias':'Hub','member_id':'1001'}],'total':1}"));
+        ActivityRequest request = new ActivityRequest().setRouteId("ROUTE-A1")
+                .setType(ActivityType.INSERT_DESTINATION).setLimit(5).setOffset(10).setTeam(false);
+
+        Activities feed = manager.getActivityFeed(request);
+        manager.getActivityFeed(null);
+
+        http.request(0).assertEndpoint("GET", HOST, "/api.v4/activity_feed.php").assertApiKeyInQuery()
+                .assertQuery("route_id", "ROUTE-A1")
+                .assertQuery("activity_type", "insert-destination")
+                .assertQuery("limit", "5")
+                .assertQuery("offset", "10")
+                .assertQuery("team", "0")
+                .assertNoQuery("member_id")
+                .assertNoBody();
+        http.request(1).assertEndpoint("GET", HOST, "/api.v4/activity_feed.php")
+                .assertNoQuery("activity_type").assertNoQuery("route_id");
+        Activity activity = feed.getResults().get(0);
+        assertEquals(ActivityType.INSERT_DESTINATION, activity.getType());
+        assertEquals("5002", activity.getRouteDestinationId());
+        assertEquals("North hub", activity.getDestinationName());
+        assertEquals("Hub", activity.getDestinationAlias());
+        assertEquals("1001", activity.getMemberId());
+        assertEquals(1, feed.getTotal().intValue());
+    }
+
+    @Test
+    public void routeDestinationIdIsReadFromItsRealName() throws Exception {
+        ActivityManager manager = manager();
+        http.respond(200, json("{'results':[{'activity_id':'ACT-4','route_destination_id':'5003',"
+                + "'route_destination_od':'WRONG'}],'total':1}"));
+
+        Activities activities = manager.getActivities(new ActivityRequest());
+
+        assertEquals("5003", activities.getResults().get(0).getRouteDestinationId());
     }
 
     @Test

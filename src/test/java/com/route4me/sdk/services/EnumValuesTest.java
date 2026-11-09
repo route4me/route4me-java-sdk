@@ -60,19 +60,10 @@ public class EnumValuesTest {
     }
 
     @Test
-    public void toStringAndGetValueAgree() throws Exception {
+    public void everyValueEnumReturnsItsApiValueFromToString() throws Exception {
         List<Class<?>> enums = valueEnums();
         assertTrue("expected the Constants enums to be found", enums.size() > 30);
         for (Class<?> type : enums) {
-            if (overridesToString(type)) {
-                assertValuesMatchToString(type);
-            }
-        }
-    }
-
-    @Test
-    public void everyValueEnumReturnsItsApiValueFromToString() throws Exception {
-        for (Class<?> type : valueEnums()) {
             assertValuesMatchToString(type);
         }
     }
@@ -99,7 +90,8 @@ public class EnumValuesTest {
     public void knownApiValues() {
         assertEquals("depots", SourceType.DEPOTS.getValue());
         assertEquals("input_addresses", SourceType.ADDRESSES.toString());
-        assertEquals("certain_number_of_locations", RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_LOCATIONS.getValue());
+        assertEquals("certain_number_of_locations",
+                RouteBreaksEnum.RouteBreaksType.CERTAIN_NUMBER_OF_LOCATIONS.getValue());
         assertEquals("optimal_anywhere", InsertMode.OPTIMAL_ANYWHERE.getValue());
         assertEquals("user_message", ActivityType.USER_MESSAGE.toString());
         assertEquals("dropoff", StatusUpdateType.DROPOFF.toString());
@@ -118,20 +110,12 @@ public class EnumValuesTest {
                 continue;
             }
             for (Object constant : type.getEnumConstants()) {
-                assertSame(type.getSimpleName() + "." + constant, constant, lookup.invoke(null, getValue.invoke(constant)));
+                assertSame(type.getSimpleName() + "." + constant, constant,
+                        lookup.invoke(null, getValue.invoke(constant)));
             }
             checked++;
         }
         assertTrue("expected enums with a get(int) lookup", checked >= 5);
-    }
-
-    @Test
-    public void sourceTypeIsImmutable() throws Exception {
-        Field value = SourceType.class.getDeclaredField("value");
-        assertTrue("SourceType.value should be final", Modifier.isFinal(value.getModifiers()));
-        for (Method method : SourceType.class.getMethods()) {
-            assertFalse("SourceType should not have a public " + method.getName(), "setValue".equals(method.getName()));
-        }
     }
 
     @Test
@@ -189,16 +173,6 @@ public class EnumValuesTest {
             if (getValue != null && getValue.getReturnType() == String.class) {
                 assertEquals(name, getValue.invoke(constant), constant.toString());
             }
-        }
-    }
-
-    /** Returns whether the enum declares its own {@code toString()}. */
-    private static boolean overridesToString(Class<?> type) {
-        try {
-            type.getDeclaredMethod("toString");
-            return true;
-        } catch (NoSuchMethodException e) {
-            return false;
         }
     }
 

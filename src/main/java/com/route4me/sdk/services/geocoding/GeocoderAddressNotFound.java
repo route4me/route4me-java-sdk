@@ -10,15 +10,17 @@ import lombok.Data;
  * and open the template in the editor.
  */
 
+/** The answer of the geocoder for an address it cannot find. */
 @Data
 public class GeocoderAddressNotFound {
-    
+
+    /** The status of the answer ({@code status}). */
     @SerializedName("status")
-    String status;
-    
+    private String status;
+
     /** The number of results. The API spells the key {@code resutls}; {@code results} is accepted too. */
     @SerializedName(value = "resutls", alternate = {"results"})
-    Integer results;
-   
-    
+    private Integer results;
+
+
 }

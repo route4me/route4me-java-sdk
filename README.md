@@ -3,8 +3,79 @@
 [![Code Quality](https://github.com/route4me/route4me-java-sdk/actions/workflows/code-quality.yml/badge.svg?branch=master)](https://github.com/route4me/route4me-java-sdk/actions/workflows/code-quality.yml)
 [![codebeat badge](https://codebeat.co/badges/088f1145-147e-438e-aa03-9fc5323ff235)](https://codebeat.co/projects/github-com-route4me-route4me-java-sdk)
 
+## Using the SDK
+
+### Requirements
+- **Java 8 or later.** The jar is built for Java 8 (`--release 8`) and runs unchanged on Java 11, 17, 21 and later; CI tests JDK 8, 11, 17 and 21.
+
+### Installation
+Maven:
+```xml
+<dependency>
+    <groupId>io.github.route4me</groupId>
+    <artifactId>route4me-java-sdk</artifactId>
+    <version>2.0.0</version>
+</dependency>
+```
+Gradle: `implementation 'io.github.route4me:route4me-java-sdk:2.0.0'`. The SDK declares the patched `okhttp` and `org.json` versions as its own dependencies, so Maven and Gradle use them without extra configuration (see `SECURITY.md`).
+
+### Authentication
+Every manager takes your API key (Route4Me.com, Settings, API). The SDK sends it as the `api_key` query parameter to the API V4 (`https://api.route4me.com`), which requires that, and as an `Authorization: Bearer` header to the API V5 (`https://wh.route4me.com/modules/api/v5.0`), so it does not appear in V5 URLs or logs. Read the key from the environment or a secret store; do not put it in source code. The examples read `R4M_API_KEY`.
+
+### Managers, timeouts and closing
+Each area of the API has a manager, for example `RoutingManager`, `AddressBookManagerV5` or `VehiclesManagerV5`. A manager keeps one pooled HTTP client: reuse it, and `close()` it when you are done (it implements `Closeable`).
+
+Requests time out by default: 6,050 ms to connect and 30,000 ms to read (`Manager.DEFAULT_CONNECT_TIMEOUT_MS`, `DEFAULT_SOCKET_TIMEOUT_MS`); change them with `setConnectTimeout` and `setSocketTimeout`. Redirects are followed only over https to the Route4Me API hosts, `api.route4me.com` and `wh.route4me.com`, the only hosts that receive the API key.
+
+```java
+try (VehiclesManagerV5 vehicles = new VehiclesManagerV5(System.getenv("R4M_API_KEY"))) {
+    vehicles.setSocketTimeout(60_000);
+    VehiclesPaginatedResponse page = vehicles.getPaginatedVehiclesList(new VehiclePaginateRequest().setPage(1).setPerPage(20));
+}
+```
+
+### Errors
+A failed call throws `APIException`. It carries the HTTP status (`getStatusCode()`, 0 when there was no response), the API's error messages (`getErrors()`, and the V5 `getCode()` and `getMessages()`), the method and the URL with credentials removed (`getMethod()`, `getUrl()`), and the reply body cut to 2,000 characters (`getResponseBody()`). Its message never contains the API key.
+
+```java
+try {
+    facilities.getFacility(facilityId);
+} catch (APIException e) {
+    if (e.getStatusCode() == 404) {
+        // not found
+    } else {
+        System.err.println(e.getStatusCode() + ": " + e.getErrors());
+    }
+}
+```
+
+### Background jobs
+Some V5 calls start a background job and answer `202 Accepted`, for example the address book exports, the vehicle bulk calls and the automatic territories. They return an `AsyncJob`: `getJobId()` gives the job ID (from the `X-Job-Id` header, or from a `Location` status URL), which the job status and result methods take, and `getBodyAs(Class)` parses the reply body when there is one. An address book export is followed with `AddressBookManagerV5.getExportStatus(jobId)` and its file downloaded with `getExportResult(jobId)`.
+
+```java
+AsyncJob job = vehicles.deleteVehicles(vehicleIds);
+if (job.getJobId() != null) {
+    VehicleJobResponse status = vehicles.getVehicleJobStatus(job.getJobId());
+}
+```
+
+### Examples
+`src/examples/java` has a runnable example for each manager method, by area; each one says what it does and which method it calls. They read the key from `R4M_API_KEY`, are compiled by every build, and are not part of the jar. They call the live API: run them against a test account. The examples that change or delete data take their target IDs from environment variables such as `ROUTE_ID` and stop when they are not set. Run one from your IDE, or with `mvn test-compile` and the test classpath.
+
+### Deprecated methods
+Methods on retired Route4Me hosts or obsolete endpoints are marked `@Deprecated` and name their replacement: the telematics vendor methods on the retired `telematics.route4me.com` host (use `TelematicsManager.getTelematicsVendorsV5`; they throw without sending a request) and `RoutingManager.resequenceReoptimizeRoute`, on the obsolete V3 endpoint `/api.v3/route/reoptimize_2.php` (use `updateRoute` with `reoptimize`). The V4 calls that the C# SDK marks obsolete are deprecated too, and name their V5 replacement: the `user.php` methods of `UsersManager` (use `TeamManagementManagerV5`), the `address_book.php` contact methods of `AddressBookManager` (use `AddressBookManagerV5`) and the whole `VehiclesManager` (use `VehiclesManagerV5`). They will be removed in the next major version. See `CHANGELOG.md`.
+
+### Development
+```bash
+mvn -B clean verify          # Checkstyle, javac -Xlint:all -Werror, unit tests, JaCoCo, Javadoc (doclint)
+```
+The build must pass on JDK 8 and on a current JDK. The unit tests never call the API: every request goes through a mocked client and is checked against an endpoint registry built from the Route4Me OpenAPI specs (`src/test/resources/endpoints.json`), with its host, https and the placement of the key.
+
+### Security
+See [SECURITY.md](SECURITY.md) to report a vulnerability.
+
 ### What does Route4Me do?
-In layman's terms Route4Me solves complex variations of the [traveling salesman problem](https://blog.route4me.com/traveling-salesman-problem/) and the [vehicle routing problem](https://blog.route4me.com/vehicle-routing-problems-real-life-solutions/). In more technical terms, Route4Me solves HP-hard logistics problems that span several mathematical and scientific disciplines such as industrial engineering, operations research, algorithmic graph theory, computational geometry, combinatorial optimization, fleet management, field service management, [telematics](https://telematics.route4me.com/).
+In layman's terms Route4Me solves complex variations of the [traveling salesman problem](https://blog.route4me.com/traveling-salesman-problem/) and the [vehicle routing problem](https://blog.route4me.com/vehicle-routing-problems-real-life-solutions/). In more technical terms, Route4Me solves HP-hard logistics problems that span several mathematical and scientific disciplines such as industrial engineering, operations research, algorithmic graph theory, computational geometry, combinatorial optimization, fleet management, field service management, [telematics](https://route4me.com/integrations/telematics).
 
 ### What does the Route4Me SDK permit me to do?
 This SDK makes it easier for you use the Route4Me API. The API has many features, including [route optimization](https://route4me.io/),  and the primary features are related to creating orders and then [creating optimally sequenced driving routes](https://route4me.com) for many drivers.
@@ -96,16 +167,28 @@ The time required to integrate the SDK can be as little as 1 hour or may take se
 
 ## Creating a Simple Route
 
-``` java
+This is `src/examples/java/com/route4me/sdk/examples/SingleDriverRoundTrip.java`.
+
+```java
 package com.route4me.sdk.examples;
 
 import com.route4me.sdk.exception.APIException;
-import com.route4me.sdk.services.routing.Constants.*;
-import com.route4me.sdk.services.routing.*;
+import com.route4me.sdk.services.routing.Constants.AlgorithmType;
+import com.route4me.sdk.services.routing.Constants.DeviceType;
+import com.route4me.sdk.services.routing.Constants.DistanceUnit;
+import com.route4me.sdk.services.routing.Constants.OptimizationState;
+import com.route4me.sdk.services.routing.Constants.Optimize;
+import com.route4me.sdk.services.routing.Constants.TravelMode;
+import com.route4me.sdk.services.routing.Address;
+import com.route4me.sdk.services.routing.DataObject;
+import com.route4me.sdk.services.routing.OptimizationParameters;
+import com.route4me.sdk.services.routing.Parameters;
+import com.route4me.sdk.services.routing.RoutingManager;
 
 import java.util.ArrayList;
 import java.util.List;
 
+/** Optimizes one round-trip route with {@link RoutingManager#runOptimization}, the example of the README. */
 public class SingleDriverRoundTrip {
 
     public static void main(String[] args) {
@@ -129,11 +212,14 @@ public class SingleDriverRoundTrip {
         optParameters.setParameters(parameters);
 
         List<Address> addresses = new ArrayList<>();
-        addresses.add(new Address("754 5th Ave New York, NY 10019", true, "Bergdorf Goodman", 40.7636197, -73.9744388, 0));
+        addresses.add(new Address("754 5th Ave New York, NY 10019", true, "Bergdorf Goodman", 40.7636197, -73.9744388,
+                0));
         addresses.add(new Address("717 5th Ave New York, NY 10022", "Giorgio Armani", 40.7669692, -73.9693864, 0));
-        addresses.add(new Address("888 Madison Ave New York, NY 10014", "Ralph Lauren Women's and Home", 40.7715154, -73.9669241, 0));
+        addresses.add(new Address("888 Madison Ave New York, NY 10014", "Ralph Lauren Women's and Home", 40.7715154,
+                -73.9669241, 0));
         addresses.add(new Address("1011 Madison Ave New York, NY 10075", "Yigal Azrou'l", 40.7772129, -73.9669, 0));
-        addresses.add(new Address("440 Columbus Ave New York, NY 10024", "Frank Stella Clothier", 40.7808364, -73.9732729, 0));
+        addresses.add(new Address("440 Columbus Ave New York, NY 10024", "Frank Stella Clothier", 40.7808364,
+                -73.9732729, 0));
         addresses.add(new Address("324 Columbus Ave #1 New York, NY 10023", "Liana", 40.7803123, -73.9793079, 0));
         addresses.add(new Address("110 W End Ave New York, NY 10023", "Toga Bike Shop", 40.7753077, -73.9861529, 0));
         addresses.add(new Address("555 W 57th St New York, NY 10019", "BMW of Manhattan", 40.7718005, -73.9897716, 0));
