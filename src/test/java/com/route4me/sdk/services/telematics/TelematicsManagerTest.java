@@ -9,6 +9,7 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -273,11 +274,51 @@ public class TelematicsManagerTest {
     }
 
     @Test
-    public void unreadableIsEnabledFailsAsAnUnparsableReply() {
-        final TelematicsManager manager = manager();
+    public void anyIsEnabledValueReadsAsAFlagWithoutFailingTheReply() throws Exception {
+        TelematicsManager manager = manager();
+        Gson gson = new Gson();
+        // Whole numbers are kept; other numbers and text read as 1 or 0, as LenientBooleanAdapter reads them.
+        String[][] cases = {{"1.0", "1"}, {"0.0", "0"}, {"2", "2"}, {"0.5", "1"}, {"1e0", "1"}, {"\"1.0\"", "1"},
+            {"\"yes\"", "1"}, {"\"on\"", "1"}, {"\"sometimes\"", "0"}, {"\"\"", "0"}, {"\" 3 \"", "3"}};
+        for (String[] c : cases) {
+            assertEquals(c[0], Integer.valueOf(c[1]),
+                    gson.fromJson("{\"is_enabled\":" + c[0] + "}", TelematicsConnection.class).getIsEnabled());
+        }
         http.respond(200, json("{'connection_token':'CONNECTION-1','is_enabled':'sometimes'}"));
 
-        http.expectApiException(() -> manager.getTelematicsConnection(TOKEN, "CONNECTION-1"));
+        TelematicsConnection fetched = manager.getTelematicsConnection(TOKEN, "CONNECTION-1");
+
+        assertEquals("CONNECTION-1", fetched.getConnectionToken());
+        assertEquals(Integer.valueOf(0), fetched.getIsEnabled());
+    }
+
+    @Test
+    public void metadataKeepsWholeNumbersOnARoundTrip() throws Exception {
+        TelematicsManager manager = manager();
+        http.respond(200, json("{'connection_token':'CONNECTION-1','metadata':{'fleet_id':12345,"
+                + "'big_id':9007199254740993,'ratio':0.5,'whole_double':2.0,'nested':{'id':7},'list':[1,2.5],"
+                + "'name':'North','gone':null}}"))
+                .respond(200, json("{'connection_token':'CONNECTION-1','metadata':[]}"))
+                .respond(200, json("{'connection_token':'CONNECTION-1'}"));
+
+        TelematicsConnection fetched = manager.getTelematicsConnection(TOKEN, "CONNECTION-1");
+        TelematicsConnection emptyMetadata = manager.getTelematicsConnection(TOKEN, "CONNECTION-1");
+        TelematicsConnection change = new TelematicsConnection();
+        change.setMetadata(fetched.getMetadata());
+        manager.updateTelematicsConnectionV5("CONNECTION-1", change);
+
+        Map<String, Object> metadata = fetched.getMetadata();
+        assertEquals(12345L, metadata.get("fleet_id"));
+        assertEquals("no digits lost above 2^53", 9007199254740993L, metadata.get("big_id"));
+        assertEquals(0.5, metadata.get("ratio"));
+        assertEquals("a number written with a fraction stays a Double", 2.0, metadata.get("whole_double"));
+        assertEquals(Collections.singletonMap("id", 7L), metadata.get("nested"));
+        assertEquals(Arrays.asList(1L, 2.5), metadata.get("list"));
+        assertTrue(metadata.containsKey("gone"));
+        assertTrue(emptyMetadata.getMetadata().isEmpty());
+        http.request(2).assertJson("metadata", "{\"fleet_id\":12345,\"big_id\":9007199254740993,\"ratio\":0.5,"
+                + "\"whole_double\":2.0,\"nested\":{\"id\":7},\"list\":[1,2.5],\"name\":\"North\","
+                + "\"gone\":null}");
     }
 
     @Test

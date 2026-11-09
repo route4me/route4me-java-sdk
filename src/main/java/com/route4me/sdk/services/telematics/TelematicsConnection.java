@@ -5,16 +5,19 @@
  */
 package com.route4me.sdk.services.telematics;
 
-import com.google.gson.JsonSyntaxException;
+import com.google.gson.GsonBuilder;
+import com.google.gson.ToNumberPolicy;
 import com.google.gson.TypeAdapter;
 import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import com.route4me.sdk.queryconverter.QueryParameter;
+import com.route4me.sdk.utils.LenientBooleanAdapter;
+import com.route4me.sdk.utils.LenientMapAdapterFactory;
 import java.io.IOException;
-import java.util.Locale;
 import java.util.Map;
 import lombok.Data;
 import lombok.ToString;
@@ -107,9 +110,12 @@ public class TelematicsConnection {
     /**
      * Metadata, custom key-value storage ({@code metadata}). The connection methods send it as the text of a JSON
      * object, as the telematics API reads it; a key whose value is {@code null} is sent as {@code null}, which an
-     * update reads as "remove this key".
+     * update reads as "remove this key". A whole number is read as a {@code Long} and any other number as a
+     * {@code Double}, so that metadata read from the API and sent back keeps {@code 12345} as {@code 12345}; an
+     * empty JSON array reads as an empty map.
      */
     @SerializedName("metadata")
+    @JsonAdapter(MetadataAdapter.class)
     private Map<String, Object> metadata;
     /**
      * Whether to check the credentials with the vendor before saving ({@code validate_remote_credentials}), such as
@@ -120,7 +126,9 @@ public class TelematicsConnection {
 
     /**
      * Reads {@code is_enabled} from a number, a boolean ({@code true} is {@code 1}) or a string, and writes it as a
-     * number.
+     * number. A whole number, or a string of one, is kept as it is; any other value reads as {@code 1} or {@code 0}:
+     * a number unless it is 0, and a string as {@link LenientBooleanAdapter#readString(String)} reads it. So a flag
+     * never fails the reply.
      */
     static final class EnabledFlagAdapter extends TypeAdapter<Integer> {
 
@@ -143,18 +151,42 @@ public class TelematicsConnection {
             if (token == JsonToken.BOOLEAN) {
                 return in.nextBoolean() ? 1 : 0;
             }
+            if (token == JsonToken.NUMBER) {
+                double number = in.nextDouble();
+                if (number == (int) number) {
+                    return (int) number;
+                }
+                return number != 0 ? 1 : 0;
+            }
             String text = in.nextString().trim();
-            if ("true".equals(text.toLowerCase(Locale.ROOT))) {
-                return 1;
-            }
-            if ("false".equals(text.toLowerCase(Locale.ROOT))) {
-                return 0;
-            }
             try {
                 return Integer.valueOf(text);
             } catch (NumberFormatException ex) {
-                throw new JsonSyntaxException("is_enabled is not a number or a boolean: " + text, ex);
+                return LenientBooleanAdapter.readString(text) ? 1 : 0;
             }
+        }
+    }
+
+    /**
+     * Reads {@code metadata} with whole numbers as {@code Long} and other numbers as {@code Double}, and an empty
+     * JSON array as an empty map; Gson's default reads every number of an {@code Object} value as a
+     * {@code Double}. Writing is Gson's own.
+     */
+    static final class MetadataAdapter extends TypeAdapter<Map<String, Object>> {
+        /** Gson's map adapter, with the number policy and the empty-array rule. */
+        private static final TypeAdapter<Map<String, Object>> MAPS = LenientMapAdapterFactory.register(
+                new GsonBuilder().setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE))
+                .create().getAdapter(new TypeToken<Map<String, Object>>() {
+                });
+
+        @Override
+        public void write(JsonWriter out, Map<String, Object> value) throws IOException {
+            MAPS.write(out, value);
+        }
+
+        @Override
+        public Map<String, Object> read(JsonReader in) throws IOException {
+            return MAPS.read(in);
         }
     }
 }

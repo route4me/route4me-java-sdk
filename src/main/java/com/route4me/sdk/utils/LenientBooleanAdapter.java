@@ -99,6 +99,19 @@ public final class LenientBooleanAdapter extends TypeAdapter<Boolean> {
         }
     }
 
+    /**
+     * Reads a string as this adapter reads a JSON string: {@code true} for a plain decimal number
+     * other than 0 and for {@code "true"}, {@code "yes"} and {@code "on"} (trimmed, any case),
+     * and {@code false} for any other text. Other adapters of lenient flags use it.
+     *
+     * @param text the string
+     * @return the boolean the string stands for
+     * @throws NullPointerException if {@code text} is {@code null}
+     */
+    public static boolean readString(String text) {
+        return parse(text);
+    }
+
     /** Reads a string: a number as a number, a word that PHP reads as true as {@code true}, anything else as false. */
     private static Boolean parse(String text) {
         String value = text.trim().toLowerCase(Locale.ROOT);
