@@ -15,7 +15,8 @@ import java.util.logging.Logger;
 /**
  * Creates a user of the account with the deprecated {@link UsersManager#createUser}. New code uses
  * {@code TeamManagementManagerV5.createTeamMember}; see {@link CreateTeamMemberV5}. Set
- * {@code R4M_NEW_MEMBER_PASSWORD} to the password of the new user.
+ * {@code R4M_NEW_MEMBER_PASSWORD} to the password of the new user. Use a test account: the example adds a driver to the
+ * account of the API key, and a new member may take a paid seat.
  */
 public class CreateUser {
     // Shows a deprecated V4 user.php method (obsolete in the C# SDK) until it is removed.
@@ -23,7 +24,8 @@ public class CreateUser {
     public static void main(String[] args) {
         String password = System.getenv("R4M_NEW_MEMBER_PASSWORD");
         if (password == null || password.isEmpty()) {
-            System.err.println("Set R4M_NEW_MEMBER_PASSWORD to the password of the new user.");
+            System.err.println("Set R4M_NEW_MEMBER_PASSWORD to the password of the new user, and use a test account;"
+                    + " this example adds a driver to it, which may take a paid seat.");
             return;
         }
         String apiKey = System.getenv("R4M_API_KEY");

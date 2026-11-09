@@ -8,7 +8,8 @@ import com.route4me.sdk.services.users.TeamMemberRequest;
 
 /**
  * Creates two drivers in one request with {@link TeamManagementManagerV5#bulkCreateTeamMembers}. The owner of the
- * new members is the member of the API key, read with {@link AccountProfileManager#getAccountProfile}.
+ * new members is the member of the API key, read with {@link AccountProfileManager#getAccountProfile}. Use a test
+ * account: the example adds two drivers to the account of the API key, and each new member may take a paid seat.
  */
 public class BulkCreateTeamMembersV5 {
     public static void main(String[] args) {

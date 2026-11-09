@@ -16,14 +16,16 @@ import java.util.logging.Logger;
 
 /**
  * Registers a new account with {@link UsersManager#registerUser}, using a manager without an API key. The password of
- * the new account comes from {@code R4M_NEW_ACCOUNT_PASSWORD}.
+ * the new account comes from {@code R4M_NEW_ACCOUNT_PASSWORD}. The example registers a real Route4Me account, which
+ * may take a paid seat: use it only to register a test account.
  */
 public class RegisterNewUser {
 
     public static void main(String[] args) {
         String password = System.getenv("R4M_NEW_ACCOUNT_PASSWORD");
         if (password == null || password.isEmpty()) {
-            System.err.println("Set R4M_NEW_ACCOUNT_PASSWORD to the password of the new account.");
+            System.err.println("Set R4M_NEW_ACCOUNT_PASSWORD to the password of the new account. This example registers"
+                    + " a real Route4Me account, which may take a paid seat; use it only to register a test account.");
             return;
         }
         UserRegistration registration = new UserRegistration();

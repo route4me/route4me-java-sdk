@@ -7,13 +7,15 @@ import com.route4me.sdk.services.users.TeamMemberRequest;
 /**
  * Creates a team member through the V5 API with {@link TeamManagementManagerV5#createTeamMember}. The owner of the
  * new member is the member of the API key, read with {@link AccountProfileManager#getAccountProfile}; the password
- * of the new member comes from {@code R4M_NEW_MEMBER_PASSWORD}.
+ * of the new member comes from {@code R4M_NEW_MEMBER_PASSWORD}. Use a test account: the example adds a driver to the
+ * account of the API key, and a new member may take a paid seat.
  */
 public class CreateTeamMemberV5 {
     public static void main(String[] args) {
         String password = System.getenv("R4M_NEW_MEMBER_PASSWORD");
         if (password == null || password.isEmpty()) {
-            System.err.println("Set R4M_NEW_MEMBER_PASSWORD to the password of the new member.");
+            System.err.println("Set R4M_NEW_MEMBER_PASSWORD to the password of the new member, and use a test account;"
+                    + " this example adds a driver to it, which may take a paid seat.");
             return;
         }
         String apiKey = System.getenv("R4M_API_KEY");
