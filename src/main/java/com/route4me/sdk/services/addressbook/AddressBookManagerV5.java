@@ -443,8 +443,12 @@ public class AddressBookManagerV5 extends Manager {
      * Downloads the file of a finished address book export: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export/result/{jobId}}. The API answers the file
      * itself, for example as {@code text/csv}, and this method returns its bytes unchanged, so an {@code xls} or
-     * {@code xlsx} file can be saved as it is. Decode a CSV file to read it as text, for example with
-     * {@code new String(file, StandardCharsets.UTF_8)}. The whole file is held in memory.
+     * {@code xlsx} file can be saved as it is. The whole file is held in memory.
+     *
+     * <p>To read a CSV file as text, decode it with its charset. The API does not document which charset it uses,
+     * and this method does not return the reply's {@code Content-Type}. {@code new String(file,
+     * StandardCharsets.UTF_8)} reads UTF-8, the charset of the API's JSON answers; check a file with accented
+     * letters before you rely on it.
      *
      * @param jobId the export ID: {@link AsyncJob#getJobId()} of the export job
      * @return the bytes of the file, as the API sent them; an empty array for an empty answer
