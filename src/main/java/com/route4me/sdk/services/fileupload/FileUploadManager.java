@@ -3,7 +3,6 @@ package com.route4me.sdk.services.fileupload;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
-import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.UUID;
 import org.apache.http.HttpEntity;
@@ -17,6 +16,9 @@ import org.apache.http.entity.ByteArrayEntity;
  *
  * <p>No OpenAPI spec and no C# method cover these endpoints; the requests follow the Python SDK's
  * {@code FileUploading}. Every method returns the answer as text.
+ *
+ * <p>The file is sent from memory: the request body is built as one array, so an upload holds about twice the size
+ * of the file while it runs.
  */
 public class FileUploadManager extends Manager {
 
@@ -45,7 +47,8 @@ public class FileUploadManager extends Manager {
      * @param format the format of the answer, such as {@code json} ({@code format}); {@code null} leaves it out
      * @return the answer, which identifies the upload for {@link #getFilePreview} and {@link #uploadFileGeocode}
      * @throws APIException if the request fails or the server answers with an error status
-     * @throws IllegalArgumentException if the file name or the content is {@code null}
+     * @throws IllegalArgumentException if the file name or the content is {@code null}, or the file is too large for
+     *                                  one request body (about 2 GB)
      */
     public String uploadFile(String fileName, byte[] content, String format) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(UPLOAD_EP);
@@ -79,13 +82,18 @@ public class FileUploadManager extends Manager {
      * https://api.route4me.com/actions/upload/csv-xls-geocode.php?strUploadID=...}, with the file as the
      * {@code strFilename} part of a multipart body.
      *
+     * <p>The call waits for the answer with this manager's read timeout ({@link #getSocketTimeout()}, 30 seconds by
+     * default). If the server geocodes the rows before it answers, a large file can take longer: raise the timeout
+     * with {@link #setSocketTimeout(int)} first. A call that times out may still be geocoding on the server, and
+     * sending it again geocodes the file again.
+     *
      * @param uploadId the ID of the upload, from {@link #uploadFile} ({@code strUploadID})
      * @param fileName the name of the file
      * @param content the content of the file
      * @return the answer
      * @throws APIException if the request fails or the server answers with an error status
-     * @throws IllegalArgumentException if the upload ID is {@code null} or empty, or the file name or the content is
-     *                                  {@code null}
+     * @throws IllegalArgumentException if the upload ID is {@code null} or empty, the file name or the content is
+     *                                  {@code null}, or the file is too large for one request body (about 2 GB)
      */
     public String uploadFileGeocode(String uploadId, String fileName, byte[] content) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(GEOCODE_EP);
@@ -107,7 +115,9 @@ public class FileUploadManager extends Manager {
      * @param fileName the file name; quotes, backslashes and line breaks become {@code _}, so it cannot end the
      *                 header
      * @param content the content of the file
-     * @return the body, with its content type and boundary
+     * @return the body, with its content type and boundary, in one array of the exact size
+     * @throws IllegalArgumentException if the file name or the content is {@code null}, or the body would not fit in
+     *                                  one array
      */
     private static HttpEntity multipart(String fileName, byte[] content) {
         if (fileName == null || content == null) {
@@ -119,14 +129,32 @@ public class FileUploadManager extends Manager {
                 + "Content-Disposition: form-data; name=\"" + FILE_PART + "\"; filename=\"" + safeName + "\"" + CRLF
                 + "Content-Type: application/octet-stream" + CRLF + CRLF;
         String tail = CRLF + "--" + boundary + "--" + CRLF;
-        ByteArrayOutputStream body = new ByteArrayOutputStream(head.length() + content.length + tail.length());
         byte[] headBytes = head.getBytes(StandardCharsets.UTF_8);
         byte[] tailBytes = tail.getBytes(StandardCharsets.UTF_8);
-        body.write(headBytes, 0, headBytes.length);
-        body.write(content, 0, content.length);
-        body.write(tailBytes, 0, tailBytes.length);
-        ByteArrayEntity entity = new ByteArrayEntity(body.toByteArray());
+        // One copy of the file, not three: the body is written straight into an array of its size.
+        byte[] body = new byte[bodySize(headBytes.length, content.length, tailBytes.length)];
+        System.arraycopy(headBytes, 0, body, 0, headBytes.length);
+        System.arraycopy(content, 0, body, headBytes.length, content.length);
+        System.arraycopy(tailBytes, 0, body, headBytes.length + content.length, tailBytes.length);
+        ByteArrayEntity entity = new ByteArrayEntity(body);
         entity.setContentType("multipart/form-data; boundary=" + boundary);
         return entity;
+    }
+
+    /**
+     * Adds the sizes of the parts of a multipart body.
+     *
+     * @param head    the size of the part header, in bytes
+     * @param content the size of the file, in bytes
+     * @param tail    the size of the closing boundary, in bytes
+     * @return the size of the body
+     * @throws IllegalArgumentException if the sum does not fit in an {@code int}, the largest array size
+     */
+    static int bodySize(int head, int content, int tail) {
+        try {
+            return Math.addExact(Math.addExact(head, content), tail);
+        } catch (ArithmeticException ex) {
+            throw new IllegalArgumentException("The file is too large to upload in one request", ex);
+        }
     }
 }
