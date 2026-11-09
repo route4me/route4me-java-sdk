@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
@@ -65,6 +66,44 @@ public class TrackingManagerTest {
         assertNull("a GET without a body has no Content-Type", http.request().header("Content-Type"));
         assertEquals(Boolean.TRUE, response.getStatus());
         assertEquals("TX-1", response.getTxId());
+        assertNull(response.getAnswerText());
+    }
+
+    /**
+     * GPSPosition can only ask for csv, serialized or xml. The position is stored once the
+     * server answers, so an answer that is not JSON must not fail the call: it is kept as text.
+     */
+    @Test
+    public void setGpsKeepsAnAnswerThatIsNotJsonAsText() throws Exception {
+        TrackingManager manager = manager();
+        String[][] answers = {
+            {"csv", "status,tx_id\r\n1,TX-2\r\n", "text/csv"},
+            {"xml", "<?xml version=\"1.0\"?><response><status>true</status></response>", "application/xml"},
+            {"serialized", "a:1:{s:6:\"status\";b:1;}", "text/plain"},
+            {"csv", "{not json", "text/plain"},
+        };
+        for (String[] answer : answers) {
+            http.respond(200, answer[1], answer[2]);
+        }
+
+        for (String[] answer : answers) {
+            Constants.Format format = Constants.Format.valueOf(answer[0].toUpperCase(Locale.ROOT));
+            SetGpsResponse response = manager.setGPS(new GPSPosition().setRouteId("ROUTE-A1").setFormat(format));
+
+            assertNull(response.getStatus());
+            assertNull(response.getTxId());
+            assertEquals(answer[1], response.getAnswerText());
+        }
+        assertEquals(answers.length, http.requestCount());
+    }
+
+    @Test
+    public void setGpsReturnsNullForAnEmptyAnswer() throws Exception {
+        TrackingManager manager = manager();
+        http.respondWithoutBody(200).respond(200, "  ");
+
+        assertNull(manager.setGPS(new GPSPosition().setRouteId("ROUTE-A1")));
+        assertNull(manager.setGPS(new GPSPosition().setRouteId("ROUTE-A1")));
     }
 
     @Test
