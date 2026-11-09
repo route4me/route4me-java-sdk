@@ -3,6 +3,7 @@ package com.route4me.sdk.services.addressbarcode;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.responses.StatusResponse;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 

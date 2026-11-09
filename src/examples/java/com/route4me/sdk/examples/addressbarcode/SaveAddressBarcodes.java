@@ -1,10 +1,10 @@
 package com.route4me.sdk.examples.addressbarcode;
 
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.services.addressbarcode.AddressBarcodeManager;
 import com.route4me.sdk.services.addressbarcode.BarcodeDataRequest;
 import com.route4me.sdk.services.addressbarcode.SaveAddressBarcodesRequest;
-import com.route4me.sdk.services.addressbarcode.StatusResponse;
 
 import java.util.ArrayList;
 import java.util.List;
