@@ -213,6 +213,17 @@ public class RouteDestinationsManagerTest {
     }
 
     @Test
+    public void sortingResourceReadsA64BitMemberIdAndScheduledFor() throws Exception {
+        RouteDestinationsManager manager = manager();
+        http.respond(200, json("{'destination_id':5002,'member_id':3000000003,'scheduled_for':3000000004}"));
+
+        SortingFilteringResource sorting = manager.getDestinationByLabelCode("LBL-1");
+
+        assertEquals(Long.valueOf(3000000003L), sorting.getMemberId());
+        assertEquals(Long.valueOf(3000000004L), sorting.getScheduledFor());
+    }
+
+    @Test
     public void getDestinationsByOrderPutsTheUuidInThePath() throws Exception {
         RouteDestinationsManager manager = manager();
         http.respond(200, "{\"items\":[" + DESTINATION + "]}");
