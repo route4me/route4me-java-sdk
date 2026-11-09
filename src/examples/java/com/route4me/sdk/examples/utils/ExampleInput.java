@@ -1,5 +1,7 @@
 package com.route4me.sdk.examples.utils;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +51,25 @@ public final class ExampleInput {
             }
         }
         System.err.println(name + " must be a number up to " + Integer.MAX_VALUE + ": " + value);
+        return null;
+    }
+
+    /**
+     * Reads a date written as {@code yyyy-MM-dd}, such as {@code 2026-11-09}.
+     *
+     * @param name the variable that holds the value, named in the message
+     * @param value the date, surrounding spaces allowed, or {@code null}
+     * @return the date, or {@code null} after printing that {@code name} must be a date as {@code YYYY-MM-DD}
+     */
+    public static LocalDate toDate(String name, String value) {
+        if (value != null) {
+            try {
+                return LocalDate.parse(value.trim());
+            } catch (DateTimeParseException e) {
+                // Not a date: say so below.
+            }
+        }
+        System.err.println(name + " must be a date as YYYY-MM-DD: " + value);
         return null;
     }
 
