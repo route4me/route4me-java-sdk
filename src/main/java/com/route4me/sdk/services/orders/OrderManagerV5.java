@@ -65,11 +65,13 @@ public class OrderManagerV5 extends Manager {
      * Creates an order: {@code POST https://wh.route4me.com/modules/api/v5.0/orders-platform/create}, with the order as
      * the JSON body.
      *
-     * @param order the order
+     * @param order the order; required
      * @return the created order
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code order} is {@code null}; nothing is sent
      */
     public OrderV5 createOrder(OrderV5 order) throws APIException {
+        requireFields(order);
         URIBuilder builder = v5Builder(ORDERS_CREATE_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(order), OrderV5.class);
     }
@@ -91,11 +93,14 @@ public class OrderManagerV5 extends Manager {
      * order as the JSON body.
      *
      * @param orderUuid the order UUID
-     * @param order the new values
+     * @param order the new values; required
      * @return the updated order
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code order} is {@code null}, or the UUID is {@code null} or empty;
+     *                                  nothing is sent
      */
     public OrderV5 updateOrder(String orderUuid, OrderV5 order) throws APIException {
+        requireFields(order);
         URIBuilder builder = v5Builder(ORDERS_PLATFORM_EP, orderUuid);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(order), OrderV5.class);
     }
@@ -117,11 +122,13 @@ public class OrderManagerV5 extends Manager {
      * JSON body.
      *
      * @param request the order IDs, text search, filters, sort order, page ({@code limit} and {@code offset}) and
-     *                fields
+     *                fields; required
      * @return the matching orders and their total number
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public SearchOrdersResponse searchOrders(SearchOrdersRequest request) throws APIException {
+        requireFields(request);
         URIBuilder builder = v5Builder(ORDERS_PLATFORM_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), SearchOrdersResponse.class);
     }
@@ -130,11 +137,13 @@ public class OrderManagerV5 extends Manager {
      * Creates several orders: {@code POST https://wh.route4me.com/modules/api/v5.0/orders-platform/batch-create}, with
      * the orders as the JSON body.
      *
-     * @param request the orders
+     * @param request the orders; required
      * @return whether the request was accepted, and whether a background job does it
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public AsyncStatusResponse batchCreateOrders(BatchCreateOrdersRequest request) throws APIException {
+        requireFields(request);
         URIBuilder builder = v5Builder(ORDERS_BATCH_CREATE_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), AsyncStatusResponse.class);
     }
@@ -144,11 +153,13 @@ public class OrderManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/orders-platform/batch-update}, with the order IDs and the new values
      * as the JSON body.
      *
-     * @param request the order IDs and the new values
+     * @param request the order IDs and the new values; required
      * @return the updated orders
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public OrderV5[] batchUpdateOrders(BatchUpdateOrdersRequest request) throws APIException {
+        requireFields(request);
         URIBuilder builder = v5Builder(ORDERS_BATCH_UPDATE_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), OrderV5[].class);
     }
@@ -157,11 +168,13 @@ public class OrderManagerV5 extends Manager {
      * Deletes several orders: {@code POST https://wh.route4me.com/modules/api/v5.0/orders-platform/batch-delete}, with
      * {@code {"order_ids": [...]}} as the JSON body.
      *
-     * @param request the order IDs, as 32-character hex strings
+     * @param request the order IDs, as 32-character hex strings; required
      * @return the status of the request
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public StatusResponse batchDeleteOrders(BatchDeleteOrdersRequest request) throws APIException {
+        requireFields(request);
         URIBuilder builder = v5Builder(ORDERS_BATCH_DELETE_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), StatusResponse.class);
     }
@@ -171,11 +184,13 @@ public class OrderManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/orders-platform/batch-update/filter}, with the filters, the text
      * search and the new values as the JSON body.
      *
-     * @param request the filters, the text search and the new values
+     * @param request the filters, the text search and the new values; required
      * @return whether the request was accepted, and whether a background job does it
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public AsyncStatusResponse batchUpdateFilter(BatchUpdateFilterOrderRequest request) throws APIException {
+        requireFields(request);
         URIBuilder builder = v5Builder(ORDERS_BATCH_UPDATE_FILTER_EP);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), AsyncStatusResponse.class);
     }
@@ -184,11 +199,13 @@ public class OrderManagerV5 extends Manager {
      * Lists the archived orders, one page at a time: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/orders/archive}, with the request as the JSON body.
      *
-     * @param request the page cursor, the page size and the filters
+     * @param request the page cursor, the page size and the filters; required
      * @return one page of archived orders, with the cursor of the next page
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public ArchiveOrdersResponse archiveOrders(ArchiveOrdersRequest request) throws APIException {
+        requireFields(request);
         URIBuilder builder = v5Builder(ORDERS_ARCHIVE_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), ArchiveOrdersResponse.class);
     }

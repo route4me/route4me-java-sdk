@@ -308,6 +308,24 @@ public class OrderManagerV5Test {
     }
 
     @Test
+    public void nullOrdersAndRequestsAreRejectedBeforeSending() {
+        final OrderManagerV5 manager = manager();
+
+        IllegalArgumentException error = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.createOrder(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateOrder(ORDER_ID, null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.searchOrders(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchCreateOrders(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchUpdateOrders(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchDeleteOrders(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchUpdateFilter(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.archiveOrders(null));
+
+        http.assertNoRequests();
+        assertEquals("The request is required", error.getMessage());
+    }
+
+    @Test
     public void customUserFieldUuidIsRejectedWhenEmptyAndEncodedWhenItHasASlash() throws Exception {
         final OrderManagerV5 manager = manager();
         final UpdateCustomUserFieldRequest update = new UpdateCustomUserFieldRequest();
