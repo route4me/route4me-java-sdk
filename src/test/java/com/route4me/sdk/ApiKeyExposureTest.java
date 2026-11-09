@@ -227,7 +227,10 @@ public class ApiKeyExposureTest {
 
     @Test
     public void noModelPrintsACredentialInToString() throws Exception {
-        Map<Class<?>, List<Field>> models = credentialFields();
+        List<String> unloadable = new ArrayList<>();
+        Map<Class<?>, List<Field>> models = credentialFields(unloadable);
+        // A class the sweep cannot load would go unchecked, and a credential model behind it with it.
+        assertEquals("classes the sweep could not load", Collections.emptyList(), unloadable);
         List<String> problems = new ArrayList<>();
         for (Map.Entry<Class<?>, List<Field>> model : models.entrySet()) {
             problems.addAll(leaks(model.getKey(), model.getValue()));
@@ -244,8 +247,11 @@ public class ApiKeyExposureTest {
      * {@code toString()} and a field whose Java name, {@code @SerializedName} or
      * {@code @QueryParameter} looks like a credential, inherited fields included. A class that
      * keeps {@code Object.toString()}, such as a manager, prints no field.
+     *
+     * @param unloadable where to list the classes that cannot be loaded, with the reason, so that
+     *                   the test fails on them instead of skipping them
      */
-    private static Map<Class<?>, List<Field>> credentialFields()
+    private static Map<Class<?>, List<Field>> credentialFields(List<String> unloadable)
             throws IOException, URISyntaxException, NoSuchMethodException {
         Path root = Paths.get(User.class.getProtectionDomain().getCodeSource().getLocation().toURI());
         List<String> names;
@@ -262,6 +268,7 @@ public class ApiKeyExposureTest {
             try {
                 type = Class.forName(name, false, User.class.getClassLoader());
             } catch (ClassNotFoundException | LinkageError ex) {
+                unloadable.add(name + ": " + ex);
                 continue;
             }
             if (type.isInterface() || type.isEnum() || type.isAnnotation() || type.isAnonymousClass()
