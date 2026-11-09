@@ -14,7 +14,8 @@ import java.util.logging.Logger;
 
 /**
  * Creates a user of the account with the deprecated {@link UsersManager#createUser}. New code uses
- * {@code TeamManagementManagerV5.createTeamMember}; see {@link CreateTeamMemberV5}.
+ * {@code TeamManagementManagerV5.createTeamMember}; see {@link CreateTeamMemberV5}. Set
+ * {@code R4M_NEW_MEMBER_PASSWORD} to the password of the new user.
  */
 public class CreateUser {
     // Shows a deprecated V4 user.php method (obsolete in the C# SDK) until it is removed.

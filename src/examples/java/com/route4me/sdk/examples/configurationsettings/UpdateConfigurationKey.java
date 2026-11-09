@@ -6,13 +6,14 @@ import com.route4me.sdk.services.configurationsettings.ConfigurationSettingsMana
 
 /**
  * Changes the value of a configuration key with {@link ConfigurationSettingsManager#updateConfigurationKey}. Set
- * {@code CONFIG_KEY} to the key to change, such as {@code sdk_example_key} from {@link CreateConfigurationKey}.
+ * {@code CONFIG_KEY} to a key of a test account, such as {@code sdk_example_key} from {@link CreateConfigurationKey}:
+ * the example changes its value.
  */
 public class UpdateConfigurationKey {
     public static void main(String[] args) {
         String configKey = System.getenv("CONFIG_KEY");
         if (configKey == null || configKey.isEmpty()) {
-            System.err.println("Set CONFIG_KEY to the configuration key to change, such as sdk_example_key from "
+            System.err.println("Set CONFIG_KEY to a configuration key of a test account, such as sdk_example_key from "
                     + "CreateConfigurationKey; this example sets its value to 48.");
             return;
         }
