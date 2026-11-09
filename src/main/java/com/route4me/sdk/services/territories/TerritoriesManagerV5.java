@@ -111,9 +111,7 @@ public class TerritoriesManagerV5 extends Manager {
      *                                  an address without an ID
      */
     public AsyncJob createAutomaticTerritoriesJob(AutomaticTerritoriesJobRequest request) throws APIException {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
+        requireRequest(request);
         boolean noStorage = request.getTemporaryAddressesStorageId() == null
                 || request.getTemporaryAddressesStorageId().isEmpty();
         boolean noAddresses = request.getAddresses() == null || request.getAddresses().isEmpty();

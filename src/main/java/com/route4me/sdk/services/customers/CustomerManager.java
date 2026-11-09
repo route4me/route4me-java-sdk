@@ -114,10 +114,4 @@ public class CustomerManager extends Manager {
         this.makeRequest(RequestMethod.DELETE, builder, "", String.class);
     }
 
-    /** Rejects a {@code null} request, which Gson would send as the JSON text {@code null}. */
-    private static void requireRequest(Object request) {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
-    }
 }

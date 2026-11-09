@@ -416,9 +416,7 @@ public class OrderManagerV5 extends Manager {
      * @throws IllegalArgumentException if the request is {@code null} or a value is {@code null}
      */
     private static void requireFields(Object request, Object... namesAndValues) {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
+        requireRequest(request);
         List<String> missing = new ArrayList<>();
         for (int i = 0; i + 1 < namesAndValues.length; i += 2) {
             if (namesAndValues[i + 1] == null) {

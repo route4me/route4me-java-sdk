@@ -101,9 +101,7 @@ public class TrackingManager extends Manager {
 
     /** Checks the fields the track-set spec requires for one ping or a batch. */
     private static void checkPings(TrackingPingsRequest request) {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
+        requireRequest(request);
         if (request.getItems() == null) {
             if (request.getLat() == null || request.getLng() == null) {
                 throw new IllegalArgumentException("A single ping needs lat and lng");

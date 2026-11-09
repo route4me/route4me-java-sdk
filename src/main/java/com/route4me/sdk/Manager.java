@@ -300,6 +300,19 @@ public abstract class Manager implements Closeable {
     }
 
     /**
+     * Refuses a {@code null} request or body before anything is sent: Gson would send it as the
+     * JSON text {@code null}. Write methods, and list methods that post a filter, call it first.
+     *
+     * @param request the request or body to check
+     * @throws IllegalArgumentException if {@code request} is {@code null} ("The request is required")
+     */
+    protected static void requireRequest(Object request) {
+        if (request == null) {
+            throw new IllegalArgumentException("The request is required");
+        }
+    }
+
+    /**
      * Sends a request with a form body ({@code application/x-www-form-urlencoded}, UTF-8)
      * and parses the response.
      *

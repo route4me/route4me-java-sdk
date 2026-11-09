@@ -359,9 +359,7 @@ public class SchedulesManager extends Manager {
      */
     public RouteScheduleCopiesResponse getRouteScheduleCopies(GetRouteScheduleCopiesRequest request)
             throws APIException {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
+        requireRequest(request);
         require(request.getRouteId(), "route_id");
         URIBuilder builder = v5Builder(SCHEDULED_ROUTES_GET_COPIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),

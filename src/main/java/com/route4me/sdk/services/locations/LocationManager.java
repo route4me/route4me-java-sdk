@@ -271,12 +271,6 @@ public class LocationManager extends Manager {
         return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteLocationTypeResponse.class);
     }
 
-    /** Rejects a {@code null} request, which Gson would send as the JSON text {@code null}. */
-    private static void requireRequest(Object request) {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
-    }
 
     /** Checks the fields the spec requires in a location type, before any request is sent. */
     private static void checkLocationType(StoreLocationTypeRequest request) {

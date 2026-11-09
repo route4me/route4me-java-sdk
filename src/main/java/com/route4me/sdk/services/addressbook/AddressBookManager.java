@@ -118,9 +118,7 @@ public class AddressBookManager extends Manager {
      */
     @Deprecated
     public List<Contact> getContacts(ContactsRequest request) throws APIException {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
+        requireRequest(request);
         URIBuilder builder = contactsQuery(request);
         ContactsResponse cr = this.makeJSONRequest(RequestMethod.GET, builder, request, ContactsResponse.class);
         return cr == null ? null : cr.getResults();

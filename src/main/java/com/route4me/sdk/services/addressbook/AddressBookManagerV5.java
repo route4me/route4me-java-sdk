@@ -537,12 +537,6 @@ public class AddressBookManagerV5 extends Manager {
                 AddressBookContactsResponse.class);
     }
 
-    /** Rejects a {@code null} request, which Gson would send as the JSON text {@code null}. */
-    private static void requireRequest(Object request) {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
-    }
 
     /** Rejects a {@code null} or empty list of contact IDs, before any request is sent. */
     private static void requireIds(long[] contactIds) {

@@ -76,9 +76,7 @@ public class AddressBarcodeManager extends Manager {
      * @throws IllegalArgumentException if a required field is missing; nothing is sent
      */
     public StatusResponse saveAddressBarcodes(SaveAddressBarcodesRequest request) throws APIException {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
+        requireRequest(request);
         requireText(request.getRouteId(), "route_id");
         if (request.getRouteDestinationId() == null) {
             throw new IllegalArgumentException("route_destination_id is required");

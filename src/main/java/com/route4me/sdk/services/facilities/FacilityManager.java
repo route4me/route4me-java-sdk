@@ -92,9 +92,9 @@ public class FacilityManager extends Manager {
      * @throws IllegalArgumentException if the request is {@code null} or a required field is missing
      */
     public FacilityResource createFacility(FacilityCreateRequest request) throws APIException {
-        requireFields(request == null, request == null ? null : request.getFacilityAlias(),
-                request == null ? null : request.getAddress(), request == null ? null : request.getCoordinates(),
-                request == null ? null : request.getFacilityTypes());
+        requireRequest(request);
+        requireFields(request.getFacilityAlias(), request.getAddress(), request.getCoordinates(),
+                request.getFacilityTypes());
         URIBuilder builder = v5Builder(FACILITIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), FacilityResource.class);
     }
@@ -112,9 +112,9 @@ public class FacilityManager extends Manager {
      */
     public FacilityResource updateFacility(String facilityId, FacilityUpdateRequest request) throws APIException {
         URIBuilder builder = v5Builder(FACILITIES_EP, facilityId);
-        requireFields(request == null, request == null ? null : request.getFacilityAlias(),
-                request == null ? null : request.getAddress(), request == null ? null : request.getCoordinates(),
-                request == null ? null : request.getFacilityTypes());
+        requireRequest(request);
+        requireFields(request.getFacilityAlias(), request.getAddress(), request.getCoordinates(),
+                request.getFacilityTypes());
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), FacilityResource.class);
     }
 
@@ -156,18 +156,13 @@ public class FacilityManager extends Manager {
     /**
      * Checks the fields the facilities spec requires in a create or update body.
      *
-     * @param noRequest whether the request is {@code null}
      * @param alias the {@code facility_alias}
      * @param address the {@code address}
      * @param coordinates the {@code coordinates}
      * @param types the {@code facility_types}
-     * @throws IllegalArgumentException if the request is {@code null} or a field is {@code null}
+     * @throws IllegalArgumentException if a field is {@code null}
      */
-    private static void requireFields(boolean noRequest, Object alias, Object address, Object coordinates,
-            Object types) {
-        if (noRequest) {
-            throw new IllegalArgumentException("The request is required");
-        }
+    private static void requireFields(Object alias, Object address, Object coordinates, Object types) {
         List<String> missing = new ArrayList<>();
         if (alias == null) {
             missing.add("facility_alias");

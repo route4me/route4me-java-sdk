@@ -211,12 +211,6 @@ public class OptimizationProfileManager extends Manager {
                 OptimizationProfileAssignResponse.class);
     }
 
-    /** Rejects a {@code null} request body, before any request is sent. */
-    private static void requireRequest(Object request) {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
-    }
 
     /** Rejects a required text that is {@code null} or empty, before any request is sent. */
     private static void requireText(String value, String name) {
