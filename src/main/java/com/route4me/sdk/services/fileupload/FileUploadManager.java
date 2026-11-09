@@ -28,6 +28,10 @@ public class FileUploadManager extends Manager {
     /** The name of the multipart part that holds the file. */
     private static final String FILE_PART = "strFilename";
     private static final String CRLF = "\r\n";
+    /** The largest request body, in bytes: the largest array Java VMs can allocate. */
+    private static final int MAX_BODY_SIZE = Integer.MAX_VALUE - 8;
+    /** The message of a file that does not fit in one request body. */
+    private static final String TOO_LARGE = "The file is too large to upload in one request";
 
     /**
      * Creates a manager that sends its requests with an API key.
@@ -148,13 +152,19 @@ public class FileUploadManager extends Manager {
      * @param content the size of the file, in bytes
      * @param tail    the size of the closing boundary, in bytes
      * @return the size of the body
-     * @throws IllegalArgumentException if the sum does not fit in an {@code int}, the largest array size
+     * @throws IllegalArgumentException if the sum is larger than {@code Integer.MAX_VALUE - 8}, the largest array
+     *                                  Java VMs can allocate; a larger one would fail with {@link OutOfMemoryError}
      */
     static int bodySize(int head, int content, int tail) {
+        int size;
         try {
-            return Math.addExact(Math.addExact(head, content), tail);
+            size = Math.addExact(Math.addExact(head, content), tail);
         } catch (ArithmeticException ex) {
-            throw new IllegalArgumentException("The file is too large to upload in one request", ex);
+            throw new IllegalArgumentException(TOO_LARGE, ex);
         }
+        if (size > MAX_BODY_SIZE) {
+            throw new IllegalArgumentException(TOO_LARGE);
+        }
+        return size;
     }
 }

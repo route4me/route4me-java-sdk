@@ -82,13 +82,22 @@ public class FileUploadManagerTest {
     @Test
     public void aBodyLargerThanAnArrayIsRefused() {
         assertEquals(60, FileUploadManager.bodySize(10, 40, 10));
-        assertEquals(Integer.MAX_VALUE, FileUploadManager.bodySize(100, Integer.MAX_VALUE - 150, 50));
+        assertEquals(Integer.MAX_VALUE - 8, FileUploadManager.bodySize(100, Integer.MAX_VALUE - 158, 50));
         try {
             FileUploadManager.bodySize(100, Integer.MAX_VALUE - 120, 50);
             fail("a body past Integer.MAX_VALUE bytes must be refused");
         } catch (IllegalArgumentException expected) {
             assertTrue(expected.getMessage().contains("too large"));
             assertTrue(expected.getCause() instanceof ArithmeticException);
+        }
+        // Java VMs cannot allocate an array in the last 8 sizes below Integer.MAX_VALUE: OutOfMemoryError.
+        for (int size : new int[] {Integer.MAX_VALUE - 7, Integer.MAX_VALUE}) {
+            try {
+                FileUploadManager.bodySize(100, size - 150, 50);
+                fail("a body of " + size + " bytes must be refused");
+            } catch (IllegalArgumentException expected) {
+                assertTrue(expected.getMessage().contains("too large"));
+            }
         }
     }
 
