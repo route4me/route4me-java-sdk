@@ -138,6 +138,19 @@ public class TelematicsManagerTest {
     }
 
     @Test
+    public void vendorCredentialDefaultIsReadUnderBothNames() throws Exception {
+        TelematicsManager manager = manager();
+        http.respond(200, json("[{'id':'55','credentials':[{'name':'host','default':'fleet.example.com'},"
+                + "{'name':'region','defaut':'eu'},{'name':'api_key'}]}]"));
+
+        TelematicsVendor[] vendors = manager.getTelematicsVendor(TOKEN);
+
+        assertEquals("fleet.example.com", vendors[0].getCredentials().get(0).getDefaut());
+        assertEquals("eu", vendors[0].getCredentials().get(1).getDefaut());
+        assertNull(vendors[0].getCredentials().get(2).getDefaut());
+    }
+
+    @Test
     public void connectionErrorBecomesApiException() {
         final TelematicsManager manager = manager();
         http.respondWithFixture(400, "error_400.json");

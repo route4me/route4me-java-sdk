@@ -18,8 +18,11 @@ public class TelematicsVendorCredentials {
     /** Whether the credential is used ({@code is_enabled}). */
     @SerializedName("is_enabled")
     private Boolean isEnabled;
-    /** The default value of the credential field ({@code defaut}). */
-    @SerializedName("defaut")
+    /**
+     * The default value of the credential field ({@code default}). The telematics spec names it {@code default};
+     * the misspelt {@code defaut} that 1.16.1 mapped is read too. The accessors keep the 1.16.1 names.
+     */
+    @SerializedName(value = "default", alternate = {"defaut"})
     private String defaut;
 
 }
