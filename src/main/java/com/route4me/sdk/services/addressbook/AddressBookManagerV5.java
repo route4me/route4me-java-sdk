@@ -561,8 +561,8 @@ public class AddressBookManagerV5 extends Manager {
 
     /**
      * Rejects an area filter that selects no area, before any request is sent: it needs a drawn area or a complete
-     * rectangle. A text alone is not enough, since the spec makes {@code query} and {@code bounding_box} optional and
-     * only {@code selected_areas} required.
+     * rectangle. A text alone is not enough: the spec marks only {@code query} and {@code bounding_box} as optional,
+     * so it expects {@code selected_areas}, and a complete rectangle bounds the contacts as well.
      */
     private static void requireArea(AddressBookAreasFilter filter) {
         if (filter == null) {
