@@ -41,8 +41,10 @@ import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -53,6 +55,7 @@ import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNotSame;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertSame;
@@ -915,7 +918,8 @@ public class ManagerTest {
 
         Reply reply = manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class);
 
-        assertEquals("R1", reply == null ? null : reply.routeId);
+        assertNotNull("the result is kept although close() failed", reply);
+        assertEquals("R1", reply.routeId);
     }
 
     @Test
@@ -925,7 +929,7 @@ public class ManagerTest {
 
         String result = manager.makeRequest(RequestMethod.DELETE, builder(), "", String.class);
 
-        assertTrue("expected no content, got: " + result, result == null || result.isEmpty());
+        assertEquals("a 204 reads as an empty text, not null", "", result);
     }
 
     @Test
@@ -1253,7 +1257,9 @@ public class ManagerTest {
     @Test
     public void theDefaultClientRefusesRedirectsAwayFromRoute4Me() throws Exception {
         HttpServer server = HttpServer.create(new InetSocketAddress(InetAddress.getLoopbackAddress(), 0), 0);
+        final List<String> seen = new CopyOnWriteArrayList<>();
         server.createContext("/", exchange -> {
+            seen.add(exchange.getRequestURI() + " " + exchange.getRequestHeaders().entrySet());
             String target = exchange.getRequestURI().getPath().endsWith("/plain")
                     ? "http://api.route4me.com/api.v4/route.php" : "https://example.com/collect";
             exchange.getResponseHeaders().add("Location", target);
@@ -1277,6 +1283,15 @@ public class ManagerTest {
                 }
                 assertTrue("expected a RedirectException in " + error, cause != null);
                 assertTrue(cause.getMessage(), cause.getMessage().startsWith("Refused to follow a redirect to "));
+            }
+            // The first request went over plain http to a host that is not Route4Me: it carried no key.
+            assertEquals("each path was requested once, and no redirect was followed", 2, seen.size());
+            for (int i = 0; i < seen.size(); i++) {
+                String request = seen.get(i);
+                assertFalse("request " + i + " carried the API key", request.contains(MockHttp.API_KEY));
+                assertFalse("request " + i + " carried an api_key parameter", request.contains("api_key"));
+                assertFalse("request " + i + " carried an Authorization header",
+                        request.toLowerCase(Locale.ROOT).contains("authorization"));
             }
         } finally {
             server.stop(0);
