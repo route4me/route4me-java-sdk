@@ -1,6 +1,7 @@
 package com.route4me.sdk.services.notes;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
@@ -87,8 +88,8 @@ public class NotesManager extends Manager {
      * list or {@code {"data": [...]}}; this method reads both.
      *
      * @return the custom note types; empty when the account has none
-     * @throws APIException if the request fails, the server answers with an error status or the answer is neither
-     *     shape
+     * @throws APIException if the request fails, the server answers with an error status, the answer is neither
+     *     shape or an item of the list cannot be read as a custom note type
      */
     public List<CustomNoteType> getAllCustomNoteTypes() throws APIException {
         URIBuilder builder = Manager.defaultBuilder(CUSTOM_NOTE_TYPES_EP);
@@ -103,7 +104,11 @@ public class NotesManager extends Manager {
         if (!list.isJsonArray()) {
             throw new APIException("The custom note types answer is neither a list nor {\"data\": [...]}");
         }
-        return new ArrayList<>(Arrays.asList(this.gson.fromJson(list, CustomNoteType[].class)));
+        try {
+            return new ArrayList<>(Arrays.asList(this.gson.fromJson(list, CustomNoteType[].class)));
+        } catch (JsonParseException | IllegalStateException ex) {
+            throw new APIException("The custom note types answer could not be parsed", ex);
+        }
     }
 
     /**
