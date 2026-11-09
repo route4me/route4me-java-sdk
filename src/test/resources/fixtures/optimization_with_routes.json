@@ -1,0 +1,24 @@
+{
+  "optimization_problem_id": "OPT-1",
+  "state": 4,
+  "parameters": {
+    "route_name": "Morning run"
+  },
+  "routes": [
+    {
+      "route_id": "ROUTE-A1",
+      "member_id": 1001,
+      "trip_distance": 12.5,
+      "route_duration_sec": 3600,
+      "destination_count": 2,
+      "is_unrouted": false
+    },
+    {
+      "route_id": "ROUTE-A2",
+      "member_id": 1002,
+      "trip_distance": 7.25,
+      "destination_count": 1,
+      "is_unrouted": false
+    }
+  ]
+}

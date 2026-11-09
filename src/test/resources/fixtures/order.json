@@ -1,0 +1,19 @@
+{
+  "order_id": 7001,
+  "order_status_id": 0,
+  "member_id": 1001,
+  "address_alias": "Example Bakery",
+  "address_1": "100 Example St, Springfield",
+  "address_city": "Springfield",
+  "cached_lat": 40.1,
+  "cached_lng": -74.1,
+  "day_added_YYMMDD": "2026-10-21",
+  "day_scheduled_for_YYMMDD": "2026-10-22",
+  "EXT_FIELD_first_name": "Alex",
+  "EXT_FIELD_last_name": "Sample",
+  "EXT_FIELD_email": "alex@example.com",
+  "EXT_FIELD_weight": 12.5,
+  "EXT_FIELD_custom_data": {
+    "tracking": "TRK-1"
+  }
+}

@@ -8,18 +8,15 @@ package com.route4me.sdk.services.routing;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
-/**
- *
- * @author Route4Me
- */
+/** The answer of {@link RoutingManager#renameRoute(String, String)}. */
 @Data
 public class RouteRenamedStatus {
 
+    /** Whether the route was renamed ({@code success}). */
     @SerializedName("success")
     private Boolean success;
+    /** The error message when {@code success} is {@code false} ({@code error}). */
     @SerializedName("error")
     private String error;
 
-    
-    
 }

@@ -1,0 +1,6 @@
+{
+  "errors": [
+    "Request is invalid: a required parameter is missing"
+  ],
+  "code": 400
+}

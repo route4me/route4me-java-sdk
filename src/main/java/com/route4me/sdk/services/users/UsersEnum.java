@@ -5,18 +5,17 @@
  */
 package com.route4me.sdk.services.users;
 
-/**
- *
- * @author Route4Me
- */
+/** Values of the user API. */
 public class UsersEnum {
 
+    /** The plan of a new account, for {@link UserRegistration}; {@code toString()} gives the API value. */
     public enum Plan {
+        /** The marketplace plan ({@code marketplace}). */
         MARKETPLACE("marketplace");
 
-        private String value;
+        private final String value;
 
-        private Plan(String value) {
+        Plan(String value) {
             this.value = value;
         }
 
@@ -26,17 +25,12 @@ public class UsersEnum {
         }
 
         /**
-         * @return the value
+         * Returns the API value of the plan.
+         *
+         * @return the value, such as {@code marketplace}
          */
         public String getValue() {
             return value;
-        }
-
-        /**
-         * @param value the value to set
-         */
-        public void setValue(String value) {
-            this.value = value;
         }
 
     }

@@ -8,18 +8,21 @@ package com.route4me.sdk.services.telematics;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
-/**
- *
- * @author Route4Me
- */
+/** A credential field a telematics vendor needs. */
 @Data
 public class TelematicsVendorCredentials {
 
+    /** The name of the credential field, such as {@code username} ({@code name}). */
     @SerializedName("name")
     private String name;
+    /** Whether the credential is used ({@code is_enabled}). */
     @SerializedName("is_enabled")
     private Boolean isEnabled;
-    @SerializedName("defaut")
+    /**
+     * The default value of the credential field ({@code default}). The telematics spec names it {@code default};
+     * the misspelt {@code defaut} that 1.16.1 mapped is read too. The accessors keep the 1.16.1 names.
+     */
+    @SerializedName(value = "default", alternate = {"defaut"})
     private String defaut;
 
 }

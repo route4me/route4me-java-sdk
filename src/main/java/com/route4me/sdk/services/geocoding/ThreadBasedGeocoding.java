@@ -12,7 +12,10 @@ import java.util.Arrays;
 import java.util.concurrent.Callable;
 import org.apache.http.client.utils.URIBuilder;
 
-public class ThreadBasedGeocoding implements Callable {
+/**
+ * Geocodes one address for {@link GeocodingManager#bulkGeocoder}.
+ */
+public class ThreadBasedGeocoding implements Callable<Address> {
 
     private static final String GEOCODING_ADDRESS = "/api/address.php";
 
@@ -20,12 +23,27 @@ public class ThreadBasedGeocoding implements Callable {
     private final GeocodingManager manager;
     private final GeocoderOptions options;
 
+    /**
+     * Creates the task that geocodes one address.
+     *
+     * @param manager the manager that sends the request
+     * @param address the address
+     * @param options the format, detail and attempts of the request
+     */
     public ThreadBasedGeocoding(GeocodingManager manager, String address, GeocoderOptions options) {
         this.manager = manager;
         this.address = address;
         this.options = options;
     }
 
+    /**
+     * Returns a new builder for a path on {@code https://api.route4me.com}, as
+     * {@link com.route4me.sdk.Manager}'s own {@code defaultBuilder} does. The API key is added
+     * by the manager when the request is sent.
+     *
+     * @param endpoint the path, such as {@code /api/address.php}
+     * @return a new builder
+     */
     protected static URIBuilder defaultBuilder(String endpoint) {
         URIBuilder builder = new URIBuilder();
         builder.setScheme("https");
@@ -43,7 +61,7 @@ public class ThreadBasedGeocoding implements Callable {
     }
 
     private <T> T geocoder(Class<T> clazz) {
-        return manager.forwardGeocode(getBuilder(), clazz);
+        return manager.forwardGeocode(getBuilder(), clazz, options.getMaxRetries());
     }
 
     @Override
@@ -51,19 +69,25 @@ public class ThreadBasedGeocoding implements Callable {
         return this.address;
     }
 
+    /**
+     * Geocodes the address.
+     *
+     * @return the address with its coordinates and geocodings; unmatched (coordinates 0,
+     * one geocoding of type {@code "invalid"}) when the geocoder finds no match or fails
+     */
     @Override
-    public Address call() throws Exception {
-        Address geocodedAddress = new Address(address, 0.0, 0.0);
-        Geocodings defaultGeocodings = new Geocodings(0.0, 0.0, "invalid", "0", address);
-        geocodedAddress.setGeocodings(Arrays.asList(defaultGeocodings));
+    public Address call() {
+        Address geocodedAddress = GeocodingManager.unmatched(address);
         switch (options.getDetailed()) {
             case DETAILED:
                 Geocodings[] geocodes = geocoder(Geocodings[].class);
-                if (geocodes != null) {
+                if (geocodes != null && geocodes.length > 0 && geocodes[0] != null) {
                     geocodes = fixGeocodings(geocodes);
                     geocodedAddress.setGeocodings(Arrays.asList(geocodes));
-                    geocodedAddress.setLatitude(geocodes[0].getCoordinates().getLatitude());
-                    geocodedAddress.setLongitude(geocodes[0].getCoordinates().getLongitude());
+                    // fixGeocodings copied the coordinates, when there are any, to the
+                    // latitude and longitude of each geocoding.
+                    geocodedAddress.setLatitude(geocodes[0].getLatitude());
+                    geocodedAddress.setLongitude(geocodes[0].getLongitude());
                 }
                 break;
             case SIMPLE:
@@ -73,16 +97,30 @@ public class ThreadBasedGeocoding implements Callable {
                     geocodedAddress.setLongitude(geocoordinate.getLongitude());
                 }
                 break;
+            default:
+                // GeocoderDetails has no other value.
+                break;
         }
 
         return geocodedAddress;
     }
 
+    /**
+     * Copies the {@code coordinates} of each geocoding to its latitude and longitude, as
+     * 1.16.1 did. A geocoding without {@code coordinates} ({@link Geocodings#getCoordinates()}
+     * then answers 0, 0) keeps the latitude and longitude it came with, instead of losing them.
+     */
     private Geocodings[] fixGeocodings(Geocodings[] geocodes) {
         // This is done to maintain the backward compatibility
         for (Geocodings g : geocodes) {
-            g.setLatitude(g.getCoordinates().getLatitude());
-            g.setLongitude(g.getCoordinates().getLongitude());
+            if (g == null) {
+                continue;
+            }
+            GeoCoordinates coordinates = g.getCoordinates();
+            if (coordinates.getLatitude() != 0.0 || coordinates.getLongitude() != 0.0) {
+                g.setLatitude(coordinates.getLatitude());
+                g.setLongitude(coordinates.getLongitude());
+            }
         }
         return geocodes;
     }

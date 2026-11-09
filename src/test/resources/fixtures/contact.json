@@ -1,0 +1,19 @@
+{
+  "address_id": 12345,
+  "address_group": "Customers",
+  "address_alias": "Example Bakery",
+  "address_1": "100 Example St, Springfield",
+  "member_id": 1001,
+  "first_name": "Alex",
+  "last_name": "Sample",
+  "address_email": "alex@example.com",
+  "address_phone_number": "555-0100",
+  "address_city": "Springfield",
+  "cached_lat": 40.1,
+  "cached_lng": -74.1,
+  "address_custom_data": {
+    "gate_code": "A1"
+  },
+  "service_time": 300,
+  "eligible_depot": false
+}
