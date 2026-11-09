@@ -30,6 +30,8 @@ import java.net.Socket;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.logging.Level;
 
 import static org.junit.Assert.assertEquals;
@@ -219,6 +221,33 @@ public class MockHttpTest {
         assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: custom failure"));
         assertSame("the answer gets the captured request", http.request(0), seen[0]);
         assertEquals("the queue goes on after the answer", "after", manager.get("/api.v4/route.php"));
+    }
+
+    @Test
+    public void assertJsonChecksTheJsonTypeOfTheValue() throws Exception {
+        ProbeManager manager = http.install(new ProbeManager());
+        http.respond(200, "{}");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("limit", 5);
+        body.put("text_limit", "5");
+        body.put("active", true);
+        body.put("text_active", "true");
+        manager.postJson("/api.v4/route.php", body);
+        final CapturedRequest request = http.request();
+
+        request.assertJson("limit", 5).assertJson("text_limit", "5").assertJson("active", true)
+                .assertJson("text_active", "true");
+        assertJsonFails(request, "text_limit", 5, "should be a JSON number");
+        assertJsonFails(request, "limit", "5", "should be a JSON string");
+        assertJsonFails(request, "text_active", true, "should be a JSON boolean");
+        assertJsonFails(request, "active", "true", "should be a JSON string");
+    }
+
+    /** Asserts that {@code assertJson(path, expected)} fails with a message that contains {@code reason}. */
+    private void assertJsonFails(final CapturedRequest request, final String path, final Object expected,
+                                 String reason) {
+        AssertionError error = http.expectThrows(AssertionError.class, () -> request.assertJson(path, expected));
+        assertTrue(error.getMessage(), error.getMessage().contains(reason));
     }
 
     @Test

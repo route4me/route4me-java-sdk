@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -493,8 +494,11 @@ public final class CapturedRequest {
     }
 
     /**
-     * Asserts a primitive JSON value. Strings, numbers and booleans are compared by their
-     * text, so {@code assertJson("limit", 10)} matches {@code "limit": 10}.
+     * Asserts a primitive JSON value, with its JSON type: a {@code Number} must be sent as a
+     * JSON number, a {@code Boolean} as a JSON boolean, and anything else (a {@code String}, an
+     * enum) as a JSON string. The values are then compared by their text, so
+     * {@code assertJson("limit", 10)} matches {@code "limit": 10} (and {@code 10.0} matches
+     * {@code 10.0}), but not {@code "limit": "10"}.
      *
      * @param path     the path of the value
      * @param expected the expected value
@@ -508,7 +512,15 @@ public final class CapturedRequest {
             return this;
         }
         assertTrue("'" + path + "' should be a primitive in " + body, element.isJsonPrimitive());
-        assertEquals("'" + path + "' in JSON body of " + this, String.valueOf(expected), element.getAsString());
+        JsonPrimitive primitive = element.getAsJsonPrimitive();
+        if (expected instanceof Number) {
+            assertTrue("'" + path + "' should be a JSON number in " + body, primitive.isNumber());
+        } else if (expected instanceof Boolean) {
+            assertTrue("'" + path + "' should be a JSON boolean in " + body, primitive.isBoolean());
+        } else {
+            assertTrue("'" + path + "' should be a JSON string in " + body, primitive.isString());
+        }
+        assertEquals("'" + path + "' in JSON body of " + this, String.valueOf(expected), primitive.getAsString());
         return this;
     }
 
