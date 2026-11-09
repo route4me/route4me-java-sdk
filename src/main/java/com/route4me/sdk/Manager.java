@@ -112,7 +112,8 @@ public abstract class Manager implements Closeable {
     protected Gson gson;
     private HttpHost proxy;
     private boolean disableRedirects;
-    private String callBackURL;
+    /** Volatile, like the timeouts: {@link #setCallBackURL} may run on another thread than {@link #send}. */
+    private volatile String callBackURL;
     private volatile int connectTimeout = DEFAULT_CONNECT_TIMEOUT_MS;
     private volatile int socketTimeout = DEFAULT_SOCKET_TIMEOUT_MS;
     private volatile int connectionRequestTimeout = DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS;
