@@ -83,23 +83,20 @@ public class GeocoderWebSocketsTest {
     }
 
     /**
-     * Starts a geocoding job of {@code totalAddresses} on a connected mock socket, asks for
-     * the first download and returns the {@code download} payload it emits.
+     * Starts a geocoding job of {@code totalAddresses} on a mock socket, asks for the first
+     * download once it is connected and returns the {@code download} payload it emits.
      */
     private JSONObject firstDownload(int totalAddresses) throws Exception {
-        Socket connected = Mockito.mock(Socket.class);
-        Mockito.when(connected.connected()).thenReturn(true);
-        GeocoderWebSockets geocoder = new GeocoderWebSockets();
-        setSocket(geocoder, connected);
+        OfflineGeocoder geocoder = new OfflineGeocoder();
         geocoder.startGeocoding("TMP-1", totalAddresses);
+        Mockito.when(geocoder.mock.connected()).thenReturn(true);
 
         Method download = GeocoderWebSockets.class.getDeclaredMethod("downloadAddresses", int.class);
         download.setAccessible(true);
         download.invoke(geocoder, 0);
 
         ArgumentCaptor<Object> payload = ArgumentCaptor.forClass(Object.class);
-        verify(connected).emit(Mockito.eq("download"), payload.capture());
-        verify(connected, never()).connect();
+        verify(geocoder.mock).emit(Mockito.eq("download"), payload.capture());
         return (JSONObject) payload.getValue();
     }
 
@@ -118,18 +115,21 @@ public class GeocoderWebSocketsTest {
     }
 
     @Test
-    public void aConnectedSocketIsAskedToGeocodeAtOnce() throws Exception {
-        Socket connected = Mockito.mock(Socket.class);
-        Mockito.when(connected.connected()).thenReturn(true);
-        GeocoderWebSockets geocoder = new GeocoderWebSockets();
-        setSocket(geocoder, connected);
-
+    public void theGeocodeRequestIsSentOncePerJobAlsoAfterAReconnect() throws Exception {
+        OfflineGeocoder geocoder = new OfflineGeocoder();
         geocoder.startGeocoding(STORAGE_ID, 3);
+        verify(geocoder.mock, never()).emit(Mockito.eq("geocode"), Mockito.any());
+        Listener connect = geocoder.listener(Socket.EVENT_CONNECT);
+
+        connect.call();
+        // Socket.IO connects again after a dropped connection and fires the connect event again.
+        geocoder.listener(Socket.EVENT_DISCONNECT).call("transport close");
+        connect.call();
 
         ArgumentCaptor<Object> payload = ArgumentCaptor.forClass(Object.class);
-        verify(connected).emit(Mockito.eq("geocode"), payload.capture());
+        verify(geocoder.mock, Mockito.times(1)).emit(Mockito.eq("geocode"), payload.capture());
         assertEquals(STORAGE_ID, ((JSONObject) payload.getValue()).getString("temporary_addresses_storage_id"));
-        verify(connected, never()).connect();
+        verify(geocoder.mock, Mockito.times(1)).connect();
     }
 
     @Test
@@ -216,7 +216,8 @@ public class GeocoderWebSocketsTest {
 
     @Test
     public void aStorageIdIsRequired() {
-        GeocoderWebSockets geocoder = new GeocoderWebSockets();
+        // An offline geocoder: if the check regressed, a real one would connect to the live validator.
+        OfflineGeocoder geocoder = new OfflineGeocoder();
         for (String storageId : new String[] {null, ""}) {
             try {
                 geocoder.startGeocoding(storageId, 2);
@@ -225,6 +226,7 @@ public class GeocoderWebSocketsTest {
                 assertFalse(geocoder.isStarted());
             }
         }
+        verify(geocoder.mock, never()).connect();
     }
 
     @Test
@@ -268,14 +270,15 @@ public class GeocoderWebSocketsTest {
         Listener single = geocoder.listener("address");
         Listener progress = geocoder.listener("geocode_progress");
 
-        for (Listener listener : new Listener[] {bulk, single, progress}) {
+        for (Listener listener : new Listener[] {bulk, progress}) {
             listener.call();
             listener.call((Object) null);
             listener.call(JSONObject.NULL);
             listener.call("{not json");
             listener.call("\"a text\"");
         }
-        single.call(new JSONObject().put("address", JSONObject.NULL));
+        single.call();
+        single.call((Object) null);
         progress.call(new JSONObject());
 
         assertEquals(0, geocoder.getAddressesCount());
@@ -293,6 +296,26 @@ public class GeocoderWebSocketsTest {
         assertTrue(geocoder.isCompleted());
         assertEquals(4, geocoder.getAddressesCount());
         assertEquals(2, geocoder.getAddresses().size());
+    }
+
+    @Test
+    public void anAddressMessageWithoutAnAddressCountsSoTheJobCompletes() throws Exception {
+        OfflineGeocoder geocoder = new OfflineGeocoder();
+        geocoder.startGeocoding(STORAGE_ID, 4);
+        Listener single = geocoder.listener("address");
+
+        single.call(new JSONObject().put("address", JSONObject.NULL));
+        single.call(new JSONObject());
+        single.call("{not json");
+        assertFalse(geocoder.isCompleted());
+        verify(geocoder.mock, never()).close();
+        single.call(chunk("9 Side Rd").get(0));
+
+        assertTrue("every address message counts, with or without an address", geocoder.isCompleted());
+        assertEquals(4, geocoder.getAddressesCount());
+        assertEquals(1, geocoder.getAddresses().size());
+        assertEquals("9 Side Rd", geocoder.getAddresses().get(0).getAddress());
+        verify(geocoder.mock).close();
     }
 
     @Test

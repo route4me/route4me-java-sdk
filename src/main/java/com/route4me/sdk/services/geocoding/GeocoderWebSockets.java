@@ -59,6 +59,8 @@ public class GeocoderWebSockets {
     private long nextDownloadStage = 0;
     private String temporaryAddressesStorageID;
     private boolean started;
+    /** Whether the {@code geocode} request of the job was sent; guarded by the lock of this object. */
+    private boolean geocodeSent;
 
     /** The number of addresses to download in one stage, before the chunks are split. */
     private static final int BUFFER_FAIL_SAFE_MAX_ADDRESSES = 100;
@@ -111,7 +113,9 @@ public class GeocoderWebSockets {
     }
 
     /**
-     * Handles an {@code address} message: one geocoded address. A message without a readable address is ignored.
+     * Handles an {@code address} message: one geocoded address. Every message with a payload counts as one address
+     * received, as each entry of {@link #onAddressesBulk} does, so that the job completes; only a readable address
+     * is added to the list. A message without a payload is ignored.
      *
      * @param args the arguments of the message
      */
@@ -124,8 +128,8 @@ public class GeocoderWebSockets {
         Address address = message == null ? null : message.getAddress();
         if (address != null) {
             geocodedAddresses.add(address);
-            addressesCount++;
         }
+        addressesCount++;
         if (totalAddresses == addressesCount) {
             closeGeoCodeSocketIO();
         }
@@ -282,8 +286,17 @@ public class GeocoderWebSockets {
         }
     }
 
-    /** Asks the geocoder to geocode the stored addresses. The storage ID selects them, so it is not logged. */
+    /**
+     * Asks the geocoder to geocode the stored addresses, once per job. The socket connects again after a dropped
+     * connection and fires its connect event again; a second request could make the validator geocode the batch
+     * again and send addresses that have already arrived. The storage ID selects the addresses, so it is not logged.
+     */
     private synchronized void emitTemporaryAddressesStorageID() {
+        if (geocodeSent) {
+            LOG.info("Connected again to the WebSocket Geocoder; the geocode request is not sent twice");
+            return;
+        }
+        geocodeSent = true;
         LOG.debug("Asking the geocoder to geocode the stored addresses");
         Map<String, Object> parameters = new HashMap<>();
         parameters.put("temporary_addresses_storage_id", this.temporaryAddressesStorageID);
@@ -321,11 +334,8 @@ public class GeocoderWebSockets {
         this.chunksLimit = (long) Math.ceil(BUFFER_FAIL_SAFE_MAX_ADDRESSES / (double) this.chunkSize);
         this.maxAddressesToBeDownloaded = this.chunkSize * this.chunksLimit;
         this.temporaryAddressesStorageID = storageId;
-        if (geocoderWebSocket != null && geocoderWebSocket.connected()) {
-            emitTemporaryAddressesStorageID();
-        } else {
-            connectGeocoder();
-        }
+        // A geocoder runs one job, so its socket does not exist yet: the connect event sends the request.
+        connectGeocoder();
     }
 
     /**
