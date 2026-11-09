@@ -62,8 +62,10 @@ public class LocationManager extends Manager {
      * @param request the filters, sort order, page and fields
      * @return the page of locations and the columns
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationCombinedResource getLocationsCombined(LocationCombinedRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_LIST_COMBINED_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationCombinedResource.class);
     }
@@ -75,8 +77,10 @@ public class LocationManager extends Manager {
      * @param request the filters, sort order, page and fields
      * @return the page of locations
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationListResource getLocationsList(LocationCombinedRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_LIST_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationListResource.class);
     }
@@ -89,8 +93,10 @@ public class LocationManager extends Manager {
      * @param request the filters and the zoom level
      * @return the clusters, and the locations that are not in one
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationClusteringResource getLocationsClustering(LocationClusteringRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_CLUSTERING_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 LocationClusteringResource.class);
@@ -103,8 +109,10 @@ public class LocationManager extends Manager {
      * @param request the filters and the zoom level
      * @return the heat map
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationHeatmapCollection getLocationsHeatmap(LocationHeatmapRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_HEATMAP_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 LocationHeatmapCollection.class);
@@ -118,9 +126,11 @@ public class LocationManager extends Manager {
      * @param request the location filters and the territory page
      * @return the page of territories
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationTerritoriesCollection getLocationsTerritories(LocationTerritoriesRequest request)
             throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_TERRITORIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 LocationTerritoriesCollection.class);
@@ -134,9 +144,11 @@ public class LocationManager extends Manager {
      * @param request the location filters
      * @return the columns
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationExportColumnsResource[] getLocationsExportColumns(LocationCombinedRequest request)
             throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_EXPORT_COLUMNS_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 LocationExportColumnsResource[].class);
@@ -151,8 +163,10 @@ public class LocationManager extends Manager {
      * @param request the locations, the columns, the file name and the format
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public AsyncJob exportLocations(LocationExportRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_EXPORT_EP);
         return this.makeJobRequest(RequestMethod.POST, builder, this.gson.toJson(request));
     }
@@ -263,6 +277,13 @@ public class LocationManager extends Manager {
     public DeleteLocationTypeResponse deleteLocationType(String locationTypeId) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
         return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteLocationTypeResponse.class);
+    }
+
+    /** Rejects a {@code null} request, which Gson would send as the JSON text {@code null}. */
+    private static void requireRequest(Object request) {
+        if (request == null) {
+            throw new IllegalArgumentException("The request is required");
+        }
     }
 
     /** Checks the fields the spec requires in a location type, before any request is sent. */

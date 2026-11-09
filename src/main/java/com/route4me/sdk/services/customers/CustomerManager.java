@@ -46,11 +46,14 @@ public class CustomerManager extends Manager {
      * Lists customers, with filters, sorting and paging: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/customers/list}, with the parameters as the JSON body.
      *
-     * @param parameters the filters, sort order, page and fields
+     * @param parameters the filters, sort order, page and fields; empty parameters for the first page of all the
+     *     customers
      * @return the page of customers
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code parameters} is {@code null}; nothing is sent
      */
     public CustomerListResponse getCustomersList(CustomerListParameters parameters) throws APIException {
+        requireRequest(parameters);
         URIBuilder builder = v5Builder(CUSTOMERS_LIST_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(parameters), CustomerListResponse.class);
     }
@@ -95,9 +98,11 @@ public class CustomerManager extends Manager {
      * @param request the new values of the customer
      * @return the updated customer
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public CustomerResource updateCustomer(String customerId, CustomerStoreRequest request) throws APIException {
         URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);
+        requireRequest(request);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), CustomerResource.class);
     }
 
@@ -111,5 +116,12 @@ public class CustomerManager extends Manager {
     public void deleteCustomer(String customerId) throws APIException {
         URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);
         this.makeRequest(RequestMethod.DELETE, builder, "", String.class);
+    }
+
+    /** Rejects a {@code null} request, which Gson would send as the JSON text {@code null}. */
+    private static void requireRequest(Object request) {
+        if (request == null) {
+            throw new IllegalArgumentException("The request is required");
+        }
     }
 }

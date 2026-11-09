@@ -235,6 +235,21 @@ public class LocationManagerTest {
         http.assertNoRequests();
     }
 
+    /** Regression: a {@code null} body was sent as the JSON text {@code null}. */
+    @Test
+    public void aNullRequestIsRejectedBeforeSending() {
+        final LocationManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsCombined(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsList(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsClustering(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsHeatmap(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsTerritories(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationsExportColumns(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.exportLocations(null));
+        http.assertNoRequests();
+    }
+
     @Test
     public void locationTypeIdsAreRejectedWhenEmptyAndStayInOneSegment() throws Exception {
         final LocationManager manager = manager();

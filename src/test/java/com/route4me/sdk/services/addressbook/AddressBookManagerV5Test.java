@@ -371,6 +371,36 @@ public class AddressBookManagerV5Test {
         assertQueuedJob(removed);
     }
 
+    /** Regression: a {@code null} body was sent as the JSON text {@code null}. */
+    @Test
+    public void aNullRequestIsRejectedBeforeSending() {
+        final AddressBookManagerV5 manager = manager();
+        final BatchCreateContactsRequest noData = new BatchCreateContactsRequest();
+        final BatchCreateContactsRequest emptyData = new BatchCreateContactsRequest();
+        emptyData.setData(Collections.<AddressBookContactV5>emptyList());
+        final BatchUpdateContactsRequest noIds = new BatchUpdateContactsRequest();
+        noIds.setAddressGroup("North");
+        final BatchUpdateContactsRequest emptyIds = new BatchUpdateContactsRequest();
+        emptyIds.setAddressIds(Collections.<Long>emptyList());
+
+        http.expectThrows(IllegalArgumentException.class,
+            () -> manager.getContacts((AddressBookContactsBodyRequest) null));
+        http.expectThrows(IllegalArgumentException.class,
+            () -> manager.getContactsPaginated((AddressBookContactsBodyPaginatedRequest) null));
+        http.expectThrows(IllegalArgumentException.class,
+            () -> manager.getAddressBookContactsClustering((AddressBookClusteringRequest) null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchCreateContacts(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchCreateContacts(noData));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchCreateContacts(emptyData));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchUpdateContacts(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchUpdateContacts(noIds));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchUpdateContacts(emptyIds));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.exportAddresses(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.exportAddressesByAreas(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.exportAddressesByAreaIds(null));
+        http.assertNoRequests();
+    }
+
     /** Regression: no IDs sent {@code {}} or {@code {"address_ids":[]}} to an endpoint that also deletes by filter. */
     @Test
     public void contactIdsAreRequiredBeforeSending() {

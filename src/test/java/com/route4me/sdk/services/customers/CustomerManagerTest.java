@@ -150,6 +150,16 @@ public class CustomerManagerTest {
         http.assertNoRequests();
     }
 
+    /** Regression: a {@code null} body was sent as the JSON text {@code null}. */
+    @Test
+    public void aNullRequestIsRejectedBeforeSending() {
+        final CustomerManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getCustomersList(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomer("CUST-1", null));
+        http.assertNoRequests();
+    }
+
     @Test
     public void customerIdsAreRejectedWhenEmptyAndStayInOneSegment() throws Exception {
         final CustomerManager manager = manager();
