@@ -13,17 +13,23 @@ import java.util.logging.Logger;
 
 /**
  * Gets one user with the deprecated {@link UsersManager#getUser}. New code uses
- * {@code TeamManagementManagerV5.getTeamMemberById}; see {@link AddSkillsToDriverV5}.
+ * {@code TeamManagementManagerV5.getTeamMemberById}; see {@link AddSkillsToDriverV5}. Set {@code MEMBER_ID} to a
+ * member of the account.
  */
 public class GetUser {
     // Shows a deprecated V4 user.php method (obsolete in the C# SDK) until it is removed.
     @SuppressWarnings("deprecation")
     public static void main(String[] args) {
+        String memberId = System.getenv("MEMBER_ID");
+        if (memberId == null || memberId.isEmpty()) {
+            System.err.println("Set MEMBER_ID to the ID of a member of the account; this example reads it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         UsersManager manager = new UsersManager(apiKey);
         User user;
         try {
-            user = manager.getUser("1");
+            user = manager.getUser(memberId);
             System.out.println(user);
         } catch (APIException ex) {
             Logger.getLogger(GetUser.class.getName()).log(Level.SEVERE, null, ex);

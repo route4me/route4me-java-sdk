@@ -11,15 +11,23 @@ import java.util.List;
 
 /**
  * Renames several vehicles in one asynchronous job with {@link VehiclesManagerV5#updateVehicles}, then reads the
- * job status with {@link VehiclesManagerV5#getVehicleJobStatus}. Arguments: the vehicle IDs.
+ * job status with {@link VehiclesManagerV5#getVehicleJobStatus}. Arguments: the vehicle IDs; without them, the
+ * example reads the comma-separated IDs in {@code VEHICLE_IDS}. Use vehicles of a test account: the example renames
+ * them.
  */
 public class UpdateVehiclesBulkV5 {
     public static void main(String[] args) {
+        String ids = args.length > 0 ? String.join(",", args) : System.getenv("VEHICLE_IDS");
+        if (ids == null || ids.trim().isEmpty()) {
+            System.err.println("Pass vehicle IDs as arguments or set VEHICLE_IDS to the comma-separated IDs of"
+                    + " vehicles of a test account; this example renames them.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         VehiclesManagerV5 manager = new VehiclesManagerV5(apiKey);
         try {
             List<VehicleV5> vehicles = new ArrayList<>();
-            for (String vehicleId : args.length > 0 ? args : new String[] {"VEHICLE_ID_HERE"}) {
+            for (String vehicleId : ids.trim().split("\\s*,\\s*")) {
                 VehicleV5 vehicle = new VehicleV5();
                 vehicle.setVehicleId(vehicleId);
                 vehicle.setVehicleAlias("Renamed " + vehicleId);

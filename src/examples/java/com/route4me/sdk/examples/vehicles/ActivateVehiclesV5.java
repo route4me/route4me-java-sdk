@@ -10,14 +10,21 @@ import com.route4me.sdk.services.vehicles.VehiclesManagerV5;
  * status with {@link VehiclesManagerV5#getVehicleJobStatus} (and, once the job is over,
  * {@link VehiclesManagerV5#getVehicleJobResult}). The same pattern applies to
  * {@link VehiclesManagerV5#deactivateVehicles}, {@link VehiclesManagerV5#deleteVehicles} and
- * {@link VehiclesManagerV5#restoreVehicles}. Arguments: the vehicle IDs.
+ * {@link VehiclesManagerV5#restoreVehicles}. Arguments: the vehicle IDs; without them, the example reads the
+ * comma-separated IDs in {@code VEHICLE_IDS}. Use vehicles of a test account: the example activates them.
  */
 public class ActivateVehiclesV5 {
     public static void main(String[] args) {
+        String ids = args.length > 0 ? String.join(",", args) : System.getenv("VEHICLE_IDS");
+        if (ids == null || ids.trim().isEmpty()) {
+            System.err.println("Pass vehicle IDs as arguments or set VEHICLE_IDS to the comma-separated IDs of"
+                    + " vehicles of a test account; this example activates them.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         VehiclesManagerV5 manager = new VehiclesManagerV5(apiKey);
         try {
-            String[] vehicleIds = args.length > 0 ? args : new String[] {"VEHICLE_ID_HERE"};
+            String[] vehicleIds = ids.trim().split("\\s*,\\s*");
             AsyncJob job = manager.activateVehicles(vehicleIds);
             System.out.println("Activation accepted as job " + job.getJobId());
             if (job.getJobId() != null) {
