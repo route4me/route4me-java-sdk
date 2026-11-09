@@ -76,8 +76,10 @@ import static org.junit.Assert.assertEquals;
  *
  * <p>Every {@code execute} overload of the mocked client that takes an {@code HttpUriRequest}
  * (with or without an {@code HttpContext} or a {@code ResponseHandler}) goes through the guard.
- * Any other {@code execute} or {@code doExecute} call, such as {@code execute(HttpHost, HttpRequest)},
- * fails the test, even when the code under test catches the error: it would bypass the guard.
+ * A non-null {@code HttpContext} fails the test: the guard cannot check the credentials, proxy or
+ * request config it may carry, and the SDK never passes one. Any other {@code execute} or
+ * {@code doExecute} call, such as {@code execute(HttpHost, HttpRequest)}, fails the test, even
+ * when the code under test catches the error: it would bypass the guard.
  *
  * <p>The rule also installs the {@link NetworkBlock}, so a manager that a test forgot to
  * {@link #install} fails instead of reaching the network. Only managers created with
@@ -141,13 +143,17 @@ public final class MockHttp implements TestRule {
             // doAnswer().when() form: calling client.execute(...) inside when() would run unstubbed().
             Mockito.doAnswer(invocation -> execute(invocation.getArgument(0)))
                     .when(client).execute(Mockito.any(HttpUriRequest.class));
-            Mockito.doAnswer(invocation -> execute(invocation.getArgument(0)))
-                    .when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<HttpContext>any());
+            Mockito.doAnswer(invocation -> {
+                refuseContext(invocation.getArgument(1));
+                return execute(invocation.getArgument(0));
+            }).when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<HttpContext>any());
             Mockito.doAnswer(invocation -> handle(invocation.getArgument(0), invocation.getArgument(1)))
                     .when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<ResponseHandler<Object>>any());
-            Mockito.doAnswer(invocation -> handle(invocation.getArgument(0), invocation.getArgument(1)))
-                    .when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<ResponseHandler<Object>>any(),
-                            Mockito.<HttpContext>any());
+            Mockito.doAnswer(invocation -> {
+                refuseContext(invocation.getArgument(2));
+                return handle(invocation.getArgument(0), invocation.getArgument(1));
+            }).when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<ResponseHandler<Object>>any(),
+                    Mockito.<HttpContext>any());
             Mockito.doAnswer(invocation -> {
                 closeCount.incrementAndGet();
                 IOException failure = closeFailure;
@@ -519,6 +525,23 @@ public final class MockHttp implements TestRule {
     private Object handle(HttpUriRequest request, ResponseHandler<?> handler) throws IOException {
         try (CloseableHttpResponse response = execute(request)) {
             return handler.handleResponse(response);
+        }
+    }
+
+    /**
+     * Fails the test when the code under test passes a context to {@code execute}. A real
+     * client applies the context as it is: its credentials provider and auth cache can add an
+     * {@code Authorization} header, and its request config can set a proxy or the redirect
+     * policy. The guard sees only the request, so it could not check any of that. The SDK never
+     * passes a context; a {@code null} one is the plain overload. The failure is recorded, so the
+     * test fails even when the code under test catches the error.
+     */
+    private void refuseContext(HttpContext context) {
+        if (context != null) {
+            String problem = "the code under test passed an HttpContext to execute(...); a context can add"
+                    + " credentials, a proxy or a request config that the request guard cannot check";
+            violations.add(problem);
+            throw new AssertionError(guardMessage(Collections.singletonList(problem)));
         }
     }
 

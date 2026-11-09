@@ -13,6 +13,7 @@ import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
 import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.junit.AssumptionViolatedException;
@@ -33,6 +34,7 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -161,7 +163,7 @@ public class MockHttpTest {
         try (CloseableHttpResponse plain = client.execute(new HttpGet(url + 1))) {
             assertEquals("one", EntityUtils.toString(plain.getEntity()));
         }
-        try (CloseableHttpResponse withContext = client.execute(new HttpGet(url + 2), new BasicHttpContext())) {
+        try (CloseableHttpResponse withContext = client.execute(new HttpGet(url + 2), (HttpContext) null)) {
             assertEquals("two", EntityUtils.toString(withContext.getEntity()));
         }
         ResponseHandler<String> text = response -> EntityUtils.toString(response.getEntity());
@@ -176,18 +178,58 @@ public class MockHttpTest {
 
     @Test
     public void theGuardChecksTheContextAndHandlerOverloadsToo() {
+        final String url = "https://example.com/collect?api_key=" + MockHttp.API_KEY;
+        final ResponseHandler<String> handler = response -> "read";
+        final int[] refused = new int[1];
         AssertionError error = runInRule(inner -> {
             CloseableHttpClient client = ManagerTestAccess.httpClient(inner.install(new ProbeManager()));
-            try {
-                client.execute(new HttpGet("https://example.com/collect?api_key=" + MockHttp.API_KEY),
-                        response -> "read");
-            } catch (AssertionError swallowed) {
-                // the code under test swallows the guard failure
+            MockHttp.Call[] overloads = {
+                () -> client.execute(new HttpGet(url), (HttpContext) null),
+                () -> client.execute(new HttpGet(url), handler),
+                () -> client.execute(new HttpGet(url), handler, null),
+            };
+            for (MockHttp.Call overload : overloads) {
+                try {
+                    overload.run();
+                } catch (AssertionError swallowed) {
+                    // the code under test swallows the guard failure
+                    refused[0]++;
+                }
             }
         });
 
-        assertTrue(error.getMessage(), error.getMessage().contains("host 'example.com' is not in allowed_hosts"));
+        assertEquals("every overload is refused", 3, refused[0]);
+        String hostProblem = "host 'example.com' is not in allowed_hosts";
+        assertEquals(error.getMessage(), 3, error.getMessage().split(Pattern.quote(hostProblem), -1).length - 1);
         assertFalse(error.getMessage(), error.getMessage().contains(MockHttp.API_KEY));
+    }
+
+    @Test
+    public void aContextFailsTheTestEvenWhenCaught() {
+        final String url = "https://api.route4me.com/api.v4/route.php";
+        final ResponseHandler<String> handler = response -> "read";
+        final int[] refused = new int[1];
+        AssertionError error = runInRule(inner -> {
+            CloseableHttpClient client = ManagerTestAccess.httpClient(inner.install(new ProbeManager()));
+            inner.respondToAll(200, "{}");
+            MockHttp.Call[] overloads = {
+                () -> client.execute(new HttpGet(url), new BasicHttpContext()),
+                () -> client.execute(new HttpGet(url), handler, new BasicHttpContext()),
+            };
+            for (MockHttp.Call overload : overloads) {
+                try {
+                    overload.run();
+                } catch (AssertionError swallowed) {
+                    // the code under test swallows the guard failure
+                    refused[0]++;
+                }
+            }
+            assertEquals("nothing is sent with a context", 0, inner.requestCount());
+        });
+
+        assertEquals("both context overloads are refused", 2, refused[0]);
+        String contextProblem = "passed an HttpContext to execute(...)";
+        assertEquals(error.getMessage(), 2, error.getMessage().split(Pattern.quote(contextProblem), -1).length - 1);
     }
 
     @Test
