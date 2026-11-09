@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.orders;
 
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -307,6 +308,24 @@ public class OrderManagerV5Test {
     }
 
     @Test
+    public void nullOrdersAndRequestsAreRejectedBeforeSending() {
+        final OrderManagerV5 manager = manager();
+
+        IllegalArgumentException error = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.createOrder(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateOrder(ORDER_ID, null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.searchOrders(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchCreateOrders(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchUpdateOrders(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchDeleteOrders(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchUpdateFilter(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.archiveOrders(null));
+
+        http.assertNoRequests();
+        assertEquals("The request is required", error.getMessage());
+    }
+
+    @Test
     public void customUserFieldUuidIsRejectedWhenEmptyAndEncodedWhenItHasASlash() throws Exception {
         final OrderManagerV5 manager = manager();
         final UpdateCustomUserFieldRequest update = new UpdateCustomUserFieldRequest();
@@ -316,11 +335,13 @@ public class OrderManagerV5Test {
 
         http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomUserField("", update));
         http.expectThrows(IllegalArgumentException.class, () -> manager.deleteCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteCustomUserField("FIELD/1"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomUserField("FIELD\\1", update));
         http.assertNoRequests();
 
         http.respondToAll(200, FIELD);
-        manager.deleteCustomUserField("FIELD/1");
-        assertEquals(FIELDS_EP + "/FIELD%2F1", http.request().getUri().getRawPath());
+        manager.deleteCustomUserField("FIELD 1");
+        assertEquals(FIELDS_EP + "/FIELD%201", http.request().getUri().getRawPath());
     }
 
     @Test
@@ -363,6 +384,19 @@ public class OrderManagerV5Test {
         assertEquals(Long.valueOf(42L), fields.get(0).getOrderCustomFieldId());
         assertEquals("dock", fields.get(1).getOrderCustomFieldName());
         assertNull(manager.getOrderCustomFields());
+    }
+
+    @Test
+    public void getOrderCustomFieldsReadsAnEmptyTypeInfoArrayAsNull() throws Exception {
+        OrderManagerV5 manager = manager();
+        http.respond(200, json("{'data':[{'data':{'order_custom_field_id':42,'order_custom_field_type':'text',"
+                + "'order_custom_field_type_info':[]}},{'order_custom_field_id':43,"
+                + "'order_custom_field_type':'checkbox','order_custom_field_type_info':{'short_label':'Dock'}}]}"));
+
+        List<OrderCustomUserField> fields = manager.getOrderCustomFields();
+
+        assertNull(fields.get(0).getOrderCustomFieldTypeInfo());
+        assertEquals("Dock", fields.get(1).getOrderCustomFieldTypeInfo().getShortLabel());
     }
 
     @Test

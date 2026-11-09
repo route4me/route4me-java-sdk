@@ -7,7 +7,8 @@ import com.route4me.sdk.services.vehicles.VehiclesManagerV5;
 
 /**
  * Lists the vehicles in one state ({@code active}, {@code pending}, {@code deleted} or {@code all}) with
- * {@link VehiclesManagerV5#getVehicles}, through the {@code show} filter of {@link VehicleListRequest}.
+ * {@link VehiclesManagerV5#getVehicles}, through the {@code show} filter of {@link VehicleListRequest}. Pass the state
+ * as the first argument; without it, the example lists the deleted vehicles.
  */
 public class GetVehiclesByStateV5 {
     public static void main(String[] args) {

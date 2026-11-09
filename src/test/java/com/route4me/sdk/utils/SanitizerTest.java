@@ -1,5 +1,7 @@
 package com.route4me.sdk.utils;
 
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -62,6 +64,45 @@ public class SanitizerTest {
     public void redactUrlFindsACredentialInsideAnotherValue() {
         assertEquals("https://x/?next=https://y/?organization_api_key=REDACTED&b=2",
                 Sanitizer.redactUrl("https://x/?next=https://y/?organization_api_key=k&b=2"));
+    }
+
+    @Test
+    public void redactUrlKeepsTheJsonAfterAUrlInAString() {
+        String body = "{\"error\":\"bad key for https://api.route4me.com/x?api_key=" + KEY + "\","
+                + "\"errors\":[\"Invalid key\"],\"status\":false}";
+
+        String redacted = Sanitizer.redactUrl(body);
+
+        assertEquals("{\"error\":\"bad key for https://api.route4me.com/x?api_key=REDACTED\","
+                + "\"errors\":[\"Invalid key\"],\"status\":false}", redacted);
+        JsonObject parsed = JsonParser.parseString(redacted).getAsJsonObject();
+        assertEquals("Invalid key", parsed.getAsJsonArray("errors").get(0).getAsString());
+        assertFalse(parsed.get("status").getAsBoolean());
+    }
+
+    @Test
+    public void redactUrlEndsAValueWhereAUrlInATextEnds() {
+        assertEquals("see https://x/?token=REDACTED and retry", Sanitizer.redactUrl("see https://x/?token=t and retry"));
+        assertEquals("line https://x/?token=REDACTED\nnext", Sanitizer.redactUrl("line https://x/?token=t\nnext"));
+        assertEquals("<a href=\"https://x/?password=REDACTED\">x</a>",
+                Sanitizer.redactUrl("<a href=\"https://x/?password=p\">x</a>"));
+        assertEquals("<https://x/?password=REDACTED>", Sanitizer.redactUrl("<https://x/?password=p>"));
+    }
+
+    @Test
+    public void redactUrlHidesAJsonEscapedValueInFull() {
+        // PHP writes "/" as "\/" in JSON; an escaped quote is part of the value, not its end.
+        String body = "{\"error\":\"https:\\/\\/x\\/?password=pa\\\"ss\\/word\",\"status\":false}";
+
+        assertEquals("{\"error\":\"https:\\/\\/x\\/?password=REDACTED\",\"status\":false}",
+                Sanitizer.redactUrl(body));
+        assertEquals("a trailing backslash", "https://x/?token=REDACTED", Sanitizer.redactUrl("https://x/?token=t\\"));
+    }
+
+    @Test
+    public void redactUrlHidesTheCharactersAQueryValueMayHoldUnencoded() {
+        // Apache HttpClient leaves ' ( ) ! * ~ unencoded in a query value: they stay in the hidden value.
+        assertEquals("https://x/?password=REDACTED&b=1", Sanitizer.redactUrl("https://x/?password=it's(a)!*~&b=1"));
     }
 
     @Test

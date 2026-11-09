@@ -344,6 +344,7 @@ public class RoutingManagerTest {
 
         http.request(0).assertEndpoint("POST", API, "/api/change_hybrid_optimization_depot.php")
                 .assertApiKeyInQuery()
+                .assertQuery("optimization_problem_id", "OPT-1")
                 .assertContentType("application/json")
                 .assertJson("optimization_problem_id", "OPT-1")
                 .assertJson("delete_old_depots", true)
@@ -351,6 +352,16 @@ public class RoutingManagerTest {
                 .assertJson("new_depots[0].is_depot", true);
         http.request(1).assertJsonLacks("delete_old_depots");
         assertTrue(result.getStatus());
+    }
+
+    @Test
+    public void addDepotsToHybridOptimizationLeavesANullIdOutOfTheQuery() throws Exception {
+        RoutingManager manager = manager();
+        http.respond(200, json("{'status':true}"));
+
+        manager.addDepotsToHybridOptimization(null, true, Collections.<Address>emptyList());
+
+        http.request().assertNoQuery("optimization_problem_id").assertJsonLacks("optimization_problem_id");
     }
 
     @Test
@@ -559,6 +570,18 @@ public class RoutingManagerTest {
     }
 
     @Test
+    public void deleteRoutesRefusesAnIdWithAComma() {
+        final RoutingManager manager = manager();
+
+        IllegalArgumentException refused = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.deleteRoutes("ROUTE-A1,ROUTE-A2"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes("ROUTE-A1", "ROUTE-A2,"));
+
+        assertTrue(refused.getMessage(), refused.getMessage().contains("','"));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void duplicateRouteSendsTheRouteIdAndTarget() throws Exception {
         RoutingManager manager = manager();
         http.respond(200, json("{'optimization_problem_id':'OPT-2','success':true}"));
@@ -719,6 +742,8 @@ public class RoutingManagerTest {
                 () -> manager.mergeRoutes(Collections.<String>emptyList(), null, null, null, null));
         http.expectThrows(IllegalArgumentException.class,
                 () -> manager.mergeRoutes(Arrays.asList("ROUTE-A1", ""), null, null, null, null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.mergeRoutes(Collections.singletonList("ROUTE-A1,ROUTE-A2"), null, true, null, null));
         http.assertNoRequests();
     }
 

@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.addressbook;
 
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -81,8 +82,7 @@ public class AddressBookManagerTest {
 
         Contact contact = manager.getContact(12345);
 
-        http.request().assertEndpoint("GET", HOST, ADDRESS_BOOK_EP).assertNoBody();
-        assertTrue(http.request().query("address_id").contains("12345"));
+        http.request().assertEndpoint("GET", HOST, ADDRESS_BOOK_EP).assertNoBody().assertQuery("address_id", "12345");
         assertEquals("Example Bakery", contact.getAddressAlias());
     }
 
@@ -104,6 +104,17 @@ public class AddressBookManagerTest {
 
         assertNull(manager.getContacts(new ContactsRequest()));
         assertFalse(manager.deleteContact(Arrays.<Number>asList(12345)));
+    }
+
+    /** Regression: a {@code null} ID threw a {@code NullPointerException} with no message. */
+    @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
+    public void aMissingIdOrRequestIsRejectedBeforeSending() {
+        final AddressBookManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getContact(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getContacts(null));
+        http.assertNoRequests();
     }
 
     @Test

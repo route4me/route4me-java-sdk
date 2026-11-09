@@ -5,7 +5,7 @@ import lombok.Data;
 @Data
 public class RouteNoteResource {
     /** The id of the note in the system ({@code note_id}). */
-    @SerializedName("note_id") private Integer noteId;
+    @SerializedName("note_id") private Long noteId;
     /** Note UUID (32-char hex string) ({@code note_uuid}). */
     @SerializedName("note_uuid") private String noteUuid;
     /** Upload ID (32-char hex string) ({@code upload_id}). */

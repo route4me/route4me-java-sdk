@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.tracking;
 
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
@@ -38,13 +39,45 @@ public class TrackingManager extends Manager {
      * Records a GPS position of a route: {@code GET /track/set.php}, with the position as
      * query parameters and no body.
      *
+     * <p>A JSON answer is read into the status and the transaction ID. Any other answer, such as one in the
+     * {@code csv}, {@code serialized} or {@code xml} format that {@link GPSPosition} can ask for, does not
+     * fail the call, since the position is already stored: the response then has no status and no transaction ID,
+     * and {@code SetGpsResponse.getAnswerText()} holds the answer as the server sent it.
+     *
      * @param position the position, with its route, member and device
-     * @return the server's answer, with the status and the transaction ID
-     * @throws APIException if the request fails
+     * @return the server's answer, with the status and the transaction ID; {@code null} when the answer is empty
+     * @throws APIException if the request fails or the server answers with an error status
      */
     public SetGpsResponse setGPS(GPSPosition position) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(SET_LOCATION_EP);
-        return this.makeJSONRequest(RequestMethod.GET, builder, position, SetGpsResponse.class);
+        String answer = this.makeJSONRequest(RequestMethod.GET, builder, position, String.class);
+        return readSetGpsAnswer(answer);
+    }
+
+    /**
+     * Reads the answer of {@code track/set.php}: a JSON object into its fields, any other text as it is.
+     *
+     * @param answer the answer, as text
+     * @return the answer; {@code null} when it is empty
+     */
+    private SetGpsResponse readSetGpsAnswer(String answer) {
+        if (answer == null || answer.trim().isEmpty()) {
+            return null;
+        }
+        String trimmed = answer.trim();
+        if (trimmed.startsWith("{")) {
+            try {
+                SetGpsResponse parsed = this.gson.fromJson(trimmed, SetGpsResponse.class);
+                if (parsed != null) {
+                    return parsed;
+                }
+            } catch (JsonParseException | IllegalStateException ex) {
+                logger.debug("The track/set.php answer is not valid JSON; it is kept as text");
+            }
+        }
+        SetGpsResponse text = new SetGpsResponse();
+        text.setAnswerText(answer);
+        return text;
     }
 
     /**
@@ -68,9 +101,7 @@ public class TrackingManager extends Manager {
 
     /** Checks the fields the track-set spec requires for one ping or a batch. */
     private static void checkPings(TrackingPingsRequest request) {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
+        requireRequest(request);
         if (request.getItems() == null) {
             if (request.getLat() == null || request.getLng() == null) {
                 throw new IllegalArgumentException("A single ping needs lat and lng");

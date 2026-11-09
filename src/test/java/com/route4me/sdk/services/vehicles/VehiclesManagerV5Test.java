@@ -232,6 +232,23 @@ public class VehiclesManagerV5Test {
     }
 
     @Test
+    public void externalTelematicsVehicleIdUsesTheSingularApiName() throws Exception {
+        VehiclesManagerV5 manager = manager();
+        http.respond(200, json("{'vehicle_id':'" + VEHICLE_ID + "','external_telematics_vehicle_id':778899}"))
+                .respond(200, json("{'vehicle_id':'" + VEHICLE_ID + "','external_telematics_vehicle_ids':'EXT-7'}"));
+        VehicleV5 change = new VehicleV5();
+        change.setExternalTelematicsVehicleId("EXT-12345");
+
+        VehicleV5 updated = manager.updateVehicle(VEHICLE_ID, change);
+        VehicleV5 fetched = manager.getVehicleById(VEHICLE_ID);
+
+        http.request(0).assertJson("external_telematics_vehicle_id", "EXT-12345")
+                .assertJsonLacks("external_telematics_vehicle_ids");
+        assertEquals("778899", updated.getExternalTelematicsVehicleId());
+        assertEquals("EXT-7", fetched.getExternalTelematicsVehicleId());
+    }
+
+    @Test
     public void getVehicleTrackPutsTheIdBeforeTrack() throws Exception {
         VehiclesManagerV5 manager = manager();
         http.respondToAll(200, json("{'data':[{'route_id':'C0FFEE00000000000000000000000002','member_id':1001,"
@@ -676,22 +693,25 @@ public class VehiclesManagerV5Test {
     }
 
     @Test
-    public void slashInAnIdStaysInItsSegment() throws Exception {
-        VehiclesManagerV5 manager = manager();
-        http.respond(200, json("{'data':[]}")).respond(200, VEHICLE).respond(200, PROFILE).respond(200, CAPACITY)
-                .respond(200, json("{'status':true}"));
+    public void anIdWithASlashIsRefused() throws Exception {
+        final VehiclesManagerV5 manager = manager();
 
-        manager.getVehicleTrack("../secret", null, null);
-        manager.updateVehicle("../secret", vehicle());
-        manager.updateVehicleProfile("../secret", profile());
-        manager.updateVehicleCapacityProfile("../secret", capacity());
-        manager.getVehicleJobResult("../secret");
+        for (final String id : Arrays.asList("../secret", "..\\secret")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getVehicleTrack(id, null, null));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateVehicle(id, vehicle()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateVehicleProfile(id, profile()));
+            http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.updateVehicleCapacityProfile(id, capacity()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getVehicleJobResult(id));
+        }
+        http.assertNoRequests();
 
-        assertEquals(VEHICLES_EP + "/..%2Fsecret/track", http.request(0).getUri().getRawPath());
-        assertEquals(VEHICLES_EP + "/..%2Fsecret", http.request(1).getUri().getRawPath());
-        assertEquals(PROFILES_EP + "/..%2Fsecret", http.request(2).getUri().getRawPath());
-        assertEquals(CAPACITY_EP + "/..%2Fsecret", http.request(3).getUri().getRawPath());
-        assertEquals(VEHICLES_EP + "/job-tracker/result/..%2Fsecret", http.request(4).getUri().getRawPath());
+        http.respond(200, json("{'data':[]}")).respond(200, json("{'status':true}"));
+        manager.getVehicleTrack("a b", null, null);
+        manager.getVehicleJobResult("a?b");
+
+        assertEquals(VEHICLES_EP + "/a%20b/track", http.request(0).getUri().getRawPath());
+        assertEquals(VEHICLES_EP + "/job-tracker/result/a%3Fb", http.request(1).getUri().getRawPath());
     }
 
     // ------------------------------------------------------------------ manager behaviour

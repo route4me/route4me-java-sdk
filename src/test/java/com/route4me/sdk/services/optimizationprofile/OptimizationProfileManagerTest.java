@@ -178,15 +178,31 @@ public class OptimizationProfileManagerTest {
     }
 
     @Test
-    public void slashInAProfileIdStaysInItsSegment() throws Exception {
-        OptimizationProfileManager manager = manager();
+    public void nullRequestBodiesAreRejectedBeforeSending() {
+        final OptimizationProfileManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createOptimizationProfile(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateOptimizationProfile("PROF-1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.saveEntities(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteEntities(null));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void aProfileIdWithASlashIsRefused() throws Exception {
+        final OptimizationProfileManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateOptimizationProfile("../secret", createRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteOptimizationProfile("..\\secret"));
+        http.assertNoRequests();
+
         http.respond(200, PROFILE).respond(200, json("{'status':true}"));
+        manager.updateOptimizationProfile("a b", createRequest());
+        manager.deleteOptimizationProfile("a?b");
 
-        manager.updateOptimizationProfile("../secret", createRequest());
-        manager.deleteOptimizationProfile("../secret");
-
-        assertEquals(PROFILES_EP + "/..%2Fsecret", http.request(0).getUri().getRawPath());
-        assertEquals(PROFILES_EP + "/..%2Fsecret", http.request(1).getUri().getRawPath());
+        assertEquals(PROFILES_EP + "/a%20b", http.request(0).getUri().getRawPath());
+        assertEquals(PROFILES_EP + "/a%3Fb", http.request(1).getUri().getRawPath());
     }
 
     @Test

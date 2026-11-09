@@ -27,7 +27,7 @@ public class SortingFilteringResource {
 
     /** Unix timestamp of the scheduled date for this destination ({@code scheduled_for}). */
     @SerializedName("scheduled_for")
-    private Integer scheduledFor;
+    private Long scheduledFor;
 
     /** Street address of the destination ({@code destination_address}). */
     @SerializedName("destination_address")
@@ -43,7 +43,7 @@ public class SortingFilteringResource {
 
     /** Member (driver) ID. Null if unassigned ({@code member_id}). */
     @SerializedName("member_id")
-    private Integer memberId;
+    private Long memberId;
 
     /** Alias of the assigned vehicle. Null if unassigned ({@code assigned_vehicle}). */
     @SerializedName("assigned_vehicle")

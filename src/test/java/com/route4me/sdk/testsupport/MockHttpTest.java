@@ -3,10 +3,18 @@ package com.route4me.sdk.testsupport;
 import com.google.gson.JsonObject;
 import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
+import com.route4me.sdk.ManagerTestAccess;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import org.apache.http.HttpHost;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.protocol.HttpContext;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
@@ -21,12 +29,17 @@ import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.Socket;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.logging.Level;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -141,6 +154,145 @@ public class MockHttpTest {
     }
 
     @Test
+    public void everyUriRequestOverloadGoesThroughTheGuard() throws Exception {
+        CloseableHttpClient client = ManagerTestAccess.httpClient(http.install(new ProbeManager()));
+        String url = "https://api.route4me.com/api.v4/route.php?route_id=R";
+        http.respond(200, "one", "text/plain").respond(200, "two", "text/plain")
+                .respond(200, "three", "text/plain").respond(200, "four", "text/plain");
+
+        try (CloseableHttpResponse plain = client.execute(new HttpGet(url + 1))) {
+            assertEquals("one", EntityUtils.toString(plain.getEntity()));
+        }
+        try (CloseableHttpResponse withContext = client.execute(new HttpGet(url + 2), (HttpContext) null)) {
+            assertEquals("two", EntityUtils.toString(withContext.getEntity()));
+        }
+        ResponseHandler<String> text = response -> EntityUtils.toString(response.getEntity());
+        assertEquals("three", client.execute(new HttpGet(url + 3), text));
+        assertEquals("four", client.execute(new HttpGet(url + 4), text, null));
+
+        assertEquals(4, http.requestCount());
+        for (int i = 0; i < 4; i++) {
+            http.request(i).assertQuery("route_id", "R" + (i + 1));
+        }
+    }
+
+    @Test
+    public void theGuardChecksTheContextAndHandlerOverloadsToo() {
+        final String url = "https://example.com/collect?api_key=" + MockHttp.API_KEY;
+        final ResponseHandler<String> handler = response -> "read";
+        final int[] refused = new int[1];
+        AssertionError error = runInRule(inner -> {
+            CloseableHttpClient client = ManagerTestAccess.httpClient(inner.install(new ProbeManager()));
+            MockHttp.Call[] overloads = {
+                () -> client.execute(new HttpGet(url), (HttpContext) null),
+                () -> client.execute(new HttpGet(url), handler),
+                () -> client.execute(new HttpGet(url), handler, null),
+            };
+            for (MockHttp.Call overload : overloads) {
+                try {
+                    overload.run();
+                } catch (AssertionError swallowed) {
+                    // the code under test swallows the guard failure
+                    refused[0]++;
+                }
+            }
+        });
+
+        assertEquals("every overload is refused", 3, refused[0]);
+        String hostProblem = "host 'example.com' is not in allowed_hosts";
+        assertEquals(error.getMessage(), 3, error.getMessage().split(Pattern.quote(hostProblem), -1).length - 1);
+        assertFalse(error.getMessage(), error.getMessage().contains(MockHttp.API_KEY));
+    }
+
+    @Test
+    public void aContextFailsTheTestEvenWhenCaught() {
+        final String url = "https://api.route4me.com/api.v4/route.php";
+        final ResponseHandler<String> handler = response -> "read";
+        final int[] refused = new int[1];
+        AssertionError error = runInRule(inner -> {
+            CloseableHttpClient client = ManagerTestAccess.httpClient(inner.install(new ProbeManager()));
+            inner.respondToAll(200, "{}");
+            MockHttp.Call[] overloads = {
+                () -> client.execute(new HttpGet(url), new BasicHttpContext()),
+                () -> client.execute(new HttpGet(url), handler, new BasicHttpContext()),
+            };
+            for (MockHttp.Call overload : overloads) {
+                try {
+                    overload.run();
+                } catch (AssertionError swallowed) {
+                    // the code under test swallows the guard failure
+                    refused[0]++;
+                }
+            }
+            assertEquals("nothing is sent with a context", 0, inner.requestCount());
+        });
+
+        assertEquals("both context overloads are refused", 2, refused[0]);
+        String contextProblem = "passed an HttpContext to execute(...)";
+        assertEquals(error.getMessage(), 2, error.getMessage().split(Pattern.quote(contextProblem), -1).length - 1);
+    }
+
+    @Test
+    public void anExecuteOverloadThatBypassesTheGuardFailsTheTestEvenWhenCaught() {
+        AssertionError error = runInRule(inner -> {
+            CloseableHttpClient client = ManagerTestAccess.httpClient(inner.install(new ProbeManager()));
+            try {
+                client.execute(new HttpHost("api.route4me.com", 443, "https"), new HttpGet("/api.v4/route.php"));
+                fail("expected the mocked client to refuse an unrouted overload");
+            } catch (AssertionError swallowed) {
+                assertTrue(swallowed.getMessage(), swallowed.getMessage().contains("does not route"));
+            }
+        });
+
+        assertTrue(error.getMessage(),
+                error.getMessage().contains("CloseableHttpClient.execute(org.apache.http.HttpHost"));
+        assertTrue(error.getMessage(), error.getMessage().contains("does not route through the request guard"));
+    }
+
+    @Test
+    public void answersTheNextRequestWithCustomCode() throws Exception {
+        final ProbeManager manager = http.install(new ProbeManager());
+        final CapturedRequest[] seen = new CapturedRequest[1];
+        http.answerNextRequest(request -> {
+            seen[0] = request;
+            throw new IllegalStateException("custom failure");
+        }).respond(200, "after", "text/plain");
+
+        APIException error = http.expectApiException(() -> manager.get("/api.v4/route.php"));
+
+        assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: custom failure"));
+        assertSame("the answer gets the captured request", http.request(0), seen[0]);
+        assertEquals("the queue goes on after the answer", "after", manager.get("/api.v4/route.php"));
+    }
+
+    @Test
+    public void assertJsonChecksTheJsonTypeOfTheValue() throws Exception {
+        ProbeManager manager = http.install(new ProbeManager());
+        http.respond(200, "{}");
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("limit", 5);
+        body.put("text_limit", "5");
+        body.put("active", true);
+        body.put("text_active", "true");
+        manager.postJson("/api.v4/route.php", body);
+        final CapturedRequest request = http.request();
+
+        request.assertJson("limit", 5).assertJson("text_limit", "5").assertJson("active", true)
+                .assertJson("text_active", "true");
+        assertJsonFails(request, "text_limit", 5, "should be a JSON number");
+        assertJsonFails(request, "limit", "5", "should be a JSON string");
+        assertJsonFails(request, "text_active", true, "should be a JSON boolean");
+        assertJsonFails(request, "active", "true", "should be a JSON string");
+    }
+
+    /** Asserts that {@code assertJson(path, expected)} fails with a message that contains {@code reason}. */
+    private void assertJsonFails(final CapturedRequest request, final String path, final Object expected,
+                                 String reason) {
+        AssertionError error = http.expectThrows(AssertionError.class, () -> request.assertJson(path, expected));
+        assertTrue(error.getMessage(), error.getMessage().contains(reason));
+    }
+
+    @Test
     public void readsFixtures() {
         assertTrue(Fixtures.read("error_400.json").contains("errors"));
     }
@@ -186,6 +338,23 @@ public class MockHttpTest {
         }
         assertEquals(Collections.singletonList(Proxy.NO_PROXY),
                 ProxySelector.getDefault().select(URI.create("socket://127.0.0.1:8080")));
+    }
+
+    @Test
+    public void onlyLoopbackLiteralsPassTheNetworkBlock() {
+        for (String host : Arrays.asList("127.0.0.1", "127.1.2.3", "localhost", "[::1]", "0:0:0:0:0:0:0:1")) {
+            assertTrue(host, NetworkBlock.isLoopback(host));
+        }
+        for (String host : Arrays.asList("127.0.0.1.example.net", "127.example.com", "127.0.0.256", "127.0.0",
+                "127.0.0.1.", "127.0.0.x", "128.0.0.1", "0127.0.0.1", "", null)) {
+            assertFalse(String.valueOf(host), NetworkBlock.isLoopback(host));
+        }
+        try {
+            ProxySelector.getDefault().select(URI.create("socket://127.0.0.1.example.net:443"));
+            fail("expected the network block to refuse a name that only starts like a loopback address");
+        } catch (AssertionError expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().startsWith(NetworkBlock.MESSAGE));
+        }
     }
 
     @Test
@@ -244,6 +413,23 @@ public class MockHttpTest {
         return runInRule(call, false);
     }
 
+    /** Code that runs inside a fresh {@link MockHttp} rule and uses it. */
+    private interface RuleCall {
+        void run(MockHttp inner) throws Exception;
+    }
+
+    /** Runs code inside a fresh {@link MockHttp} rule, which it gets, and returns the guard failure it causes. */
+    private static AssertionError runInRule(final RuleCall call) {
+        final MockHttp inner = new MockHttp();
+        Statement statement = new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                call.run(inner);
+            }
+        };
+        return evaluate(inner, statement);
+    }
+
     /**
      * Runs code inside a fresh {@link MockHttp} rule, with a manager installed on it when
      * {@code installProbe} is set, and returns the guard failure it causes.
@@ -264,6 +450,11 @@ public class MockHttpTest {
                 call.run();
             }
         };
+        return evaluate(inner, statement);
+    }
+
+    /** Runs a statement inside a rule and returns the guard failure it causes. */
+    private static AssertionError evaluate(MockHttp inner, Statement statement) {
         try {
             inner.apply(statement, Description.createTestDescription(MockHttpTest.class, "inner")).evaluate();
         } catch (AssertionError expected) {

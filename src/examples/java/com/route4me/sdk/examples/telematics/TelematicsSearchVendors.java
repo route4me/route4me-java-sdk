@@ -35,7 +35,7 @@ public class TelematicsSearchVendors {
             print(manager.getTelematicsVendorsV5(new TelematicsVendorsV5Request().setSearch("fleet")
                     .setPage(1).setPerPage(2)));
         } catch (APIException ex) {
-            Logger.getLogger(TelematicsSearchVendors.class.getName()).log(Level.INFO, ex.toString());
+            Logger.getLogger(TelematicsSearchVendors.class.getName()).log(Level.SEVERE, ex.toString());
         }
     }
 

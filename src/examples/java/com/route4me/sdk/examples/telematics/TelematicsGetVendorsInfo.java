@@ -27,7 +27,7 @@ public class TelematicsGetVendorsInfo {
                 System.out.println(vendor);
             }
         } catch (APIException ex) {
-            Logger.getLogger(TelematicsGetVendorsInfo.class.getName()).log(Level.INFO, ex.toString());
+            Logger.getLogger(TelematicsGetVendorsInfo.class.getName()).log(Level.SEVERE, ex.toString());
         }
     }
 }

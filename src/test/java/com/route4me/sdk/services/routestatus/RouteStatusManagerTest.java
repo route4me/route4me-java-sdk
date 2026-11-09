@@ -42,6 +42,20 @@ public class RouteStatusManagerTest {
     }
 
     @Test
+    public void getRouteStatusReadsTheTimeOfEachChange() throws Exception {
+        RouteStatusManager manager = manager();
+        http.respond(200, json("{'route_id':'ROUTE-A1','status':'completed','planned_at':1761030000,"
+                + "'started_at':1761040000,'paused_at':1761041000,'resumed_at':1761042000,'completed_at':1761050000}"));
+
+        RouteStatusResponse status = manager.getRouteStatus("ROUTE-A1");
+
+        assertEquals(Long.valueOf(1761030000L), status.getPlannedAt());
+        assertEquals(Long.valueOf(1761041000L), status.getPausedAt());
+        assertEquals(Long.valueOf(1761042000L), status.getResumedAt());
+        assertEquals(Long.valueOf(1761050000L), status.getCompletedAt());
+    }
+
+    @Test
     public void updateRouteStatusPostsTheNewStatus() throws Exception {
         RouteStatusManager manager = manager();
         http.respond(200, ROUTE_STATUS);
@@ -112,13 +126,17 @@ public class RouteStatusManagerTest {
     }
 
     @Test
-    public void routeIdsWithASlashStayInOneSegment() throws Exception {
-        RouteStatusManager manager = manager();
+    public void routeIdsWithASlashAreRefused() throws Exception {
+        final RouteStatusManager manager = manager();
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateRouteStatus("../secret", new RouteStatusRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.rollbackRouteStatus("..\\secret"));
+        http.assertNoRequests();
         http.respondToAll(200, ROUTE_STATUS);
 
-        manager.updateRouteStatus("../secret", new RouteStatusRequest());
+        manager.updateRouteStatus("a b", new RouteStatusRequest());
 
-        assertEquals(STATUS_EP + "/..%2Fsecret", http.request().getUri().getRawPath());
+        assertEquals(STATUS_EP + "/a%20b", http.request().getUri().getRawPath());
     }
 
     @Test

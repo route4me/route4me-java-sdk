@@ -11,8 +11,11 @@ import com.route4me.sdk.services.telematics.TelematicsManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** Gets one telematics connection with {@link TelematicsManager#getTelematicsConnection}. The tokens
- * come from environment variables. */
+/**
+ * Gets one telematics connection with {@link TelematicsManager#getTelematicsConnection}. Set
+ * {@code R4M_TELEMATICS_API_TOKEN} to the member's telematics API token and {@code R4M_TELEMATICS_CONNECTION_TOKEN} to
+ * the token of one of its connections.
+ */
 public class TelematicsGetVendorConnection {
 
     public static void main(String[] args) {

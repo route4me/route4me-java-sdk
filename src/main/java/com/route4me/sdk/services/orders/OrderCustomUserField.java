@@ -1,6 +1,11 @@
 package com.route4me.sdk.services.orders;
 
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
+import java.lang.reflect.Type;
 import lombok.Data;
 
 /**
@@ -32,7 +37,25 @@ public class OrderCustomUserField {
     /** The account owner's member ID ({@code root_owner_member_id}). */
     @SerializedName("root_owner_member_id")
     private Long rootOwnerMemberId;
-    /** The labels and allowed values of the custom field ({@code order_custom_field_type_info}). */
+    /**
+     * The labels and allowed values of the custom field ({@code order_custom_field_type_info}). An empty JSON array
+     * ({@code []}), which the PHP API sends for an empty map, is read as {@code null}.
+     */
     @SerializedName("order_custom_field_type_info")
+    @JsonAdapter(TypeInfoReader.class)
     private OrderCustomFieldTypeInfo orderCustomFieldTypeInfo;
+
+    /**
+     * Reads {@code order_custom_field_type_info} from an object, and an empty array as {@code null}. A non-empty array
+     * is not a type info and still fails. Writing is Gson's own.
+     */
+    static final class TypeInfoReader implements JsonDeserializer<OrderCustomFieldTypeInfo> {
+        @Override
+        public OrderCustomFieldTypeInfo deserialize(JsonElement json, Type type, JsonDeserializationContext context) {
+            if (json.isJsonArray() && json.getAsJsonArray().size() == 0) {
+                return null;
+            }
+            return context.deserialize(json, OrderCustomFieldTypeInfo.class);
+        }
+    }
 }

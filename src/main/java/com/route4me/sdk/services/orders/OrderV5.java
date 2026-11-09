@@ -129,7 +129,7 @@ public class OrderV5 {
     @SerializedName("created_timestamp")
     private Long createdTimestamp;
 
-    /** Timestamp of an order creation ({@code updated_timestamp}). */
+    /** When the order was last updated, as a Unix timestamp ({@code updated_timestamp}). */
     @SerializedName("updated_timestamp")
     private Long updatedTimestamp;
 }

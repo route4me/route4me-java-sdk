@@ -4,7 +4,6 @@ import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.utils.URIBuilder;
 
 /**
  * Reads the authentication history of the members of the account (their log-ins) through the V5 API
@@ -12,7 +11,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class AuthHistoryManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String API_CONFIG_EP = V5_BASE + "/auth-history/apiconf";
 
     /**
@@ -32,14 +30,6 @@ public class AuthHistoryManager extends Manager {
      */
     public AuthHistoryManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
     }
 
     /**

@@ -33,11 +33,17 @@ import java.util.logging.Logger;
 
 /**
  * Adds a stop to a route where it fits best ({@code optimal_position}) with
- * {@link RoutingManager#addAddressesToRoute}.
+ * {@link RoutingManager#addAddressesToRoute}. Set {@code ROUTE_ID} to a route of a test account: the example adds the
+ * stop to it.
  */
 public class InsertStopAtOptimalPosition {
 
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        if (routeId == null || routeId.isEmpty()) {
+            System.err.println("Set ROUTE_ID to the ID of a route of a test account; this example adds a stop to it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
 
         RoutingManager routeManager = new RoutingManager(apiKey);
@@ -46,7 +52,7 @@ public class InsertStopAtOptimalPosition {
 
         try {
             List<Address> addresses = Arrays.asList(address);
-            routeManager.addAddressesToRoute("5B705E1F9DE8A9CE58A8D735CA07FB9D", addresses, true);
+            routeManager.addAddressesToRoute(routeId, addresses, true);
 
         } catch (APIException ex) {
             Logger.getLogger(InsertStopAtOptimalPosition.class.getName()).log(Level.SEVERE, null, ex);

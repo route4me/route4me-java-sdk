@@ -5,6 +5,7 @@
  */
 package com.route4me.sdk.examples.advancedconstraints;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.Constants.AlgorithmType;
@@ -27,10 +28,20 @@ import java.util.logging.Logger;
 /**
  * Reads the orders of three territories with {@link TerritoriesManager#getOrdersInTerritory} and optimizes
  * routes for one driver group per territory, each from its own depot, with {@link RoutingManager#runOptimization}.
+ * Set {@code TERRITORY_IDS} to the comma-separated IDs of three of your territories.
  */
 public class OptimizationUsingTerritoriesOrdersDifferentDepot {
 
     public static void main(String[] args) {
+        List<String> ids = ExampleInput.toList("TERRITORY_IDS", System.getenv("TERRITORY_IDS"));
+        if (ids == null) {
+            return;
+        }
+        if (ids.size() != 3) {
+            System.err.println("Set TERRITORY_IDS to the comma-separated IDs of three of your territories; this"
+                    + " example optimizes routes to their orders.");
+            return;
+        }
         try {
             String apiKey = System.getenv("R4M_API_KEY");
             RoutingManager manager = new RoutingManager(apiKey, true);
@@ -55,9 +66,9 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
 
             // Territories
             // **********************
-            List<String> zone1 = Arrays.asList("477FF1EB618FDE5C1CA85292B2A6DE92");
-            List<String> zone2 = Arrays.asList("2A6E027E74A3623762BEA3D6E94B643E");
-            List<String> zone3 = Arrays.asList("C8B7DEFFC4C42AB7674EA27CBC607B3F");
+            List<String> zone1 = Arrays.asList(ids.get(0));
+            List<String> zone2 = Arrays.asList(ids.get(1));
+            List<String> zone3 = Arrays.asList(ids.get(2));
 
             List<Address> addresses = new ArrayList<>();
 
@@ -133,7 +144,8 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
             try {
                 DataObject responseObject = manager.runOptimization(optParameters);
                 System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-                System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+                System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                        : OptimizationState.get(responseObject.getState().intValue())));
                 if (responseObject.getAddresses() != null) {
                     for (Address addressResponse : responseObject.getAddresses()) {
                         System.out.println(addressResponse);

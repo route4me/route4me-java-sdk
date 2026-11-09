@@ -1,5 +1,7 @@
 package com.route4me.sdk.services.notes;
 
+import com.google.gson.JsonParseException;
+import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Constants;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
@@ -122,6 +124,20 @@ public class NotesManagerTest {
         http.respond(200, json("{'data':'none'}"));
 
         http.expectApiException(() -> manager.getAllCustomNoteTypes());
+    }
+
+    @Test
+    public void getAllCustomNoteTypesReportsAnUnreadableItemAsApiException() {
+        final NotesManager manager = manager();
+        http.respond(200, json("['Reason']"))
+                .respond(200, json("{'data':[{'note_custom_type_id':7,'note_custom_type_values':{'a':'Closed'}}]}"));
+
+        APIException notAnObject = http.expectApiException(() -> manager.getAllCustomNoteTypes());
+        APIException wrongField = http.expectApiException(() -> manager.getAllCustomNoteTypes());
+
+        assertTrue(notAnObject.getMessage().contains("custom note types"));
+        assertTrue(notAnObject.getCause() instanceof JsonParseException);
+        assertTrue(wrongField.getCause() instanceof JsonParseException);
     }
 
     @Test

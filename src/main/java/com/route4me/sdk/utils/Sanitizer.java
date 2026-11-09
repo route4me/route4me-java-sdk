@@ -68,9 +68,13 @@ public final class Sanitizer {
      * URLs: every parameter for which {@link #isSensitiveParameter(String)} is true, such as
      * {@code api_key}, {@code api_token}, {@code password} or {@code organization_api_key}.
      *
-     * <p>A value runs to the next {@code &} or {@code #}. A parameter inside the value of
-     * another one, such as a URL passed as {@code ?next=https://...?api_key=...}, is found
-     * too.
+     * <p>A value runs to the next {@code &} or {@code #}, or to the first character that a URL
+     * cannot hold unencoded and that ends a URL quoted in a text: whitespace, {@code "},
+     * {@code <} or {@code >}. So a URL inside a JSON string or a sentence loses its credential
+     * value only, and the text after it stays. A backslash escapes the next character, as in a
+     * JSON string ({@code \"}, {@code \/}), so an escaped character stays in the hidden value.
+     * A parameter inside the value of another one, such as a URL passed as
+     * {@code ?next=https://...?api_key=...}, is found too.
      *
      * @param url the URL, or {@code null}
      * @return the URL with each credential value replaced by {@link #REDACTED}, or
@@ -145,13 +149,23 @@ public final class Sanitizer {
         return false;
     }
 
-    /** Returns where a query value that starts at {@code start} ends: the next {@code &} or {@code #}. */
+    /**
+     * Returns where a query value that starts at {@code start} ends: at the next {@code &} or
+     * {@code #}, or at whitespace, {@code "}, {@code <} or {@code >}, which a URL never holds
+     * unencoded. A backslash and the character after it belong to the value.
+     */
     private static int valueEnd(String url, int start) {
-        for (int i = start; i < url.length(); i++) {
+        int i = start;
+        while (i < url.length()) {
             char c = url.charAt(i);
-            if (c == '&' || c == '#') {
+            if (c == '\\') {
+                i += 2;
+                continue;
+            }
+            if (c == '&' || c == '#' || c == '"' || c == '<' || c == '>' || Character.isWhitespace(c)) {
                 return i;
             }
+            i++;
         }
         return url.length();
     }

@@ -3,6 +3,7 @@ package com.route4me.sdk.services.locations;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 import java.util.List;
 
 /**
@@ -11,6 +12,7 @@ import java.util.List;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class LocationTerritoriesRequest extends LocationCombinedRequest {
     /** Page number for territories pagination (1-based) ({@code territories_page}). */
     @SerializedName("territories_page")
@@ -26,5 +28,5 @@ public class LocationTerritoriesRequest extends LocationCombinedRequest {
 
     /** Sort order for territories as array of [field, direction] pairs ({@code territories_order_by}). */
     @SerializedName("territories_order_by")
-    private List<String[]> territoriesOrderBy;
+    private List<List<String>> territoriesOrderBy;
 }

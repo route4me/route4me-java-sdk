@@ -31,7 +31,6 @@ import java.util.List;
  */
 public class VehiclesManagerV5 extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String VEHICLES_EP = V5_BASE + "/vehicles";
     private static final String VEHICLES_PAGINATE_EP = VEHICLES_EP + "/paginate";
     private static final String VEHICLES_SEARCH_EP = VEHICLES_EP + "/search";
@@ -68,14 +67,6 @@ public class VehiclesManagerV5 extends Manager {
      */
     public VehiclesManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /** Throws {@link IllegalArgumentException} when a field the API requires is {@code null}. */
@@ -127,6 +118,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param vehicleId the vehicle ID
      * @return the vehicle
+     * @throws IllegalArgumentException if {@code vehicleId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 getVehicleById(String vehicleId) throws APIException {
@@ -157,8 +150,8 @@ public class VehiclesManagerV5 extends Manager {
      * @param vehicleId the vehicle ID
      * @param vehicle the new values; required
      * @return the updated vehicle
-     * @throws IllegalArgumentException if {@code vehicleId} is {@code null} or empty, or {@code vehicle} is
-     *     {@code null}; nothing is sent
+     * @throws IllegalArgumentException if {@code vehicleId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}, or {@code vehicle} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 updateVehicle(String vehicleId, VehicleV5 vehicle) throws APIException {
@@ -172,6 +165,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param vehicleId the vehicle ID
      * @return the deleted vehicle
+     * @throws IllegalArgumentException if {@code vehicleId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 deleteVehicle(String vehicleId) throws APIException {
@@ -187,7 +182,8 @@ public class VehiclesManagerV5 extends Manager {
      * @param start the first day, such as {@code 2026-10-01}; {@code null} leaves {@code start} out
      * @param end the last day, such as {@code 2026-10-02}; {@code null} leaves {@code end} out
      * @return the positions of the track
-     * @throws IllegalArgumentException if {@code vehicleId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code vehicleId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleTrackResponse getVehicleTrack(String vehicleId, String start, String end) throws APIException {
@@ -404,7 +400,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of the job a bulk method started
      * @return the result: {@code status} is {@code "true"} and {@code result} holds what the job wrote
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleJobResponse getVehicleJobResult(String jobId) throws APIException {
@@ -422,7 +419,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of the job a bulk method started
      * @return the status, or the result
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleJobResponse getVehicleJobStatus(String jobId) throws APIException {
@@ -460,6 +458,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param profileId the profile ID
      * @return the profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleProfile getVehicleProfileById(String profileId) throws APIException {
@@ -490,8 +490,8 @@ public class VehiclesManagerV5 extends Manager {
      * @param profileId the profile ID
      * @param profile the new values; required
      * @return the updated profile
-     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty, or {@code profile} is
-     *     {@code null}; nothing is sent
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}, or {@code profile} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleProfile updateVehicleProfile(String profileId, VehicleProfile profile) throws APIException {
@@ -505,6 +505,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param profileId the profile ID
      * @return the deleted profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleProfile deleteVehicleProfile(String profileId) throws APIException {
@@ -541,6 +543,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param profileId the profile ID
      * @return the profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleCapacityProfileResponse getVehicleCapacityProfileById(String profileId) throws APIException {
@@ -574,8 +578,8 @@ public class VehiclesManagerV5 extends Manager {
      * @param profileId the profile ID
      * @param profile the new values; required
      * @return the updated profile
-     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty, or {@code profile} is
-     *     {@code null}; nothing is sent
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}, or {@code profile} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleCapacityProfileResponse updateVehicleCapacityProfile(String profileId, VehicleCapacityProfile profile)
@@ -592,6 +596,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param profileId the profile ID
      * @return the deleted profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleCapacityProfileResponse deleteVehicleCapacityProfile(String profileId) throws APIException {

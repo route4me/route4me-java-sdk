@@ -11,10 +11,15 @@ import com.route4me.sdk.services.orders.OrderManagerV5;
  */
 public class GetOrderHistoryV5 {
     public static void main(String[] args) {
+        String orderUuid = System.getenv("ORDER_UUID");
+        if (orderUuid == null || orderUuid.isEmpty()) {
+            System.err.println("Set ORDER_UUID to the UUID of one of your orders; this example prints its history.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrderManagerV5 manager = new OrderManagerV5(apiKey);
         try {
-            OrderHistoryResponse history = manager.getOrderHistory(null, System.getenv("ORDER_UUID"), null);
+            OrderHistoryResponse history = manager.getOrderHistory(null, orderUuid, null);
             if (history.getResults() != null) {
                 for (OrderHistoryEntry entry : history.getResults()) {
                     System.out.println(entry.getCreatedTimestamp() + ": event " + entry.getEventType());

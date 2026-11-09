@@ -1,9 +1,16 @@
 package com.route4me.sdk.services.routing;
 
 import com.google.gson.annotations.SerializedName;
+import com.route4me.sdk.utils.Sanitizer;
 import lombok.Data;
 
-/** The URLs of an optimization and of its view. */
+/**
+ * The URLs of an optimization and of its view.
+ *
+ * <p>The V4 API may put the {@code api_key} in these URLs, so {@link #toString()} hides
+ * credential query parameters (see {@link Sanitizer#redactUrl(String)}). The getters return
+ * the URLs unchanged.
+ */
 @Data
 public class Links {
 
@@ -16,4 +23,17 @@ public class Links {
     /** A Link to the GET operation for the optimization problem ({@code view}). */
     @SerializedName("view")
     private String view;
+
+    /**
+     * Returns the URLs with the values of credential query parameters, such as
+     * {@code api_key}, replaced by {@link Sanitizer#REDACTED}, so the result is safe to log.
+     *
+     * @return the three URLs, with credentials hidden
+     */
+    @Override
+    public String toString() {
+        return "Links(optimizationProblem=" + Sanitizer.redactUrl(this.optimizationProblem)
+                + ", route=" + Sanitizer.redactUrl(this.route)
+                + ", view=" + Sanitizer.redactUrl(this.view) + ")";
+    }
 }

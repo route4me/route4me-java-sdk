@@ -85,7 +85,8 @@ public class BundlingUsingMultipleFields {
         try {
             DataObject responseObject = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-            System.out.println("State:" + Constants.OptimizationState.get(responseObject.getState().intValue()));
+            System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                    : Constants.OptimizationState.get(responseObject.getState().intValue())));
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();

@@ -49,14 +49,6 @@ public class RoutingManager extends Manager {
     private static final String MARK_ADDRESS_VISITED_EP = "/actions/address/update_address_visited.php";
     private static final String DELETE_ROUTE_DESTINATION_EP = "/actions/route/delete_route_destination.php";
 
-    private URIBuilder getRouteSearchURI(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
-    }
-
     /**
      * Creates a manager that sends its requests with an API key.
      *
@@ -268,9 +260,9 @@ public class RoutingManager extends Manager {
 
     /**
      * Adds depots to a hybrid optimization, or replaces its depots: {@code POST
-     * https://api.route4me.com/api/change_hybrid_optimization_depot.php}, with {@code optimization_problem_id},
-     * {@code delete_old_depots} and {@code new_depots} as the JSON body. A {@code null} argument is left out of the
-     * body.
+     * https://api.route4me.com/api/change_hybrid_optimization_depot.php?optimization_problem_id=...}, with {@code
+     * optimization_problem_id}, {@code delete_old_depots} and {@code new_depots} as the JSON body. The ID goes in both
+     * the query and the body, as the PHP SDK sends it. A {@code null} argument is left out of the query and the body.
      *
      * @param optimizationProblemId the ID of the hybrid optimization, from
      *     {@link #getHybridOptimization(String, Integer)} ({@code optimization_problem_id})
@@ -282,6 +274,7 @@ public class RoutingManager extends Manager {
     public StatusResponse addDepotsToHybridOptimization(String optimizationProblemId, Boolean deleteOldDepots,
             List<Address> newDepots) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(HYBRID_DEPOTS_EP);
+        addParameter(builder, "optimization_problem_id", optimizationProblemId);
         HybridDepots body = new HybridDepots(optimizationProblemId, deleteOldDepots, newDepots);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(body), StatusResponse.class);
     }
@@ -484,7 +477,7 @@ public class RoutingManager extends Manager {
     public RouteSearchResult getRoutesbyDateTimeZone(String scheduledForStart, String scheduledForEnd, String timeZone,
             Integer page, Integer perPage) throws APIException {
 
-        URIBuilder builder = this.getRouteSearchURI(ROUTE_SEARCH_V5_1);
+        URIBuilder builder = v5Builder(ROUTE_SEARCH_V5_1);
 
         RouteSearch request = new RouteSearch();
         request.setTimeZone(timeZone);
@@ -617,7 +610,8 @@ public class RoutingManager extends Manager {
      *
      * @param routeIds the IDs of the routes to delete; at least one
      * @return the deletion result
-     * @throws IllegalArgumentException if no route ID is given, or one is {@code null} or empty
+     * @throws IllegalArgumentException if no route ID is given, or one is {@code null}, empty or contains a comma
+     *     (the API would read it as several IDs); nothing is sent
      * @throws APIException             if the request fails
      */
     public RouteDeletedResponse deleteRoutes(String... routeIds) throws APIException {
@@ -625,9 +619,7 @@ public class RoutingManager extends Manager {
             throw new IllegalArgumentException("At least one route ID is required");
         }
         for (String routeId : routeIds) {
-            if (routeId == null || routeId.isEmpty()) {
-                throw new IllegalArgumentException("A route ID must not be null or empty");
-            }
+            requireListedRouteId(routeId);
         }
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         builder.addParameter("route_id", String.join(",", routeIds));
@@ -685,7 +677,8 @@ public class RoutingManager extends Manager {
      * @param depotLat the latitude of the depot ({@code depot_lat})
      * @param depotLng the longitude of the depot ({@code depot_lng})
      * @return whether the routes were merged, and the optimization of the merged route
-     * @throws IllegalArgumentException if no route ID is given, or one is {@code null} or empty
+     * @throws IllegalArgumentException if no route ID is given, or one is {@code null}, empty or contains a comma
+     *     (the API would read it as several IDs); nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public MergeRoutesResponse mergeRoutes(List<String> routeIds, String depotAddress, Boolean removeOrigin,
@@ -694,9 +687,7 @@ public class RoutingManager extends Manager {
             throw new IllegalArgumentException("At least one route ID is required");
         }
         for (String routeId : routeIds) {
-            if (routeId == null || routeId.isEmpty()) {
-                throw new IllegalArgumentException("A route ID must not be null or empty");
-            }
+            requireListedRouteId(routeId);
         }
         URIBuilder builder = Manager.defaultBuilder(MERGE_ROUTES_EP);
         List<NameValuePair> form = new ArrayList<>();
@@ -836,6 +827,16 @@ public class RoutingManager extends Manager {
         List<NameValuePair> form = new ArrayList<>();
         form.add(new BasicNameValuePair("route_destination_id", ids.toString()));
         return this.makeRequest(RequestMethod.POST, builder, form, JsonElement.class);
+    }
+
+    /**
+     * Refuses a route ID of a comma-separated list: one that is {@code null}, empty or contains a comma, which the
+     * API would split into several route IDs.
+     */
+    private static void requireListedRouteId(String routeId) {
+        if (routeId == null || routeId.isEmpty() || routeId.indexOf(',') >= 0) {
+            throw new IllegalArgumentException("A route ID must not be null, empty or contain ','");
+        }
     }
 
     /** Adds the query of the mark-visited and mark-departed requests, leaving out the {@code null} values. */

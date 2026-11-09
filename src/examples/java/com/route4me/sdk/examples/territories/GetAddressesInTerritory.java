@@ -4,25 +4,27 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.territories.TerritoriesManager;
 import com.route4me.sdk.services.territories.Territory;
 
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Takes a territory from {@link TerritoriesManager#getTerritories} and reads it with its addresses with
- * {@link TerritoriesManager#getAddressesInTerritory}.
+ * Reads a territory with its addresses with {@link TerritoriesManager#getAddressesInTerritory}. Set
+ * {@code TERRITORY_ID} to one of your territories.
  */
 public class GetAddressesInTerritory {
 
     public static void main(String[] args) {
+        String territoryId = System.getenv("TERRITORY_ID");
+        if (territoryId == null || territoryId.isEmpty()) {
+            System.err.println("Set TERRITORY_ID to the ID of one of your territories; this example reads its"
+                    + " addresses.");
+            return;
+        }
         try {
             String apiKey = System.getenv("R4M_API_KEY");
             TerritoriesManager territoriesManager = new TerritoriesManager(apiKey);
-            List<Territory> territories = territoriesManager.getTerritories();
-            String territoryID;
-            territoryID = territories.get(0).getTerritoryId();
-            Territory responseObject = territoriesManager.getAddressesInTerritory(territoryID);
-            System.out.println("Addresses:\n" + responseObject.getAddresses());
+            Territory responseObject = territoriesManager.getAddressesInTerritory(territoryId);
+            System.out.println("Addresses:\n" + (responseObject == null ? null : responseObject.getAddresses()));
         } catch (APIException ex) {
             Logger.getLogger(GetAddressesInTerritory.class.getName()).log(Level.SEVERE, null, ex);
         }

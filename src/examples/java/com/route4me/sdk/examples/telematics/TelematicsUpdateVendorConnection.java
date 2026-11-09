@@ -11,8 +11,11 @@ import com.route4me.sdk.services.telematics.TelematicsManager;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** Updates a telematics connection with {@link TelematicsManager#updateTelematicsConnection}. The
- * tokens come from environment variables. */
+/**
+ * Updates a telematics connection with {@link TelematicsManager#updateTelematicsConnection}. Set
+ * {@code R4M_TELEMATICS_API_TOKEN} to the member's telematics API token and {@code R4M_TELEMATICS_CONNECTION_TOKEN} to
+ * a connection of a test account: the example changes it.
+ */
 public class TelematicsUpdateVendorConnection {
 
     public static void main(String[] args) {
@@ -20,7 +23,8 @@ public class TelematicsUpdateVendorConnection {
         String connectionToken = System.getenv("R4M_TELEMATICS_CONNECTION_TOKEN");
         if (apiToken == null || apiToken.isEmpty() || connectionToken == null || connectionToken.isEmpty()) {
             System.err.println("Set R4M_TELEMATICS_API_TOKEN to the member's telematics API token (from registerMember)"
-                    + " and R4M_TELEMATICS_CONNECTION_TOKEN to the token of the connection.");
+                    + " and R4M_TELEMATICS_CONNECTION_TOKEN to the token of a connection of a test account; this"
+                    + " example changes the connection.");
             return;
         }
         String apiKey = System.getenv("R4M_API_KEY");

@@ -5,6 +5,7 @@ import com.route4me.sdk.ManagerTestAccess;
 import com.route4me.sdk.exception.APIException;
 import org.apache.http.HttpVersion;
 import org.apache.http.StatusLine;
+import org.apache.http.client.ResponseHandler;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.entity.ByteArrayEntity;
@@ -14,10 +15,12 @@ import org.apache.http.impl.EnglishReasonPhraseCatalog;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicHttpResponse;
 import org.apache.http.message.BasicStatusLine;
+import org.apache.http.protocol.HttpContext;
 import org.junit.rules.TestRule;
 import org.junit.runner.Description;
 import org.junit.runners.model.Statement;
 import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -71,6 +74,13 @@ import static org.junit.Assert.assertEquals;
  * record, for which the {@code com.route4me} loggers are set to {@code ALL} while the test
  * runs. Guard failures are reported even when the test ends in an assumption failure.
  *
+ * <p>Every {@code execute} overload of the mocked client that takes an {@code HttpUriRequest}
+ * (with or without an {@code HttpContext} or a {@code ResponseHandler}) goes through the guard.
+ * A non-null {@code HttpContext} fails the test: the guard cannot check the credentials, proxy or
+ * request config it may carry, and the SDK never passes one. Any other {@code execute} or
+ * {@code doExecute} call, such as {@code execute(HttpHost, HttpRequest)}, fails the test, even
+ * when the code under test catches the error: it would bypass the guard.
+ *
  * <p>The rule also installs the {@link NetworkBlock}, so a manager that a test forgot to
  * {@link #install} fails instead of reaching the network. Only managers created with
  * {@link #API_KEY}, or with no key, can be installed: the guard looks for that key, so it
@@ -95,11 +105,29 @@ public final class MockHttp implements TestRule {
         void run() throws Exception;
     }
 
+    /**
+     * A custom answer to one request, for what a canned response or
+     * {@link #failNextRequest(IOException)} cannot express, such as an unchecked exception or a
+     * body that fails while it is read. The request has passed the guard when it runs.
+     */
+    @FunctionalInterface
+    public interface Answer {
+        /**
+         * Answers the request.
+         *
+         * @param request the captured request
+         * @return the response {@code HttpClient.execute} returns
+         * @throws IOException an I/O error {@code HttpClient.execute} throws
+         */
+        CloseableHttpResponse answer(CapturedRequest request) throws IOException;
+    }
+
     /** Fills in the parameters of a {@code java.util.logging} record. */
     private static final Formatter MESSAGES = new SimpleFormatter();
 
     private final RequestGuard guard = new RequestGuard(EndpointRegistry.load(), API_KEY);
-    private final CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
+    /** The mocked client; a call that no stub below routes through the guard fails (see {@link #unstubbed}). */
+    private final CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class, this::unstubbed);
     private final Queue<Object> steps = new ConcurrentLinkedQueue<>();
     private final List<CapturedRequest> requests = new CopyOnWriteArrayList<>();
     private final List<String> violations = new CopyOnWriteArrayList<>();
@@ -112,8 +140,20 @@ public final class MockHttp implements TestRule {
     /** Creates the rule and its mocked client. */
     public MockHttp() {
         try {
-            Mockito.when(client.execute(Mockito.any(HttpUriRequest.class)))
-                    .thenAnswer(invocation -> execute(invocation.getArgument(0)));
+            // doAnswer().when() form: calling client.execute(...) inside when() would run unstubbed().
+            Mockito.doAnswer(invocation -> execute(invocation.getArgument(0)))
+                    .when(client).execute(Mockito.any(HttpUriRequest.class));
+            Mockito.doAnswer(invocation -> {
+                refuseContext(invocation.getArgument(1));
+                return execute(invocation.getArgument(0));
+            }).when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<HttpContext>any());
+            Mockito.doAnswer(invocation -> handle(invocation.getArgument(0), invocation.getArgument(1)))
+                    .when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<ResponseHandler<Object>>any());
+            Mockito.doAnswer(invocation -> {
+                refuseContext(invocation.getArgument(2));
+                return handle(invocation.getArgument(0), invocation.getArgument(1));
+            }).when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<ResponseHandler<Object>>any(),
+                    Mockito.<HttpContext>any());
             Mockito.doAnswer(invocation -> {
                 closeCount.incrementAndGet();
                 IOException failure = closeFailure;
@@ -259,6 +299,19 @@ public final class MockHttp implements TestRule {
      */
     public MockHttp failNextRequest(IOException failure) {
         steps.add(failure);
+        return this;
+    }
+
+    /**
+     * Answers the next request with custom code, for example to throw an unchecked exception
+     * or to return a body that fails while it is read. The request goes through the guard
+     * first, like any other.
+     *
+     * @param answer the code that answers the request
+     * @return this rule
+     */
+    public MockHttp answerNextRequest(Answer answer) {
+        steps.add(answer);
         return this;
     }
 
@@ -458,7 +511,54 @@ public final class MockHttp implements TestRule {
         if (step instanceof IOException) {
             throw (IOException) step;
         }
+        if (step instanceof Answer) {
+            return ((Answer) step).answer(captured);
+        }
         return ((CannedResponse) step).toHttpResponse();
+    }
+
+    /**
+     * Answers {@code execute(request, handler)} as Apache HttpClient does: the request is
+     * captured, checked and answered like any other, the handler reads the response, and the
+     * response is closed.
+     */
+    private Object handle(HttpUriRequest request, ResponseHandler<?> handler) throws IOException {
+        try (CloseableHttpResponse response = execute(request)) {
+            return handler.handleResponse(response);
+        }
+    }
+
+    /**
+     * Fails the test when the code under test passes a context to {@code execute}. A real
+     * client applies the context as it is: its credentials provider and auth cache can add an
+     * {@code Authorization} header, and its request config can set a proxy or the redirect
+     * policy. The guard sees only the request, so it could not check any of that. The SDK never
+     * passes a context; a {@code null} one is the plain overload. The failure is recorded, so the
+     * test fails even when the code under test catches the error.
+     */
+    private void refuseContext(HttpContext context) {
+        if (context != null) {
+            String problem = "the code under test passed an HttpContext to execute(...); a context can add"
+                    + " credentials, a proxy or a request config that the request guard cannot check";
+            violations.add(problem);
+            throw new AssertionError(guardMessage(Collections.singletonList(problem)));
+        }
+    }
+
+    /**
+     * The default answer of the mocked client. An {@code execute} or {@code doExecute} call that
+     * no stub routes through the guard fails the test, and is recorded so that the test fails
+     * even when the code under test catches the error; any other call gets Mockito's default.
+     */
+    private Object unstubbed(InvocationOnMock invocation) throws Throwable {
+        String name = invocation.getMethod().getName();
+        if (name.startsWith("execute") || "doExecute".equals(name)) {
+            String problem = "the code under test called " + invocation.getMethod().toGenericString()
+                    + ", which MockHttp does not route through the request guard; route it in MockHttp first";
+            violations.add(problem);
+            throw new AssertionError(guardMessage(Collections.singletonList(problem)));
+        }
+        return Mockito.RETURNS_DEFAULTS.answer(invocation);
     }
 
     /** Formats guard problems as one assertion message. */

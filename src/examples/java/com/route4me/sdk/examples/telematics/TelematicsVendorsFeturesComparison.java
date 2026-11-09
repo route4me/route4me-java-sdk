@@ -1,10 +1,10 @@
 package com.route4me.sdk.examples.telematics;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.telematics.TelematicsManager;
 import com.route4me.sdk.services.telematics.TelematicsVendorInfo;
 import com.route4me.sdk.services.telematics.TelematicsVendorsV5Response;
-import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -24,21 +24,12 @@ import java.util.logging.Logger;
 public class TelematicsVendorsFeturesComparison {
 
     public static void main(String[] args) {
-        Set<String> vendorIds = new LinkedHashSet<>();
-        List<String> sources = new ArrayList<>();
-        for (String arg : args) {
-            sources.add(arg);
+        String text = args.length > 0 ? String.join(",", args) : System.getenv("TELEMATICS_VENDOR_IDS");
+        List<String> ids = ExampleInput.toList(args.length > 0 ? "The argument list" : "TELEMATICS_VENDOR_IDS", text);
+        if (ids == null) {
+            return;
         }
-        if (sources.isEmpty() && System.getenv("TELEMATICS_VENDOR_IDS") != null) {
-            sources.add(System.getenv("TELEMATICS_VENDOR_IDS"));
-        }
-        for (String source : sources) {
-            for (String id : source.split(",")) {
-                if (!id.trim().isEmpty()) {
-                    vendorIds.add(id.trim());
-                }
-            }
-        }
+        Set<String> vendorIds = new LinkedHashSet<>(ids);
         if (vendorIds.isEmpty()) {
             System.err.println("Give the vendor IDs to compare as arguments, or in TELEMATICS_VENDOR_IDS (comma"
                     + " separated); TelematicsGetVendorsInfo lists the catalog with its IDs.");
@@ -67,7 +58,7 @@ public class TelematicsVendorsFeturesComparison {
                 }
             }
         } catch (APIException ex) {
-            Logger.getLogger(TelematicsVendorsFeturesComparison.class.getName()).log(Level.INFO, ex.toString());
+            Logger.getLogger(TelematicsVendorsFeturesComparison.class.getName()).log(Level.SEVERE, ex.toString());
         }
     }
 }

@@ -6,6 +6,7 @@ import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.DeleteResponse;
+import com.route4me.sdk.responses.StatusResponse;
 import java.util.ArrayList;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -35,14 +36,6 @@ public class AddressBookManager extends Manager {
      */
     public AddressBookManager(String apiKey) {
         super(apiKey);
-    }
-
-    private URIBuilder getAPIV5URI(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
     }
 
 
@@ -93,8 +86,12 @@ public class AddressBookManager extends Manager {
      * @param addressID the contact's address ID
      * @return the contact, or {@code null} when the address book has no contact with that ID
      * @throws APIException if the request fails
+     * @throws IllegalArgumentException if {@code addressID} is {@code null}; nothing is sent
      */
     public Contact getContact(Number addressID) throws APIException {
+        if (addressID == null) {
+            throw new IllegalArgumentException("address_id is required");
+        }
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
         builder.setParameter("address_id", addressID.toString());
         ContactsResponse response = this.makeRequest(RequestMethod.GET, builder, "", ContactsResponse.class);
@@ -113,6 +110,7 @@ public class AddressBookManager extends Manager {
      * @param request the IDs or search parameters
      * @return the contacts, or {@code null} when the answer has no results
      * @throws APIException if the request fails
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      * @deprecated the V4 {@code /api.v4/address_book.php} call is obsolete: the C# SDK marks
      *     {@code GetAddressBookContacts} as {@code [Obsolete]}. Use
      *     {@link AddressBookManagerV5#getContacts(AddressBookContactsQuery)}. This method will be removed in the next
@@ -120,6 +118,7 @@ public class AddressBookManager extends Manager {
      */
     @Deprecated
     public List<Contact> getContacts(ContactsRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = contactsQuery(request);
         ContactsResponse cr = this.makeJSONRequest(RequestMethod.GET, builder, request, ContactsResponse.class);
         return cr == null ? null : cr.getResults();
@@ -343,7 +342,7 @@ public class AddressBookManager extends Manager {
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public List<Contact> getDepotsFromAddressBook() throws APIException {
-        URIBuilder builder = this.getAPIV5URI(ADDRESS_BOOK_DEPOTS);
+        URIBuilder builder = v5Builder(ADDRESS_BOOK_DEPOTS);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Contact>>() {
         }.getType());
     }

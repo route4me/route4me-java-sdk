@@ -12,18 +12,17 @@ import com.route4me.sdk.queryconverter.QueryConverter;
 import com.route4me.sdk.utils.LenientBooleanAdapter;
 import com.route4me.sdk.utils.LenientMapAdapterFactory;
 import com.route4me.sdk.utils.Sanitizer;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -75,6 +74,10 @@ import org.apache.logging.log4j.LogManager;
  * <p>Every request carries the connect, socket (read) and connection-request timeouts of
  * the manager; see {@link #setConnectTimeout(int)}, {@link #setSocketTimeout(int)} and
  * {@link #setConnectionRequestTimeout(int)}.
+ *
+ * <p>Every reply is read whole into memory, up to the maximum response size of the manager
+ * (see {@link #setMaxResponseSize(int)}); a larger reply fails the request with an
+ * {@link APIException}.
  */
 public abstract class Manager implements Closeable {
 
@@ -84,6 +87,11 @@ public abstract class Manager implements Closeable {
     public static final int DEFAULT_SOCKET_TIMEOUT_MS = 30000;
     /** Default time to wait for a free connection from the pool, in milliseconds. */
     public static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS = 6050;
+    /**
+     * Default and largest maximum response size, in bytes: {@code Integer.MAX_VALUE - 8}, the
+     * largest array that Java VMs can allocate.
+     */
+    public static final int DEFAULT_MAX_RESPONSE_SIZE = Integer.MAX_VALUE - 8;
 
     /** The default number of pooled connections of a manager, per route and in total. */
     private static final int DEFAULT_MAX_CONNECTIONS = 10;
@@ -93,6 +101,8 @@ public abstract class Manager implements Closeable {
     private static final String V4_HOST = "api.route4me.com";
     /** The host of the V5 API, which takes the API key as a bearer token. */
     private static final String V5_HOST = "wh.route4me.com";
+    /** The path of the V5.0 API on the V5 host: {@code /modules/api/v5.0}. */
+    protected static final String V5_BASE = "/modules/api/v5.0";
     /** The path prefixes of the V5 API on {@link #V5_HOST}. */
     private static final String[] V5_PATH_PREFIXES = {"/modules/api/v5.0", "/modules/api/v5.1"};
     private static final String USER_AGENT = "Route4Me Java SDK";
@@ -104,6 +114,10 @@ public abstract class Manager implements Closeable {
      * and PDF exports acceptable.
      */
     private static final String V5_ACCEPT = "application/json, */*;q=0.8";
+    /** The size of the buffer that reads a response body, and its first size when the length is unknown. */
+    private static final int READ_BUFFER_SIZE = 8192;
+    /** The largest first size of the buffer of a body whose length is declared, so that a false length costs little. */
+    private static final int MAX_PRESIZE = 1 << 20;
 
     /** The logger of the managers; protected, and named in lower case, since subclasses use it. */
     @SuppressWarnings("checkstyle:ConstantName") // public API of subclasses: renaming it would break them
@@ -114,10 +128,12 @@ public abstract class Manager implements Closeable {
     protected Gson gson;
     private HttpHost proxy;
     private boolean disableRedirects;
-    private String callBackURL;
+    /** Volatile, like the timeouts: {@link #setCallBackURL} may run on another thread than {@link #send}. */
+    private volatile String callBackURL;
     private volatile int connectTimeout = DEFAULT_CONNECT_TIMEOUT_MS;
     private volatile int socketTimeout = DEFAULT_SOCKET_TIMEOUT_MS;
     private volatile int connectionRequestTimeout = DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS;
+    private volatile int maxResponseSize = DEFAULT_MAX_RESPONSE_SIZE;
     /** Guards the creation, replacement and closing of {@link #httpClient}. */
     private final Object clientLock = new Object();
     /** The client of this manager; {@code null} until the first request or after {@link #close()}. */
@@ -246,11 +262,36 @@ public abstract class Manager implements Closeable {
     }
 
     /**
+     * Creates a builder for a V5 endpoint: {@code https://wh.route4me.com}, the endpoint path and
+     * its path segments, each percent-encoded as one segment (see {@link #withPathSegments}).
+     *
+     * @param endpoint the endpoint path, such as {@code /modules/api/v5.0/vehicles}
+     * @param segments the segments to append after it, such as IDs; none leaves the endpoint as it is
+     * @return a new builder
+     * @throws IllegalArgumentException if a segment is {@code null}, empty, {@code .} or {@code ..}, or
+     *                                  contains {@code /}, {@code \} or {@code ;}
+     */
+    protected static URIBuilder v5Builder(String endpoint, Object... segments) {
+        URIBuilder builder = new URIBuilder();
+        builder.setScheme("https");
+        builder.setHost(V5_HOST);
+        return withPathSegments(builder, endpoint, segments);
+    }
+
+    /**
      * Sets the path of a builder to an endpoint followed by path segments, such as IDs.
      *
-     * <p>Each segment is percent-encoded as one segment: a {@code /} in it becomes
-     * {@code %2F}, so a value such as {@code ../secret} cannot climb out of the endpoint and
-     * send the request, with the API key, to another one.
+     * <p>Each segment is percent-encoded as one segment, so that a space, {@code ?} or
+     * {@code #} in it stays in the path. A segment that could leave its endpoint is refused
+     * before any request is sent: one that is empty, {@code .} or {@code ..}, and one that
+     * contains {@code /}, {@code \} or {@code ;}. Encoding a slash is not enough: some front ends
+     * decode {@code %2F} or {@code %5C} before they resolve {@code ..}, which would send a value
+     * such as {@code ../secret}, with the API key, to another endpoint. A {@code ;} is sent as it
+     * is, and some servers and proxies drop a path parameter (from {@code ;} to the end of the
+     * segment) before they resolve {@code ..}, so {@code ..;x} would climb one level too. No
+     * Route4Me ID contains any of these characters. A {@code %} is encoded, so a value typed as
+     * {@code a%2Fb} is sent as {@code a%252Fb}: one segment, which a single decoding does not
+     * turn into a slash.
      *
      * @param builder  the builder to change
      * @param endpoint the endpoint path, such as {@code /modules/api/v5.0/vehicles}
@@ -258,7 +299,7 @@ public abstract class Manager implements Closeable {
      *                 {@link String#valueOf(Object)}; none leaves the endpoint as it is
      * @return {@code builder}
      * @throws IllegalArgumentException if a segment is {@code null}, empty, {@code .} or
-     *                                  {@code ..}
+     *                                  {@code ..}, or contains {@code /}, {@code \} or {@code ;}
      */
     protected static URIBuilder withPathSegments(URIBuilder builder, String endpoint, Object... segments) {
         if (segments == null || segments.length == 0) {
@@ -272,13 +313,27 @@ public abstract class Manager implements Closeable {
         }
         for (Object segment : segments) {
             String value = segment == null ? null : String.valueOf(segment);
-            if (value == null || value.isEmpty() || ".".equals(value) || "..".equals(value)) {
+            if (value == null || value.isEmpty() || ".".equals(value) || "..".equals(value)
+                    || value.indexOf('/') >= 0 || value.indexOf('\\') >= 0 || value.indexOf(';') >= 0) {
                 throw new IllegalArgumentException("Invalid value for a URL path segment: "
                         + (value == null ? "null" : "'" + Sanitizer.forLog(value, 100) + "'"));
             }
             parts.add(value);
         }
         return builder.setPathSegments(parts);
+    }
+
+    /**
+     * Refuses a {@code null} request or body before anything is sent: Gson would send it as the
+     * JSON text {@code null}. Write methods, and list methods that post a filter, call it first.
+     *
+     * @param request the request or body to check
+     * @throws IllegalArgumentException if {@code request} is {@code null} ("The request is required")
+     */
+    protected static void requireRequest(Object request) {
+        if (request == null) {
+            throw new IllegalArgumentException("The request is required");
+        }
     }
 
     /**
@@ -290,7 +345,8 @@ public abstract class Manager implements Closeable {
      * @param body    the form fields
      * @param clazz   the response type
      * @param <T>     the response type
-     * @return the parsed response, or {@code null} when the response has no content
+     * @return the parsed response; for a reply without content, {@code null}, or {@code ""} for
+     *         {@code String.class} and an empty array for {@code byte[].class}
      * @throws APIException if the request fails, the server answers with an error status or
      *                      the response cannot be parsed
      */
@@ -306,9 +362,11 @@ public abstract class Manager implements Closeable {
      * @param builder the request URL; it is not changed
      * @param body    the JSON text, sent as {@code application/json; charset=UTF-8}; an
      *                empty string sends no body
-     * @param clazz   the response type; {@code String.class} returns the body as text
+     * @param clazz   the response type; {@code String.class} returns the body as text and
+     *                {@code byte[].class} returns its bytes unchanged, such as a file download
      * @param <T>     the response type
-     * @return the parsed response, or {@code null} when the response has no content
+     * @return the parsed response; for a reply without content, {@code null}, or {@code ""} for
+     *         {@code String.class} and an empty array for {@code byte[].class}
      * @throws APIException if the request fails, the server answers with an error status or
      *                      the response cannot be parsed
      */
@@ -340,9 +398,11 @@ public abstract class Manager implements Closeable {
      * @param method  the HTTP method
      * @param builder the request URL; it is not changed
      * @param body    the request body, sent with its own {@code Content-Type}; {@code null} sends none
-     * @param clazz   the response type; {@code String.class} returns the body as text
+     * @param clazz   the response type; {@code String.class} returns the body as text and
+     *                {@code byte[].class} returns its bytes unchanged, such as a file download
      * @param <T>     the response type
-     * @return the parsed response, or {@code null} when the response has no content
+     * @return the parsed response; for a reply without content, {@code null}, or {@code ""} for
+     *         {@code String.class} and an empty array for {@code byte[].class}
      * @throws APIException if the request fails, the server answers with an error status or
      *                      the response cannot be parsed
      */
@@ -390,28 +450,21 @@ public abstract class Manager implements Closeable {
      * serialized with this manager's JSON mapper.
      *
      * @param method        the HTTP method
-     * @param builder       the request URL; the query parameters are added to it
+     * @param builder       the request URL; it is not changed: the query parameters go to a copy
      * @param body          the object to send as the JSON body; {@code null} sends the text {@code null}
      * @param requestParams the object whose query fields to add, or {@code null} for none
      * @param clazz         the response type
      * @param <T>           the response type
-     * @return the parsed response, or {@code null} when the response has no content
+     * @return the parsed response; for a reply without content, {@code null}, or {@code ""} for
+     *         {@code String.class} and an empty array for {@code byte[].class}
      * @throws APIException if {@code requestParams} cannot be read, the request fails, the
      *                      server answers with an error status or the response cannot be parsed
      */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams,
             Class<T> clazz) throws APIException {
-        if (requestParams != null) {
-            List<NameValuePair> params;
-            try {
-                params = queryParameters(builder, requestParams);
-                builder.addParameters(params);
-            } catch (IllegalAccessException ex) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
-                        + " to query parameters.", ex);
-            }
-        }
-        return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), clazz, null);
+        URIBuilder target = requestParams == null ? builder
+                : withQuery(builder, queryParametersOf(builder, requestParams));
+        return this.makeRequest(method, target, jsonEntity(this.gson.toJson(body)), clazz, null);
     }
 
     /**
@@ -419,7 +472,7 @@ public abstract class Manager implements Closeable {
      * generic type. See {@link #makeJSONRequest(RequestMethod, URIBuilder, Object, Object, Class)}.
      *
      * @param method        the HTTP method
-     * @param builder       the request URL; the query parameters are added to it
+     * @param builder       the request URL; it is not changed: the query parameters go to a copy
      * @param body          the object to send as the JSON body; {@code null} sends the text {@code null}
      * @param requestParams the object whose query fields to add, or {@code null} for none
      * @param type          the response type, such as a {@code TypeToken} type
@@ -430,17 +483,9 @@ public abstract class Manager implements Closeable {
      */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams,
             Type type) throws APIException {
-        if (requestParams != null) {
-            List<NameValuePair> params;
-            try {
-                params = queryParameters(builder, requestParams);
-                builder.addParameters(params);
-            } catch (IllegalAccessException ex) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
-                        + " to query parameters.", ex);
-            }
-        }
-        return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), null, type);
+        URIBuilder target = requestParams == null ? builder
+                : withQuery(builder, queryParametersOf(builder, requestParams));
+        return this.makeRequest(method, target, jsonEntity(this.gson.toJson(body)), null, type);
     }
 
     /**
@@ -453,29 +498,25 @@ public abstract class Manager implements Closeable {
      * the query is not changed.
      *
      * @param method        the HTTP method
-     * @param builder       the request URL; on {@code GET} the query parameters are added to it
+     * @param builder       the request URL; it is not changed: on {@code GET} the query
+     *                      parameters go to a copy
      * @param requestParams the request object, or {@code null} to send neither query fields nor a body
      * @param clazz         the response type
      * @param <T>           the response type
-     * @return the parsed response, or {@code null} when the response has no content
-     * @throws APIException if {@code requestParams} cannot be read, the request fails, the
-     *                      server answers with an error status or the response cannot be parsed
+     * @return the parsed response; for a reply without content, {@code null}, or {@code ""} for
+     *         {@code String.class} and an empty array for {@code byte[].class}
+     * @throws APIException if, on {@code GET}, {@code requestParams} cannot be read, or if the
+     *                      request fails, the server answers with an error status or the
+     *                      response cannot be parsed
      */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz)
             throws APIException {
         if (requestParams != null) {
-            try {
-                List<NameValuePair> params = queryParameters(builder, requestParams);
-                if (method == RequestMethod.GET) {
-                    builder.addParameters(params);
-                }
-            } catch (IllegalAccessException e) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
-                        + " to query parameters.", e);
-            }
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), clazz, null);
             }
+            URIBuilder target = withQuery(builder, queryParametersOf(builder, requestParams));
+            return this.makeRequest(method, target, (HttpEntity) null, clazz, null);
         }
         return this.makeRequest(method, builder, (HttpEntity) null, clazz, null);
     }
@@ -486,31 +527,62 @@ public abstract class Manager implements Closeable {
      * {@link #makeJSONRequest(RequestMethod, URIBuilder, Object, Class)}.
      *
      * @param method        the HTTP method
-     * @param builder       the request URL; on {@code GET} the query parameters are added to it
+     * @param builder       the request URL; it is not changed: on {@code GET} the query
+     *                      parameters go to a copy
      * @param requestParams the request object, or {@code null} to send neither query fields nor a body
      * @param type          the response type, such as a {@code TypeToken} type
      * @param <T>           the response type
      * @return the parsed response, or {@code null} when the response has no content
-     * @throws APIException if {@code requestParams} cannot be read, the request fails, the
-     *                      server answers with an error status or the response cannot be parsed
+     * @throws APIException if, on {@code GET}, {@code requestParams} cannot be read, or if the
+     *                      request fails, the server answers with an error status or the
+     *                      response cannot be parsed
      */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type)
             throws APIException {
         if (requestParams != null) {
-            try {
-                List<NameValuePair> params = queryParameters(builder, requestParams);
-                if (method == RequestMethod.GET) {
-                    builder.addParameters(params);
-                }
-            } catch (IllegalAccessException e) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
-                        + " to query parameters.", e);
-            }
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), null, type);
             }
+            URIBuilder target = withQuery(builder, queryParametersOf(builder, requestParams));
+            return this.makeRequest(method, target, (HttpEntity) null, null, type);
         }
         return this.makeRequest(method, builder, (HttpEntity) null, null, type);
+    }
+
+    /**
+     * Converts the query fields of a request object, as {@link #queryParameters} does, and
+     * reports a field that cannot be read as an {@link APIException}.
+     *
+     * @param builder       the request URL
+     * @param requestParams the object with the query fields
+     * @return the parameters
+     * @throws APIException if a field cannot be read
+     */
+    private static List<NameValuePair> queryParametersOf(URIBuilder builder, Object requestParams)
+            throws APIException {
+        try {
+            return queryParameters(builder, requestParams);
+        } catch (IllegalAccessException ex) {
+            throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
+                    + " to query parameters.", ex);
+        }
+    }
+
+    /**
+     * Returns a copy of a builder with query parameters added; the builder itself is not
+     * changed, so that the caller can send it again (for example on a retry) without
+     * repeating them.
+     *
+     * @param builder the request URL
+     * @param params  the parameters to add
+     * @return the copy
+     */
+    private static URIBuilder withQuery(URIBuilder builder, List<NameValuePair> params) {
+        try {
+            return new URIBuilder(builder.build()).addParameters(params);
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException(ex);
+        }
     }
 
     /**
@@ -578,13 +650,16 @@ public abstract class Manager implements Closeable {
      */
     protected AsyncJob makeJobRequest(RequestMethod method, URIBuilder builder, HttpEntity body) throws APIException {
         RawResponse response = this.send(method, builder, body);
-        return AsyncJob.fromReply(response.status, response.headers, response.body);
+        return AsyncJob.fromReply(response.status, response.headers, response.text());
     }
 
     private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type)
             throws APIException {
         RawResponse response = this.send(method, builder, body);
-        String respString = response.body;
+        if (clazz == byte[].class) {
+            return clazz.cast(response.bytes);
+        }
+        String respString = response.text();
         //deserialize json into an object
         try {
             if (clazz != null && clazz != String.class) {
@@ -658,14 +733,29 @@ public abstract class Manager implements Closeable {
         CloseableHttpClient client = this.httpClient();
         try (CloseableHttpResponse resp = client.execute(hrb)) {
             int status = resp.getStatusLine().getStatusCode();
-            String respString = readBody(resp.getEntity());
+            HttpEntity entity = resp.getEntity();
+            byte[] bytes;
+            try {
+                bytes = readBody(entity, this.maxResponseSize);
+            } catch (ResponseTooLargeException ex) {
+                if (status < 200 || status > 303) {
+                    // The status tells the caller more than the start of an oversized error page
+                    // (APIException keeps only 2,000 characters of a body), so keep it and drop the body.
+                    throw APIException.forErrorStatus(method.name(), safeUrl, status, null);
+                }
+                throw ex;
+            }
+            Charset charset = charsetOf(entity);
             if (status < 200 || status > 303) {
                 throw APIException.forErrorStatus(method.name(), safeUrl, status,
-                        respString.isEmpty() ? null : this.redactBody(respString));
+                        bytes.length == 0 ? null : this.redactBody(new String(bytes, charset)));
             }
-            return new RawResponse(safeUrl, status, resp.getAllHeaders(), respString);
+            return new RawResponse(safeUrl, status, resp.getAllHeaders(), bytes, charset);
         } catch (IOException ex) {
-            throw APIException.forIOException(method.name(), safeUrl, Sanitizer.redactCause(ex, this.apiKey));
+            // close() shuts the pool down, which also closes the connection of a request that is
+            // reading its reply ("Socket closed"): report the documented reason, with the I/O error as its cause.
+            IOException reported = client != this.httpClient ? new IOException(CLOSED_DURING_REQUEST, ex) : ex;
+            throw APIException.forIOException(method.name(), safeUrl, Sanitizer.redactCause(reported, this.apiKey));
         } catch (IllegalStateException ex) {
             // Apache HttpClient throws this unchecked exception when its connection pool was shut
             // down, which close() does, while the request ran or waited for a connection.
@@ -683,14 +773,26 @@ public abstract class Manager implements Closeable {
         private final int status;
         /** The response headers. */
         private final Header[] headers;
-        /** The body; empty when the reply has none. */
-        private final String body;
+        /** The body as sent; empty when the reply has none. */
+        private final byte[] bytes;
+        /** The charset the reply declares, or UTF-8 when it declares none or an unknown one. */
+        private final Charset charset;
 
-        RawResponse(String safeUrl, int status, Header[] headers, String body) {
+        RawResponse(String safeUrl, int status, Header[] headers, byte[] bytes, Charset charset) {
             this.safeUrl = safeUrl;
             this.status = status;
             this.headers = headers;
-            this.body = body;
+            this.bytes = bytes;
+            this.charset = charset;
+        }
+
+        /**
+         * Decodes the body with the charset of the reply, line breaks included.
+         *
+         * @return the body as text; empty when the reply has none
+         */
+        String text() {
+            return new String(this.bytes, this.charset);
         }
     }
 
@@ -722,14 +824,17 @@ public abstract class Manager implements Closeable {
      * other request is sent without the key, neither as a bearer token nor as the
      * {@code api_key} parameter.
      *
+     * <p>The hosts are {@link Route4MeRedirectStrategy#ALLOWED_HOSTS}, the only hosts a redirect
+     * may lead to: Apache HttpClient copies the headers onto a redirect, so the two lists are one.
+     *
      * @param scheme the request scheme
      * @param host   the request host
      * @param port   the request port, {@code -1} for the scheme's default
      * @return {@code true} for https on port 443 to {@code api.route4me.com} or {@code wh.route4me.com}
      */
     static boolean takesApiKey(String scheme, String host, int port) {
-        return "https".equalsIgnoreCase(scheme) && (port == -1 || port == HTTPS_PORT)
-                && (V4_HOST.equalsIgnoreCase(host) || V5_HOST.equalsIgnoreCase(host));
+        return "https".equalsIgnoreCase(scheme) && (port == -1 || port == HTTPS_PORT) && host != null
+                && Route4MeRedirectStrategy.ALLOWED_HOSTS.contains(host.toLowerCase(Locale.ROOT));
     }
 
     /** Removes the API key of this manager from a text, for exceptions and logs. */
@@ -748,42 +853,115 @@ public abstract class Manager implements Closeable {
     }
 
     /**
-     * Reads a whole response body as text, line breaks included.
+     * Reads a whole response body, up to a limit.
      *
-     * <p>The body is decoded with the charset its {@code Content-Type} declares, and as
-     * UTF-8 when it declares none (never with the platform default charset).
+     * <p>A body over the limit fails before it fills the memory: at once when its
+     * {@code Content-Length} is larger, otherwise as soon as more bytes arrive. Its stream is
+     * then left open, because closing it would read the rest of the body to reuse the
+     * connection; {@link #send} closes the response, which drops the connection instead.
      *
      * @param entity the response entity, or {@code null} when the response has none (such
      *               as a {@code 204 No Content})
-     * @return the body, or an empty string when there is no entity or no content
-     * @throws IOException if the body cannot be read
+     * @param limit  the largest body to read, in bytes
+     * @return the body; empty when there is no entity or no content
+     * @throws IOException if the body cannot be read; a {@link ResponseTooLargeException} if it is larger
+     *                     than {@code limit}
      */
-    private static String readBody(HttpEntity entity) throws IOException {
+    private static byte[] readBody(HttpEntity entity, int limit) throws IOException {
         if (entity == null) {
-            return "";
+            return new byte[0];
         }
-        Charset charset = StandardCharsets.UTF_8;
+        long declared = entity.getContentLength();
+        if (declared > limit) {
+            throw tooLarge("declares " + declared + " bytes, more", limit);
+        }
+        InputStream in = entity.getContent();
+        if (in == null) {
+            return new byte[0];
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream(
+                declared >= 0 ? (int) Math.min(declared, MAX_PRESIZE) : READ_BUFFER_SIZE);
+        boolean withinLimit;
         try {
-            ContentType contentType = ContentType.get(entity);
-            if (contentType != null && contentType.getCharset() != null) {
-                charset = contentType.getCharset();
+            withinLimit = copyAtMost(in, out, limit);
+        } catch (IOException | RuntimeException ex) {
+            try {
+                in.close();
+            } catch (IOException | RuntimeException closeFailure) {
+                ex.addSuppressed(closeFailure);
             }
-        } catch (ParseException | UnsupportedCharsetException ex) {
-            // An unreadable or unknown charset: keep UTF-8.
+            throw ex;
         }
-        try (InputStream in = entity.getContent()) {
-            if (in == null) {
-                return "";
-            }
-            Reader reader = new InputStreamReader(in, charset);
-            StringBuilder text = new StringBuilder();
-            char[] buffer = new char[8192];
-            int read;
-            while ((read = reader.read(buffer)) != -1) {
-                text.append(buffer, 0, read);
-            }
-            return text.toString();
+        if (!withinLimit) {
+            throw tooLarge("is larger", limit);
         }
+        in.close();
+        return out.toByteArray();
+    }
+
+    /**
+     * Copies a stream until its end, unless it holds more than {@code limit} bytes.
+     *
+     * @param in    the stream
+     * @param out   where to copy it
+     * @param limit the most bytes to copy
+     * @return {@code true} when the stream ended within the limit; {@code false} when it holds
+     *         more, and nothing past the limit was copied
+     * @throws IOException if the stream cannot be read
+     */
+    private static boolean copyAtMost(InputStream in, ByteArrayOutputStream out, int limit) throws IOException {
+        byte[] buffer = new byte[READ_BUFFER_SIZE];
+        long total = 0;
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            total += read;
+            if (total > limit) {
+                return false;
+            }
+            out.write(buffer, 0, read);
+        }
+        return true;
+    }
+
+    /**
+     * The error of a reply over the maximum response size. {@link #send} reports it as an
+     * {@link APIException}: with the HTTP status when the reply has an error status, as a failed
+     * request otherwise.
+     */
+    private static final class ResponseTooLargeException extends IOException {
+        private static final long serialVersionUID = 1L;
+
+        ResponseTooLargeException(String message) {
+            super(message);
+        }
+    }
+
+    /** Builds the error of a reply over the maximum response size; see {@link ResponseTooLargeException}. */
+    private static ResponseTooLargeException tooLarge(String size, int limit) {
+        return new ResponseTooLargeException("The response " + size + " than the maximum response size of " + limit
+                + " bytes; see Manager.setMaxResponseSize");
+    }
+
+    /**
+     * Finds the charset to decode a response body with: the one its {@code Content-Type}
+     * declares, and UTF-8 when it declares none (never the platform default charset).
+     *
+     * @param entity the response entity, or {@code null}
+     * @return the declared charset, or UTF-8 when there is none or it is unreadable or unknown
+     */
+    private static Charset charsetOf(HttpEntity entity) {
+        if (entity != null) {
+            try {
+                ContentType contentType = ContentType.get(entity);
+                if (contentType != null && contentType.getCharset() != null) {
+                    return contentType.getCharset();
+                }
+            } catch (ParseException | IllegalArgumentException ex) {
+                // An unreadable, illegal or unknown charset name: keep UTF-8. Both
+                // IllegalCharsetNameException and UnsupportedCharsetException are IllegalArgumentExceptions.
+            }
+        }
+        return StandardCharsets.UTF_8;
     }
 
     /**
@@ -993,6 +1171,36 @@ public abstract class Manager implements Closeable {
      */
     public void setConnectionRequestTimeout(int millis) {
         this.connectionRequestTimeout = checkTimeout(millis);
+    }
+
+    /**
+     * Returns the largest response body, in bytes, that a request of this manager reads.
+     *
+     * @return the limit; {@link #DEFAULT_MAX_RESPONSE_SIZE} unless changed
+     */
+    public int getMaxResponseSize() {
+        return maxResponseSize;
+    }
+
+    /**
+     * Sets the largest response body, in bytes, that a request of this manager reads. Every
+     * reply is held in memory, so a lower limit keeps a huge reply from exhausting the heap. A
+     * larger reply fails the request with an {@link APIException}, not an
+     * {@link OutOfMemoryError}: before its body is read when its {@code Content-Length} is
+     * larger, otherwise as soon as more bytes arrive. A larger reply with an error status keeps
+     * that status ({@link APIException#getStatusCode()}) but not its body; any other has status
+     * {@code 0}. It applies to the requests sent after the call.
+     *
+     * @param bytes the limit, from {@code 0} to {@link #DEFAULT_MAX_RESPONSE_SIZE}
+     * @throws IllegalArgumentException if {@code bytes} is negative or larger than
+     *                                  {@link #DEFAULT_MAX_RESPONSE_SIZE}
+     */
+    public void setMaxResponseSize(int bytes) {
+        if (bytes < 0 || bytes > DEFAULT_MAX_RESPONSE_SIZE) {
+            throw new IllegalArgumentException("The maximum response size must be from 0 to "
+                    + DEFAULT_MAX_RESPONSE_SIZE + " bytes: " + bytes);
+        }
+        this.maxResponseSize = bytes;
     }
 
     /** Rejects negative timeouts, which Apache HttpClient would read as "system default". */

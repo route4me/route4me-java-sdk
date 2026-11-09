@@ -10,10 +10,16 @@ import com.route4me.sdk.services.territories.TerritoriesManagerV5;
  */
 public class GetAutomaticTerritoriesJobResult {
     public static void main(String[] args) {
+        String jobId = System.getenv("JOB_ID");
+        if (jobId == null || jobId.isEmpty()) {
+            System.err.println("Set JOB_ID to the ID of an automatic territories job (see"
+                    + " CreateAutomaticTerritoriesJob); this example prints its clusters.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         TerritoriesManagerV5 manager = new TerritoriesManagerV5(apiKey);
         try {
-            AutomaticTerritoriesJobResult result = manager.getAutomaticTerritoriesJobResult(System.getenv("JOB_ID"));
+            AutomaticTerritoriesJobResult result = manager.getAutomaticTerritoriesJobResult(jobId);
             if (result.getClusters() != null) {
                 for (AutomaticTerritoriesJobResult.Cluster cluster : result.getClusters()) {
                     System.out.println("Cluster " + cluster.getClusterId() + ": " + cluster.getAddressesCount()

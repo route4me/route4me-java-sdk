@@ -6,6 +6,8 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.annotations.SerializedName;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
@@ -49,15 +51,38 @@ public class LenientBooleanAdapterTest {
         assertFalse(GSON.fromJson("{\"is_default\":null}", Flags.class).isDefault);
     }
 
+    /**
+     * SDK 1.16.1 read a string with {@code Boolean.parseBoolean}: only {@code "true"} was true. A
+     * string the API sends for false still reads as false, and so does any text that names
+     * no boolean, so that a string never fails the parse.
+     */
     @Test
-    public void anEmptyStringAndAnyOtherTextAreFalseAsIn1161() {
-        for (String text : new String[] {"", " ", "0", "false", "FALSE", "no", "yes", "t", "null", "2", "maybe"}) {
+    public void anEmptyStringFalseWordsZeroAndOtherTextAreFalse() {
+        for (String text : Arrays.asList("", " ", "0", "00", "0.0", "-0", "false", "FALSE", "no", "off", "t", "f",
+                "null", "maybe", "NaN", "Infinity", "1e3", "0x1", "1.", "yes please")) {
             String json = "{\"is_predefined\":\"" + text + "\",\"is_default\":\"" + text + "\"}";
             Flags flags = GSON.fromJson(json, Flags.class);
             assertEquals(text, Boolean.FALSE, flags.predefined);
             assertFalse(text, flags.isDefault);
         }
-        assertTrue(GSON.fromJson("{\"is_predefined\":\" True \"}", Flags.class).predefined);
+    }
+
+    /**
+     * A plain decimal string (digits, optionally with a sign and a fraction) reads as the number
+     * would ({@code "2"} like {@code 2}), and PHP's own words for true
+     * ({@code FILTER_VALIDATE_BOOLEAN}) read as true, so that the API cannot send a true that the
+     * SDK reads as false. Other number notations, such as {@code "1e3"} or {@code "1."}, are text
+     * and read as false. Every string that 1.16.1 read as true still is.
+     */
+    @Test
+    public void nonZeroNumericStringsAndPhpTrueWordsAreTrue() {
+        for (String text : Arrays.asList("1", " True ", "TRUE", "2", "-1", "+3", "0.5", "10", "yes", "YES", "on",
+                "On")) {
+            String json = "{\"is_predefined\":\"" + text + "\",\"is_default\":\"" + text + "\"}";
+            Flags flags = GSON.fromJson(json, Flags.class);
+            assertEquals(text, Boolean.TRUE, flags.predefined);
+            assertTrue(text, flags.isDefault);
+        }
     }
 
     @Test

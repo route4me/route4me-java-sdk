@@ -8,6 +8,8 @@ import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.responses.StatusResponse;
+import java.util.List;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -27,8 +29,8 @@ import org.apache.http.client.utils.URIBuilder;
  * }</pre>
  */
 public class AddressBookManagerV5 extends Manager {
-    private static final String V5_BASE = "/modules/api/v5.0/address-book";
-    private static final String CONTACTS_EP = V5_BASE + "/addresses";
+    private static final String ADDRESS_BOOK_BASE = V5_BASE + "/address-book";
+    private static final String CONTACTS_EP = ADDRESS_BOOK_BASE + "/addresses";
     private static final String CONTACTS_ALL_EP = CONTACTS_EP + "/index/all";
     private static final String CONTACTS_PAGINATED_EP = CONTACTS_EP + "/index/pagination";
     private static final String CONTACTS_CLUSTERING_EP = CONTACTS_EP + "/index/clustering";
@@ -45,9 +47,9 @@ public class AddressBookManagerV5 extends Manager {
     private static final String CONTACTS_EXPORT_RESULT_EP = CONTACTS_EXPORT_EP + "/result";
     private static final String CONTACTS_EXPORT_BY_AREAS_EP = CONTACTS_EP + "/export-by-areas";
     private static final String CONTACTS_EXPORT_BY_AREA_IDS_EP = CONTACTS_EP + "/export-by-area-ids";
-    private static final String JOB_STATUS_EP = V5_BASE + "/job-tracker/status";
-    private static final String JOB_RESULT_EP = V5_BASE + "/job-tracker/result";
-    private static final String GROUPS_EP = V5_BASE + "/groups";
+    private static final String JOB_STATUS_EP = ADDRESS_BOOK_BASE + "/job-tracker/status";
+    private static final String JOB_RESULT_EP = ADDRESS_BOOK_BASE + "/job-tracker/result";
+    private static final String GROUPS_EP = ADDRESS_BOOK_BASE + "/groups";
     private static final String GROUPS_FILTER_ALL_EP = GROUPS_EP + "/filter/all";
 
     /**
@@ -69,14 +71,6 @@ public class AddressBookManagerV5 extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
-    }
-
     /**
      * Lists the contacts that match query parameters: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/index/all}.
@@ -96,11 +90,13 @@ public class AddressBookManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/index/all}, with the request as the JSON
      * body. This is the POST form of {@link #getContacts(AddressBookContactsQuery)}; it can also filter by area.
      *
-     * @param request the search text, filters, sort order, fields and range
+     * @param request the search text, filters, sort order, fields and range; an empty request for all the contacts
      * @return the contacts
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public AddressBookContactsResponse getContacts(AddressBookContactsBodyRequest request) throws APIException {
+        requireRequest(request);
         return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_ALL_EP), this.gson.toJson(request),
                 AddressBookContactsResponse.class);
     }
@@ -126,12 +122,15 @@ public class AddressBookManagerV5 extends Manager {
      * request as the JSON body. This is the POST form of
      * {@link #getContactsPaginated(AddressBookContactsPaginatedQuery)}.
      *
-     * @param request the search text, filters, sort order, fields and page
+     * @param request the search text, filters, sort order, fields and page; an empty request for the first page of
+     *     all the contacts
      * @return the page of contacts
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public AddressBookContactsResponse getContactsPaginated(AddressBookContactsBodyPaginatedRequest request)
             throws APIException {
+        requireRequest(request);
         return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_PAGINATED_EP), this.gson.toJson(request),
                 AddressBookContactsResponse.class);
     }
@@ -159,9 +158,11 @@ public class AddressBookManagerV5 extends Manager {
      * @param request the search text, the clustering precision and the filters
      * @return the clusters
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public AddressBookClusteringResponse getAddressBookContactsClustering(AddressBookClusteringRequest request)
             throws APIException {
+        requireRequest(request);
         return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_CLUSTERING_EP), this.gson.toJson(request),
                 AddressBookClusteringResponse.class);
     }
@@ -187,8 +188,10 @@ public class AddressBookManagerV5 extends Manager {
      * @param contactIds the contact IDs
      * @return the contacts
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code contactIds} is {@code null} or empty; nothing is sent
      */
     public AddressBookContactsResponse getContactsByIds(long[] contactIds) throws APIException {
+        requireIds(contactIds);
         ContactIdsRequest request = new ContactIdsRequest();
         request.setAddressIds(contactIds);
         return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_SHOW_EP), this.gson.toJson(request),
@@ -232,12 +235,18 @@ public class AddressBookManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/batch-update}, with the request as the JSON
      * body: {@code address_ids} and the fields to set.
      *
-     * @param request the contact IDs and the fields to set
+     * @param request the contact IDs and the fields to set; at least one contact ID
      * @return the updated contacts; the spec describes {@code {"results": [...]}}, while the C# and PHP SDKs read an
      *     array, so both are read
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null} or has no {@code address_ids}; nothing is
+     *     sent
      */
     public AddressBookContactsResponse batchUpdateContacts(BatchUpdateContactsRequest request) throws APIException {
+        requireRequest(request);
+        if (request.getAddressIds() == null || request.getAddressIds().isEmpty()) {
+            throw new IllegalArgumentException("address_ids is required");
+        }
         return this.makeRequest(RequestMethod.PUT, v5Builder(CONTACTS_BATCH_UPDATE_EP), this.gson.toJson(request),
                 AddressBookContactsResponse.class);
     }
@@ -248,11 +257,17 @@ public class AddressBookManagerV5 extends Manager {
      * body. The API runs the update as a background job and answers {@code 202 Accepted}, with the job status URL
      * in {@code Location}; follow it with {@link #getJobStatus(String)}.
      *
-     * @param request the areas and the fields to set
+     * @param request the areas and the fields to set; the filter must select at least one area
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code request} or its {@code filter} is {@code null}, a
+     *     {@code selected_areas} entry is {@code null} or lacks a {@code type} or a {@code value}, or the filter has
+     *     neither {@code selected_areas} nor a {@code bounding_box} with its four edges; nothing is sent, since an
+     *     update with an empty filter could change every contact
      */
     public AsyncJob updateAddressBookContactByAreas(UpdateContactsByAreasRequest request) throws APIException {
+        requireRequest(request);
+        requireArea(request.getFilter());
         return this.makeJobRequest(RequestMethod.PUT, v5Builder(CONTACTS_UPDATE_BY_AREAS_EP),
                 this.gson.toJson(request));
     }
@@ -262,16 +277,19 @@ public class AddressBookManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/batch-create}, with the contacts as the JSON
      * body.
      *
-     * @param request the contacts; each needs {@code address_1}, {@code cached_lat} and {@code cached_lng}
+     * @param request the contacts, at least one; each needs {@code address_1}, {@code cached_lat} and
+     *     {@code cached_lng}
      * @return the status of the request
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if a contact misses a required field; nothing is sent
+     * @throws IllegalArgumentException if {@code request} is {@code null}, has no contacts, or a contact misses a
+     *     required field; nothing is sent
      */
     public StatusResponse batchCreateContacts(BatchCreateContactsRequest request) throws APIException {
-        if (request != null && request.getData() != null) {
-            for (AddressBookContactV5 contact : request.getData()) {
-                checkContact(contact, "data[]");
-            }
+        if (request == null || request.getData() == null || request.getData().isEmpty()) {
+            throw new IllegalArgumentException("data is required");
+        }
+        for (AddressBookContactV5 contact : request.getData()) {
+            checkContact(contact, "data[]");
         }
         return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_BATCH_CREATE_EP), this.gson.toJson(request),
                 StatusResponse.class);
@@ -283,12 +301,15 @@ public class AddressBookManagerV5 extends Manager {
      * {@code 200} with {@code {"status": true}}, or queues the deletion as a background job: {@code 202 Accepted},
      * no body, and the job ID in {@code x-job-id}; follow it with {@link #getJobStatus(String)}.
      *
-     * @param contactIds the contact IDs
+     * @param contactIds the contact IDs; at least one
      * @return the accepted job: its ID, status URL and reply body; the job ID is {@code null} when the contacts were
      *     deleted at once, and {@code getBodyAs(StatusResponse.class)} then reads the status
      * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code contactIds} is {@code null} or empty; nothing is sent, since the
+     *     endpoint also selects contacts by filters and an empty list must not reach it
      */
     public AsyncJob deleteContacts(long[] contactIds) throws APIException {
+        requireIds(contactIds);
         ContactIdsRequest request = new ContactIdsRequest();
         request.setAddressIds(contactIds);
         return this.makeJobRequest(RequestMethod.DELETE, v5Builder(CONTACTS_DELETE_EP), this.gson.toJson(request));
@@ -301,11 +322,16 @@ public class AddressBookManagerV5 extends Manager {
      * {@code 202 Accepted}, with the job status URL in {@code Location}; follow it with
      * {@link #getJobStatus(String)}.
      *
-     * @param filter the contacts to delete: a text, a rectangle or drawn areas
+     * @param filter the contacts to delete: drawn areas or a rectangle, and optionally a text that narrows them
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code filter} is {@code null}, a {@code selected_areas} entry is
+     *     {@code null} or lacks a {@code type} or a {@code value}, or the filter has neither {@code selected_areas} nor
+     *     a {@code bounding_box} with its four edges; nothing is sent, since a deletion with an empty filter could
+     *     delete every contact
      */
     public AsyncJob removeAddressBookContactsByAreas(AddressBookAreasFilter filter) throws APIException {
+        requireArea(filter);
         return this.makeJobRequest(RequestMethod.DELETE, v5Builder(CONTACTS_DELETE_BY_AREAS_EP),
                 this.gson.toJson(new FilterBody(filter)));
     }
@@ -346,8 +372,10 @@ public class AddressBookManagerV5 extends Manager {
      * @param request the contact IDs, the file name and its format
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public AsyncJob exportAddresses(AddressExportRequest request) throws APIException {
+        requireRequest(request);
         return this.makeJobRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_EP), this.gson.toJson(request));
     }
 
@@ -364,8 +392,12 @@ public class AddressBookManagerV5 extends Manager {
      * @param filter the contacts to export and the file to make
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code filter} is {@code null}; nothing is sent
      */
     public AsyncJob exportAddressesByAreas(AddressExportByAreasFilter filter) throws APIException {
+        if (filter == null) {
+            throw new IllegalArgumentException("The filter is required");
+        }
         return this.makeJobRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_BY_AREAS_EP),
                 this.gson.toJson(new FilterBody(filter)));
     }
@@ -383,8 +415,10 @@ public class AddressBookManagerV5 extends Manager {
      * @param request the territory IDs and the file to make
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public AsyncJob exportAddressesByAreaIds(AddressExportByAreaIdsRequest request) throws APIException {
+        requireRequest(request);
         return this.makeJobRequest(RequestMethod.POST, v5Builder(CONTACTS_EXPORT_BY_AREA_IDS_EP),
                 this.gson.toJson(request));
     }
@@ -398,7 +432,8 @@ public class AddressBookManagerV5 extends Manager {
      *     {@link #exportAddressesByAreas} or {@link #exportAddressesByAreaIds} started
      * @return the status: the value of the JSON string; any other answer as it came; {@code ""} for an empty answer
      * @throws APIException if the request fails or the server answers with an error status
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      */
     public String getExportStatus(String jobId) throws APIException {
         String body = this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_EXPORT_STATUS_EP, jobId),
@@ -409,17 +444,24 @@ public class AddressBookManagerV5 extends Manager {
     /**
      * Downloads the file of a finished address book export: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export/result/{jobId}}. The API answers the file
-     * itself, for example as {@code text/csv}.
+     * itself, for example as {@code text/csv}, and this method returns its bytes unchanged, so an {@code xls} or
+     * {@code xlsx} file can be saved as it is. The whole file is held in memory.
+     *
+     * <p>To read a CSV file as text, decode it with its charset. The API does not document which charset it uses,
+     * and this method does not return the reply's {@code Content-Type}. {@code new String(file,
+     * StandardCharsets.UTF_8)} reads UTF-8, the charset of the API's JSON answers; check a file with accented
+     * letters before you rely on it.
      *
      * @param jobId the export ID: {@link AsyncJob#getJobId()} of the export job
-     * @return the content of the file, as text; {@code ""} for an empty answer
+     * @return the bytes of the file, as the API sent them; an empty array for an empty answer
      * @throws APIException if the request fails or the server answers with an error status, for example while the
      *     export is still running
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      */
-    public String getExportResult(String jobId) throws APIException {
+    public byte[] getExportResult(String jobId) throws APIException {
         return this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_EXPORT_RESULT_EP, jobId), (HttpEntity) null,
-                String.class);
+                byte[].class);
     }
 
     /** Returns the value of a JSON string answer, or the answer as it is when it is not a JSON string. */
@@ -446,7 +488,8 @@ public class AddressBookManagerV5 extends Manager {
      * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of the job a method of this manager started
      * @return the status
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      */
     public JobStatusResponse getJobStatus(String jobId) throws APIException {
         return this.makeRequest(RequestMethod.GET, v5Builder(JOB_STATUS_EP, jobId), (HttpEntity) null,
@@ -460,7 +503,8 @@ public class AddressBookManagerV5 extends Manager {
      * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of the job a method of this manager started
      * @return the result: {@code status} is {@code true} when the job succeeded
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      */
     public StatusResponse getJobResult(String jobId) throws APIException {
         return this.makeRequest(RequestMethod.GET, v5Builder(JOB_RESULT_EP, jobId), (HttpEntity) null,
@@ -501,6 +545,49 @@ public class AddressBookManagerV5 extends Manager {
         }
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 AddressBookContactsResponse.class);
+    }
+
+
+    /** Rejects a {@code null} or empty list of contact IDs, before any request is sent. */
+    private static void requireIds(long[] contactIds) {
+        if (contactIds == null || contactIds.length == 0) {
+            throw new IllegalArgumentException("At least one contact ID is required");
+        }
+    }
+
+    /**
+     * Rejects an area filter that could select every contact, before any request is sent: it needs drawn areas or a
+     * complete rectangle. A text alone is not enough: the spec marks only {@code query} and {@code bounding_box} as
+     * optional, so it expects {@code selected_areas}, and a complete rectangle bounds the contacts as well. Every
+     * drawn area must be complete, even next to a complete one or a rectangle: Gson would send an incomplete one as
+     * {@code {}} or {@code null}, and how the API reads that is not documented.
+     */
+    private static void requireArea(AddressBookAreasFilter filter) {
+        if (filter == null) {
+            throw new IllegalArgumentException("The filter is required");
+        }
+        List<SelectedArea> areas = filter.getSelectedAreas();
+        if (areas != null && !areas.isEmpty()) {
+            for (SelectedArea area : areas) {
+                if (!isComplete(area)) {
+                    throw new IllegalArgumentException("Every selected_areas entry needs a type and a value");
+                }
+            }
+        } else if (!isComplete(filter.getBoundingBox())) {
+            throw new IllegalArgumentException("The filter needs selected_areas or a bounding_box with four edges");
+        }
+    }
+
+    /** Tells whether a drawn area has a type and a geometry. */
+    private static boolean isComplete(SelectedArea area) {
+        return area != null && area.getType() != null && !area.getType().isEmpty() && area.getValue() != null
+                && !area.getValue().isEmpty();
+    }
+
+    /** Tells whether a rectangle has its four edges. */
+    private static boolean isComplete(BoundingBox box) {
+        return box != null && box.getTop() != null && box.getLeft() != null && box.getBottom() != null
+                && box.getRight() != null;
     }
 
     /** Checks the fields the spec requires in a contact, before any request is sent. */

@@ -38,8 +38,6 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.logging.log4j.LogManager;
 
 /**
@@ -69,23 +67,22 @@ public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
         this.address = address;
     }
 
-    private Address updateAddressFirstName() {
+    private Address updateAddressFirstName() throws APIException {
         UUID uuid = UUID.randomUUID();
         address.setAlias(uuid.toString().toUpperCase());
-        Address updatedAddress = null;
-        try {
-            updatedAddress = manager.updateAddressAttribute(routeID, address.getRouteDestinationId(), address);
-        } catch (APIException ex) {
-            LOGGER.error(ex);
-        }
-        return updatedAddress;
+        return manager.updateAddressAttribute(routeID, address.getRouteDestinationId(), address);
     }
 
+    /**
+     * Gives the address a random alias.
+     *
+     * @return the updated address
+     * @throws APIException if the update fails; {@link Future#get} reports it as the cause of an
+     *     {@link ExecutionException}
+     */
     @Override
-    public Address call() throws Exception {
-
-        Address updatedAddress = updateAddressFirstName();
-        return updatedAddress;
+    public Address call() throws APIException {
+        return updateAddressFirstName();
     }
 
     public static void main(String[] args) {
@@ -119,7 +116,9 @@ public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
             System.out.println("\nUpdating Address in Parallel...\n");
             try {
                 if (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
-                    System.err.println("The updates did not finish within 5 minutes");
+                    System.err.println("The updates did not finish within 5 minutes; the ones not started are dropped,"
+                            + " and the ones already sent may still change their stops");
+                    executor.shutdownNow();
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -136,13 +135,17 @@ public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
                 } catch (InterruptedException ex) {
                     Thread.currentThread().interrupt();
                     return;
-                } catch (ExecutionException | TimeoutException ex) {
-                    LOGGER.error("Thread Execution Exception. " + ex);
+                } catch (ExecutionException ex) {
+                    LOGGER.error("An update failed", ex.getCause());
+                } catch (TimeoutException ex) {
+                    worker.cancel(true);
+                    LOGGER.error("An update did not finish in time; it may already have been sent and could not be"
+                            + " cancelled, so it may still change its stop");
                 }
             }
         } catch (APIException ex) {
             executor.shutdownNow();
-            Logger.getLogger(TheadBasedAddressesAliasUpdater.class.getName()).log(Level.SEVERE, null, ex);
+            LOGGER.error("Could not read the route", ex);
         }
 
     }

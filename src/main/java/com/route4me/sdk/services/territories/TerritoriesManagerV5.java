@@ -13,7 +13,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class TerritoriesManagerV5 extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String TERRITORIES_EP = V5_BASE + "/territories";
     private static final String AVOIDANCE_EP = V5_BASE + "/avoidance";
     private static final String AUTOMATIC_TERRITORIES_EP = V5_BASE + "/automatic-territories";
@@ -37,14 +36,6 @@ public class TerritoriesManagerV5 extends Manager {
      */
     public TerritoriesManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /** Checks that a latitude and a longitude are given together or not at all, as the spec requires. */
@@ -120,9 +111,7 @@ public class TerritoriesManagerV5 extends Manager {
      *                                  an address without an ID
      */
     public AsyncJob createAutomaticTerritoriesJob(AutomaticTerritoriesJobRequest request) throws APIException {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
+        requireRequest(request);
         boolean noStorage = request.getTemporaryAddressesStorageId() == null
                 || request.getTemporaryAddressesStorageId().isEmpty();
         boolean noAddresses = request.getAddresses() == null || request.getAddresses().isEmpty();
@@ -148,7 +137,8 @@ public class TerritoriesManagerV5 extends Manager {
      *              {@link #createAutomaticTerritoriesJob(AutomaticTerritoriesJobRequest)}
      * @return the status of the job
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}
+     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}
      */
     public AutomaticTerritoriesJobStatus getAutomaticTerritoriesJobStatus(String jobId) throws APIException {
         URIBuilder builder = v5Builder(AUTOMATIC_JOB_STATUS_EP, jobId);
@@ -164,7 +154,8 @@ public class TerritoriesManagerV5 extends Manager {
      * @return the clusters
      * @throws APIException if the request fails, the server answers with an error status (409 while the job runs) or
      *                      the answer cannot be parsed
-     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}
+     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}
      */
     public AutomaticTerritoriesJobResult getAutomaticTerritoriesJobResult(String jobId) throws APIException {
         URIBuilder builder = v5Builder(AUTOMATIC_JOB_RESULT_EP, jobId);

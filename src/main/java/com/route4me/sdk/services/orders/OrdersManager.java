@@ -71,15 +71,16 @@ public class OrdersManager extends Manager {
      * request has a filter.
      *
      * <p>Without a filter the parameters go in the query. With a filter they go, filter included, in the JSON body,
-     * which is how the API takes a filter.
+     * which is how the API takes a filter. A {@code null} request sends a plain {@code GET} and lists the orders the
+     * API returns by default, as in 1.16.1.
      *
-     * @param request the search parameters
+     * @param request the search parameters, or {@code null} for no parameters
      * @return the matching orders
      * @throws APIException if the request fails
      */
     public List<Order> getOrders(OrderRequest request) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
-        RequestMethod method = request.getFilter() != null ? RequestMethod.POST : RequestMethod.GET;
+        RequestMethod method = request != null && request.getFilter() != null ? RequestMethod.POST : RequestMethod.GET;
         GetOrdersResponse response = this.makeJSONRequest(method, builder, request, GetOrdersResponse.class);
         return response == null ? null : response.getResults();
     }

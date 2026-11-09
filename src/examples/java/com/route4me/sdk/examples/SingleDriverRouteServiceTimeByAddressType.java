@@ -97,7 +97,8 @@ public class SingleDriverRouteServiceTimeByAddressType {
         try {
             DataObject responseObject = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-            System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+            System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                    : OptimizationState.get(responseObject.getState().intValue())));
             if (responseObject.getAddresses() != null) {
                 for (Address sequencedAddress : responseObject.getAddresses()) {
                     System.out.println(sequencedAddress.getSequenceNo() + " - " + sequencedAddress.getAddress()

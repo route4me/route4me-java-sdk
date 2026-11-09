@@ -111,8 +111,11 @@ public abstract class AbstractRouteDestinationResource {
     @SerializedName("bundle")
     private String bundle;
 
-    /** Comma-separated list of required driver skills ({@code skills}). */
-    @SerializedName("skills")
+    /**
+     * Comma-separated list of the driver skills the stop requires ({@code required_skills}). The older name
+     * {@code skills} is read too.
+     */
+    @SerializedName(value = "required_skills", alternate = {"skills"})
     private String skills;
 
     /** Running distance to this stop, formatted with unit (e.g., "12.34 mi") ({@code running_distance}). */
@@ -123,9 +126,12 @@ public abstract class AbstractRouteDestinationResource {
     @SerializedName("stop_status_id")
     private String stopStatusId;
 
-    /** Workflow identifier (hexadecimal UUID) associated with this stop ({@code workflow_id}). */
+    /**
+     * The ID of the POD workflow of this stop, a 32-character hex ID ({@code workflow_id}); a numeric ID is read as its
+     * text.
+     */
     @SerializedName("workflow_id")
-    private Integer workflowId;
+    private String workflowId;
 
     /** Stop type (e.g., "Dropoff", "Pickup", "Service") ({@code address_stop_type}). */
     @SerializedName("address_stop_type")

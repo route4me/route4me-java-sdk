@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.addresses;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.RoutingManager;
 
@@ -17,11 +18,15 @@ public class DeleteAddress {
                     + " stops; this example deletes the stop.");
             return;
         }
+        Long stopId = ExampleInput.toLong("ROUTE_DESTINATION_ID", routeDestinationId);
+        if (stopId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         try {
             System.out.println("Deleting Address: " + routeDestinationId + " from Route: " + routeId);
-            manager.deleteAddress(routeId, Long.valueOf(routeDestinationId));
+            manager.deleteAddress(routeId, stopId);
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();

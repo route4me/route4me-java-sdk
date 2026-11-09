@@ -16,15 +16,12 @@ import java.util.List;
  */
 public class OptimizationProfileManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String PROFILES_EP = V5_BASE + "/optimization-profiles";
     private static final String PROFILES_DATA_LIST_EP = PROFILES_EP + "/data-list";
     private static final String PROFILES_SAVE_ENTITIES_EP = PROFILES_EP + "/save-entities";
     private static final String PROFILES_DELETE_ENTITIES_EP = PROFILES_EP + "/delete-entities";
     private static final String PROFILES_GET_ENTITIES_EP = PROFILES_EP + "/get-entities";
     private static final String PROFILES_GET_ENTITIES_TEMPLATE_EP = PROFILES_EP + "/get-entities-template";
-    private static final String PROFILES_LIST_EP = PROFILES_EP + "/list";
-    private static final String PROFILES_LIST_CONFIG_EP = PROFILES_EP + "/list/config";
     private static final String ASSIGN_TO_ORDERS_GROUP_EP = V5_BASE + "/orders/aggregation/assign-optimization-profile";
 
     /**
@@ -46,14 +43,6 @@ public class OptimizationProfileManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
-    }
-
     /**
      * Lists the optimization profiles: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/optimization-profiles/data-list}.
@@ -72,6 +61,8 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param profileId the profile ID
      * @return the profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfile getOptimizationProfileById(String profileId) throws APIException {
@@ -85,9 +76,11 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param request the profile
      * @return the created profile
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfile createOptimizationProfile(OptimizationProfileCreateRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(PROFILES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), OptimizationProfile.class);
     }
@@ -99,10 +92,13 @@ public class OptimizationProfileManager extends Manager {
      * @param profileId the profile ID
      * @param request the new values
      * @return the updated profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}, or {@code request} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfile updateOptimizationProfile(String profileId, OptimizationProfileCreateRequest request)
             throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), OptimizationProfile.class);
     }
@@ -113,6 +109,8 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param profileId the profile ID
      * @return {@code true}; an error status throws instead
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public boolean deleteOptimizationProfile(String profileId) throws APIException {
@@ -127,9 +125,11 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param request the entities
      * @return the saved entities
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfileSaveEntities saveEntities(OptimizationProfileSaveEntities request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(PROFILES_SAVE_ENTITIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 OptimizationProfileSaveEntities.class);
@@ -142,10 +142,12 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param request the IDs of the entities
      * @return the answer of the API
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfileSaveEntities deleteEntities(OptimizationProfileDeleteEntitiesRequest request)
             throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(PROFILES_DELETE_ENTITIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 OptimizationProfileSaveEntities.class);
@@ -212,6 +214,7 @@ public class OptimizationProfileManager extends Manager {
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 OptimizationProfileAssignResponse.class);
     }
+
 
     /** Rejects a required text that is {@code null} or empty, before any request is sent. */
     private static void requireText(String value, String name) {

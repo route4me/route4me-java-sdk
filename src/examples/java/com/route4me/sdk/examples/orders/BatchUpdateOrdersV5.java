@@ -8,16 +8,23 @@ import java.util.Arrays;
 
 /**
  * Gives two orders the same group through the V5 order platform with {@link OrderManagerV5#batchUpdateOrders}. Set
- * {@code ORDER_ID_1} and {@code ORDER_ID_2} to the IDs of two of your orders.
+ * {@code ORDER_ID_1} and {@code ORDER_ID_2} to the IDs of two orders of a test account: the example changes them.
  */
 public class BatchUpdateOrdersV5 {
     public static void main(String[] args) {
+        String firstOrderId = System.getenv("ORDER_ID_1");
+        String secondOrderId = System.getenv("ORDER_ID_2");
+        if (firstOrderId == null || firstOrderId.isEmpty() || secondOrderId == null || secondOrderId.isEmpty()) {
+            System.err.println("Set ORDER_ID_1 and ORDER_ID_2 to the IDs of two orders of a test account; this"
+                    + " example changes them.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrderManagerV5 manager = new OrderManagerV5(apiKey);
         OrderV5 values = new OrderV5();
         values.setFirstName("Alex");
         BatchUpdateOrdersRequest request = new BatchUpdateOrdersRequest();
-        request.setOrderIds(Arrays.asList(System.getenv("ORDER_ID_1"), System.getenv("ORDER_ID_2")));
+        request.setOrderIds(Arrays.asList(firstOrderId, secondOrderId));
         request.setData(values);
         try {
             OrderV5[] updated = manager.batchUpdateOrders(request);

@@ -24,16 +24,20 @@ import org.junit.Test;
 import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
- * Checks that every manager that puts an ID into the URL path encodes it as one path
- * segment, so that an ID such as {@code ../secret} cannot send the request, with the API
- * key, to another endpoint.
+ * Checks that every manager that puts an ID into the URL path keeps it in one path segment:
+ * an ID with a {@code /}, {@code \} or {@code ;}, such as {@code ../secret} or {@code ..;x}, is
+ * refused before anything is sent, so it cannot send the request, with the API key, to another
+ * endpoint; other reserved characters are percent-encoded.
  */
 public class PathSegmentEncodingTest {
 
-    /** An ID that would climb out of its endpoint if it were not encoded. */
+    /** An ID that would climb out of its endpoint on a front end that decodes {@code %2F}. */
     private static final String ESCAPE = "../secret";
+    /** The same with backslashes, which some servers read as slashes. */
+    private static final String BACKSLASH_ESCAPE = "..\\secret";
     private static final String V5 = "/modules/api/v5.0";
 
     @Rule
@@ -52,16 +56,17 @@ public class PathSegmentEncodingTest {
         return http.lastRequest();
     }
 
-    /** Asserts that the ID stayed one encoded segment of the expected endpoint. */
-    private void assertEncoded(String prefix, String suffix, MockHttp.Call call) throws Exception {
-        CapturedRequest request = send(call);
-        assertEquals(request.toString(), prefix + "/..%2Fsecret" + suffix, request.getUri().getRawPath());
-        assertEquals(prefix + "/" + ESCAPE + suffix, request.getPath());
+    /** Asserts that the call is refused before anything is sent. */
+    private void assertRefused(MockHttp.Call call) {
+        int before = http.requestCount();
+        IllegalArgumentException error = http.expectThrows(IllegalArgumentException.class, call);
+        assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid value for a URL path segment"));
+        assertEquals("nothing is sent", before, http.requestCount());
     }
 
     @Test
-    @SuppressWarnings("deprecation") // the deprecated V4 VehiclesManager must still encode its IDs
-    public void vehicleIdsStayInOneSegment() throws Exception {
+    @SuppressWarnings("deprecation") // the deprecated V4 VehiclesManager must refuse them too
+    public void vehicleIdsWithASlashAreRefused() throws Exception {
         final VehiclesManagerV5 v5 = http.install(new VehiclesManagerV5(MockHttp.API_KEY));
         // Fully qualified: Java 8 warns on an import of a deprecated class, and no annotation can suppress that.
         final com.route4me.sdk.services.vehicles.VehiclesManager v4 =
@@ -69,38 +74,35 @@ public class PathSegmentEncodingTest {
         final Vehicles vehicle = new Vehicles();
         vehicle.setVehicleId(ESCAPE);
 
-        assertEncoded(V5 + "/vehicles", "", () -> v5.getVehicleById(ESCAPE));
-        assertEncoded(V5 + "/vehicles", "", () -> v5.deleteVehicle(ESCAPE));
-        assertEncoded(V5 + "/vehicles/job-tracker/status", "", () -> v5.getVehicleJobStatus(ESCAPE));
-        assertEncoded(V5 + "/vehicle-profiles", "", () -> v5.getVehicleProfileById(ESCAPE));
-        assertEncoded(V5 + "/vehicle-capacity-profiles", "", () -> v5.deleteVehicleCapacityProfile(ESCAPE));
-        assertEncoded("/modules/api/vehicles", "", () -> v4.getVehicle(ESCAPE));
-        assertEncoded("/modules/api/vehicles", "", () -> v4.updateVehicle(vehicle));
+        assertRefused(() -> v5.getVehicleById(ESCAPE));
+        assertRefused(() -> v5.deleteVehicle(ESCAPE));
+        assertRefused(() -> v5.getVehicleJobStatus(ESCAPE));
+        assertRefused(() -> v5.getVehicleProfileById(ESCAPE));
+        assertRefused(() -> v5.deleteVehicleCapacityProfile(ESCAPE));
+        assertRefused(() -> v4.getVehicle(ESCAPE));
+        assertRefused(() -> v4.updateVehicle(vehicle));
     }
 
     @Test
-    public void routeIdsStayInOneSegment() throws Exception {
+    public void routeIdsWithASlashAreRefused() throws Exception {
         final RouteStatusManager status = http.install(new RouteStatusManager(MockHttp.API_KEY));
         final RouteCustomDataManager customData = http.install(new RouteCustomDataManager(MockHttp.API_KEY));
         final SchedulesManager schedules = http.install(new SchedulesManager(MockHttp.API_KEY));
         final RouteDestinationsManager destinations = http.install(new RouteDestinationsManager(MockHttp.API_KEY));
 
-        assertEncoded(V5 + "/route-status", "", () -> status.getRouteStatus(ESCAPE));
-        assertEncoded(V5 + "/route-status", "/history", () -> status.getRouteStatusHistory(ESCAPE, null, null, null));
-        assertEncoded(V5 + "/route-status", "/rollback", () -> status.rollbackRouteStatus(ESCAPE));
-        assertEncoded(V5 + "/routes", "/custom-data", () -> customData.getRouteCustomData(ESCAPE));
-        assertEncoded(V5 + "/recurring-routes/schedules", "", () -> schedules.getSchedule(ESCAPE));
-        assertEncoded(V5 + "/recurring-routes/route-schedules", "/items",
-                () -> schedules.deleteRouteScheduleItems(ESCAPE));
-        assertEncoded(V5 + "/recurring-routes/route-schedules", "/preview",
-                () -> schedules.getRouteSchedulePreview(ESCAPE, "2026-10-01", "2026-10-31"));
-        assertEncoded(V5 + "/recurring-routes/scheduled-routes/is-copy", "",
-                () -> schedules.isRouteScheduleCopied(ESCAPE));
-        assertEncoded(V5 + "/route-destinations", "", () -> destinations.getDestination(ESCAPE));
+        assertRefused(() -> status.getRouteStatus(ESCAPE));
+        assertRefused(() -> status.getRouteStatusHistory(ESCAPE, null, null, null));
+        assertRefused(() -> status.rollbackRouteStatus(ESCAPE));
+        assertRefused(() -> customData.getRouteCustomData(ESCAPE));
+        assertRefused(() -> schedules.getSchedule(ESCAPE));
+        assertRefused(() -> schedules.deleteRouteScheduleItems(ESCAPE));
+        assertRefused(() -> schedules.getRouteSchedulePreview(ESCAPE, "2026-10-01", "2026-10-31"));
+        assertRefused(() -> schedules.isRouteScheduleCopied(ESCAPE));
+        assertRefused(() -> destinations.getDestination(ESCAPE));
     }
 
     @Test
-    public void otherIdsStayInOneSegment() throws Exception {
+    public void otherIdsWithASlashAreRefused() throws Exception {
         final CustomerManager customers = http.install(new CustomerManager(MockHttp.API_KEY));
         final DriverReviewManager reviews = http.install(new DriverReviewManager(MockHttp.API_KEY));
         final FacilityManager facilities = http.install(new FacilityManager(MockHttp.API_KEY));
@@ -111,17 +113,17 @@ public class PathSegmentEncodingTest {
         final PodWorkflowManager workflows = http.install(new PodWorkflowManager(MockHttp.API_KEY));
         final AddressBookManagerV5 addressBook = http.install(new AddressBookManagerV5(MockHttp.API_KEY));
 
-        assertEncoded(V5 + "/customers", "", () -> customers.getCustomerById(ESCAPE));
-        assertEncoded(V5 + "/driver-reviews", "", () -> reviews.getDriverReviewById(ESCAPE));
-        assertEncoded(V5 + "/facilities", "", () -> facilities.getFacility(ESCAPE));
-        assertEncoded(V5 + "/address-book/locations/types", "", () -> locations.getLocationTypeById(ESCAPE));
-        assertEncoded(V5 + "/notes", "", () -> notes.getNote(ESCAPE));
-        assertEncoded(V5 + "/notes/route", "", () -> notes.getNotesByRoute(ESCAPE, null, null));
-        assertEncoded(V5 + "/notes/destination", "", () -> notes.getNotesByDestination(ESCAPE, null, null));
-        assertEncoded(V5 + "/optimization-profiles", "", () -> profiles.getOptimizationProfileById(ESCAPE));
-        assertEncoded(V5 + "/orders-platform", "", () -> orders.getOrder(ESCAPE));
-        assertEncoded(V5 + "/workflows", "", () -> workflows.getPodWorkflow(ESCAPE));
-        assertEncoded(V5 + "/address-book/job-tracker/status", "", () -> addressBook.getJobStatus(ESCAPE));
+        assertRefused(() -> customers.getCustomerById(ESCAPE));
+        assertRefused(() -> reviews.getDriverReviewById(ESCAPE));
+        assertRefused(() -> facilities.getFacility(ESCAPE));
+        assertRefused(() -> locations.getLocationTypeById(ESCAPE));
+        assertRefused(() -> notes.getNote(ESCAPE));
+        assertRefused(() -> notes.getNotesByRoute(ESCAPE, null, null));
+        assertRefused(() -> notes.getNotesByDestination(ESCAPE, null, null));
+        assertRefused(() -> profiles.getOptimizationProfileById(ESCAPE));
+        assertRefused(() -> orders.getOrder(ESCAPE));
+        assertRefused(() -> workflows.getPodWorkflow(ESCAPE));
+        assertRefused(() -> addressBook.getJobStatus(ESCAPE));
     }
 
     @Test
@@ -134,11 +136,27 @@ public class PathSegmentEncodingTest {
         request.assertNoQuery("c");
     }
 
+    /**
+     * A {@code %2F} typed as text is left alone: its {@code %} is encoded, so it is sent as
+     * {@code %252F}. A front end that decodes the path once reads the text {@code ..%2Fsecret}, one
+     * segment, not {@code ../secret}; only a front end that decodes twice would see a slash.
+     */
     @Test
-    public void emptyAndDotSegmentsAreRejectedBeforeSending() {
+    public void anEncodedSlashTypedAsTextIsSentAsOneHarmlessSegment() throws Exception {
+        final OrderManagerV5 orders = http.install(new OrderManagerV5(MockHttp.API_KEY));
+
+        CapturedRequest request = send(() -> orders.getOrder("..%2Fsecret"));
+
+        assertEquals(V5 + "/orders-platform/..%252Fsecret", request.getUri().getRawPath());
+        assertEquals(V5 + "/orders-platform/..%2Fsecret", request.getUri().getPath());
+    }
+
+    @Test
+    public void emptyDotAndSeparatorSegmentsAreRejectedBeforeSending() {
         final CustomerManager customers = http.install(new CustomerManager(MockHttp.API_KEY));
 
-        for (final String id : Arrays.asList(null, "", ".", "..")) {
+        for (final String id : Arrays.asList(null, "", ".", "..", "/", "\\", "a/b", "a\\b", ESCAPE, BACKSLASH_ESCAPE,
+                ";", "a;b", "..;x", ".;", "..;")) {
             http.expectThrows(IllegalArgumentException.class, () -> customers.getCustomerById(id));
         }
         http.assertNoRequests();

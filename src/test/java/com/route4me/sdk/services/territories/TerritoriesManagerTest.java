@@ -1,6 +1,5 @@
 package com.route4me.sdk.services.territories;
 
-import com.route4me.sdk.testsupport.Fixtures;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
@@ -157,15 +156,15 @@ public class TerritoriesManagerTest {
     }
 
     @Test
-    public void updatesWithoutAnIdSendNoTerritoryIdParameter() throws Exception {
-        TerritoriesManager manager = manager();
-        http.respondToAll(200, Fixtures.read("territory.json"));
+    public void updatesWithoutATerritoryOrItsIdAreRefusedBeforeSending() {
+        final TerritoriesManager manager = manager();
 
-        manager.updateTerritory(polygonTerritory(null));
-        manager.updateAvoidanceZone(polygonTerritory(null));
+        for (final Territory territory : new Territory[] {null, polygonTerritory(null), polygonTerritory("")}) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateTerritory(territory));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateAvoidanceZone(territory));
+        }
 
-        http.request(0).assertEndpoint("PUT", HOST, TERRITORY_EP).assertNoQuery("territory_id");
-        http.request(1).assertEndpoint("PUT", HOST, AVOIDANCE_EP).assertNoQuery("territory_id");
+        http.assertNoRequests();
     }
 
     @Test
@@ -289,6 +288,22 @@ public class TerritoriesManagerTest {
         assertEquals(1, polygons.size());
         assertEquals("T-OK", polygons.get(0).getTerritory().getTerritoryId());
         assertTrue("an empty reply gives no polygons", manager.getPolygonsFromTerritories().isEmpty());
+    }
+
+    @Test
+    public void polygonLookupSkipsOnlyTheTerritoriesWithAMalformedPoint() {
+        TerritoriesManager manager = manager();
+        http.respond(200, json("[{'territory_id':'T-NULL','territory':{'type':'poly','data':['40.0,-74.0',null]}},"
+                + "{'territory_id':'T-NOCOMMA','territory':{'type':'poly','data':['40.0,-74.0','41.0']}},"
+                + "{'territory_id':'T-TEXT','territory':{'type':'poly','data':['40.0,-74.0','north,west']}},"
+                + "{'territory_id':'T-OK','territory':{'type':'poly',"
+                + "'data':['40.0,-74.0','41.0,-74.0','41.0,-75.0']}}]"));
+
+        List<TerritoryPolygon> polygons = manager.getPolygonsFromTerritories();
+
+        assertEquals(1, polygons.size());
+        assertEquals("T-OK", polygons.get(0).getTerritory().getTerritoryId());
+        assertEquals(41000000, polygons.get(0).getPolygon().xpoints[1]);
     }
 
     @Test
