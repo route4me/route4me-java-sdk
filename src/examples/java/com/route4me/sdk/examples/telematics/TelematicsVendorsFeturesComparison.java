@@ -67,7 +67,7 @@ public class TelematicsVendorsFeturesComparison {
                 }
             }
         } catch (APIException ex) {
-            Logger.getLogger(TelematicsVendorsFeturesComparison.class.getName()).log(Level.INFO, ex.toString());
+            Logger.getLogger(TelematicsVendorsFeturesComparison.class.getName()).log(Level.SEVERE, ex.toString());
         }
     }
 }
