@@ -24,7 +24,7 @@ public class AccountProfileManagerTest {
         AccountProfile profile = manager.getAccountProfile();
 
         http.request().assertEndpoint("GET", "wh.route4me.com", "/modules/api/v5.0/profile-api")
-                .assertApiKeyInQuery().assertNoBody();
+                .assertApiKeyAsBearer().assertNoBody();
         assertEquals("owner@example.com", profile.getEmail());
         assertEquals(Long.valueOf(1001), profile.getMemberId());
         assertEquals("mi", profile.getPreferredUnits());

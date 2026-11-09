@@ -4,13 +4,19 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>io.github.route4me</groupId>
     <artifactId>route4me-java-sdk</artifactId>
-    <version>1.16.1-SNAPSHOT</version>
+    <version>2.0.0-SNAPSHOT</version>
     <packaging>jar</packaging>
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-         <log4j.version>2.17.1</log4j.version>
+        <log4j.version>2.25.5</log4j.version>
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
+        <!-- Every javac lint check, with -Werror, for the library, the tests and the examples,
+             except `processing`: Lombok runs as an annotation processor and claims only its own
+             annotations, so javac would report Gson's @SerializedName and the SDK's
+             @QueryParameter (runtime annotations, read by reflection) as unclaimed, and no source
+             change can claim them. The java20+ profile also turns off `options`. -->
+        <compiler.lint>-Xlint:all,-processing</compiler.lint>
     </properties>
     <name>route4me-java-sdk</name>
     <licenses>
@@ -39,21 +45,43 @@
         <url>https://www.route4me.com</url>
     </organization>
 
+    <profiles>
+        <profile>
+            <!-- JDK 9 and later compile against the Java 8 API with release 8, instead of
+                 source and target 1.8 (which would warn that no Java 8 boot class path is set). -->
+            <id>java9+</id>
+            <activation>
+                <jdk>[9,)</jdk>
+            </activation>
+            <properties>
+                <maven.compiler.release>8</maven.compiler.release>
+            </properties>
+        </profile>
+        <profile>
+            <!-- JDK 20 and later warn that release 8 is obsolete ("[options] source value 8 is
+                 obsolete and will be removed in a future release"). The SDK targets Java 8 on
+                 purpose, so that one option warning is turned off there; every other lint
+                 check stays on. -->
+            <id>java20+</id>
+            <activation>
+                <jdk>[20,)</jdk>
+            </activation>
+            <properties>
+                <compiler.lint>-Xlint:all,-processing,-options</compiler.lint>
+            </properties>
+        </profile>
+    </profiles>
+
     <dependencies>
         <dependency>
             <groupId>org.apache.logging.log4j</groupId>
             <artifactId>log4j-api</artifactId>
-            <version>2.17.1</version>
+            <version>${log4j.version}</version>
         </dependency>
-        <dependency> 
-            <groupId>com.opencsv</groupId> 
-            <artifactId>opencsv</artifactId> 
-            <version>4.1</version> 
-        </dependency> 
         <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
-            <version>2.8.9</version>
+            <version>2.14.0</version>
         </dependency>
         <dependency>
             <groupId>org.apache.httpcomponents</groupId>
@@ -79,9 +107,28 @@
             <scope>provided</scope>
         </dependency>
         <dependency>
+            <!-- Stay on 1.x: validator.route4me.com runs a Socket.IO 2 server (Engine.IO 3),
+                 which socket.io-client 2.x cannot talk to. -->
             <groupId>io.socket</groupId>
             <artifactId>socket.io-client</artifactId>
-            <version>1.0.1</version>
+            <version>1.0.2</version>
+        </dependency>
+        <!-- Patched releases of what socket.io-client 1.0.2 asks for: okhttp 3.12.12
+             (CVE-2021-0341, which can accept a wrong certificate), its okio 1.15.0
+             (CVE-2023-3635) and org.json 20090211 (CVE-2022-45688, CVE-2023-5072).
+             okhttp 4.12.0 brings okio 3.6.0 (and kotlin-stdlib). All of them run on Java 8.
+             They are direct dependencies, not dependencyManagement entries: Maven applies a
+             library's dependencyManagement only to the library's own build, so only direct
+             dependencies reach the projects that use the SDK (nearest wins). -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
+        </dependency>
+        <dependency>
+            <groupId>org.json</groupId>
+            <artifactId>json</artifactId>
+            <version>20260814</version>
         </dependency>
     </dependencies>
     <build>
@@ -114,6 +161,12 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-javadoc-plugin</artifactId>
                 <version>3.4.0</version>
+                <configuration>
+                    <!-- Every doclint check except `missing`, which Checkstyle enforces (it also sees
+                         the Javadoc of the Lombok fields). A doclint error fails the build. -->
+                    <doclint>all,-missing</doclint>
+                    <failOnWarnings>true</failOnWarnings>
+                </configuration>
                 <executions>
                     <execution>
                         <id>attach-javadocs</id>
@@ -211,16 +264,73 @@
                 </executions>
             </plugin>
             <plugin>
+                <!-- Checkstyle 9.3, the last line that runs on Java 8, over the library, the
+                     tests and the examples. Any violation fails the build. -->
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-checkstyle-plugin</artifactId>
+                <version>3.6.0</version>
+                <dependencies>
+                    <dependency>
+                        <groupId>com.puppycrawl.tools</groupId>
+                        <artifactId>checkstyle</artifactId>
+                        <version>9.3</version>
+                    </dependency>
+                </dependencies>
+                <configuration>
+                    <configLocation>config/checkstyle/checkstyle.xml</configLocation>
+                    <!-- config_loc is the folder of the configuration, as in the IDE plugins. -->
+                    <propertyExpansion>config_loc=${project.basedir}/config/checkstyle</propertyExpansion>
+                    <consoleOutput>true</consoleOutput>
+                    <failOnViolation>true</failOnViolation>
+                    <violationSeverity>warning</violationSeverity>
+                    <includeTestSourceDirectory>false</includeTestSourceDirectory>
+                    <sourceDirectories>
+                        <sourceDirectory>${project.build.sourceDirectory}</sourceDirectory>
+                        <sourceDirectory>${project.build.testSourceDirectory}</sourceDirectory>
+                        <sourceDirectory>${project.basedir}/src/examples/java</sourceDirectory>
+                    </sourceDirectories>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>checkstyle</id>
+                        <phase>validate</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
+                <!-- The examples live in src/examples/java. They are compiled with the tests,
+                     so that every build checks them against the API, but they are not part of
+                     the SDK jar, and no test runs them. -->
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <id>add-example-sources</id>
+                        <phase>generate-test-sources</phase>
+                        <goals>
+                            <goal>add-test-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>src/examples/java</source>
+                            </sources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.14.0</version>
                 <configuration>
                     <compilerArgs>
-                        <arg>-Xlint</arg>
+                        <arg>${compiler.lint}</arg>
+                        <arg>-Werror</arg>
                     </compilerArgs>
-                    <excludes>
-                        <exclude>**/examples/**</exclude>
-                    </excludes>
                     <annotationProcessorPaths>
                         <path>
                             <groupId>org.projectlombok</groupId>

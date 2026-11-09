@@ -23,23 +23,21 @@
  */
 package com.route4me.sdk.services.routing.balance;
 
-/**
- *
- * @author route4me
- */
+/** The balancing modes of a {@link Balance}; {@code toString()} gives the API value. */
 public enum BalanceMode {
 
-        DESTINATIONS_COUNT("destinations_count");
+    /** Give each route about the same number of destinations ({@code destinations_count}). */
+    DESTINATIONS_COUNT("destinations_count");
 
-        private final String value;
+    private final String value;
 
-        BalanceMode(String value) {
-            this.value = value;
-        }
+    BalanceMode(String value) {
+        this.value = value;
+    }
 
-        @Override
-        public String toString() {
-            return this.value;
-        }   
-    
+    @Override
+    public String toString() {
+        return this.value;
+    }
+
 }

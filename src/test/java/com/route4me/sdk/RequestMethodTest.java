@@ -1,7 +1,9 @@
 package com.route4me.sdk;
 
 import com.route4me.sdk.http.HttpDeleteWithBody;
+import org.apache.http.client.methods.HttpEntityEnclosingRequestBase;
 import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPatch;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpPut;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -9,7 +11,8 @@ import org.junit.Test;
 
 import java.net.URI;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class RequestMethodTest {
 
@@ -37,6 +40,14 @@ public class RequestMethodTest {
     public void testDeleteCreatesHttpDeleteWithBody() {
         HttpRequestBase request = RequestMethod.DELETE.create(TEST_URI);
         assertTrue(request instanceof HttpDeleteWithBody);
+    }
+
+    @Test
+    public void testPatchCreatesHttpPatchThatCarriesABody() {
+        HttpRequestBase request = RequestMethod.PATCH.create(TEST_URI);
+        assertTrue(request instanceof HttpPatch);
+        assertTrue(request instanceof HttpEntityEnclosingRequestBase);
+        assertEquals("PATCH", request.getMethod());
     }
 
     @Test

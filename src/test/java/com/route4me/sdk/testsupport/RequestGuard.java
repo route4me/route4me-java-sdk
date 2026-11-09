@@ -3,9 +3,12 @@ package com.route4me.sdk.testsupport;
 import org.apache.http.NameValuePair;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
@@ -15,20 +18,32 @@ import java.util.Set;
  *
  * <p>A request passes when:
  * <ul>
- *   <li>its scheme is {@code https};</li>
+ *   <li>its scheme is {@code https}, on the default port, and its URL has no user
+ *       information ({@code https://user@host/});</li>
  *   <li>its (host, path) is on the registry's {@code deprecated} list, which is allowed but
  *       recorded for the {@link DeprecatedEndpointReport}; or its host is in
  *       {@code allowed_hosts} and its (method, host, path) matches an {@code endpoints}
  *       entry;</li>
- *   <li>the API key appears nowhere except the {@code api_key} query parameter, which is
- *       where the SDK puts it today: not in a header, the path, another query parameter,
- *       or the body.</li>
+ *   <li>the API key goes only to {@code api.route4me.com} and {@code wh.route4me.com}, deprecated
+ *       entries included: a request to any other host must not carry it anywhere;</li>
+ *   <li>the API key appears in one place only. On the V5 API
+ *       ({@code https://wh.route4me.com/modules/api/v5.0/} and {@code v5.1/}) that is the
+ *       {@code Authorization: Bearer} header; everywhere else it is the {@code api_key}
+ *       query parameter. It must not be in another header, the path, another query
+ *       parameter or the body.</li>
  * </ul>
  * Messages never print the key itself.
  */
 public final class RequestGuard {
 
     private static final String API_KEY_PARAMETER = "api_key";
+    private static final String AUTHORIZATION_HEADER = "Authorization";
+    private static final String V5_HOST = "wh.route4me.com";
+    private static final String[] V5_PATH_PREFIXES = {"/modules/api/v5.0", "/modules/api/v5.1"};
+    /** The only hosts that may receive the API key. */
+    private static final Set<String> KEY_HOSTS =
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList("api.route4me.com", "wh.route4me.com")));
+    private static final int HTTPS_PORT = 443;
 
     private final EndpointRegistry registry;
     private final String apiKey;
@@ -65,10 +80,20 @@ public final class RequestGuard {
     public List<String> check(CapturedRequest request, String testName) {
         List<String> problems = new ArrayList<>();
         String host = request.getHost();
-        String path = request.getPath();
+        // Match on the raw path, as the server gets it: the registry refuses a {} segment with an
+        // encoded "/" or "\" (%2F, %5C), which some front ends decode before they resolve "..".
+        String path = request.getUri().getRawPath();
 
         if (!"https".equals(request.getScheme())) {
             problems.add(request + ": scheme must be https, not " + request.getScheme());
+        }
+        int port = request.getUri().getPort();
+        if (port != -1 && port != HTTPS_PORT) {
+            problems.add(request + ": port must be the https default (443), not " + port);
+        }
+        if (request.getUri().getRawUserInfo() != null) {
+            problems.add(request.getMethod() + " https://" + host + path
+                    + ": the URL must not carry user information (user@host)");
         }
         EndpointRegistry.Entry deprecated = registry.findDeprecated(host, path);
         if (deprecated != null) {
@@ -86,8 +111,10 @@ public final class RequestGuard {
     }
 
     /**
-     * Finds every place where the API key appears in a request, other than the
-     * {@code api_key} query parameter.
+     * Finds every place where the API key appears in a request, other than its expected
+     * place: the {@code Authorization: Bearer} header on the V5 API, the {@code api_key}
+     * query parameter elsewhere on {@code api.route4me.com} and {@code wh.route4me.com}. On
+     * any other host the key has no expected place.
      *
      * @param request the captured request
      * @return one message per leak; empty when there is none
@@ -97,20 +124,35 @@ public final class RequestGuard {
             return Collections.emptyList();
         }
         List<String> leaks = new ArrayList<>();
+        String host = request.getHost() == null ? "" : request.getHost().toLowerCase(Locale.ROOT);
+        if (!KEY_HOSTS.contains(host) && carriesKey(request)) {
+            leaks.add(request + ": the API key was sent to '" + request.getHost() + "'; only " + KEY_HOSTS
+                    + " may receive it");
+            return leaks;
+        }
+        boolean v5 = isV5(request);
         for (Map.Entry<String, List<String>> header : request.getHeaders().entrySet()) {
             for (String value : header.getValue()) {
-                if (contains(header.getKey()) || contains(value)) {
-                    leaks.add(request + ": the API key appears in header '" + header.getKey() + "'");
+                boolean expectedPlace = v5 && AUTHORIZATION_HEADER.equalsIgnoreCase(header.getKey())
+                        && ("Bearer " + apiKey).equals(value);
+                if (contains(header.getKey()) || (!expectedPlace && contains(value))) {
+                    leaks.add(request + ": the API key appears in header '" + header.getKey() + "'"
+                            + (v5 ? "" : "; outside the V5 API it goes in the api_key query parameter"));
                 }
             }
+        }
+        if (contains(request.getUri().getRawUserInfo()) || contains(request.getUri().getUserInfo())) {
+            leaks.add(request.getMethod() + " https://" + host + request.getUri().getRawPath()
+                    + ": the API key appears in the URL user information");
         }
         if (contains(request.getPath())) {
             leaks.add(request + ": the API key appears in the URL path");
         }
         for (NameValuePair pair : request.getQueryParameters()) {
-            boolean expectedPlace = API_KEY_PARAMETER.equals(pair.getName());
+            boolean expectedPlace = !v5 && API_KEY_PARAMETER.equals(pair.getName());
             if (contains(pair.getName()) || (!expectedPlace && contains(pair.getValue()))) {
-                leaks.add(request + ": the API key appears in query parameter '" + pair.getName() + "'");
+                leaks.add(request + ": the API key appears in query parameter '" + pair.getName() + "'"
+                        + (v5 ? "; the V5 API takes it in the Authorization header" : ""));
             }
         }
         if (contains(request.getUri().getRawFragment())) {
@@ -120,6 +162,43 @@ public final class RequestGuard {
             leaks.add(request + ": the API key appears in the request body");
         }
         return leaks;
+    }
+
+    /** Returns whether the key appears anywhere in a request: URL, headers or body. */
+    private boolean carriesKey(CapturedRequest request) {
+        if (contains(request.getUri().toString()) || contains(request.getBody())) {
+            return true;
+        }
+        for (Map.Entry<String, List<String>> header : request.getHeaders().entrySet()) {
+            if (contains(header.getKey())) {
+                return true;
+            }
+            for (String value : header.getValue()) {
+                if (contains(value)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Tells whether a request goes to the V5 API, which takes the key as a bearer token.
+     *
+     * @param request the captured request
+     * @return {@code true} for {@code https://wh.route4me.com/modules/api/v5.0/...} and {@code v5.1}
+     */
+    public static boolean isV5(CapturedRequest request) {
+        String path = request.getPath();
+        if (!V5_HOST.equalsIgnoreCase(request.getHost()) || path == null) {
+            return false;
+        }
+        for (String prefix : V5_PATH_PREFIXES) {
+            if (path.startsWith(prefix + "/") || path.equals(prefix)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**

@@ -1,7 +1,6 @@
 package com.route4me.sdk.services.territories;
 
 import com.route4me.sdk.testsupport.MockHttp;
-import org.junit.Ignore;
 import org.junit.Rule;
 import org.junit.Test;
 
@@ -93,13 +92,12 @@ public class TerritoriesManagerTest {
 
         assertEquals(Collections.singletonList(21), plain.getOrders());
         http.request(0).assertEndpoint("GET", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY")
-                .assertQuery("orders", "false").assertQuery("addresses", "false");
-        http.request(1).assertQuery("orders", "true").assertQuery("addresses", "false");
-        http.request(2).assertQuery("orders", "false").assertQuery("addresses", "true");
-        http.request(3).assertQuery("orders", "true").assertQuery("addresses", "true");
+                .assertQuery("orders", "0").assertQuery("addresses", "0");
+        http.request(1).assertQuery("orders", "1").assertQuery("addresses", "0");
+        http.request(2).assertQuery("orders", "0").assertQuery("addresses", "1");
+        http.request(3).assertQuery("orders", "1").assertQuery("addresses", "1");
     }
 
-    @Ignore("bug (unfiled): getTerritory(id, null, null) throws NullPointerException on the Boolean flags")
     @Test
     public void getTerritoryAcceptsNullFlags() throws Exception {
         TerritoriesManager manager = manager();
@@ -107,7 +105,8 @@ public class TerritoriesManagerTest {
 
         manager.getTerritory("T-POLY", null, null);
 
-        http.request().assertEndpoint("GET", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY");
+        http.request().assertEndpoint("GET", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY")
+                .assertNoQuery("orders").assertNoQuery("addresses");
     }
 
     @Test
@@ -117,7 +116,8 @@ public class TerritoriesManagerTest {
 
         assertTrue(manager.deleteTerritory("T-POLY"));
 
-        http.request().assertEndpoint("DELETE", HOST, TERRITORY_EP).assertQuery("territory_id", "T-POLY").assertNoBody();
+        http.request().assertEndpoint("DELETE", HOST, TERRITORY_EP).assertQuery("territory_id",
+                "T-POLY").assertNoBody();
     }
 
     @Test
@@ -135,7 +135,6 @@ public class TerritoriesManagerTest {
         assertEquals("Downtown", updated.getTerritoryName());
     }
 
-    @Ignore("bug #31: updateTerritory sends DELETE instead of PUT")
     @Test
     public void updateTerritorySendsPut() throws Exception {
         TerritoriesManager manager = manager();
@@ -146,7 +145,6 @@ public class TerritoriesManagerTest {
         http.request().assertMethod("PUT");
     }
 
-    @Ignore("bug #31: updateTerritory does not put territory_id on the URL")
     @Test
     public void updateTerritoryPutsTheIdOnTheUrl() throws Exception {
         TerritoriesManager manager = manager();
@@ -155,6 +153,27 @@ public class TerritoriesManagerTest {
         manager.updateTerritory(polygonTerritory("T-POLY"));
 
         http.request().assertQuery("territory_id", "T-POLY");
+    }
+
+    @Test
+    public void updatesWithoutATerritoryOrItsIdAreRefusedBeforeSending() {
+        final TerritoriesManager manager = manager();
+
+        for (final Territory territory : new Territory[] {null, polygonTerritory(null), polygonTerritory("")}) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateTerritory(territory));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateAvoidanceZone(territory));
+        }
+
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void deletesWithAnEmptyResponseReportFalse() throws Exception {
+        TerritoriesManager manager = manager();
+        http.respondWithoutBody(200).respondWithoutBody(200);
+
+        assertFalse(manager.deleteTerritory("T-POLY"));
+        assertFalse(manager.deleteAvoidanceZone("T-POLY"));
     }
 
     @Test
@@ -212,7 +231,6 @@ public class TerritoriesManagerTest {
         http.request().assertPath(AVOIDANCE_EP).assertJson("territory_id", "T-POLY");
     }
 
-    @Ignore("bug #31: updateAvoidanceZone sends DELETE instead of PUT")
     @Test
     public void updateAvoidanceZoneSendsPut() throws Exception {
         TerritoriesManager manager = manager();
@@ -223,7 +241,6 @@ public class TerritoriesManagerTest {
         http.request().assertMethod("PUT");
     }
 
-    @Ignore("bug #31: updateAvoidanceZone does not put territory_id on the URL")
     @Test
     public void updateAvoidanceZonePutsTheIdOnTheUrl() throws Exception {
         TerritoriesManager manager = manager();
@@ -255,6 +272,38 @@ public class TerritoriesManagerTest {
         assertEquals(1, polygons.size());
         assertEquals("T-POLY", polygons.get(0).getTerritory().getTerritoryId());
         assertEquals(4, polygons.get(0).getPolygon().npoints);
+    }
+
+    @Test
+    public void polygonLookupSkipsTerritoriesWithoutAShapeAndAnEmptyReply() {
+        TerritoriesManager manager = manager();
+        http.respond(200, json("[null,{'territory_id':'T-NONE'},{'territory_id':'T-NOTYPE','territory':{}},"
+                + "{'territory_id':'T-NODATA','territory':{'type':'poly'}},"
+                + "{'territory_id':'T-OK','territory':{'type':'poly',"
+                + "'data':['40.0,-74.0','41.0,-74.0','41.0,-75.0']}}]"))
+                .respondWithoutBody(200);
+
+        List<TerritoryPolygon> polygons = manager.getPolygonsFromTerritories();
+
+        assertEquals(1, polygons.size());
+        assertEquals("T-OK", polygons.get(0).getTerritory().getTerritoryId());
+        assertTrue("an empty reply gives no polygons", manager.getPolygonsFromTerritories().isEmpty());
+    }
+
+    @Test
+    public void polygonLookupSkipsOnlyTheTerritoriesWithAMalformedPoint() {
+        TerritoriesManager manager = manager();
+        http.respond(200, json("[{'territory_id':'T-NULL','territory':{'type':'poly','data':['40.0,-74.0',null]}},"
+                + "{'territory_id':'T-NOCOMMA','territory':{'type':'poly','data':['40.0,-74.0','41.0']}},"
+                + "{'territory_id':'T-TEXT','territory':{'type':'poly','data':['40.0,-74.0','north,west']}},"
+                + "{'territory_id':'T-OK','territory':{'type':'poly',"
+                + "'data':['40.0,-74.0','41.0,-74.0','41.0,-75.0']}}]"));
+
+        List<TerritoryPolygon> polygons = manager.getPolygonsFromTerritories();
+
+        assertEquals(1, polygons.size());
+        assertEquals("T-OK", polygons.get(0).getTerritory().getTerritoryId());
+        assertEquals(41000000, polygons.get(0).getPolygon().xpoints[1]);
     }
 
     @Test

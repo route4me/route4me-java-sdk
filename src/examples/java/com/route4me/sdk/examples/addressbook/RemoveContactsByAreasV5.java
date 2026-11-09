@@ -1,0 +1,51 @@
+package com.route4me.sdk.examples.addressbook;
+
+import com.route4me.sdk.AsyncJob;
+import com.route4me.sdk.examples.utils.ExampleInput;
+import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.services.addressbook.AddressBookAreasFilter;
+import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
+import com.route4me.sdk.services.addressbook.BoundingBox;
+import com.route4me.sdk.services.addressbook.JobStatusResponse;
+
+/**
+ * Deletes the contacts inside a rectangle, in a background job, with
+ * {@link AddressBookManagerV5#removeAddressBookContactsByAreas}, then reads the job status with
+ * {@link AddressBookManagerV5#getJobStatus}. It deletes real data: set {@code CONTACTS_BOUNDING_BOX} to
+ * {@code top,left,bottom,right}, in degrees, of an area of a test account, and optionally {@code CONTACTS_QUERY} to a
+ * text that narrows the contacts to delete. Without the rectangle, or with a malformed one, the example stops. A
+ * rectangle that crosses the 180th meridian (left edge east of the right one) is refused: the API does not document
+ * how it reads one, and a server that sorts the longitudes would delete the contacts on the other side of the world.
+ */
+public class RemoveContactsByAreasV5 {
+    public static void main(String[] args) {
+        String text = System.getenv("CONTACTS_BOUNDING_BOX");
+        if (text == null || text.trim().isEmpty()) {
+            System.err.println("Set CONTACTS_BOUNDING_BOX to top,left,bottom,right in degrees of an area of a test"
+                    + " account, such as 40.80,-74.05,40.70,-73.90; this example deletes every contact inside it.");
+            return;
+        }
+        BoundingBox box = ExampleInput.toBoundingBox("CONTACTS_BOUNDING_BOX", text);
+        if (box == null) {
+            return;
+        }
+        String apiKey = System.getenv("R4M_API_KEY");
+        AddressBookManagerV5 manager = new AddressBookManagerV5(apiKey);
+        try {
+            AddressBookAreasFilter filter = new AddressBookAreasFilter();
+            filter.setBoundingBox(box);
+            String query = System.getenv("CONTACTS_QUERY");
+            if (query != null && !query.isEmpty()) {
+                filter.setQuery(query);
+            }
+            AsyncJob job = manager.removeAddressBookContactsByAreas(filter);
+            System.out.println("The deletion was queued as job " + job.getJobId());
+            if (job.getJobId() != null) {
+                JobStatusResponse status = manager.getJobStatus(job.getJobId());
+                System.out.println("Job status: " + status.getStatus());
+            }
+        } catch (APIException e) {
+            e.printStackTrace();
+        }
+    }
+}

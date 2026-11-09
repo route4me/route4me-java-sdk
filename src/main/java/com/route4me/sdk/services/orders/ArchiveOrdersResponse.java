@@ -4,11 +4,14 @@ import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import java.util.List;
 
+/** The answer of {@link OrderManagerV5#archiveOrders(ArchiveOrdersRequest)}: one page of archived orders. */
 @Data
 public class ArchiveOrdersResponse {
-    @SerializedName("status")
-    private Boolean status;
+    /** The archived orders of this page ({@code items}). */
+    @SerializedName("items")
+    private List<Order> items;
 
-    @SerializedName("data")
-    private List<OrderV5> data;
+    /** The cursor of the next page, for {@link ArchiveOrdersRequest#setCursor}; none on the last page. */
+    @SerializedName("next_page_cursor")
+    private String nextPageCursor;
 }

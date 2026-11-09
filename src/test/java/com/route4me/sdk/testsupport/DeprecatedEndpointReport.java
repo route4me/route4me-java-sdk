@@ -1,5 +1,6 @@
 package com.route4me.sdk.testsupport;
 
+import org.junit.runner.Description;
 import org.junit.runner.Result;
 import org.junit.runner.notification.RunListener;
 
@@ -19,7 +20,8 @@ import java.util.concurrent.ConcurrentSkipListSet;
  * (for example the retired {@code telematics.route4me.com} host), but every hit is
  * recorded in {@link #global()}. Surefire registers this class as a JUnit
  * {@link RunListener} (see the {@code listener} property in {@code pom.xml}), so the
- * summary appears once at the end of {@code mvn test}.
+ * summary appears once at the end of {@code mvn test}. The listener also installs the
+ * {@link NetworkBlock} when the run starts.
  */
 public class DeprecatedEndpointReport extends RunListener {
 
@@ -76,6 +78,17 @@ public class DeprecatedEndpointReport extends RunListener {
     /** @return the hits of the whole test run, which this listener prints at the end */
     public static Hits global() {
         return GLOBAL;
+    }
+
+    /**
+     * Installs the {@link NetworkBlock} before the first test of the run, so that no unit test
+     * can reach the network, whether it uses {@link MockHttp} or not.
+     *
+     * @param description the tests of the run
+     */
+    @Override
+    public void testRunStarted(Description description) {
+        NetworkBlock.install();
     }
 
     /** Prints the summary once, after the last test of the run. */

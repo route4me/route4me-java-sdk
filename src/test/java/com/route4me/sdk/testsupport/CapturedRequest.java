@@ -5,6 +5,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParseException;
 import com.google.gson.JsonParser;
+import com.google.gson.JsonPrimitive;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpEntityEnclosingRequest;
@@ -26,6 +27,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -46,10 +48,13 @@ import static org.junit.Assert.fail;
  *     .assertNoBody();
  * }</pre>
  *
- * <p>{@link #toString()} masks the {@code api_key} query parameter, so failure messages
- * never print the key.
+ * <p>{@link #toString()} masks the value of every {@code api_key} query parameter, whatever
+ * the key, and {@link MockHttp#API_KEY} anywhere else, so failure messages never print a key.
  */
 public final class CapturedRequest {
+
+    /** An {@code api_key} query parameter and its value, which {@link #toString()} masks. */
+    private static final Pattern API_KEY_VALUE = Pattern.compile("([?&]api_key=)[^&#]*");
 
     private final String method;
     private final URI uri;
@@ -58,16 +63,18 @@ public final class CapturedRequest {
     private final String body;
     private final String entityContentType;
     private final String proxy;
+    private final RequestConfig config;
 
     private CapturedRequest(String method, URI uri, Map<String, List<String>> headers,
-                            String body, String entityContentType, String proxy) {
+                            String body, String entityContentType, RequestConfig config) {
         this.method = method;
         this.uri = uri;
         this.headers = headers;
         this.query = Collections.unmodifiableList(URLEncodedUtils.parse(uri, StandardCharsets.UTF_8));
         this.body = body;
         this.entityContentType = entityContentType;
-        this.proxy = proxy;
+        this.config = config;
+        this.proxy = config != null && config.getProxy() != null ? config.getProxy().toURI() : null;
     }
 
     /**
@@ -97,14 +104,8 @@ public final class CapturedRequest {
                 contentType = entity.getContentType() == null ? null : entity.getContentType().getValue();
             }
         }
-        String proxy = null;
-        if (request instanceof HttpRequestBase) {
-            RequestConfig config = ((HttpRequestBase) request).getConfig();
-            if (config != null && config.getProxy() != null) {
-                proxy = config.getProxy().toURI();
-            }
-        }
-        return new CapturedRequest(request.getMethod(), request.getURI(), headers, body, contentType, proxy);
+        RequestConfig config = request instanceof HttpRequestBase ? ((HttpRequestBase) request).getConfig() : null;
+        return new CapturedRequest(request.getMethod(), request.getURI(), headers, body, contentType, config);
     }
 
     // ------------------------------------------------------------------ accessors
@@ -147,6 +148,14 @@ public final class CapturedRequest {
     /** @return the proxy set in the request config, as {@code scheme://host:port}, or {@code null} */
     public String getProxy() {
         return proxy;
+    }
+
+    /**
+     * @return the per-request configuration (timeouts, proxy, redirects) the SDK set, or
+     * {@code null} when it set none
+     */
+    public RequestConfig getRequestConfig() {
+        return config;
     }
 
     /** @return the body text, or {@code null} when the request has no entity */
@@ -393,16 +402,40 @@ public final class CapturedRequest {
 
     /**
      * Asserts that the SDK put the test API key in the {@code api_key} query parameter
-     * exactly once, which is where the SDK sends it today.
+     * exactly once, which is where it sends the key outside the V5 API.
      *
      * @return this request
      */
     public CapturedRequest assertApiKeyInQuery() {
         List<String> values = queryValues("api_key");
         assertEquals("Number of api_key query parameters in " + this, 1, values.size());
+        assertNull("No Authorization header is expected on " + this, header("Authorization"));
         assertTrue("The api_key query parameter in " + this + " is not the test key",
                 MockHttp.API_KEY.equals(values.get(0)));
         return this;
+    }
+
+    /**
+     * Asserts that the SDK sent the test API key as a bearer token, which is how it sends
+     * the key to the V5 API, and not in the {@code api_key} query parameter.
+     *
+     * @return this request
+     */
+    public CapturedRequest assertApiKeyAsBearer() {
+        assertTrue("The Authorization header of " + this + " is not the bearer test key",
+                ("Bearer " + MockHttp.API_KEY).equals(header("Authorization")));
+        assertTrue("The API key must not be in the query of " + this, queryValues("api_key").isEmpty());
+        return this;
+    }
+
+    /**
+     * Asserts that the API key is in its expected place for this request: the bearer
+     * header on the V5 API, the {@code api_key} query parameter elsewhere.
+     *
+     * @return this request
+     */
+    public CapturedRequest assertApiKeySent() {
+        return RequestGuard.isV5(this) ? assertApiKeyAsBearer() : assertApiKeyInQuery();
     }
 
     /**
@@ -461,8 +494,11 @@ public final class CapturedRequest {
     }
 
     /**
-     * Asserts a primitive JSON value. Strings, numbers and booleans are compared by their
-     * text, so {@code assertJson("limit", 10)} matches {@code "limit": 10}.
+     * Asserts a primitive JSON value, with its JSON type: a {@code Number} must be sent as a
+     * JSON number, a {@code Boolean} as a JSON boolean, and anything else (a {@code String}, an
+     * enum) as a JSON string. The values are then compared by their text, so
+     * {@code assertJson("limit", 10)} matches {@code "limit": 10} (and {@code 10.0} matches
+     * {@code 10.0}), but not {@code "limit": "10"}.
      *
      * @param path     the path of the value
      * @param expected the expected value
@@ -476,7 +512,15 @@ public final class CapturedRequest {
             return this;
         }
         assertTrue("'" + path + "' should be a primitive in " + body, element.isJsonPrimitive());
-        assertEquals("'" + path + "' in JSON body of " + this, String.valueOf(expected), element.getAsString());
+        JsonPrimitive primitive = element.getAsJsonPrimitive();
+        if (expected instanceof Number) {
+            assertTrue("'" + path + "' should be a JSON number in " + body, primitive.isNumber());
+        } else if (expected instanceof Boolean) {
+            assertTrue("'" + path + "' should be a JSON boolean in " + body, primitive.isBoolean());
+        } else {
+            assertTrue("'" + path + "' should be a JSON string in " + body, primitive.isString());
+        }
+        assertEquals("'" + path + "' in JSON body of " + this, String.valueOf(expected), primitive.getAsString());
         return this;
     }
 
@@ -521,6 +565,7 @@ public final class CapturedRequest {
     /** @return {@code METHOD url}, with the {@code api_key} value masked */
     @Override
     public String toString() {
-        return (method + " " + uri).replace(MockHttp.API_KEY, "<api_key>");
+        return API_KEY_VALUE.matcher(method + " " + uri).replaceAll("$1<api_key>")
+                .replace(MockHttp.API_KEY, "<api_key>");
     }
 }

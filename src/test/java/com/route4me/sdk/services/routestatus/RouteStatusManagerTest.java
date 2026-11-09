@@ -4,6 +4,8 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
+
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -33,10 +35,24 @@ public class RouteStatusManagerTest {
 
         RouteStatusResponse status = manager.getRouteStatus("ROUTE-A1");
 
-        http.request().assertEndpoint("GET", HOST, STATUS_EP + "/ROUTE-A1").assertApiKeyInQuery().assertNoBody();
+        http.request().assertEndpoint("GET", HOST, STATUS_EP + "/ROUTE-A1").assertApiKeyAsBearer().assertNoBody();
         assertEquals("started", status.getStatus());
         assertEquals(Long.valueOf(1761040000L), status.getStartedAt());
         assertEquals(40.5, status.getLatitude(), 0.0);
+    }
+
+    @Test
+    public void getRouteStatusReadsTheTimeOfEachChange() throws Exception {
+        RouteStatusManager manager = manager();
+        http.respond(200, json("{'route_id':'ROUTE-A1','status':'completed','planned_at':1761030000,"
+                + "'started_at':1761040000,'paused_at':1761041000,'resumed_at':1761042000,'completed_at':1761050000}"));
+
+        RouteStatusResponse status = manager.getRouteStatus("ROUTE-A1");
+
+        assertEquals(Long.valueOf(1761030000L), status.getPlannedAt());
+        assertEquals(Long.valueOf(1761041000L), status.getPausedAt());
+        assertEquals(Long.valueOf(1761042000L), status.getResumedAt());
+        assertEquals(Long.valueOf(1761050000L), status.getCompletedAt());
     }
 
     @Test
@@ -55,7 +71,72 @@ public class RouteStatusManagerTest {
                 .assertJson("status", "started")
                 .assertJson("lat", 40.5)
                 .assertJson("lng", -74.5)
-                .assertJson("event_timestamp", 1761040000L);
+                .assertJson("event_timestamp", 1761040000L)
+                .assertNoQuery("device_id");
+    }
+
+    @Test
+    public void updateRouteStatusSendsTheDeviceAndLeavesOutAnUnknownLocation() throws Exception {
+        RouteStatusManager manager = manager();
+        http.respond(200, ROUTE_STATUS);
+        RouteStatusRequest request = new RouteStatusRequest();
+        request.setStatus("paused");
+        request.setReason("Traffic jam");
+        request.setReasonCode("TRAFFIC");
+
+        manager.updateRouteStatus("ROUTE-A1", request, "device-123");
+
+        http.request().assertEndpoint("POST", HOST, STATUS_EP + "/ROUTE-A1")
+                .assertQuery("device_id", "device-123")
+                .assertJson("status", "paused")
+                .assertJson("reason", "Traffic jam")
+                .assertJson("reason_code", "TRAFFIC")
+                .assertJsonLacks("lat", "lng", "event_timestamp");
+    }
+
+    @Test
+    public void requiredValuesAreCheckedBeforeSending() {
+        final RouteStatusManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteStatusAsPlanned(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteStatusAsPlanned(new String[0]));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.setRouteStopStatus(null, "completed"));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.setRouteStopStatus(new long[0], "completed"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.setRouteStopStatus(new long[] {5002}, null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.setRouteStopStatus(new long[] {5002}, ""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteStatus("ROUTE-1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteStatus("ROUTE-1", null, "DEV-1"));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void emptyRouteIdsAreRejectedBeforeSending() {
+        final RouteStatusManager manager = manager();
+
+        for (final String id : Arrays.asList(null, "")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteStatus(id));
+            http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.updateRouteStatus(id, new RouteStatusRequest()));
+            http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.getRouteStatusHistory(id, null, null, null));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.rollbackRouteStatus(id));
+        }
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void routeIdsWithASlashAreRefused() throws Exception {
+        final RouteStatusManager manager = manager();
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateRouteStatus("../secret", new RouteStatusRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.rollbackRouteStatus("..\\secret"));
+        http.assertNoRequests();
+        http.respondToAll(200, ROUTE_STATUS);
+
+        manager.updateRouteStatus("a b", new RouteStatusRequest());
+
+        assertEquals(STATUS_EP + "/a%20b", http.request().getUri().getRawPath());
     }
 
     @Test

@@ -4,11 +4,13 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.util.Arrays;
 import java.util.Collections;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -42,9 +44,17 @@ public class SchedulesManagerTest {
         schedule.setTimezone("America/New_York");
         schedule.setAdvanceInterval(7);
         schedule.setAdvanceScheduleIntervalDays(14);
-        schedule.setScheduleBlacklist(Collections.singletonList("2026-12-25"));
+        schedule.setScheduleBlacklist(
+                Collections.singletonList(new ScheduleBlacklistItem(true, "2026-12-25", "2026-12-26")));
         schedule.setScheduleData(Collections.singletonMap("mode", "weekly"));
         return schedule;
+    }
+
+    /** Builds a sample replacement schedule with fake data. */
+    private static ReplaceRouteScheduleRequest replacement() {
+        ReplaceRouteScheduleRequest request = new ReplaceRouteScheduleRequest();
+        request.setScheduleData(Collections.singletonList(Collections.singletonMap("mode", "daily")));
+        return request;
     }
 
     /** Builds a sample route schedule with fake data. */
@@ -66,7 +76,7 @@ public class SchedulesManagerTest {
 
         ScheduleList schedules = manager.getSchedules();
 
-        http.request().assertEndpoint("GET", HOST, BASE + "/schedules").assertApiKeyInQuery().assertNoBody();
+        http.request().assertEndpoint("GET", HOST, BASE + "/schedules").assertApiKeyAsBearer().assertNoBody();
         assertEquals("Weekdays", schedules.getData().get(0).getName());
         assertEquals(Integer.valueOf(7), schedules.getData().get(0).getAdvanceInterval());
     }
@@ -99,10 +109,26 @@ public class SchedulesManagerTest {
                 .assertJson("timezone", "America/New_York")
                 .assertJson("advance_interval", 7)
                 .assertJson("advance_schedule_interval_days", 14)
-                .assertJson("schedule_blacklist[0]", "2026-12-25")
+                .assertJson("schedule_blacklist[0].enabled", true)
+                .assertJson("schedule_blacklist[0].start", "2026-12-25")
+                .assertJson("schedule_blacklist[0].end", "2026-12-26")
                 .assertJson("schedule.mode", "weekly");
         http.request(1).assertEndpoint("PUT", HOST, BASE + "/schedules/SCH-1").assertJson("name", "Weekdays");
         assertEquals("SCH-1", created.getData().get(0).getScheduleUid());
+    }
+
+    @Test
+    public void scheduleBlacklistParsesAsPeriods() throws Exception {
+        SchedulesManager manager = manager();
+        http.respond(200, json("{'data':[{'schedule_uid':'SCH-1','schedule_blacklist':"
+                + "[{'enabled':true,'start':'2026-12-24','end':'2026-12-26'}]}]}"));
+
+        ScheduleList schedules = manager.getSchedule("SCH-1");
+
+        ScheduleBlacklistItem period = schedules.getData().get(0).getScheduleBlacklist().get(0);
+        assertTrue(period.getEnabled());
+        assertEquals("2026-12-24", period.getStart());
+        assertEquals("2026-12-26", period.getEnd());
     }
 
     @Test
@@ -117,7 +143,7 @@ public class SchedulesManagerTest {
         http.request(0).assertEndpoint("GET", HOST, BASE + "/schedules/SCH-1");
         http.request(1).assertEndpoint("DELETE", HOST, BASE + "/schedules/SCH-1").assertQuery("with-routes", "1")
                 .assertNoBody();
-        http.request(2).assertEndpoint("DELETE", HOST, BASE + "/schedules/SCH-1").assertNoQuery("with-routes");
+        http.request(2).assertEndpoint("DELETE", HOST, BASE + "/schedules/SCH-1").assertQuery("with-routes", "0");
     }
 
     // ------------------------------------------------------------------ route schedules
@@ -173,11 +199,24 @@ public class SchedulesManagerTest {
         http.respondToAll(200, STATUS_TRUE);
 
         StatusResponse deleted = manager.deleteRouteSchedule("ROUTE-A1");
-        manager.deleteRouteScheduleItems("ROUTE-A1");
+        DeleteRouteScheduleItemsResponse items = manager.deleteRouteScheduleItems("ROUTE-A1");
 
         http.request(0).assertEndpoint("DELETE", HOST, BASE + "/route-schedules/ROUTE-A1").assertNoBody();
-        http.request(1).assertEndpoint("DELETE", HOST, BASE + "/route-schedules/ROUTE-A1/items");
+        http.request(1).assertEndpoint("DELETE", HOST, BASE + "/route-schedules/ROUTE-A1/items").assertNoBody();
         assertTrue(deleted.getStatus());
+        assertTrue(items.getStatus());
+        assertNull(items.getData());
+    }
+
+    @Test
+    public void deleteRouteScheduleItemsReadsTheListTheSpecAnswers() throws Exception {
+        SchedulesManager manager = manager();
+        http.respond(200, ROUTE_SCHEDULE_LIST);
+
+        DeleteRouteScheduleItemsResponse items = manager.deleteRouteScheduleItems("ROUTE-A1");
+
+        assertNull(items.getStatus());
+        assertEquals("SCH-1", items.getData().get(0).getScheduleUid());
     }
 
     @Test
@@ -204,13 +243,22 @@ public class SchedulesManagerTest {
         request.setName("Weekends");
         request.setMemberId(1001L);
         request.setTimezone("UTC");
+        request.setScheduleBlacklist(
+                Collections.singletonList(new ScheduleBlacklistItem(true, "2026-12-24", "2026-12-26")));
+        request.setScheduleData(Collections.singletonList(Collections.singletonMap("mode", "daily")));
+        request.setSync(false);
 
         manager.replaceRouteSchedule("ROUTE-A1", request);
 
         http.request().assertEndpoint("PUT", HOST, BASE + "/route-schedules/replace/ROUTE-A1")
                 .assertJson("schedule_uid", "SCH-2")
                 .assertJson("name", "Weekends")
-                .assertJson("member_id", 1001);
+                .assertJson("member_id", 1001)
+                .assertJson("schedule_blacklist[0].enabled", true)
+                .assertJson("schedule_blacklist[0].start", "2026-12-24")
+                .assertJson("schedule_blacklist[0].end", "2026-12-26")
+                .assertJson("schedule[0].mode", "daily")
+                .assertJson("sync", false);
     }
 
     // ------------------------------------------------------------------ master and scheduled routes
@@ -225,13 +273,19 @@ public class SchedulesManagerTest {
         request.setName("Weekdays");
         request.setTimezone("UTC");
         request.setSync(true);
+        request.setScheduleData(Collections.singletonList(Collections.singletonMap("mode", "weekly")));
+        request.setScheduleBlacklist(
+                Collections.singletonList(new ScheduleBlacklistItem(false, "2026-11-26", "2026-11-27")));
 
         CreateMasterRouteResponse response = manager.createMasterRoute(request);
 
         http.request().assertEndpoint("POST", HOST, BASE + "/master-routes")
                 .assertJson("route_id", "ROUTE-A1")
                 .assertJson("route_name", "Master run")
-                .assertJson("sync", true);
+                .assertJson("sync", true)
+                .assertJson("schedule_blacklist[0].enabled", false)
+                .assertJson("schedule_blacklist[0].start", "2026-11-26")
+                .assertJson("schedule_blacklist[0].end", "2026-11-27");
         assertEquals("ROUTE-M1", response.getData().getRouteId());
     }
 
@@ -255,6 +309,122 @@ public class SchedulesManagerTest {
                 .assertJson("route_date", "2026-10-22");
         assertTrue(copied.getStatus());
         assertEquals("ROUTE-C1", copies.getScheduledRoutes().get(0).getChildRouteId());
+    }
+
+    // ------------------------------------------------------------------ schedule calendar (V4)
+
+    @Test
+    public void getScheduleCalendarSendsTheV4QueryWithFlagsAsOneOrZero() throws Exception {
+        SchedulesManager manager = manager();
+        http.respondToAll(200, json("{'address_book':{'2026-10-22':3},'orders':{'2026-10-22':5},"
+                + "'routes_count':{'2026-10-22':2}}"));
+        ScheduleCalendarRequest request = new ScheduleCalendarRequest();
+        request.setDateFromString("2026-10-20");
+        request.setDateToString("2026-10-26");
+        request.setMemberId(1001L);
+        request.setTimezoneOffsetMinutes(-240);
+        request.setOrders(true);
+        request.setAddressBook(false);
+        request.setRoutesCount(true);
+
+        ScheduleCalendarResponse calendar = manager.getScheduleCalendar(request);
+        manager.getScheduleCalendar(new ScheduleCalendarRequest());
+
+        http.request(0).assertEndpoint("GET", "api.route4me.com", "/api/schedule_calendar_data.php")
+                .assertApiKeyInQuery()
+                .assertQuery("date_from_string", "2026-10-20")
+                .assertQuery("date_to_string", "2026-10-26")
+                .assertQuery("member_id", "1001")
+                .assertQuery("timezone_offset_minutes", "-240")
+                .assertQuery("orders", "1")
+                .assertQuery("ab", "0")
+                .assertQuery("routes_count", "1")
+                .assertNoBody();
+        http.request(1).assertNoQuery("date_from_string").assertNoQuery("orders").assertNoQuery("ab");
+        assertEquals(Integer.valueOf(3), calendar.getAddressBook().get("2026-10-22"));
+        assertEquals(Integer.valueOf(5), calendar.getOrders().get("2026-10-22"));
+        assertEquals(Integer.valueOf(2), calendar.getRoutesCount().get("2026-10-22"));
+    }
+
+    @Test
+    public void requiredFieldsAreCheckedBeforeSending() {
+        final SchedulesManager manager = manager();
+        final Schedule noTimezone = schedule();
+        noTimezone.setTimezone(null);
+        final Schedule noRules = schedule();
+        noRules.setScheduleData(null);
+        final RouteSchedule noSchedule = routeSchedule();
+        noSchedule.setScheduleUid(null);
+        final CreateMasterRouteRequest noRoute = new CreateMasterRouteRequest();
+        noRoute.setScheduleData(Collections.singletonList(Collections.singletonMap("mode", "daily")));
+        final CreateMasterRouteRequest noMasterRules = new CreateMasterRouteRequest();
+        noMasterRules.setRouteId("ROUTE-A1");
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createSchedule(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createSchedule(noTimezone));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createSchedule(noRules));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createRouteSchedule(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createRouteSchedule(noSchedule));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createMasterRoute(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createMasterRoute(noRoute));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createMasterRoute(noMasterRules));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.replaceRouteSchedule("ROUTE-A1", new ReplaceRouteScheduleRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.replaceRouteSchedule("ROUTE-A1", null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.getRouteSchedulePreview("ROUTE-A1", null, "2026-10-31"));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.getRouteSchedulePreview("ROUTE-A1", "2026-10-01", ""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteScheduleCopies(null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.getRouteScheduleCopies(new GetRouteScheduleCopiesRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateSchedule("SCH-1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteSchedule("ROUTE-A1", null));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void emptyPathIdsAreRejectedBeforeSending() {
+        final SchedulesManager manager = manager();
+
+        for (final String id : Arrays.asList(null, "")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getSchedule(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateSchedule(id, schedule()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteSchedule(id, false));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteSchedule(id));
+            http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.updateRouteSchedule(id, routeSchedule()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRouteSchedule(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRouteScheduleItems(id));
+            http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.getRouteSchedulePreview(id, "2026-10-01", "2026-10-31"));
+            http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.replaceRouteSchedule(id, new ReplaceRouteScheduleRequest()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.isRouteScheduleCopied(id));
+        }
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void pathIdsWithASlashAreRefused() throws Exception {
+        final SchedulesManager manager = manager();
+
+        for (final String id : Arrays.asList("../secret", "..\\secret")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateSchedule(id, schedule()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteSchedule(id, false));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteSchedule(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteSchedule(id, routeSchedule()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRouteSchedule(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.replaceRouteSchedule(id, replacement()));
+        }
+        http.assertNoRequests();
+
+        http.respondToAll(200, STATUS_TRUE);
+        manager.updateSchedule("a b", schedule());
+        manager.replaceRouteSchedule("a?b", replacement());
+
+        assertEquals(BASE + "/schedules/a%20b", http.request(0).getUri().getRawPath());
+        assertEquals(BASE + "/route-schedules/replace/a%3Fb", http.request(1).getUri().getRawPath());
     }
 
     @Test

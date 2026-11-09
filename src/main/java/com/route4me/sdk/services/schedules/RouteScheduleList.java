@@ -5,8 +5,10 @@ import lombok.Data;
 
 import java.util.List;
 
+/** A list of route schedules, as the API returns it. */
 @Data
 public class RouteScheduleList {
+    /** The route schedules ({@code data}). */
     @SerializedName("data")
     private List<RouteSchedule> data;
 }
