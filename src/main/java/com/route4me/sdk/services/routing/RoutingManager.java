@@ -268,9 +268,9 @@ public class RoutingManager extends Manager {
 
     /**
      * Adds depots to a hybrid optimization, or replaces its depots: {@code POST
-     * https://api.route4me.com/api/change_hybrid_optimization_depot.php}, with {@code optimization_problem_id},
-     * {@code delete_old_depots} and {@code new_depots} as the JSON body. A {@code null} argument is left out of the
-     * body.
+     * https://api.route4me.com/api/change_hybrid_optimization_depot.php?optimization_problem_id=...}, with {@code
+     * optimization_problem_id}, {@code delete_old_depots} and {@code new_depots} as the JSON body. The ID goes in both
+     * the query and the body, as the PHP SDK sends it. A {@code null} argument is left out of the query and the body.
      *
      * @param optimizationProblemId the ID of the hybrid optimization, from
      *     {@link #getHybridOptimization(String, Integer)} ({@code optimization_problem_id})
@@ -282,6 +282,7 @@ public class RoutingManager extends Manager {
     public StatusResponse addDepotsToHybridOptimization(String optimizationProblemId, Boolean deleteOldDepots,
             List<Address> newDepots) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(HYBRID_DEPOTS_EP);
+        addParameter(builder, "optimization_problem_id", optimizationProblemId);
         HybridDepots body = new HybridDepots(optimizationProblemId, deleteOldDepots, newDepots);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(body), StatusResponse.class);
     }

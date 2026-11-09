@@ -344,6 +344,7 @@ public class RoutingManagerTest {
 
         http.request(0).assertEndpoint("POST", API, "/api/change_hybrid_optimization_depot.php")
                 .assertApiKeyInQuery()
+                .assertQuery("optimization_problem_id", "OPT-1")
                 .assertContentType("application/json")
                 .assertJson("optimization_problem_id", "OPT-1")
                 .assertJson("delete_old_depots", true)
@@ -351,6 +352,16 @@ public class RoutingManagerTest {
                 .assertJson("new_depots[0].is_depot", true);
         http.request(1).assertJsonLacks("delete_old_depots");
         assertTrue(result.getStatus());
+    }
+
+    @Test
+    public void addDepotsToHybridOptimizationLeavesANullIdOutOfTheQuery() throws Exception {
+        RoutingManager manager = manager();
+        http.respond(200, json("{'status':true}"));
+
+        manager.addDepotsToHybridOptimization(null, true, Collections.<Address>emptyList());
+
+        http.request().assertNoQuery("optimization_problem_id").assertJsonLacks("optimization_problem_id");
     }
 
     @Test
