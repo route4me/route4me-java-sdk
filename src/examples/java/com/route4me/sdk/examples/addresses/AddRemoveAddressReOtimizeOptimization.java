@@ -44,8 +44,7 @@ public class AddRemoveAddressReOtimizeOptimization {
         try {
             optimizationResponse = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + optimizationResponse.getOptimizationProblemId());
-            System.out.println("State:" + (optimizationResponse.getState() == null ? "not returned"
-                    : Constants.OptimizationState.get(optimizationResponse.getState().intValue())));
+            printState(optimizationResponse);
             if (optimizationResponse.getAddresses() != null) {
                 for (Address address : optimizationResponse.getAddresses()) {
                     System.out.println(address.getAddress());
@@ -80,8 +79,7 @@ public class AddRemoveAddressReOtimizeOptimization {
         try {
             optimizationUpdated = manager.reOptimization(optParameters, optimizationResponse);
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
-            System.out.println("State:" + (optimizationUpdated.getState() == null ? "not returned"
-                    : Constants.OptimizationState.get(optimizationUpdated.getState().intValue())));
+            printState(optimizationUpdated);
             if (optimizationUpdated.getAddresses() != null) {
                 for (Address address : optimizationUpdated.getAddresses()) {
                     System.out.println(address.getAddress());
@@ -117,8 +115,7 @@ public class AddRemoveAddressReOtimizeOptimization {
         try {
             optimizationUpdated = manager.reOptimizationByOptimizationID(optParameters);
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
-            System.out.println("State:" + (optimizationUpdated.getState() == null ? "not returned"
-                    : Constants.OptimizationState.get(optimizationUpdated.getState().intValue())));
+            printState(optimizationUpdated);
             if (optimizationUpdated.getAddresses() != null) {
                 for (Address address : optimizationUpdated.getAddresses()) {
                     System.out.println(address.getAddress());
@@ -159,8 +156,7 @@ public class AddRemoveAddressReOtimizeOptimization {
         try {
             optimizationUpdated = manager.reOptimization(optParameters, optimizationResponse);
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
-            System.out.println("State:" + (optimizationUpdated.getState() == null ? "not returned"
-                    : Constants.OptimizationState.get(optimizationUpdated.getState().intValue())));
+            printState(optimizationUpdated);
             if (optimizationUpdated.getAddresses() != null) {
                 for (Address address : optimizationUpdated.getAddresses()) {
                     System.out.println(address.getAddress());
@@ -191,6 +187,13 @@ public class AddRemoveAddressReOtimizeOptimization {
         parameters.setDeviceType(Constants.DeviceType.WEB.toString());
         parameters.setTravelMode(Constants.TravelMode.DRIVING.toString());
         return parameters;
+    }
+
+    /** Prints the state of an optimization, or that the reply had none. */
+    private static void printState(DataObject optimization) {
+        Number state = optimization.getState();
+        System.out.println("State:" + (state == null ? "not returned"
+                : Constants.OptimizationState.get(state.intValue())));
     }
 
 }
