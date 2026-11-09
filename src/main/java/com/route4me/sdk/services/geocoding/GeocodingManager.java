@@ -200,7 +200,8 @@ public class GeocodingManager extends Manager {
                 List<Future<Address>> futures;
                 if (options.getMaxTimeout() > 0) {
                     long rounds = (tasks.size() + threads - 1) / threads;
-                    futures = executor.invokeAll(tasks, options.getMaxTimeout() * rounds, TimeUnit.MILLISECONDS);
+                    futures = executor.invokeAll(tasks, waitBudget(options.getMaxTimeout(), rounds),
+                            TimeUnit.MILLISECONDS);
                 } else {
                     futures = executor.invokeAll(tasks);
                 }
@@ -221,6 +222,18 @@ public class GeocodingManager extends Manager {
             geocodedAddresses.add(results[i] != null ? results[i] : unmatched(addresses.get(i)));
         }
         return geocodedAddresses;
+    }
+
+    /**
+     * Returns how long a bulk run may take: {@code maxTimeout} per round, or {@link Long#MAX_VALUE} when the product
+     * does not fit in a {@code long}, so that a very large timeout never wraps to a negative one.
+     *
+     * @param maxTimeout the time per round, in milliseconds; more than 0
+     * @param rounds     the number of rounds; at least 1
+     * @return the time for every round, in milliseconds
+     */
+    static long waitBudget(long maxTimeout, long rounds) {
+        return maxTimeout > Long.MAX_VALUE / rounds ? Long.MAX_VALUE : maxTimeout * rounds;
     }
 
     /** Returns the address a finished task produced, or the unmatched default when it failed. */
@@ -289,8 +302,9 @@ public class GeocodingManager extends Manager {
      * {@code https://api.route4me.com/api/address.php?address=...}), retrying on errors.
      *
      * <p>A response that says the address was not found ({@code {"status": ..., "results": ...}}) ends the attempts at
-     * once. Attempts are 200 ms apart. If the thread is interrupted while it waits, it gives up and keeps its
-     * interrupt flag set.
+     * once, and so does a client error (status 400 to 499, such as a bad request or a refused API key), which a
+     * retry cannot fix; a timeout (408) or a rate limit (429) is retried. Attempts are 200 ms apart. If the thread is
+     * interrupted while it waits, it gives up and keeps its interrupt flag set.
      *
      * @param builder    the request URL; it is not changed, so it can be sent again
      * @param clazz      the response type, such as {@code Geocodings[].class}
@@ -309,6 +323,11 @@ public class GeocodingManager extends Manager {
                     logger.debug("Address not found: {}", Sanitizer.forLog(ex.getResponseBody()));
                     return null;
                 }
+                if (!isRetryable(ex)) {
+                    logger.error("Geocoding failed with status {}, which a retry cannot fix: {}",
+                            ex.getStatusCode(), Sanitizer.forLog(ex.getMessage()));
+                    return null;
+                }
                 if (attempt == attempts) {
                     logger.error("Geocoding failed after {} attempt(s): {}", attempts,
                             Sanitizer.forLog(ex.getMessage()));
@@ -324,6 +343,15 @@ public class GeocodingManager extends Manager {
             }
         }
         return null;
+    }
+
+    /**
+     * Tells whether a failed request may succeed when sent again: no response, a server error, a timeout (408), a
+     * rate limit (429) or an answer that could not be read. Other client errors (400 to 499) cannot.
+     */
+    private static boolean isRetryable(APIException ex) {
+        int status = ex.getStatusCode();
+        return status < 400 || status >= 500 || status == 408 || status == 429;
     }
 
     /** Tells whether a failed request got the geocoder's "address not found" answer. */

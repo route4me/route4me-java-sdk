@@ -14,6 +14,7 @@ import org.junit.Test;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -152,6 +153,37 @@ public class GeocodingManagerTest {
         assertNull(manager.forwardGeocode(addressBuilder("2 Nowhere Rd"), Geocodings[].class, 3));
 
         assertEquals("no retry after a not-found answer", 2, http.requestCount());
+    }
+
+    @Test
+    public void forwardGeocodeDoesNotRetryAClientError() {
+        GeocodingManager manager = manager();
+        int[] statuses = {400, 401, 403, 404, 422};
+        for (int status : statuses) {
+            http.respond(status, json("{'errors':['refused']}"));
+        }
+
+        for (int status : statuses) {
+            assertNull(status + " is not retried",
+                    manager.forwardGeocode(addressBuilder("100 Example St"), Geocodings[].class, 3));
+        }
+
+        assertEquals("one attempt per client error", statuses.length, http.requestCount());
+    }
+
+    @Test
+    public void forwardGeocodeRetriesTransientFailures() {
+        GeocodingManager manager = manager();
+        http.failNextRequest(new IOException("Connection reset"))
+                .respond(408, json("{'errors':['timeout']}"))
+                .respond(429, json("{'errors':['too many requests']}"))
+                .respond(503, json("{'errors':['unavailable']}"))
+                .respond(200, DETAILED_RESULT);
+
+        Geocodings[] matches = manager.forwardGeocode(addressBuilder("100 Example St"), Geocodings[].class, 5);
+
+        assertNotNull(matches);
+        assertEquals("high", matches[0].getConfidence());
     }
 
     @Test
@@ -294,10 +326,14 @@ public class GeocodingManagerTest {
         ThreadMXBean threads = ManagementFactory.getThreadMXBean();
         Assume.assumeTrue("thread CPU time is not available", threads.isCurrentThreadCpuTimeSupported());
         GeocodingManager manager = manager();
-        http.respondToAll(200, DETAILED_RESULT).delayResponses(600);
+        http.respondToAll(200, DETAILED_RESULT);
         GeocoderOptions options = new GeocoderOptions(1);
         options.setMaxRetries(1);
         options.setMaxTimeout(5000);
+        // A first, fast run loads and compiles the code on this thread: that CPU time is
+        // not a spin, and on a slow runner it could be a large part of a short wait.
+        manager.bulkGeocoder(Collections.singletonList("100 Example St"), options);
+        http.delayResponses(600);
 
         long wallStart = System.nanoTime();
         long cpuStart = threads.getCurrentThreadCpuTime();
@@ -305,8 +341,32 @@ public class GeocodingManagerTest {
         long cpu = threads.getCurrentThreadCpuTime() - cpuStart;
         long wall = System.nanoTime() - wallStart;
 
+        // A blocked thread uses almost no CPU, however loaded the runner is (load stretches the
+        // wall time, not the CPU time of a parked thread). A thread that polls the futures in a
+        // loop uses about as much CPU as wall time, or at least half of it on a busy runner.
+        assertTrue("waited only " + wall / 1_000_000 + " ms", wall >= 500_000_000L);
         assertTrue("the calling thread used " + cpu / 1_000_000 + " ms of CPU in " + wall / 1_000_000
-                + " ms; it should block, not spin", cpu < wall / 4);
+                + " ms; it should block, not spin", cpu < wall / 2);
+    }
+
+    @Test
+    public void bulkGeocoderTreatsAHugeTimeoutAsNoLimit() {
+        GeocodingManager manager = manager();
+        http.respondToAll(200, DETAILED_RESULT);
+        GeocoderOptions options = new GeocoderOptions(1);
+        options.setMaxTimeout(Long.MAX_VALUE);
+
+        // Two rounds of one thread: Long.MAX_VALUE * 2 wraps to -2 without the cap.
+        List<Address> results = manager.bulkGeocoder(Arrays.asList("100 Example St", "200 Sample Ave"), options);
+
+        assertEquals(2, http.requestCount());
+        for (Address result : results) {
+            assertEquals("a timeout times 2 rounds must not wrap to a negative wait", 40.1, result.getLatitude(), 0.0);
+        }
+        assertEquals(Long.MAX_VALUE, GeocodingManager.waitBudget(Long.MAX_VALUE, 3));
+        assertEquals(Long.MAX_VALUE, GeocodingManager.waitBudget(Long.MAX_VALUE / 2 + 1, 2));
+        assertEquals(Long.MAX_VALUE - 1, GeocodingManager.waitBudget(Long.MAX_VALUE / 2, 2));
+        assertEquals(6000L, GeocodingManager.waitBudget(2000, 3));
     }
 
     @Test
