@@ -24,11 +24,18 @@ import java.util.logging.Logger;
 
 /**
  * Reads the address book contacts of a territory with {@link TerritoriesManager#getAddressesInTerritory} and
- * optimizes routes from one depot for several drivers to them, with {@link RoutingManager#runOptimization}.
+ * optimizes routes from one depot for several drivers to them, with {@link RoutingManager#runOptimization}. Set
+ * {@code TERRITORY_ID} to one of your territories.
  */
 public class SingleDepotMultipleDriverByTerritoryAddressesIDs {
 
     public static void main(String[] args) {
+        String territoryId = System.getenv("TERRITORY_ID");
+        if (territoryId == null || territoryId.isEmpty()) {
+            System.err.println("Set TERRITORY_ID to the ID of one of your territories; this example optimizes"
+                    + " routes to its address book contacts.");
+            return;
+        }
         try {
             String apiKey = System.getenv("R4M_API_KEY");
             RoutingManager manager = new RoutingManager(apiKey, true);
@@ -48,7 +55,7 @@ public class SingleDepotMultipleDriverByTerritoryAddressesIDs {
 
             List<Address> addresses = new ArrayList<>();
 
-            Territory territory = territoriesManager.getAddressesInTerritory("04F6ADD89DB67371E9008A6688B750C0");
+            Territory territory = territoriesManager.getAddressesInTerritory(territoryId);
             for (Integer contactId:  territory.getAddresses()) {
                 Address address = new Address();
                 address.setContactId(contactId);

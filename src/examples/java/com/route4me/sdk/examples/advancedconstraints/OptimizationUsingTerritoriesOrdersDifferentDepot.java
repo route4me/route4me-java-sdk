@@ -27,10 +27,18 @@ import java.util.logging.Logger;
 /**
  * Reads the orders of three territories with {@link TerritoriesManager#getOrdersInTerritory} and optimizes
  * routes for one driver group per territory, each from its own depot, with {@link RoutingManager#runOptimization}.
+ * Set {@code TERRITORY_IDS} to the comma-separated IDs of three of your territories.
  */
 public class OptimizationUsingTerritoriesOrdersDifferentDepot {
 
     public static void main(String[] args) {
+        String territoryIds = System.getenv("TERRITORY_IDS");
+        String[] ids = territoryIds == null ? new String[0] : territoryIds.trim().split("\\s*,\\s*");
+        if (ids.length != 3 || ids[0].isEmpty() || ids[1].isEmpty() || ids[2].isEmpty()) {
+            System.err.println("Set TERRITORY_IDS to the comma-separated IDs of three of your territories; this"
+                    + " example optimizes routes to their orders.");
+            return;
+        }
         try {
             String apiKey = System.getenv("R4M_API_KEY");
             RoutingManager manager = new RoutingManager(apiKey, true);
@@ -55,9 +63,9 @@ public class OptimizationUsingTerritoriesOrdersDifferentDepot {
 
             // Territories
             // **********************
-            List<String> zone1 = Arrays.asList("477FF1EB618FDE5C1CA85292B2A6DE92");
-            List<String> zone2 = Arrays.asList("2A6E027E74A3623762BEA3D6E94B643E");
-            List<String> zone3 = Arrays.asList("C8B7DEFFC4C42AB7674EA27CBC607B3F");
+            List<String> zone1 = Arrays.asList(ids[0]);
+            List<String> zone2 = Arrays.asList(ids[1]);
+            List<String> zone3 = Arrays.asList(ids[2]);
 
             List<Address> addresses = new ArrayList<>();
 
