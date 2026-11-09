@@ -193,6 +193,16 @@ public class RequestGuardTest {
     }
 
     @Test
+    public void rejectsADotSegmentInPlaceOfAnId() throws IOException {
+        for (String segment : Arrays.asList("..", ".", "%2e%2e", "%2E", ".%2e")) {
+            List<String> problems = check(new HttpGet("https://wh.route4me.com/modules/api/v5.0/vehicles/" + segment));
+            assertEquals(segment + ": " + problems, 1, problems.size());
+            assertTrue(problems.get(0), problems.get(0).contains("is not a known endpoint"));
+        }
+        assertEquals("[]", check(new HttpGet("https://wh.route4me.com/modules/api/v5.0/vehicles/V..1")).toString());
+    }
+
+    @Test
     public void rejectsKeyInBody() throws IOException {
         HttpPost request = new HttpPost("https://api.route4me.com/api.v4/route.php");
         request.setEntity(new StringEntity("{\"key\":\"" + KEY + "\"}", "UTF-8"));

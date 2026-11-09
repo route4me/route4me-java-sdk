@@ -36,6 +36,16 @@ public class EndpointRegistryTest {
     }
 
     @Test
+    public void placeholderSegmentNeverMatchesADotSegment() {
+        for (String dots : new String[] {".", "..", "%2e", "%2E%2e", ".%2E", "%2e."}) {
+            assertFalse(dots, EndpointRegistry.pathMatches("/a/{}/c", "/a/" + dots + "/c"));
+        }
+        assertTrue(EndpointRegistry.pathMatches("/a/{}/c", "/a/.b/c"));
+        assertTrue(EndpointRegistry.pathMatches("/a/{}/c", "/a/.../c"));
+        assertTrue(EndpointRegistry.pathMatches("/a/{}/c", "/a/%2e%2fx/c"));
+    }
+
+    @Test
     public void anyMethodEntryMatchesEveryMethod() {
         for (String method : new String[] {"GET", "POST", "PUT", "DELETE"}) {
             assertNotNull(method, registry.findEndpoint(method, "api.route4me.com", "/api.v4/route.php"));
