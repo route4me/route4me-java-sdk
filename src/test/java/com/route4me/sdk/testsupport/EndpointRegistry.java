@@ -185,7 +185,9 @@ public final class EndpointRegistry {
      * never matches a dot segment ({@code .} or {@code ..}, also written {@code %2e}), which a
      * server or proxy would resolve to another endpoint, nor a segment with an encoded slash or
      * backslash ({@code %2F} or {@code %5C}, in any case), which some front ends decode before
-     * they resolve {@code ..}. {@code Manager.withPathSegments} refuses both before sending.
+     * they resolve {@code ..}, nor a segment with a {@code ;}, since some servers drop a path
+     * parameter before they resolve {@code ..}. {@code Manager.withPathSegments} refuses all of
+     * them before sending.
      *
      * @param pattern the registry path, such as {@code /modules/api/v5.0/vehicles/{}}
      * @param path    the raw request path, as sent (percent-encoding kept), without the query string
@@ -202,7 +204,8 @@ public final class EndpointRegistry {
         }
         for (int i = 0; i < expected.length; i++) {
             if (ANY_SEGMENT.equals(expected[i])) {
-                if (actual[i].isEmpty() || isDotSegment(actual[i]) || hasEncodedSeparator(actual[i])) {
+                if (actual[i].isEmpty() || isDotSegment(actual[i]) || hasEncodedSeparator(actual[i])
+                        || actual[i].indexOf(';') >= 0) {
                     return false;
                 }
             } else if (!expected[i].equals(actual[i])) {

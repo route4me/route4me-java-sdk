@@ -56,6 +56,14 @@ public class EndpointRegistryTest {
     }
 
     @Test
+    public void placeholderSegmentNeverMatchesAPathParameter() {
+        // Some servers drop ";params" before they resolve "..": /a/..;x would become /.
+        for (String segment : new String[] {"..;x", ".;", "..;", ";", "b;c"}) {
+            assertFalse(segment, EndpointRegistry.pathMatches("/a/{}/c", "/a/" + segment + "/c"));
+        }
+    }
+
+    @Test
     public void theV5HostHasNoCatchAllEntries() {
         // The URL shortener's /{short_link} and the route export paths under the spec's bare
         // https://wh.route4me.com/modules/ server matched almost any path on the V5 host.

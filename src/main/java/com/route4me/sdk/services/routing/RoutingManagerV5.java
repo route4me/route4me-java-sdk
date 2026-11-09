@@ -105,7 +105,7 @@ public class RoutingManagerV5 extends Manager {
      *     the default format
      * @return the exported route, as the text of the chosen format (CSV, JSON, XML or HTML)
      * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}
+     *     {@code /}, {@code \} or {@code ;}
      * @throws APIException if the request fails or the server answers with an error status
      */
     public String exportRoute(String routeId, RouteExportRequest request) throws APIException {

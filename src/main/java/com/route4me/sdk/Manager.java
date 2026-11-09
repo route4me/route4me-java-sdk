@@ -269,7 +269,7 @@ public abstract class Manager implements Closeable {
      * @param segments the segments to append after it, such as IDs; none leaves the endpoint as it is
      * @return a new builder
      * @throws IllegalArgumentException if a segment is {@code null}, empty, {@code .} or {@code ..}, or
-     *                                  contains {@code /} or {@code \}
+     *                                  contains {@code /}, {@code \} or {@code ;}
      */
     protected static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
@@ -284,10 +284,14 @@ public abstract class Manager implements Closeable {
      * <p>Each segment is percent-encoded as one segment, so that a space, {@code ?} or
      * {@code #} in it stays in the path. A segment that could leave its endpoint is refused
      * before any request is sent: one that is empty, {@code .} or {@code ..}, and one that
-     * contains {@code /} or {@code \}. Encoding a slash is not enough: some front ends decode
-     * {@code %2F} or {@code %5C} before they resolve {@code ..}, which would send a value such
-     * as {@code ../secret}, with the API key, to another endpoint. No Route4Me ID contains
-     * either character.
+     * contains {@code /}, {@code \} or {@code ;}. Encoding a slash is not enough: some front ends
+     * decode {@code %2F} or {@code %5C} before they resolve {@code ..}, which would send a value
+     * such as {@code ../secret}, with the API key, to another endpoint. A {@code ;} is sent as it
+     * is, and some servers and proxies drop a path parameter (from {@code ;} to the end of the
+     * segment) before they resolve {@code ..}, so {@code ..;x} would climb one level too. No
+     * Route4Me ID contains any of these characters. A {@code %} is encoded, so a value typed as
+     * {@code a%2Fb} is sent as {@code a%252Fb}: one segment, which a single decoding does not
+     * turn into a slash.
      *
      * @param builder  the builder to change
      * @param endpoint the endpoint path, such as {@code /modules/api/v5.0/vehicles}
@@ -295,7 +299,7 @@ public abstract class Manager implements Closeable {
      *                 {@link String#valueOf(Object)}; none leaves the endpoint as it is
      * @return {@code builder}
      * @throws IllegalArgumentException if a segment is {@code null}, empty, {@code .} or
-     *                                  {@code ..}, or contains {@code /} or {@code \}
+     *                                  {@code ..}, or contains {@code /}, {@code \} or {@code ;}
      */
     protected static URIBuilder withPathSegments(URIBuilder builder, String endpoint, Object... segments) {
         if (segments == null || segments.length == 0) {
@@ -310,7 +314,7 @@ public abstract class Manager implements Closeable {
         for (Object segment : segments) {
             String value = segment == null ? null : String.valueOf(segment);
             if (value == null || value.isEmpty() || ".".equals(value) || "..".equals(value)
-                    || value.indexOf('/') >= 0 || value.indexOf('\\') >= 0) {
+                    || value.indexOf('/') >= 0 || value.indexOf('\\') >= 0 || value.indexOf(';') >= 0) {
                 throw new IllegalArgumentException("Invalid value for a URL path segment: "
                         + (value == null ? "null" : "'" + Sanitizer.forLog(value, 100) + "'"));
             }

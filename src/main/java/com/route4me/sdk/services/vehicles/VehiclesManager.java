@@ -59,7 +59,7 @@ public class VehiclesManager extends Manager {
      * @param vehicleID the vehicle ID
      * @return the vehicle
      * @throws IllegalArgumentException if {@code vehicleID} is {@code null}, empty, {@code .} or {@code ..}, or
-     *     contains {@code /} or {@code \}; nothing is sent
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @deprecated the older vehicle API is obsolete: the C# SDK marks {@code GetVehicle} as {@code [Obsolete]}. Use
      *     {@link VehiclesManagerV5#getVehicleById(String)}. This method will be removed in the next major version.
@@ -76,7 +76,7 @@ public class VehiclesManager extends Manager {
      * @param vehicleID the vehicle ID
      * @return the deleted vehicle
      * @throws IllegalArgumentException if {@code vehicleID} is {@code null}, empty, {@code .} or {@code ..}, or
-     *     contains {@code /} or {@code \}; nothing is sent
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @deprecated the older vehicle API is obsolete: the C# SDK marks {@code DeleteVehicle} as {@code [Obsolete]}. Use
      *     {@link VehiclesManagerV5#deleteVehicle(String)}. This method will be removed in the next major version.
@@ -109,7 +109,7 @@ public class VehiclesManager extends Manager {
      * @param vehicle the vehicle, with its vehicle ID
      * @return the updated vehicle
      * @throws IllegalArgumentException if {@code vehicle} is {@code null}, or its vehicle ID is {@code null}, empty,
-     *     {@code .} or {@code ..}, or contains {@code /} or {@code \}; nothing is sent
+     *     {@code .} or {@code ..}, or contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @deprecated the older vehicle API is obsolete: the C# SDK marks {@code UpdateVehicle} as {@code [Obsolete]}.
      *     Use {@link VehiclesManagerV5#updateVehicle(String, VehicleV5)}. This method will be removed in the next major

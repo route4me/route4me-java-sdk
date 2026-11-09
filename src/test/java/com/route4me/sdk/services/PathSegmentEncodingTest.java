@@ -28,9 +28,9 @@ import static org.junit.Assert.assertTrue;
 
 /**
  * Checks that every manager that puts an ID into the URL path keeps it in one path segment:
- * an ID with a {@code /} or {@code \}, such as {@code ../secret}, is refused before anything is
- * sent, so it cannot send the request, with the API key, to another endpoint; other reserved
- * characters are percent-encoded.
+ * an ID with a {@code /}, {@code \} or {@code ;}, such as {@code ../secret} or {@code ..;x}, is
+ * refused before anything is sent, so it cannot send the request, with the API key, to another
+ * endpoint; other reserved characters are percent-encoded.
  */
 public class PathSegmentEncodingTest {
 
@@ -136,11 +136,27 @@ public class PathSegmentEncodingTest {
         request.assertNoQuery("c");
     }
 
+    /**
+     * A {@code %2F} typed as text is left alone: its {@code %} is encoded, so it is sent as
+     * {@code %252F}. A front end that decodes the path once reads the text {@code ..%2Fsecret}, one
+     * segment, not {@code ../secret}; only a front end that decodes twice would see a slash.
+     */
+    @Test
+    public void anEncodedSlashTypedAsTextIsSentAsOneHarmlessSegment() throws Exception {
+        final OrderManagerV5 orders = http.install(new OrderManagerV5(MockHttp.API_KEY));
+
+        CapturedRequest request = send(() -> orders.getOrder("..%2Fsecret"));
+
+        assertEquals(V5 + "/orders-platform/..%252Fsecret", request.getUri().getRawPath());
+        assertEquals(V5 + "/orders-platform/..%2Fsecret", request.getUri().getPath());
+    }
+
     @Test
     public void emptyDotAndSeparatorSegmentsAreRejectedBeforeSending() {
         final CustomerManager customers = http.install(new CustomerManager(MockHttp.API_KEY));
 
-        for (final String id : Arrays.asList(null, "", ".", "..", "/", "\\", "a/b", "a\\b", ESCAPE, BACKSLASH_ESCAPE)) {
+        for (final String id : Arrays.asList(null, "", ".", "..", "/", "\\", "a/b", "a\\b", ESCAPE, BACKSLASH_ESCAPE,
+                ";", "a;b", "..;x", ".;", "..;")) {
             http.expectThrows(IllegalArgumentException.class, () -> customers.getCustomerById(id));
         }
         http.assertNoRequests();

@@ -80,7 +80,7 @@ public class DriverReviewManager extends Manager {
      * @param ratingId the review ID
      * @return the review
      * @throws IllegalArgumentException if {@code ratingId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}; nothing is sent
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public DriverReviewResponse getDriverReviewById(String ratingId) throws APIException {
@@ -112,7 +112,7 @@ public class DriverReviewManager extends Manager {
      * @param review the new values of the review
      * @return the updated review
      * @throws IllegalArgumentException if {@code ratingId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}, or {@code review} is {@code null}; nothing is sent
+     *     {@code /}, {@code \} or {@code ;}, or {@code review} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public DriverReviewResponse updateDriverReview(String ratingId, DriverReview review) throws APIException {
@@ -130,7 +130,7 @@ public class DriverReviewManager extends Manager {
      *     {@code null} are not sent
      * @return the updated review
      * @throws IllegalArgumentException if {@code ratingId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}, or {@code review} is {@code null}
+     *     {@code /}, {@code \} or {@code ;}, or {@code review} is {@code null}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public DriverReviewResponse patchDriverReview(String ratingId, DriverReview review) throws APIException {

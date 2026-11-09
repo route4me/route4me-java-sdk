@@ -42,7 +42,7 @@ public class FacilityManager extends Manager {
      * @param facilityId the facility ID
      * @return the facility
      * @throws IllegalArgumentException if {@code facilityId} is {@code null}, empty, {@code .} or {@code ..}, or
-     *     contains {@code /} or {@code \}; nothing is sent
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public FacilityResource getFacility(String facilityId) throws APIException {
@@ -110,7 +110,7 @@ public class FacilityManager extends Manager {
      * @return the updated facility
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @throws IllegalArgumentException if the facility ID is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}, the request is {@code null} or a required field is missing
+     *     {@code /}, {@code \} or {@code ;}, the request is {@code null} or a required field is missing
      */
     public FacilityResource updateFacility(String facilityId, FacilityUpdateRequest request) throws APIException {
         URIBuilder builder = v5Builder(FACILITIES_EP, facilityId);
@@ -126,7 +126,7 @@ public class FacilityManager extends Manager {
      * @param facilityId the facility ID
      * @return the deleted facility, in an array, as the API returns it
      * @throws IllegalArgumentException if {@code facilityId} is {@code null}, empty, {@code .} or {@code ..}, or
-     *     contains {@code /} or {@code \}; nothing is sent
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public FacilityResource[] deleteFacility(String facilityId) throws APIException {

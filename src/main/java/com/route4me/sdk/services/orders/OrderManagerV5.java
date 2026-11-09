@@ -73,7 +73,7 @@ public class OrderManagerV5 extends Manager {
      * @param orderUuid the order UUID
      * @return the order
      * @throws IllegalArgumentException if {@code orderUuid} is {@code null}, empty, {@code .} or {@code ..}, or
-     *     contains {@code /} or {@code \}; nothing is sent
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OrderV5 getOrder(String orderUuid) throws APIException {
@@ -90,7 +90,7 @@ public class OrderManagerV5 extends Manager {
      * @return the updated order
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @throws IllegalArgumentException if {@code order} is {@code null}, or the UUID is {@code null}, empty, {@code .}
-     *     or {@code ..}, or contains {@code /} or {@code \}; nothing is sent
+     *     or {@code ..}, or contains {@code /}, {@code \} or {@code ;}; nothing is sent
      */
     public OrderV5 updateOrder(String orderUuid, OrderV5 order) throws APIException {
         requireFields(order);
@@ -104,7 +104,7 @@ public class OrderManagerV5 extends Manager {
      * @param orderUuid the order UUID
      * @return the status of the request
      * @throws IllegalArgumentException if {@code orderUuid} is {@code null}, empty, {@code .} or {@code ..}, or
-     *     contains {@code /} or {@code \}; nothing is sent
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public StatusResponse deleteOrder(String orderUuid) throws APIException {
@@ -286,7 +286,7 @@ public class OrderManagerV5 extends Manager {
      * @return the updated field
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @throws IllegalArgumentException if the UUID is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}, the request is {@code null} or a required field is missing
+     *     {@code /}, {@code \} or {@code ;}, the request is {@code null} or a required field is missing
      */
     public CustomUserFieldResponse updateCustomUserField(String fieldUuid, UpdateCustomUserFieldRequest request)
             throws APIException {
@@ -304,7 +304,7 @@ public class OrderManagerV5 extends Manager {
      * @param fieldUuid the field UUID
      * @return the deleted field
      * @throws IllegalArgumentException if {@code fieldUuid} is {@code null}, empty, {@code .} or {@code ..}, or
-     *     contains {@code /} or {@code \}; nothing is sent
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public CustomUserFieldResponse deleteCustomUserField(String fieldUuid) throws APIException {

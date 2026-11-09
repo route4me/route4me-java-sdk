@@ -42,7 +42,7 @@ public class RouteStatusManager extends Manager {
      * @param routeId the route ID
      * @return the status, with the time of each change
      * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}; nothing is sent
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteStatusResponse getRouteStatus(String routeId) throws APIException {
@@ -77,7 +77,7 @@ public class RouteStatusManager extends Manager {
      * @return the status of the route after the change
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}, or {@code request} is {@code null}; nothing is sent
+     *     {@code /}, {@code \} or {@code ;}, or {@code request} is {@code null}; nothing is sent
      */
     public RouteStatusResponse updateRouteStatus(String routeId, RouteStatusRequest request, String deviceId)
             throws APIException {
@@ -102,7 +102,7 @@ public class RouteStatusManager extends Manager {
      * @param end only changes at or before this Unix timestamp, in seconds ({@code end})
      * @return the status changes
      * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}; nothing is sent
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteStatusHistoryResponse getRouteStatusHistory(String routeId, String orderBy, Long start, Long end)
@@ -127,7 +127,7 @@ public class RouteStatusManager extends Manager {
      * @param routeId the route ID
      * @return the status of the route after the rollback
      * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}; nothing is sent
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteStatusResponse rollbackRouteStatus(String routeId) throws APIException {

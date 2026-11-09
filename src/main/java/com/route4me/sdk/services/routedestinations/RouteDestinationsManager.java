@@ -45,7 +45,7 @@ public class RouteDestinationsManager extends Manager {
      * @param id the route destination ID
      * @return the destination
      * @throws IllegalArgumentException if {@code id} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}; nothing is sent
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteDestinationResource getDestination(String id) throws APIException {
@@ -146,7 +146,7 @@ public class RouteDestinationsManager extends Manager {
      * @param orderUuid the order UUID
      * @return the destinations
      * @throws IllegalArgumentException if {@code orderUuid} is {@code null}, empty, {@code .} or {@code ..}, or
-     *     contains {@code /} or {@code \}; nothing is sent
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteDestinationsByOrderResponse getDestinationsByOrder(String orderUuid) throws APIException {

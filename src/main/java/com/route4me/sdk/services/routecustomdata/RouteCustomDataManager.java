@@ -47,7 +47,7 @@ public class RouteCustomDataManager extends Manager {
      * @param routeId the route ID
      * @return the key-value pairs
      * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}; nothing is sent
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public Map<String, String> getRouteCustomData(String routeId) throws APIException {
@@ -65,7 +65,7 @@ public class RouteCustomDataManager extends Manager {
      * @return the custom data of the route after the update
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @throws IllegalArgumentException if {@code customData} is {@code null}, or the route ID is {@code null}, empty,
-     *     {@code .} or {@code ..}, or contains {@code /} or {@code \}; nothing is sent
+     *     {@code .} or {@code ..}, or contains {@code /}, {@code \} or {@code ;}; nothing is sent
      */
     public Map<String, String> updateRouteCustomData(String routeId, Map<String, String> customData)
             throws APIException {

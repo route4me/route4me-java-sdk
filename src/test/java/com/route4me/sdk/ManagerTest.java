@@ -202,6 +202,17 @@ public class ManagerTest {
         http.assertNoRequests();
     }
 
+    /** Regression: {@code ..;x} went out unencoded, and servers that drop {@code ;params} read it as {@code ..}. */
+    @Test
+    public void v5BuilderRefusesASegmentWithASemicolon() {
+        for (String id : new String[] {"..;x", ".;", "..;", ";", "a;b", "V1;jsessionid=1"}) {
+            IllegalArgumentException error = http.expectThrows(IllegalArgumentException.class,
+                    () -> Manager.v5Builder(Manager.V5_BASE + "/vehicles", "V1", id));
+            assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid value for a URL path segment"));
+        }
+        http.assertNoRequests();
+    }
+
     /** A reply with a boolean that the API sends as a number. */
     static final class FlagReply {
         @SerializedName("is_predefined")

@@ -85,7 +85,7 @@ public class PodWorkflowManager extends Manager {
      * @param uuid the workflow GUID
      * @return the workflow
      * @throws IllegalArgumentException if {@code uuid} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}; nothing is sent
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public PodWorkflowResponse getPodWorkflow(String uuid) throws APIException {
@@ -117,7 +117,7 @@ public class PodWorkflowManager extends Manager {
      *     {@code title}
      * @return the updated workflow
      * @throws IllegalArgumentException if {@code uuid} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}, or {@code workflow} is {@code null} or misses a required field
+     *     {@code /}, {@code \} or {@code ;}, or {@code workflow} is {@code null} or misses a required field
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public PodWorkflowResponse updatePodWorkflow(String uuid, PodWorkflow workflow) throws APIException {
@@ -135,7 +135,7 @@ public class PodWorkflowManager extends Manager {
      * @param uuid the workflow GUID
      * @return the status, when the API sends one; {@code null} after a {@code 204}
      * @throws IllegalArgumentException if {@code uuid} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}
+     *     {@code /}, {@code \} or {@code ;}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public StatusResponse deletePodWorkflow(String uuid) throws APIException {

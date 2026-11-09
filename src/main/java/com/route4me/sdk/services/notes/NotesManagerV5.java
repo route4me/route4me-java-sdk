@@ -54,7 +54,7 @@ public class NotesManagerV5 extends Manager {
      * @param noteId the note ID
      * @return the note
      * @throws IllegalArgumentException if {@code noteId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}
+     *     {@code /}, {@code \} or {@code ;}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteNoteResource getNote(String noteId) throws APIException {
@@ -70,7 +70,7 @@ public class NotesManagerV5 extends Manager {
      * @param request the new text or attachment
      * @return the updated note
      * @throws IllegalArgumentException if {@code noteId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}, or {@code request} is {@code null}
+     *     {@code /}, {@code \} or {@code ;}, or {@code request} is {@code null}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteNoteResource updateNote(String noteId, NoteUpdateRequest request) throws APIException {
@@ -87,7 +87,7 @@ public class NotesManagerV5 extends Manager {
      * @param noteId the note ID
      * @return whether it was deleted
      * @throws IllegalArgumentException if {@code noteId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}
+     *     {@code /}, {@code \} or {@code ;}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public DeleteNoteResponse deleteNote(String noteId) throws APIException {
@@ -104,7 +104,7 @@ public class NotesManagerV5 extends Manager {
      * @param perPage the number of items per page ({@code per_page})
      * @return the page of notes
      * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
-     *     {@code /} or {@code \}
+     *     {@code /}, {@code \} or {@code ;}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteNoteCollection getNotesByRoute(String routeId, Integer page, Integer perPage) throws APIException {
@@ -128,7 +128,7 @@ public class NotesManagerV5 extends Manager {
      * @param perPage the number of items per page ({@code per_page})
      * @return the page of notes
      * @throws IllegalArgumentException if {@code routeDestinationId} is {@code null}, empty, {@code .} or {@code ..},
-     *     or contains {@code /} or {@code \}
+     *     or contains {@code /}, {@code \} or {@code ;}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteNoteCollection getNotesByDestination(String routeDestinationId, Integer page, Integer perPage)
