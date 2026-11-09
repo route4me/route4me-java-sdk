@@ -9,20 +9,27 @@ import com.route4me.sdk.queryconverter.QueryParameter;
 import com.route4me.sdk.testsupport.MockHttp;
 import com.route4me.sdk.utils.Sanitizer;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpVersion;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.RedirectException;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.entity.InputStreamEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
+import org.apache.http.message.BasicStatusLine;
 import org.junit.Rule;
 import org.junit.Test;
+import org.mockito.Mockito;
 
 import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.SocketException;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -786,6 +793,29 @@ public class ManagerTest {
                 error.getMessage());
         assertTrue(error.getCause().getCause() instanceof IllegalStateException);
         assertEquals("close() closed the client", 1, http.closeCount());
+    }
+
+    @Test
+    public void closingTheManagerWhileTheReplyIsReadGivesTheSameReason() throws Exception {
+        final TestManager manager = manager();
+        final CloseableHttpResponse reply = Mockito.mock(CloseableHttpResponse.class);
+        Mockito.when(reply.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+        // The pool shutdown of close() closes the socket that the body is read from.
+        Mockito.when(reply.getEntity()).thenReturn(new InputStreamEntity(new InputStream() {
+            @Override
+            public int read() throws IOException {
+                manager.close();
+                throw new SocketException("Socket closed");
+            }
+        }));
+        http.answerNextRequest(request -> reply);
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals("GET https://api.route4me.com" + PATH + " failed: the manager was closed while the request ran",
+                error.getMessage());
+        assertTrue(error.getCause().getCause() instanceof SocketException);
     }
 
     @Test

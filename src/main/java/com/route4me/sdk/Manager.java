@@ -679,7 +679,10 @@ public abstract class Manager implements Closeable {
             }
             return new RawResponse(safeUrl, status, resp.getAllHeaders(), bytes, charset);
         } catch (IOException ex) {
-            throw APIException.forIOException(method.name(), safeUrl, Sanitizer.redactCause(ex, this.apiKey));
+            // close() shuts the pool down, which also closes the connection of a request that is
+            // reading its reply ("Socket closed"): report the documented reason, with the I/O error as its cause.
+            IOException reported = client != this.httpClient ? new IOException(CLOSED_DURING_REQUEST, ex) : ex;
+            throw APIException.forIOException(method.name(), safeUrl, Sanitizer.redactCause(reported, this.apiKey));
         } catch (IllegalStateException ex) {
             // Apache HttpClient throws this unchecked exception when its connection pool was shut
             // down, which close() does, while the request ran or waited for a connection.
