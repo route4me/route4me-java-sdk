@@ -1,41 +1,30 @@
 name: AI Code Risk & Compatibility Analysis (Gemini)
 
-# Every pull request, whatever its base branch: a stacked pull request is reviewed against
-# its own base.
 on:
   pull_request:
-
-permissions:
-  contents: read
+    branches:
+      - master
+      - main
 
 jobs:
   gemini-analysis:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      # Needed to post the analysis as a pull request comment.
-      pull-requests: write
 
     steps:
       # 1. Checkout PR code
       - name: Checkout PR branch
-        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
-          # Keep the job token out of .git/config: later steps run third-party code on
-          # text from the pull request. The repository is public, so fetching needs none.
-          persist-credentials: false
 
       # 2. Get changed Java files and generate diff
       - name: Get changed files and diff
         id: changed
-        # Event values reach the script as environment variables, never spliced into it:
-        # any base branch is allowed, and a branch name could hold shell syntax.
-        env:
-          BASE_BRANCH: ${{ github.event.pull_request.base.ref }}
-          BASE_SHA: ${{ github.event.pull_request.base.sha }}
-          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
         run: |
+          BASE_BRANCH="${{ github.event.pull_request.base.ref }}"
+          BASE_SHA="${{ github.event.pull_request.base.sha }}"
+          HEAD_SHA="${{ github.event.pull_request.head.sha }}"
+
           echo "Base branch: $BASE_BRANCH"
           echo "Base SHA: $BASE_SHA"
           echo "Head SHA: $HEAD_SHA"
@@ -100,18 +89,9 @@ jobs:
             fi
           fi
 
-      # 3. Install Gemini CLI, at an exact version and without install scripts.
+      # 3. Install Gemini CLI
       - name: Install Gemini CLI
-        env:
-          # The exact @google/gemini-cli release to install (0.62.0, 2026-09-29). Raise it
-          # deliberately; the step fails rather than install a version that is not exact.
-          GEMINI_CLI_VERSION: 0.62.0
-        run: |
-          if ! printf '%s' "$GEMINI_CLI_VERSION" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+$'; then
-            echo "::error::Set GEMINI_CLI_VERSION in ai-risks-analysis.yaml to an exact @google/gemini-cli version"
-            exit 1
-          fi
-          npm install -g --ignore-scripts "@google/gemini-cli@${GEMINI_CLI_VERSION}"
+        run: npm install -g @google/gemini-cli
 
       # 4. Run Gemini AI
       - name: Run Gemini Analysis
@@ -119,11 +99,9 @@ jobs:
         if: steps.changed.outputs.has_changes == 'true' && steps.changed.outputs.diff_file != ''
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          # Passed through the environment, not pasted into the script: file names come
-          # from the pull request.
-          DIFF_FILE: ${{ steps.changed.outputs.diff_file }}
-          CHANGED_FILES: ${{ steps.changed.outputs.changed_files }}
         run: |
+          DIFF_FILE="${{ steps.changed.outputs.diff_file }}"
+          CHANGED_FILES="${{ steps.changed.outputs.changed_files }}"
 
           if [ ! -f "$DIFF_FILE" ] || [ ! -s "$DIFF_FILE" ]; then
             echo "ERROR: Diff file not found or empty"
@@ -153,13 +131,10 @@ jobs:
             echo "\`\`\`"
           } > gemini_prompt.txt
 
-          # Feed the prompt and the diff on stdin: a diff passed as one argument fails above
-          # the 128 KiB limit of a single argument. `set +e` keeps the step running when
-          # Gemini fails, so that its exit code and the error details are reported.
-          set +e
-          gemini -p "Follow the instructions at the top of the input." < gemini_prompt.txt > gemini_output.txt 2>&1
+          # Pass prompt file to Gemini (read from stdin or file if supported)
+          # If Gemini CLI doesn't support file input, we'll use the file content
+          gemini "$(cat gemini_prompt.txt)" > gemini_output.txt 2>&1
           GEMINI_EXIT_CODE=$?
-          set -e
 
           echo "Gemini CLI exit code: $GEMINI_EXIT_CODE"
 
@@ -182,49 +157,60 @@ jobs:
           echo "output_file=gemini_output.txt" >> $GITHUB_OUTPUT
           echo "exit_code=$GEMINI_EXIT_CODE" >> $GITHUB_OUTPUT
 
-      # 5. Post results to PR comment, with the GitHub CLI that the runner provides
+      # 5. Post results to PR comment
       - name: Comment on PR with Gemini Findings
         if: steps.changed.outputs.changed_files != '' && steps.gemini.outputs.output_file != ''
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PR_NUMBER: ${{ github.event.pull_request.number }}
-          OUTPUT_FILE: ${{ steps.gemini.outputs.output_file }}
-          EXIT_CODE: ${{ steps.gemini.outputs.exit_code }}
-          CHANGED_FILES: ${{ steps.changed.outputs.changed_files }}
-        run: |
-          STATUS_ICON='[OK]'
-          STATUS_TEXT='Analysis completed successfully'
-          if [ -f "$OUTPUT_FILE" ]; then
-            ANALYSIS="$(cat "$OUTPUT_FILE")"
-            if [ -z "$(printf '%s' "$ANALYSIS" | tr -d '[:space:]')" ]; then
-              ANALYSIS='No analysis output was generated.'
-              STATUS_ICON='[WARNING]'
-              STATUS_TEXT='No output generated'
-            elif [ -n "$EXIT_CODE" ] && [ "$EXIT_CODE" != "0" ]; then
-              STATUS_ICON='[ERROR]'
-              STATUS_TEXT="Analysis failed with exit code $EXIT_CODE"
-            fi
-          else
-            ANALYSIS='Analysis output file was not found.'
-            STATUS_ICON='[ERROR]'
-            STATUS_TEXT='Output file not found'
-          fi
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const outputFile = '${{ steps.gemini.outputs.output_file }}';
+            const exitCode = '${{ steps.gemini.outputs.exit_code }}';
 
-          # Format files as bullet point list (no glob expansion of the names)
-          set -f
-          {
-            echo "## Gemini AI Code Risk & Compatibility Analysis"
-            echo
-            echo "**Status:** $STATUS_ICON $STATUS_TEXT"
-            echo
-            echo "**Files analyzed:**"
-            for file in $CHANGED_FILES; do
-              echo "- \`$file\`"
-            done
-            echo
-            echo "### Analysis Results"
-            echo
-            printf '%s\n' "$ANALYSIS"
-          } > comment.md
+            let analysisOutput = '';
+            let statusIcon = '[OK]';
+            let statusText = 'Analysis completed successfully';
 
-          gh pr comment "$PR_NUMBER" --repo "$GITHUB_REPOSITORY" --body-file comment.md
+            if (fs.existsSync(outputFile)) {
+              analysisOutput = fs.readFileSync(outputFile, 'utf8');
+              if (!analysisOutput.trim()) {
+                analysisOutput = 'No analysis output was generated.';
+                statusIcon = '[WARNING]';
+                statusText = 'No output generated';
+              } else if (exitCode && exitCode !== '0') {
+                statusIcon = '[ERROR]';
+                statusText = `Analysis failed with exit code ${exitCode}`;
+              }
+            } else {
+              analysisOutput = 'Analysis output file was not found.';
+              statusIcon = '[ERROR]';
+              statusText = 'Output file not found';
+            }
+
+            // Format files as bullet point list
+            const changedFiles = '${{ steps.changed.outputs.changed_files }}';
+            const filesList = changedFiles
+              .split(' ')
+              .filter(file => file.trim())
+              .map(file => `- \`${file.trim()}\``)
+              .join('\n');
+
+            const body = `## Gemini AI Code Risk & Compatibility Analysis
+
+            **Status:** ${statusIcon} ${statusText}
+
+            **Files analyzed:**
+            ${filesList}
+
+            ### Analysis Results
+
+            ${analysisOutput}
+            `;
+
+            github.rest.issues.createComment({
+              issue_number: context.payload.pull_request.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body
+            });
