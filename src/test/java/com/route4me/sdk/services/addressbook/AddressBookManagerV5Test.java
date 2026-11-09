@@ -10,6 +10,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
@@ -455,6 +456,51 @@ public class AddressBookManagerV5Test {
         http.request().assertEndpoint("DELETE", HOST, ADDRESSES_EP + "/delete-by-areas")
                 .assertJson("filter.selected_areas[0].type", "circle")
                 .assertJsonLacks("filter.query", "filter.bounding_box");
+    }
+
+    /** Regression: one contact with a bare date string in {@code schedule_blacklist} failed the whole list. */
+    @Test
+    public void scheduleBlacklistReadsEveryShapeTheSpecAllows() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        http.respond(200, json("{'results':[{'address_id':1,'schedule_blacklist':'2026-12-25'},"
+                + "{'address_id':2,'schedule_blacklist':''},"
+                + "{'address_id':3,'schedule_blacklist':['2026-12-24','2026-12-31']},"
+                + "{'address_id':4,'schedule_blacklist':[['2026-01-01'],'2026-01-02',null,'']},"
+                + "{'address_id':5,'schedule_blacklist':null},{'address_id':6}],'total':6}"));
+
+        List<AddressBookContactV5> contacts = manager.getContacts(new AddressBookContactsBodyRequest()).getResults();
+
+        assertEquals(Collections.singletonList("2026-12-25"), contacts.get(0).getScheduleBlacklist());
+        assertEquals(Collections.<String>emptyList(), contacts.get(1).getScheduleBlacklist());
+        assertEquals(Arrays.asList("2026-12-24", "2026-12-31"), contacts.get(2).getScheduleBlacklist());
+        assertEquals(Arrays.asList("2026-01-01", "2026-01-02"), contacts.get(3).getScheduleBlacklist());
+        assertNull(contacts.get(4).getScheduleBlacklist());
+        assertNull(contacts.get(5).getScheduleBlacklist());
+    }
+
+    @Test
+    public void scheduleBlacklistIsSentAsAnArrayAndLeftOutWhenNull() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        http.respondToAll(200, CONTACT);
+        AddressBookContactV5 withDates = contact();
+        withDates.setScheduleBlacklist(Arrays.asList("2026-12-24", "2026-12-31"));
+
+        manager.addContact(withDates);
+        manager.addContact(contact());
+
+        http.request(0).assertJson("schedule_blacklist[0]", "2026-12-24")
+                .assertJson("schedule_blacklist[1]", "2026-12-31");
+        http.request(1).assertJsonLacks("schedule_blacklist");
+    }
+
+    @Test
+    public void aScheduleBlacklistThatIsNotDatesFailsTheParse() {
+        final AddressBookManagerV5 manager = manager();
+        http.respond(200, json("{'results':[{'address_id':1,'schedule_blacklist':{'start':'2026-12-24'}}]}"))
+                .respond(200, json("{'results':[{'address_id':1,'schedule_blacklist':[true]}]}"));
+
+        http.expectApiException(() -> manager.getContacts(new AddressBookContactsBodyRequest()));
+        http.expectApiException(() -> manager.getContacts(new AddressBookContactsBodyRequest()));
     }
 
     /** Regression: the answer was read as {@code data}; the spec names it {@code custom_fields}. */
