@@ -492,6 +492,26 @@ public class ManagerTest {
     }
 
     @Test
+    public void jsonRequestsDoNotChangeTheCallersBuilder() throws Exception {
+        TestManager manager = manager();
+        Type listOfReplies = new TypeToken<ArrayList<Reply>>() {
+        }.getType();
+        http.respond(200, "{}").respond(200, "[]").respond(200, "{}").respond(200, "[]");
+        URIBuilder builder = builder().setParameter("route_id", "R1");
+
+        manager.makeJSONRequest(RequestMethod.POST, builder, new Body(), new Params(), Reply.class);
+        manager.makeJSONRequest(RequestMethod.PUT, builder, new Body(), new Params(), listOfReplies);
+        manager.makeJSONRequest(RequestMethod.GET, builder, new Params(), Reply.class);
+        manager.makeJSONRequest(RequestMethod.GET, builder, new Params(), listOfReplies);
+
+        assertEquals("[route_id=R1]", builder.getQueryParams().toString());
+        for (int i = 0; i < 4; i++) {
+            http.request(i).assertQuery("route_id", "R1").assertQueryValues("limit", "5")
+                    .assertQueryValues("active", "1");
+        }
+    }
+
+    @Test
     public void jsonRequestWithoutParamsSendsTheBodyOnly() throws Exception {
         TestManager manager = manager();
         http.respond(200, "{}");

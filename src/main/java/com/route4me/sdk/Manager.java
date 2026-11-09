@@ -391,7 +391,7 @@ public abstract class Manager implements Closeable {
      * serialized with this manager's JSON mapper.
      *
      * @param method        the HTTP method
-     * @param builder       the request URL; the query parameters are added to it
+     * @param builder       the request URL; it is not changed: the query parameters go to a copy
      * @param body          the object to send as the JSON body; {@code null} sends the text {@code null}
      * @param requestParams the object whose query fields to add, or {@code null} for none
      * @param clazz         the response type
@@ -402,17 +402,9 @@ public abstract class Manager implements Closeable {
      */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams,
             Class<T> clazz) throws APIException {
-        if (requestParams != null) {
-            List<NameValuePair> params;
-            try {
-                params = queryParameters(builder, requestParams);
-                builder.addParameters(params);
-            } catch (IllegalAccessException ex) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
-                        + " to query parameters.", ex);
-            }
-        }
-        return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), clazz, null);
+        URIBuilder target = requestParams == null ? builder
+                : withQuery(builder, queryParametersOf(builder, requestParams));
+        return this.makeRequest(method, target, jsonEntity(this.gson.toJson(body)), clazz, null);
     }
 
     /**
@@ -420,7 +412,7 @@ public abstract class Manager implements Closeable {
      * generic type. See {@link #makeJSONRequest(RequestMethod, URIBuilder, Object, Object, Class)}.
      *
      * @param method        the HTTP method
-     * @param builder       the request URL; the query parameters are added to it
+     * @param builder       the request URL; it is not changed: the query parameters go to a copy
      * @param body          the object to send as the JSON body; {@code null} sends the text {@code null}
      * @param requestParams the object whose query fields to add, or {@code null} for none
      * @param type          the response type, such as a {@code TypeToken} type
@@ -431,17 +423,9 @@ public abstract class Manager implements Closeable {
      */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object body, Object requestParams,
             Type type) throws APIException {
-        if (requestParams != null) {
-            List<NameValuePair> params;
-            try {
-                params = queryParameters(builder, requestParams);
-                builder.addParameters(params);
-            } catch (IllegalAccessException ex) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
-                        + " to query parameters.", ex);
-            }
-        }
-        return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(body)), null, type);
+        URIBuilder target = requestParams == null ? builder
+                : withQuery(builder, queryParametersOf(builder, requestParams));
+        return this.makeRequest(method, target, jsonEntity(this.gson.toJson(body)), null, type);
     }
 
     /**
@@ -454,7 +438,8 @@ public abstract class Manager implements Closeable {
      * the query is not changed.
      *
      * @param method        the HTTP method
-     * @param builder       the request URL; on {@code GET} the query parameters are added to it
+     * @param builder       the request URL; it is not changed: on {@code GET} the query
+     *                      parameters go to a copy
      * @param requestParams the request object, or {@code null} to send neither query fields nor a body
      * @param clazz         the response type
      * @param <T>           the response type
@@ -465,18 +450,11 @@ public abstract class Manager implements Closeable {
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz)
             throws APIException {
         if (requestParams != null) {
-            try {
-                List<NameValuePair> params = queryParameters(builder, requestParams);
-                if (method == RequestMethod.GET) {
-                    builder.addParameters(params);
-                }
-            } catch (IllegalAccessException e) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
-                        + " to query parameters.", e);
-            }
+            List<NameValuePair> params = queryParametersOf(builder, requestParams);
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), clazz, null);
             }
+            return this.makeRequest(method, withQuery(builder, params), (HttpEntity) null, clazz, null);
         }
         return this.makeRequest(method, builder, (HttpEntity) null, clazz, null);
     }
@@ -487,7 +465,8 @@ public abstract class Manager implements Closeable {
      * {@link #makeJSONRequest(RequestMethod, URIBuilder, Object, Class)}.
      *
      * @param method        the HTTP method
-     * @param builder       the request URL; on {@code GET} the query parameters are added to it
+     * @param builder       the request URL; it is not changed: on {@code GET} the query
+     *                      parameters go to a copy
      * @param requestParams the request object, or {@code null} to send neither query fields nor a body
      * @param type          the response type, such as a {@code TypeToken} type
      * @param <T>           the response type
@@ -498,20 +477,49 @@ public abstract class Manager implements Closeable {
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type)
             throws APIException {
         if (requestParams != null) {
-            try {
-                List<NameValuePair> params = queryParameters(builder, requestParams);
-                if (method == RequestMethod.GET) {
-                    builder.addParameters(params);
-                }
-            } catch (IllegalAccessException e) {
-                throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
-                        + " to query parameters.", e);
-            }
+            List<NameValuePair> params = queryParametersOf(builder, requestParams);
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), null, type);
             }
+            return this.makeRequest(method, withQuery(builder, params), (HttpEntity) null, null, type);
         }
         return this.makeRequest(method, builder, (HttpEntity) null, null, type);
+    }
+
+    /**
+     * Converts the query fields of a request object, as {@link #queryParameters} does, and
+     * reports a field that cannot be read as an {@link APIException}.
+     *
+     * @param builder       the request URL
+     * @param requestParams the object with the query fields
+     * @return the parameters
+     * @throws APIException if a field cannot be read
+     */
+    private static List<NameValuePair> queryParametersOf(URIBuilder builder, Object requestParams)
+            throws APIException {
+        try {
+            return queryParameters(builder, requestParams);
+        } catch (IllegalAccessException ex) {
+            throw new APIException("Could not convert " + requestParams.getClass().getSimpleName()
+                    + " to query parameters.", ex);
+        }
+    }
+
+    /**
+     * Returns a copy of a builder with query parameters added; the builder itself is not
+     * changed, so that the caller can send it again (for example on a retry) without
+     * repeating them.
+     *
+     * @param builder the request URL
+     * @param params  the parameters to add
+     * @return the copy
+     */
+    private static URIBuilder withQuery(URIBuilder builder, List<NameValuePair> params) {
+        try {
+            return new URIBuilder(builder.build()).addParameters(params);
+        } catch (URISyntaxException ex) {
+            throw new IllegalArgumentException(ex);
+        }
     }
 
     /**
