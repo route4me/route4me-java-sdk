@@ -56,6 +56,10 @@ public class SingleDepotMultipleDriverByTerritoryOrderIDs {
             List<Address> addresses = new ArrayList<>();
 
             Territory territory = territoriesManager.getOrdersInTerritory(territoryId);
+            if (territory == null || territory.getOrders() == null || territory.getOrders().isEmpty()) {
+                System.out.println("Territory " + territoryId + " has no orders; nothing to optimize.");
+                return;
+            }
             for (Integer setOrderId:  territory.getOrders()) {
                 Address address = new Address();
                 address.setOrderId(setOrderId);

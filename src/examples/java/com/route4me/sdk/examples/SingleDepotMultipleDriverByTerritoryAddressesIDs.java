@@ -56,6 +56,10 @@ public class SingleDepotMultipleDriverByTerritoryAddressesIDs {
             List<Address> addresses = new ArrayList<>();
 
             Territory territory = territoriesManager.getAddressesInTerritory(territoryId);
+            if (territory == null || territory.getAddresses() == null || territory.getAddresses().isEmpty()) {
+                System.out.println("Territory " + territoryId + " has no address book contacts; nothing to optimize.");
+                return;
+            }
             for (Integer contactId:  territory.getAddresses()) {
                 Address address = new Address();
                 address.setContactId(contactId);
