@@ -459,6 +459,35 @@ public class AddressBookManagerV5Test {
         http.assertNoRequests();
     }
 
+    /** Regression: one complete area let empty ({@code {}}) and {@code null} areas next to it be sent. */
+    @Test
+    public void oneIncompleteAreaRefusesTheWholeFilter() {
+        final AddressBookManagerV5 manager = manager();
+        SelectedArea circle = filter().getSelectedAreas().get(0);
+        SelectedArea typeOnly = new SelectedArea();
+        typeOnly.setType("circle");
+        List<List<SelectedArea>> mixedLists = Arrays.asList(Arrays.asList(circle, new SelectedArea()),
+                Arrays.asList(circle, null), Arrays.asList(null, circle), Arrays.asList(circle, typeOnly));
+
+        for (List<SelectedArea> areas : mixedLists) {
+            // A complete rectangle next to them does not make the incomplete area acceptable.
+            for (BoundingBox box : Arrays.asList(null, box())) {
+                final AddressBookAreasFilter filter = new AddressBookAreasFilter();
+                filter.setSelectedAreas(areas);
+                filter.setBoundingBox(box);
+                final UpdateContactsByAreasRequest update = new UpdateContactsByAreasRequest();
+                update.setFilter(filter);
+
+                IllegalArgumentException error = http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.removeAddressBookContactsByAreas(filter));
+                assertEquals("Every selected_areas entry needs a type and a value", error.getMessage());
+                http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.updateAddressBookContactByAreas(update));
+            }
+        }
+        http.assertNoRequests();
+    }
+
     @Test
     public void aDrawnAreaAloneIsEnoughToDeleteByAreas() throws Exception {
         AddressBookManagerV5 manager = manager();

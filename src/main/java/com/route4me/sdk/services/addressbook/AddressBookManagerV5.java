@@ -260,9 +260,10 @@ public class AddressBookManagerV5 extends Manager {
      * @param request the areas and the fields to set; the filter must select at least one area
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
-     * @throws IllegalArgumentException if {@code request} or its {@code filter} is {@code null}, or the filter has
-     *     neither a {@code selected_areas} entry with a {@code type} and a {@code value} nor a {@code bounding_box}
-     *     with its four edges; nothing is sent, since an update with an empty filter could change every contact
+     * @throws IllegalArgumentException if {@code request} or its {@code filter} is {@code null}, a
+     *     {@code selected_areas} entry is {@code null} or lacks a {@code type} or a {@code value}, or the filter has
+     *     neither {@code selected_areas} nor a {@code bounding_box} with its four edges; nothing is sent, since an
+     *     update with an empty filter could change every contact
      */
     public AsyncJob updateAddressBookContactByAreas(UpdateContactsByAreasRequest request) throws APIException {
         requireRequest(request);
@@ -324,9 +325,10 @@ public class AddressBookManagerV5 extends Manager {
      * @param filter the contacts to delete: drawn areas or a rectangle, and optionally a text that narrows them
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
-     * @throws IllegalArgumentException if {@code filter} is {@code null}, or has neither a {@code selected_areas} entry
-     *     with a {@code type} and a {@code value} nor a {@code bounding_box} with its four edges; nothing is sent,
-     *     since a deletion with an empty filter could delete every contact
+     * @throws IllegalArgumentException if {@code filter} is {@code null}, a {@code selected_areas} entry is
+     *     {@code null} or lacks a {@code type} or a {@code value}, or the filter has neither {@code selected_areas} nor
+     *     a {@code bounding_box} with its four edges; nothing is sent, since a deletion with an empty filter could
+     *     delete every contact
      */
     public AsyncJob removeAddressBookContactsByAreas(AddressBookAreasFilter filter) throws APIException {
         requireArea(filter);
@@ -554,33 +556,32 @@ public class AddressBookManagerV5 extends Manager {
     }
 
     /**
-     * Rejects an area filter that selects no area, before any request is sent: it needs a drawn area or a complete
-     * rectangle. A text alone is not enough: the spec marks only {@code query} and {@code bounding_box} as optional,
-     * so it expects {@code selected_areas}, and a complete rectangle bounds the contacts as well.
+     * Rejects an area filter that could select every contact, before any request is sent: it needs drawn areas or a
+     * complete rectangle. A text alone is not enough: the spec marks only {@code query} and {@code bounding_box} as
+     * optional, so it expects {@code selected_areas}, and a complete rectangle bounds the contacts as well. Every
+     * drawn area must be complete, even next to a complete one or a rectangle: Gson would send an incomplete one as
+     * {@code {}} or {@code null}, and how the API reads that is not documented.
      */
     private static void requireArea(AddressBookAreasFilter filter) {
         if (filter == null) {
             throw new IllegalArgumentException("The filter is required");
         }
-        if (!hasArea(filter.getSelectedAreas()) && !isComplete(filter.getBoundingBox())) {
+        List<SelectedArea> areas = filter.getSelectedAreas();
+        if (areas != null && !areas.isEmpty()) {
+            for (SelectedArea area : areas) {
+                if (!isComplete(area)) {
+                    throw new IllegalArgumentException("Every selected_areas entry needs a type and a value");
+                }
+            }
+        } else if (!isComplete(filter.getBoundingBox())) {
             throw new IllegalArgumentException("The filter needs selected_areas or a bounding_box with four edges");
         }
     }
 
-    /**
-     * Tells whether a list of drawn areas has at least one area with a type and a geometry. An area without them
-     * draws nothing: Gson would send it as {@code {}}, which selects no area.
-     */
-    private static boolean hasArea(List<SelectedArea> areas) {
-        if (areas != null) {
-            for (SelectedArea area : areas) {
-                if (area != null && area.getType() != null && !area.getType().isEmpty() && area.getValue() != null
-                        && !area.getValue().isEmpty()) {
-                    return true;
-                }
-            }
-        }
-        return false;
+    /** Tells whether a drawn area has a type and a geometry. */
+    private static boolean isComplete(SelectedArea area) {
+        return area != null && area.getType() != null && !area.getType().isEmpty() && area.getValue() != null
+                && !area.getValue().isEmpty();
     }
 
     /** Tells whether a rectangle has its four edges. */
