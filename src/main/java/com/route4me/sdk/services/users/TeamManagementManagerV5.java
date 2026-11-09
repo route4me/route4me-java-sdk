@@ -1,14 +1,13 @@
 package com.route4me.sdk.services.users;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.utils.URIBuilder;
 
 /** Manages the members of the team through the V5 API ({@code https://wh.route4me.com/modules/api/v5.0/team}). */
 public class TeamManagementManagerV5 extends Manager {
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String TEAM_USERS_EP = V5_BASE + "/team/users";
     /** The bulk insert route, as C# has it; the spec's {@code /team/users/bulk-insert} answers 405. */
     private static final String TEAM_BULK_INSERT_EP = V5_BASE + "/team/bulk-insert";
@@ -32,14 +31,6 @@ public class TeamManagementManagerV5 extends Manager {
      */
     public TeamManagementManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**
@@ -137,27 +128,32 @@ public class TeamManagementManagerV5 extends Manager {
      * JSON body. This is the path the C# SDK uses; the spec's {@code /team/users/bulk-insert} answers 405.
      *
      * <p>The API creates the members in a background job. It answers with an empty object, and with the job's status
-     * URL in its {@code Location} header, which this method does not return; list the members with
-     * {@link #getTeamMembers()} to see the result.
+     * URL ({@code .../team/job-tracker/status/{job_id}}) in its {@code Location} header, which the returned job
+     * holds; list the members with {@link #getTeamMembers()} to see the result.
      *
      * @param members the members, from 1 to 100; each one needs {@code OWNER_MEMBER_ID} or {@code owner_email}
      * @param conflictStrategy what to do with a member whose email address already exists: {@code fail},
      *     {@code overwrite} or {@code skip} ({@code conflicts}); {@code null} leaves it to the API
-     * @throws IllegalArgumentException if {@code members} is {@code null}, empty, holds a {@code null} member or holds
-     *     more than 100 members
+     * @return the accepted job: its ID, status URL and reply body
+     * @throws IllegalArgumentException if {@code members} is {@code null}, empty, holds a {@code null} member, a member
+     *     with neither {@code OWNER_MEMBER_ID} nor {@code owner_email}, or more than 100 members; nothing is sent
      * @throws APIException if the request fails or the server answers with an error status
      */
-    public void bulkCreateTeamMembers(TeamMemberRequest[] members, String conflictStrategy) throws APIException {
+    public AsyncJob bulkCreateTeamMembers(TeamMemberRequest[] members, String conflictStrategy) throws APIException {
         if (members == null || members.length == 0 || members.length > MAX_BULK_MEMBERS) {
             throw new IllegalArgumentException("A bulk insert takes from 1 to " + MAX_BULK_MEMBERS + " members");
         }
         for (TeamMemberRequest member : members) {
             requireMember(member);
+            if (member.getOwnerMemberId() == null
+                    && (member.getOwnerEmail() == null || member.getOwnerEmail().isEmpty())) {
+                throw new IllegalArgumentException("Each member needs OWNER_MEMBER_ID or owner_email");
+            }
         }
         BulkMembersRequest request = new BulkMembersRequest();
         request.setUsers(members);
         request.setConflicts(conflictStrategy);
-        this.makeRequest(RequestMethod.POST, v5Builder(TEAM_BULK_INSERT_EP), this.gson.toJson(request), String.class);
+        return this.makeJobRequest(RequestMethod.POST, v5Builder(TEAM_BULK_INSERT_EP), this.gson.toJson(request));
     }
 
     /** Rejects a {@code null} member before any request is sent. */

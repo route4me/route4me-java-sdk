@@ -9,6 +9,10 @@ import com.route4me.sdk.services.fileupload.FileUploadManager;
  */
 public class GetFilePreview {
     public static void main(String[] args) {
+        if (args.length < 1) {
+            System.err.println("Usage: GetFilePreview <upload ID from UploadFile>");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         FileUploadManager manager = new FileUploadManager(apiKey);
         try {

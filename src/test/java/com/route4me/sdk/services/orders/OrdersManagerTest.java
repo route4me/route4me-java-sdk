@@ -118,8 +118,21 @@ public class OrdersManagerTest {
 
         manager.getOrders(request);
 
-        String sent = http.request().query("filter");
-        assertFalse("filter=" + sent, sent != null && sent.startsWith("OrderFilter("));
+        http.request().assertEndpoint("POST", HOST, ORDERS_EP).assertNoQuery("filter")
+                .assertJson("filter.display", "all");
+    }
+
+    @Test
+    public void getOrdersWithoutARequestListsOrdersWithAPlainGet() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, ordersPage());
+
+        List<Order> orders = manager.getOrders(null);
+
+        http.request().assertEndpoint("GET", HOST, ORDERS_EP).assertApiKeyInQuery()
+                .assertNoQuery("filter").assertNoQuery("limit").assertNoBody();
+        assertEquals(1, http.request().getQueryParameters().size());
+        assertEquals(1, orders.size());
     }
 
     @Test
@@ -261,6 +274,30 @@ public class OrdersManagerTest {
     }
 
     @Test
+    public void getOrderCustomUserFieldsReadsAnEmptyTypeInfoArrayAsNull() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, json("{'data':[{'order_custom_field_id':43,'order_custom_field_name':'notes',"
+                + "'order_custom_field_type':'text','order_custom_field_type_info':[]},"
+                + "{'order_custom_field_id':44,'order_custom_field_type_info':null}," + CUSTOM_FIELD + "]}"));
+
+        List<OrderCustomUserField> fields = manager.getOrderCustomUserFields();
+
+        assertEquals(3, fields.size());
+        assertEquals("notes", fields.get(0).getOrderCustomFieldName());
+        assertNull("PHP sends an empty map as []", fields.get(0).getOrderCustomFieldTypeInfo());
+        assertNull(fields.get(1).getOrderCustomFieldTypeInfo());
+        assertEquals("Gate", fields.get(2).getOrderCustomFieldTypeInfo().getShortLabel());
+    }
+
+    @Test
+    public void getOrderCustomUserFieldsRejectsANonEmptyTypeInfoArray() {
+        final OrdersManager manager = manager();
+        http.respond(200, json("[{'order_custom_field_id':43,'order_custom_field_type_info':['A1']}]"));
+
+        http.expectApiException(manager::getOrderCustomUserFields);
+    }
+
+    @Test
     public void getOrderCustomUserFieldsRejectsAListOfTheWrongShape() {
         final OrdersManager manager = manager();
         http.respond(200, "[1, 2]");
@@ -286,6 +323,17 @@ public class OrdersManagerTest {
         assertEquals("OK", response.getResult());
         assertEquals(Integer.valueOf(1), response.getAffected());
         assertEquals(Long.valueOf(42L), response.getData().getOrderCustomFieldId());
+    }
+
+    @Test
+    public void customUserFieldWritesRequireTheField() {
+        final OrdersManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createOrderCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateOrderCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateOrderCustomUserField(new OrderCustomUserField()));
+        http.assertNoRequests();
     }
 
     @Test
@@ -321,7 +369,7 @@ public class OrdersManagerTest {
     public void getOrdersUpdatesSendsTheLastKnownTimestamp() throws Exception {
         OrdersManager manager = manager();
         http.respond(200, json("{'data':[{'order_id':7001,'updated_timestamp':'1761040000',"
-                + "'EXT_FIELD_custom_data':{'gate':'A1'}}]}"));
+                + "'EXT_FIELD_custom_data':{'gate':'A1'}},{'order_id':7002,'EXT_FIELD_custom_data':[]}]}"));
 
         OrdersUpdatesResponse updates = manager.getOrdersUpdates(1761000000L);
 
@@ -331,6 +379,7 @@ public class OrdersManagerTest {
         assertEquals(Long.valueOf(7001L), updates.getData().get(0).getOrderId());
         assertEquals("1761040000", updates.getData().get(0).getUpdatedTimestamp());
         assertEquals("A1", updates.getData().get(0).getCustomData().get("gate"));
+        assertTrue("PHP sends an empty map as []", updates.getData().get(1).getCustomData().isEmpty());
     }
 
     @Test

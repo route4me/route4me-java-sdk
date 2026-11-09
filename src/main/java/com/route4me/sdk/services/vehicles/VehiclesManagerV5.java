@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.vehicles;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
@@ -18,14 +19,18 @@ import java.util.List;
  * <p>The bulk methods ({@link #activateVehicles(String[])}, {@link #deactivateVehicles(String[])},
  * {@link #deleteVehicles(String[])}, {@link #restoreVehicles(String[])} and {@link #updateVehicles(List)}) start an
  * asynchronous job: the API answers {@code 202 Accepted}, usually with an empty body and the job ID in the
- * {@code X-Job-Id} and {@code Location} response headers, which this manager cannot read yet. They return
- * {@code null} for an empty body, or the {@link VehicleJobResponse} the API sends; when it has a
- * job ID ({@code job_id}), follow the job with {@link #getVehicleJobStatus(String)} and
- * {@link #getVehicleJobResult(String)}.
+ * {@code X-Job-Id} and {@code Location} response headers. They return an {@link AsyncJob}; follow the job with
+ * {@link #getVehicleJobStatus(String)} and {@link #getVehicleJobResult(String)}:
+ * <pre>{@code
+ * AsyncJob job = manager.activateVehicles(vehicleIds);
+ * if (job.getJobId() != null) {
+ *     VehicleJobResponse status = manager.getVehicleJobStatus(job.getJobId());
+ * }
+ * }</pre>
+ * When the API puts the job in the body instead, {@code job.getBodyAs(VehicleJobResponse.class)} reads it.
  */
 public class VehiclesManagerV5 extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String VEHICLES_EP = V5_BASE + "/vehicles";
     private static final String VEHICLES_PAGINATE_EP = VEHICLES_EP + "/paginate";
     private static final String VEHICLES_SEARCH_EP = VEHICLES_EP + "/search";
@@ -62,14 +67,6 @@ public class VehiclesManagerV5 extends Manager {
      */
     public VehiclesManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /** Throws {@link IllegalArgumentException} when a field the API requires is {@code null}. */
@@ -121,6 +118,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param vehicleId the vehicle ID
      * @return the vehicle
+     * @throws IllegalArgumentException if {@code vehicleId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 getVehicleById(String vehicleId) throws APIException {
@@ -149,13 +148,15 @@ public class VehiclesManagerV5 extends Manager {
      * vehicle as the JSON body. Only the fields that are set are sent, so the others keep their value.
      *
      * @param vehicleId the vehicle ID
-     * @param vehicle the new values
+     * @param vehicle the new values; required
      * @return the updated vehicle
-     * @throws IllegalArgumentException if {@code vehicleId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code vehicleId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}, or {@code vehicle} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 updateVehicle(String vehicleId, VehicleV5 vehicle) throws APIException {
         URIBuilder builder = v5Builder(VEHICLES_EP, vehicleId);
+        require(vehicle, "vehicle");
         return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(vehicle), VehicleV5.class);
     }
 
@@ -164,6 +165,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param vehicleId the vehicle ID
      * @return the deleted vehicle
+     * @throws IllegalArgumentException if {@code vehicleId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 deleteVehicle(String vehicleId) throws APIException {
@@ -179,7 +182,8 @@ public class VehiclesManagerV5 extends Manager {
      * @param start the first day, such as {@code 2026-10-01}; {@code null} leaves {@code start} out
      * @param end the last day, such as {@code 2026-10-02}; {@code null} leaves {@code end} out
      * @return the positions of the track
-     * @throws IllegalArgumentException if {@code vehicleId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code vehicleId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleTrackResponse getVehicleTrack(String vehicleId, String start, String end) throws APIException {
@@ -288,11 +292,13 @@ public class VehiclesManagerV5 extends Manager {
      * identifies the vehicle by its {@code vehicle_alias}, {@code r4m_telematics_gateway_connection_id} and
      * {@code r4m_telematics_gateway_vehicle_id}.
      *
-     * @param vehicle the vehicle
+     * @param vehicle the vehicle; required
      * @return the synced vehicle
+     * @throws IllegalArgumentException if {@code vehicle} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleV5 syncPendingTelematicsData(VehicleV5 vehicle) throws APIException {
+        require(vehicle, "vehicle");
         URIBuilder builder = v5Builder(VEHICLES_SYNC_PENDING_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(vehicle), VehicleV5.class);
     }
@@ -305,12 +311,11 @@ public class VehiclesManagerV5 extends Manager {
      * JSON body.
      *
      * @param vehicleIds the vehicle IDs; required
-     * @return {@code null} when the API answers {@code 202 Accepted} with an empty body, as it documents; otherwise
-     *     the job it sends
+     * @return the accepted job: its ID, status URL and reply body
      * @throws IllegalArgumentException if {@code vehicleIds} is {@code null}; nothing is sent
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public VehicleJobResponse activateVehicles(String[] vehicleIds) throws APIException {
+    public AsyncJob activateVehicles(String[] vehicleIds) throws APIException {
         return this.startBulkJob(VEHICLES_BULK_ACTIVATE_EP, vehicleIds);
     }
 
@@ -320,12 +325,11 @@ public class VehiclesManagerV5 extends Manager {
      * JSON body.
      *
      * @param vehicleIds the vehicle IDs; required
-     * @return {@code null} when the API answers {@code 202 Accepted} with an empty body, as it documents; otherwise
-     *     the job it sends
+     * @return the accepted job: its ID, status URL and reply body
      * @throws IllegalArgumentException if {@code vehicleIds} is {@code null}; nothing is sent
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public VehicleJobResponse deactivateVehicles(String[] vehicleIds) throws APIException {
+    public AsyncJob deactivateVehicles(String[] vehicleIds) throws APIException {
         return this.startBulkJob(VEHICLES_BULK_DEACTIVATE_EP, vehicleIds);
     }
 
@@ -335,12 +339,11 @@ public class VehiclesManagerV5 extends Manager {
      * body.
      *
      * @param vehicleIds the vehicle IDs; required
-     * @return {@code null} when the API answers {@code 202 Accepted} with an empty body, as it documents; otherwise
-     *     the job it sends
+     * @return the accepted job: its ID, status URL and reply body
      * @throws IllegalArgumentException if {@code vehicleIds} is {@code null}; nothing is sent
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public VehicleJobResponse deleteVehicles(String[] vehicleIds) throws APIException {
+    public AsyncJob deleteVehicles(String[] vehicleIds) throws APIException {
         return this.startBulkJob(VEHICLES_BULK_DELETE_EP, vehicleIds);
     }
 
@@ -350,12 +353,11 @@ public class VehiclesManagerV5 extends Manager {
      * JSON body.
      *
      * @param vehicleIds the vehicle IDs; required
-     * @return {@code null} when the API answers {@code 202 Accepted} with an empty body, as it documents; otherwise
-     *     the job it sends
+     * @return the accepted job: its ID, status URL and reply body
      * @throws IllegalArgumentException if {@code vehicleIds} is {@code null}; nothing is sent
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public VehicleJobResponse restoreVehicles(String[] vehicleIds) throws APIException {
+    public AsyncJob restoreVehicles(String[] vehicleIds) throws APIException {
         return this.startBulkJob(VEHICLES_BULK_RESTORE_EP, vehicleIds);
     }
 
@@ -365,13 +367,12 @@ public class VehiclesManagerV5 extends Manager {
      * body.
      *
      * @param vehicles the vehicles, each with its {@code vehicle_id} and the fields to change; required
-     * @return {@code null} when the API answers {@code 202 Accepted} with an empty body, as it documents; otherwise
-     *     the job it sends
+     * @return the accepted job: its ID, status URL and reply body
      * @throws IllegalArgumentException if {@code vehicles}, one of them or its {@code vehicle_id} is {@code null}, or
      *     a {@code vehicle_id} is empty; nothing is sent
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws APIException if the request fails or the server answers with an error status
      */
-    public VehicleJobResponse updateVehicles(List<VehicleV5> vehicles) throws APIException {
+    public AsyncJob updateVehicles(List<VehicleV5> vehicles) throws APIException {
         require(vehicles, "vehicles");
         for (VehicleV5 vehicle : vehicles) {
             require(vehicle, "vehicles[]");
@@ -380,16 +381,16 @@ public class VehiclesManagerV5 extends Manager {
         VehicleBulkUpdateRequest request = new VehicleBulkUpdateRequest();
         request.setVehicles(vehicles);
         URIBuilder builder = v5Builder(VEHICLES_BULK_UPDATE_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), VehicleJobResponse.class);
+        return this.makeJobRequest(RequestMethod.POST, builder, this.gson.toJson(request));
     }
 
     /** Posts {@code {"vehicle_ids": [...]}} to a bulk endpoint, which starts an asynchronous job. */
-    private VehicleJobResponse startBulkJob(String endpoint, String[] vehicleIds) throws APIException {
+    private AsyncJob startBulkJob(String endpoint, String[] vehicleIds) throws APIException {
         require(vehicleIds, "vehicle_ids");
         VehicleIdsRequest request = new VehicleIdsRequest();
         request.setVehicleIds(vehicleIds);
         URIBuilder builder = v5Builder(endpoint);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), VehicleJobResponse.class);
+        return this.makeJobRequest(RequestMethod.POST, builder, this.gson.toJson(request));
     }
 
     /**
@@ -397,9 +398,10 @@ public class VehiclesManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/vehicles/job-tracker/result/{jobId}}. While the job runs, the API
      * answers {@code 409}, which throws.
      *
-     * @param jobId the job ID
+     * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of the job a bulk method started
      * @return the result: {@code status} is {@code "true"} and {@code result} holds what the job wrote
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleJobResponse getVehicleJobResult(String jobId) throws APIException {
@@ -415,9 +417,10 @@ public class VehiclesManagerV5 extends Manager {
      * created with redirects disabled returns the final status ({@code processed}, {@code failed} or
      * {@code canceled}).
      *
-     * @param jobId the job ID
+     * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of the job a bulk method started
      * @return the status, or the result
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleJobResponse getVehicleJobStatus(String jobId) throws APIException {
@@ -455,6 +458,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param profileId the profile ID
      * @return the profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleProfile getVehicleProfileById(String profileId) throws APIException {
@@ -483,13 +488,15 @@ public class VehiclesManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/vehicle-profiles/{profileId}}, with the profile as the JSON body.
      *
      * @param profileId the profile ID
-     * @param profile the new values
+     * @param profile the new values; required
      * @return the updated profile
-     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}, or {@code profile} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleProfile updateVehicleProfile(String profileId, VehicleProfile profile) throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_PROFILES_EP, profileId);
+        require(profile, "profile");
         return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(profile), VehicleProfile.class);
     }
 
@@ -498,6 +505,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param profileId the profile ID
      * @return the deleted profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleProfile deleteVehicleProfile(String profileId) throws APIException {
@@ -534,6 +543,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param profileId the profile ID
      * @return the profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleCapacityProfileResponse getVehicleCapacityProfileById(String profileId) throws APIException {
@@ -565,14 +576,16 @@ public class VehiclesManagerV5 extends Manager {
      * body.
      *
      * @param profileId the profile ID
-     * @param profile the new values
+     * @param profile the new values; required
      * @return the updated profile
-     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}, or {@code profile} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleCapacityProfileResponse updateVehicleCapacityProfile(String profileId, VehicleCapacityProfile profile)
             throws APIException {
         URIBuilder builder = v5Builder(VEHICLE_CAPACITY_PROFILES_EP, profileId);
+        require(profile, "profile");
         return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(profile),
                 VehicleCapacityProfileResponse.class);
     }
@@ -583,6 +596,8 @@ public class VehiclesManagerV5 extends Manager {
      *
      * @param profileId the profile ID
      * @return the deleted profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public VehicleCapacityProfileResponse deleteVehicleCapacityProfile(String profileId) throws APIException {

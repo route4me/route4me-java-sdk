@@ -9,5 +9,5 @@ import java.util.List;
 public class BatchDeleteOrdersRequest {
     /** The IDs of the orders to delete, as 32-character hex strings ({@code order_ids}). */
     @SerializedName("order_ids")
-    private List<String> orderUuids;
+    private List<String> orderIds;
 }

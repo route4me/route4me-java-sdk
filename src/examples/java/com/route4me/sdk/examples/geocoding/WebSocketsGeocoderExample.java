@@ -10,14 +10,16 @@ import com.route4me.sdk.services.geocoding.GeocodingManager;
 import com.route4me.sdk.services.routing.Address;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Geocodes a batch of addresses over a websocket with {@link GeocodingManager#websocketsGeocoder}, waiting until
- * every address has arrived.
+ * every address has arrived, for at most 5 minutes.
  */
 public class WebSocketsGeocoderExample {
+
+    /** How long to wait for the whole batch. */
+    private static final long TIMEOUT_MILLIS = TimeUnit.MINUTES.toMillis(5);
 
     public static void main(String[] args) {
         String apiKey = System.getenv("R4M_API_KEY");
@@ -77,18 +79,30 @@ public class WebSocketsGeocoderExample {
 
         long startTime = System.currentTimeMillis();
         GeocoderWebSockets job = geocodingManager.websocketsGeocoder(addresses);
+        if (!job.isStarted()) {
+            System.err.println("The addresses could not be uploaded; see the log for the error.");
+            return;
+        }
+        long deadline = startTime + TIMEOUT_MILLIS;
         while (!job.isCompleted()) {
+            if (System.currentTimeMillis() > deadline) {
+                job.closeGeoCodeSocketIO();
+                System.err.println("Gave up after " + TIMEOUT_MILLIS / 1000 + " seconds. " + job.getProgress()
+                        + " of " + job.getTotalAddresses());
+                return;
+            }
             try {
                 Thread.sleep(100);
             } catch (InterruptedException ex) {
-                Logger.getLogger(GeocoderWebSockets.class.getName()).log(Level.SEVERE, null, ex);
+                Thread.currentThread().interrupt();
+                job.closeGeoCodeSocketIO();
+                System.err.println("Interrupted. " + job.getProgress());
+                return;
             }
         }
         addresses = job.getAddresses();
         System.out.println("Addresses Geocoded: " + addresses.size());
         System.out.println("Elapsed Time (seconds): " + (System.currentTimeMillis() - startTime) / 1000f);
-
-
     }
 
 }

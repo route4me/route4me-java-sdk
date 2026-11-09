@@ -18,7 +18,7 @@ public class CustomerListParameters {
      * direction is {@code asc} or {@code desc} ({@code order_by}).
      */
     @SerializedName("order_by")
-    private List<String[]> orderBy;
+    private List<List<String>> orderBy;
 
     /** The page number, from 1 ({@code page}). */
     @SerializedName("page")

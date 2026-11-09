@@ -34,6 +34,10 @@ public class RouteStatusResponse {
     @SerializedName("paused_at")
     private Long pausedAt;
 
+    /** Resumed at (Unix timestamp in seconds) ({@code resumed_at}). */
+    @SerializedName("resumed_at")
+    private Long resumedAt;
+
     /** Completed at (Unix timestamp in seconds) ({@code completed_at}). */
     @SerializedName("completed_at")
     private Long completedAt;

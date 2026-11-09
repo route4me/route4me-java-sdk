@@ -9,13 +9,17 @@ import com.route4me.sdk.services.activities.ActivityType;
 
 /**
  * Reads the destinations inserted into a route from the V4 activity feed with
- * {@link ActivityManager#getActivityFeed}.
+ * {@link ActivityManager#getActivityFeed}. Set {@code ROUTE_ID} to one of your routes.
  */
 public class GetActivityFeed {
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        if (routeId == null || routeId.isEmpty()) {
+            System.err.println("Set ROUTE_ID to the ID of one of your routes; this example reads its activity feed.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         ActivityManager manager = new ActivityManager(apiKey);
-        String routeId = "ROUTE_ID_HERE";
         try {
             Activities feed = manager.getActivityFeed(new ActivityRequest().setRouteId(routeId)
                     .setType(ActivityType.INSERT_DESTINATION).setLimit(10));

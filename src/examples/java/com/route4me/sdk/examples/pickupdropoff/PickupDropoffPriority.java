@@ -39,7 +39,7 @@ public class PickupDropoffPriority {
         parameters.setLeftTurn(LeftTurn.LEFTTURN_FORBID.getValue());
         parameters.setUTurn(UTurn.UTURN_DEPART_TO_RIGHT.getValue());
         parameters.setVehicleCapacity("4");
-        parameters.isUseMixedPickupDeliveryDemands(false);
+        parameters.setUseMixedPickupDeliveryDemands(false);
         parameters.setRouteName("Pickup Dropoff Example");
         parameters.setOptimize(Optimize.TIME.toString());
         parameters.setDistanceUnit(DistanceUnit.MI.toString());
@@ -168,7 +168,8 @@ public class PickupDropoffPriority {
         try {
             DataObject responseObject = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-            System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+            System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                    : OptimizationState.get(responseObject.getState().intValue())));
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();

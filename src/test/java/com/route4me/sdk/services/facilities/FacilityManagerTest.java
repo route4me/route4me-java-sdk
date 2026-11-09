@@ -155,10 +155,10 @@ public class FacilityManagerTest {
     }
 
     @Test
-    public void facilityIdsAreRejectedWhenEmptyAndEncodedWhenTheyHaveASlash() throws Exception {
+    public void facilityIdsAreRejectedWhenEmptyOrWithASlash() throws Exception {
         final FacilityManager manager = manager();
 
-        for (final String id : Arrays.asList(null, "", ".", "..")) {
+        for (final String id : Arrays.asList(null, "", ".", "..", "FAC/1", "FAC/../1", "FAC\\1")) {
             http.expectThrows(IllegalArgumentException.class, () -> manager.getFacility(id));
             http.expectThrows(IllegalArgumentException.class, () -> manager.updateFacility(id, updateRequest()));
             http.expectThrows(IllegalArgumentException.class, () -> manager.deleteFacility(id));
@@ -166,10 +166,10 @@ public class FacilityManagerTest {
         http.assertNoRequests();
 
         http.respond(200, FACILITY).respond(200, "[" + FACILITY + "]");
-        manager.updateFacility("FAC/1", updateRequest());
-        manager.deleteFacility("FAC/../1");
-        assertEquals(FACILITIES_EP + "/FAC%2F1", http.request(0).getUri().getRawPath());
-        assertEquals(FACILITIES_EP + "/FAC%2F..%2F1", http.request(1).getUri().getRawPath());
+        manager.updateFacility("FAC 1", updateRequest());
+        manager.deleteFacility("FAC?..1");
+        assertEquals(FACILITIES_EP + "/FAC%201", http.request(0).getUri().getRawPath());
+        assertEquals(FACILITIES_EP + "/FAC%3F..1", http.request(1).getUri().getRawPath());
     }
 
     @Test

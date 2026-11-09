@@ -24,11 +24,18 @@ import java.util.logging.Logger;
 
 /**
  * Reads the orders of a territory with {@link TerritoriesManager#getOrdersInTerritory} and optimizes routes from
- * one depot for several drivers to them, with {@link RoutingManager#runOptimization}.
+ * one depot for several drivers to them, with {@link RoutingManager#runOptimization}. Set
+ * {@code TERRITORY_ID} to one of your territories.
  */
 public class SingleDepotMultipleDriverByTerritoryOrderIDs {
 
     public static void main(String[] args) {
+        String territoryId = System.getenv("TERRITORY_ID");
+        if (territoryId == null || territoryId.isEmpty()) {
+            System.err.println("Set TERRITORY_ID to the ID of one of your territories; this example optimizes"
+                    + " routes to its orders.");
+            return;
+        }
         try {
             String apiKey = System.getenv("R4M_API_KEY");
             RoutingManager manager = new RoutingManager(apiKey, true);
@@ -48,7 +55,11 @@ public class SingleDepotMultipleDriverByTerritoryOrderIDs {
 
             List<Address> addresses = new ArrayList<>();
 
-            Territory territory = territoriesManager.getOrdersInTerritory("04F6ADD89DB67371E9008A6688B750C0");
+            Territory territory = territoriesManager.getOrdersInTerritory(territoryId);
+            if (territory == null || territory.getOrders() == null || territory.getOrders().isEmpty()) {
+                System.out.println("Territory " + territoryId + " has no orders; nothing to optimize.");
+                return;
+            }
             for (Integer setOrderId:  territory.getOrders()) {
                 Address address = new Address();
                 address.setOrderId(setOrderId);
@@ -60,7 +71,8 @@ public class SingleDepotMultipleDriverByTerritoryOrderIDs {
             try {
                 DataObject responseObject = manager.runOptimization(optParameters);
                 System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-                System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+                System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                        : OptimizationState.get(responseObject.getState().intValue())));
                 if (responseObject.getAddresses() != null) {
                     for (Address address : responseObject.getAddresses()) {
                         System.out.println(address);

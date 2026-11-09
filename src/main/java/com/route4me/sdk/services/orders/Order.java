@@ -11,7 +11,7 @@ public class Order {
     /** Timestamp of an order creation ({@code created_timestamp}). */
     @SerializedName("created_timestamp")
     private Long created;
-    /** Timestamp of an order creation ({@code updated_timestamp}). */
+    /** When the order was last updated, as a Unix timestamp ({@code updated_timestamp}). */
     @SerializedName("updated_timestamp")
     private Long updatedTimestamp;
     /** An unique internal ID of an order ({@code order_id}). */
@@ -94,7 +94,7 @@ public class Order {
     /** Generate optimal routes and driving directions to this curbside latitude ({@code curbside_lat}). */
     @SerializedName("curbside_lat")
     private Double curbsideLatitude;
-    /** Generate optimal routes and driving directions to the curbside langitude ({@code curbside_lng}). */
+    /** Generate optimal routes and driving directions to the curbside longitude ({@code curbside_lng}). */
     @SerializedName("curbside_lng")
     private Double curbsideLongitude;
     /** In how many routes is included address ({@code in_route_count}). */

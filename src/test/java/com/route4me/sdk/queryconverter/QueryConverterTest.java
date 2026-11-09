@@ -97,6 +97,17 @@ public class QueryConverterTest {
     }
 
     @Test
+    public void testNullItemsOfArraysAndListsAreLeftOut() throws IllegalAccessException {
+        TestPojo pojo = new TestPojo();
+        pojo.tags = new String[]{"a", null, "c"};
+        pojo.items = Arrays.asList(null, "y", null);
+
+        List<NameValuePair> params = QueryConverter.convertObjectToParameters(pojo);
+
+        assertEquals("[tags=a, tags=c, items=y]", params.toString());
+    }
+
+    @Test
     public void testFieldWithoutAnnotationSkipped() throws IllegalAccessException {
         TestPojo pojo = new TestPojo();
         pojo.noAnnotation = "should be skipped";

@@ -18,8 +18,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Optimizes 24 stops with time windows from several depots for several drivers, with {@link
- * RoutingManager#runOptimization}.
+ * Optimizes 48 stops with time windows from two depots for several drivers, with {@link
+ * RoutingManager#runOptimization}. (The class name keeps its old "24 stops".)
  */
 public class MultipleDepotMultipleDriverWith24StopsTimeWindow {
 
@@ -131,7 +131,8 @@ public class MultipleDepotMultipleDriverWith24StopsTimeWindow {
         try {
             DataObject responseObject = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-            System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+            System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                    : OptimizationState.get(responseObject.getState().intValue())));
             if (responseObject.getAddresses() != null) {
                 for (Address address : responseObject.getAddresses()) {
                     System.out.println(address);

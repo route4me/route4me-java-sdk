@@ -3,6 +3,7 @@ package com.route4me.sdk.services.customers;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 /**
  * A customer as {@link CustomerManager#getCustomerById(String)} returns it: a {@link CustomerResource} with its
@@ -10,6 +11,7 @@ import lombok.EqualsAndHashCode;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
+@ToString(callSuper = true)
 public class CustomerShowResource extends CustomerResource {
     /** The first name of the accountable person ({@code accountable_person_first_name}). */
     @SerializedName("accountable_person_first_name")

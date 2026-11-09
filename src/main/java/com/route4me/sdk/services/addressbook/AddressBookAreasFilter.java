@@ -7,8 +7,9 @@ import java.util.List;
 
 /**
  * The contacts that {@link AddressBookManagerV5#updateAddressBookContactByAreas} and
- * {@link AddressBookManagerV5#removeAddressBookContactsByAreas} work on: those that match a text, a rectangle or
- * drawn areas. Filters left {@code null} are not sent.
+ * {@link AddressBookManagerV5#removeAddressBookContactsByAreas} work on: those inside drawn areas or a rectangle,
+ * optionally narrowed by a text. Filters left {@code null} are not sent. Both methods refuse a filter with neither a
+ * drawn area nor a rectangle with its four edges, since an empty filter could match every contact.
  */
 @Data
 public class AddressBookAreasFilter {

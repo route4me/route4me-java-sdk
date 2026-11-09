@@ -4,7 +4,9 @@ import com.route4me.sdk.ManagerTestAccess;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.GeoCoordinates;
 import com.route4me.sdk.services.routing.Geocodings;
+import com.route4me.sdk.testsupport.Log4jCapture;
 import com.route4me.sdk.testsupport.MockHttp;
+import org.apache.logging.log4j.Level;
 import org.apache.http.client.utils.URIBuilder;
 import org.junit.Assume;
 import org.junit.Rule;
@@ -12,6 +14,7 @@ import org.junit.Test;
 
 import java.lang.management.ManagementFactory;
 import java.lang.management.ThreadMXBean;
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,6 +23,7 @@ import java.util.List;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -37,8 +41,8 @@ public class GeocodingManagerTest {
     private static final String ADDRESS_EP = "/api/address.php";
     private static final String GEOCODER_EP = "/api/geocoder.php";
     private static final String DETAILED_RESULT =
-            json("[{'name':'100 Example "
-                    + "St','type':'street','confidence':'high','coordinates':{'lat':40.1,'lng':-74.1}}]");
+            json("[{'name':'100 Example St','type':'street','confidence':'high',"
+                    + "'coordinates':{'lat':40.1,'lng':-74.1}}]");
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -152,6 +156,37 @@ public class GeocodingManagerTest {
     }
 
     @Test
+    public void forwardGeocodeDoesNotRetryAClientError() {
+        GeocodingManager manager = manager();
+        int[] statuses = {400, 401, 403, 404, 422};
+        for (int status : statuses) {
+            http.respond(status, json("{'errors':['refused']}"));
+        }
+
+        for (int status : statuses) {
+            assertNull(status + " is not retried",
+                    manager.forwardGeocode(addressBuilder("100 Example St"), Geocodings[].class, 3));
+        }
+
+        assertEquals("one attempt per client error", statuses.length, http.requestCount());
+    }
+
+    @Test
+    public void forwardGeocodeRetriesTransientFailures() {
+        GeocodingManager manager = manager();
+        http.failNextRequest(new IOException("Connection reset"))
+                .respond(408, json("{'errors':['timeout']}"))
+                .respond(429, json("{'errors':['too many requests']}"))
+                .respond(503, json("{'errors':['unavailable']}"))
+                .respond(200, DETAILED_RESULT);
+
+        Geocodings[] matches = manager.forwardGeocode(addressBuilder("100 Example St"), Geocodings[].class, 5);
+
+        assertNotNull(matches);
+        assertEquals("high", matches[0].getConfidence());
+    }
+
+    @Test
     public void forwardGeocodeGivesUpWhenInterrupted() {
         GeocodingManager manager = manager();
         http.respondToAll(500, json("{'errors':['temporary failure']}"));
@@ -197,6 +232,20 @@ public class GeocodingManagerTest {
         assertEquals(-74.1, geocoded.getLongitude(), 0.0);
         assertEquals("street", geocoded.getGeocodings().get(0).getType());
         assertEquals("invalid", findByAddress(results, "ab").getGeocodings().get(0).getType());
+    }
+
+    @Test
+    public void aDetailedMatchWithoutCoordinatesKeepsItsOwnLatitudeAndLongitude() {
+        GeocodingManager manager = manager();
+        http.respond(200, json("[{'name':'100 Example St','type':'street','lat':40.2,'lng':-74.2},"
+                + "{'name':'Example','type':'city'}]"));
+
+        Address result = new ThreadBasedGeocoding(manager, "100 Example St", new GeocoderOptions(1)).call();
+
+        assertEquals(40.2, result.getLatitude(), 0.0);
+        assertEquals(-74.2, result.getLongitude(), 0.0);
+        assertEquals("street", result.getGeocodings().get(0).getType());
+        assertEquals(0.0, result.getGeocodings().get(1).getLatitude(), 0.0);
     }
 
     @Test
@@ -277,10 +326,14 @@ public class GeocodingManagerTest {
         ThreadMXBean threads = ManagementFactory.getThreadMXBean();
         Assume.assumeTrue("thread CPU time is not available", threads.isCurrentThreadCpuTimeSupported());
         GeocodingManager manager = manager();
-        http.respondToAll(200, DETAILED_RESULT).delayResponses(600);
+        http.respondToAll(200, DETAILED_RESULT);
         GeocoderOptions options = new GeocoderOptions(1);
         options.setMaxRetries(1);
         options.setMaxTimeout(5000);
+        // A first, fast run loads and compiles the code on this thread: that CPU time is
+        // not a spin, and on a slow runner it could be a large part of a short wait.
+        manager.bulkGeocoder(Collections.singletonList("100 Example St"), options);
+        http.delayResponses(600);
 
         long wallStart = System.nanoTime();
         long cpuStart = threads.getCurrentThreadCpuTime();
@@ -288,8 +341,32 @@ public class GeocodingManagerTest {
         long cpu = threads.getCurrentThreadCpuTime() - cpuStart;
         long wall = System.nanoTime() - wallStart;
 
+        // A blocked thread uses almost no CPU, however loaded the runner is (load stretches the
+        // wall time, not the CPU time of a parked thread). A thread that polls the futures in a
+        // loop uses about as much CPU as wall time, or at least half of it on a busy runner.
+        assertTrue("waited only " + wall / 1_000_000 + " ms", wall >= 500_000_000L);
         assertTrue("the calling thread used " + cpu / 1_000_000 + " ms of CPU in " + wall / 1_000_000
-                + " ms; it should block, not spin", cpu < wall / 4);
+                + " ms; it should block, not spin", cpu < wall / 2);
+    }
+
+    @Test
+    public void bulkGeocoderTreatsAHugeTimeoutAsNoLimit() {
+        GeocodingManager manager = manager();
+        http.respondToAll(200, DETAILED_RESULT);
+        GeocoderOptions options = new GeocoderOptions(1);
+        options.setMaxTimeout(Long.MAX_VALUE);
+
+        // Two rounds of one thread: Long.MAX_VALUE * 2 wraps to -2 without the cap.
+        List<Address> results = manager.bulkGeocoder(Arrays.asList("100 Example St", "200 Sample Ave"), options);
+
+        assertEquals(2, http.requestCount());
+        for (Address result : results) {
+            assertEquals("a timeout times 2 rounds must not wrap to a negative wait", 40.1, result.getLatitude(), 0.0);
+        }
+        assertEquals(Long.MAX_VALUE, GeocodingManager.waitBudget(Long.MAX_VALUE, 3));
+        assertEquals(Long.MAX_VALUE, GeocodingManager.waitBudget(Long.MAX_VALUE / 2 + 1, 2));
+        assertEquals(Long.MAX_VALUE - 1, GeocodingManager.waitBudget(Long.MAX_VALUE / 2, 2));
+        assertEquals(6000L, GeocodingManager.waitBudget(2000, 3));
     }
 
     @Test
@@ -428,17 +505,51 @@ public class GeocodingManagerTest {
     }
 
     @Test
+    public void websocketsGeocoderReturnsAnIdleGeocoderWhenTheUploadReplyIsIncomplete() throws Exception {
+        GeocodingManager manager = manager();
+        // An empty storage ID counts as none: startGeocoding would throw IllegalArgumentException.
+        http.respondWithoutBody(200).respond(200, json("{'optimization_problem_id':'P1','address_count':2}"))
+                .respond(200, json("{'temporary_addresses_storage_id':'S1'}"))
+                .respond(200, json("{'temporary_addresses_storage_id':'','address_count':2}"));
+        Field socket = GeocoderWebSockets.class.getDeclaredField("geocoderWebSocket");
+        socket.setAccessible(true);
+
+        for (int i = 0; i < 4; i++) {
+            GeocoderWebSockets geocoder = manager.websocketsGeocoder(new ArrayList<Address>());
+
+            assertNull("no socket may be opened in a unit test", socket.get(geocoder));
+            assertFalse(geocoder.isStarted());
+            assertTrue(geocoder.getAddresses().isEmpty());
+            geocoder.closeGeoCodeSocketIO();
+        }
+        assertEquals(4, http.requestCount());
+    }
+
+    @Test
     public void websocketsGeocoderReturnsAnIdleGeocoderWhenTheUploadFails() throws Exception {
         GeocodingManager manager = manager();
         http.respondWithFixture(400, "error_400.json");
 
-        GeocoderWebSockets geocoder = manager.websocketsGeocoder(new ArrayList<Address>());
+        GeocoderWebSockets geocoder;
+        Log4jCapture log = Log4jCapture.start();
+        try {
+            geocoder = manager.websocketsGeocoder(new ArrayList<Address>());
+        } finally {
+            log.stop();
+        }
 
+        boolean logged = false;
+        for (Log4jCapture.Event event : log.events()) {
+            assertFalse(String.valueOf(event.getMessage()).contains(MockHttp.API_KEY));
+            logged |= event.getLevel() == Level.ERROR && String.valueOf(event.getMessage()).contains("upload failed");
+        }
+        assertTrue("the failure is logged through Log4j 2, like the rest of the manager", logged);
         http.request().assertPath("/actions/upload/json-geocode.php");
         Field socket = GeocoderWebSockets.class.getDeclaredField("geocoderWebSocket");
         socket.setAccessible(true);
         assertNull("no socket may be opened in a unit test", socket.get(geocoder));
-        assertNull(geocoder.getAddresses());
+        assertFalse(geocoder.isStarted());
+        assertTrue(geocoder.getAddresses().isEmpty());
         assertEquals(0, geocoder.getAddressesCount());
         assertEquals(0, geocoder.getTotalAddresses());
         assertTrue(geocoder.isCompleted());

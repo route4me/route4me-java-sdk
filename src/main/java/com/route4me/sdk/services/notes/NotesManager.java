@@ -1,6 +1,7 @@
 package com.route4me.sdk.services.notes;
 
 import com.google.gson.JsonElement;
+import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
@@ -87,8 +88,8 @@ public class NotesManager extends Manager {
      * list or {@code {"data": [...]}}; this method reads both.
      *
      * @return the custom note types; empty when the account has none
-     * @throws APIException if the request fails, the server answers with an error status or the answer is neither
-     *     shape
+     * @throws APIException if the request fails, the server answers with an error status, the answer is neither
+     *     shape or an item of the list cannot be read as a custom note type
      */
     public List<CustomNoteType> getAllCustomNoteTypes() throws APIException {
         URIBuilder builder = Manager.defaultBuilder(CUSTOM_NOTE_TYPES_EP);
@@ -103,21 +104,30 @@ public class NotesManager extends Manager {
         if (!list.isJsonArray()) {
             throw new APIException("The custom note types answer is neither a list nor {\"data\": [...]}");
         }
-        return new ArrayList<>(Arrays.asList(this.gson.fromJson(list, CustomNoteType[].class)));
+        try {
+            return new ArrayList<>(Arrays.asList(this.gson.fromJson(list, CustomNoteType[].class)));
+        } catch (JsonParseException | IllegalStateException ex) {
+            throw new APIException("The custom note types answer could not be parsed", ex);
+        }
     }
 
     /**
-     * Adds a custom note type: {@code POST https://api.route4me.com/api.v4/note_custom_types.php}, with the type as
-     * the JSON body. The C# SDK ({@code AddCustomNoteType}) sends the same request.
+     * Adds a custom note type: {@code POST https://api.route4me.com/api.v4/note_custom_types.php}, with
+     * {@code {"type": ..., "values": [...]}} as the JSON body, as the C# and PHP SDKs send it (the API rejects the V4
+     * spec's {@code note_custom_type} and {@code note_custom_type_values}).
      *
-     * @param request the name, the values and the kind of field of the type; {@code note_custom_type} is required
-     * @return {@code result} {@code OK} and the number of types added
-     * @throws IllegalArgumentException if {@code request} is {@code null} or has no {@code note_custom_type}
+     * @param request the name, the values and the kind of field of the type; the name ({@code type}) and at least one
+     *     value ({@code values}) are required
+     * @return {@code result} {@code OK} and the number of types added ({@code affected})
+     * @throws IllegalArgumentException if {@code request} is {@code null}, or has no name or no values; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public CustomNoteTypeResponse addCustomNoteType(CustomNoteTypeRequest request) throws APIException {
         if (request == null || request.getNoteCustomType() == null || request.getNoteCustomType().isEmpty()) {
-            throw new IllegalArgumentException("A custom note type needs note_custom_type");
+            throw new IllegalArgumentException("A custom note type needs a name (type)");
+        }
+        if (request.getNoteCustomTypeValues() == null || request.getNoteCustomTypeValues().isEmpty()) {
+            throw new IllegalArgumentException("A custom note type needs at least one value (values)");
         }
         URIBuilder builder = Manager.defaultBuilder(CUSTOM_NOTE_TYPES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), CustomNoteTypeResponse.class);

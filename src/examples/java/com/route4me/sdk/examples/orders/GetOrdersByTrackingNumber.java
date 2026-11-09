@@ -1,24 +1,38 @@
 // codebeat:disable[SIMILARITY]
 package com.route4me.sdk.examples.orders;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.orders.Order;
 import com.route4me.sdk.services.orders.OrderStatus;
 import com.route4me.sdk.services.orders.OrdersManager;
-import java.util.Arrays;
 
 import java.util.List;
 
-/** Finds orders by tracking number with {@link OrdersManager#getOrdersByTrackingNumber}. */
+/**
+ * Finds orders by tracking number with {@link OrdersManager#getOrdersByTrackingNumber}. Set
+ * {@code TRACKING_NUMBERS} to the comma-separated tracking numbers of some of your orders.
+ */
 public class GetOrdersByTrackingNumber {
     public static void main(String[] args) {
+        List<String> trackingNumbers = ExampleInput.toList("TRACKING_NUMBERS", System.getenv("TRACKING_NUMBERS"));
+        if (trackingNumbers == null) {
+            return;
+        }
+        if (trackingNumbers.isEmpty()) {
+            System.err.println("Set TRACKING_NUMBERS to the comma-separated tracking numbers of some of your orders;"
+                    + " this example finds those orders.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrdersManager manager = new OrdersManager(apiKey);
 
-        List<String> trackingNumbers = Arrays.asList("TRACKING01", "TRACKING02", "TRACKING03");
-
         try {
             List<Order> orders = manager.getOrdersByTrackingNumber(trackingNumbers);
+            if (orders == null) {
+                System.out.println("No order has those tracking numbers");
+                return;
+            }
             for (Order order : orders) {
                 System.out.println("OrderID: " + order.getId());
                 System.out.println("\tStatus: " + OrderStatus.get(order.getLastStatus()));

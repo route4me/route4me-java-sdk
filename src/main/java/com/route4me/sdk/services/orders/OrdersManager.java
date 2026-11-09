@@ -71,15 +71,16 @@ public class OrdersManager extends Manager {
      * request has a filter.
      *
      * <p>Without a filter the parameters go in the query. With a filter they go, filter included, in the JSON body,
-     * which is how the API takes a filter.
+     * which is how the API takes a filter. A {@code null} request sends a plain {@code GET} and lists the orders the
+     * API returns by default, as in 1.16.1.
      *
-     * @param request the search parameters
+     * @param request the search parameters, or {@code null} for no parameters
      * @return the matching orders
      * @throws APIException if the request fails
      */
     public List<Order> getOrders(OrderRequest request) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ORDERS_EP);
-        RequestMethod method = request.getFilter() != null ? RequestMethod.POST : RequestMethod.GET;
+        RequestMethod method = request != null && request.getFilter() != null ? RequestMethod.POST : RequestMethod.GET;
         GetOrdersResponse response = this.makeJSONRequest(method, builder, request, GetOrdersResponse.class);
         return response == null ? null : response.getResults();
     }
@@ -239,11 +240,15 @@ public class OrdersManager extends Manager {
      * Creates a custom user field of orders: {@code POST
      * https://api.route4me.com/api.v4/order_custom_user_fields.php}, with the field as the JSON body.
      *
-     * @param field the field: its name, label, type, and optionally its value and type info
+     * @param field the field: its name, label, type, and optionally its value and type info; required
      * @return the result, with the created field
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code field} is {@code null}; nothing is sent
      */
     public OrderCustomUserFieldResponse createOrderCustomUserField(OrderCustomUserField field) throws APIException {
+        if (field == null) {
+            throw new IllegalArgumentException("The field is required");
+        }
         URIBuilder builder = Manager.defaultBuilder(ORDER_CUSTOM_FIELDS_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(field),
                 OrderCustomUserFieldResponse.class);
@@ -253,11 +258,16 @@ public class OrdersManager extends Manager {
      * Updates a custom user field of orders: {@code PUT
      * https://api.route4me.com/api.v4/order_custom_user_fields.php}, with the field as the JSON body.
      *
-     * @param field the field, with its {@code order_custom_field_id} and the new values
+     * @param field the field, with its {@code order_custom_field_id} and the new values; required
      * @return the result, with the updated field
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code field} or its {@code order_custom_field_id} is {@code null}; nothing
+     *     is sent
      */
     public OrderCustomUserFieldResponse updateOrderCustomUserField(OrderCustomUserField field) throws APIException {
+        if (field == null || field.getOrderCustomFieldId() == null) {
+            throw new IllegalArgumentException("The field and its order_custom_field_id are required");
+        }
         URIBuilder builder = Manager.defaultBuilder(ORDER_CUSTOM_FIELDS_EP);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(field),
                 OrderCustomUserFieldResponse.class);

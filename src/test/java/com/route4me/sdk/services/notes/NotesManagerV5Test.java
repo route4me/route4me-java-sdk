@@ -19,8 +19,8 @@ public class NotesManagerV5Test {
     private static final String HOST = "wh.route4me.com";
     private static final String NOTES_EP = "/modules/api/v5.0/notes";
     private static final String NOTE = json("{'note_id':9001,'note_uuid':'NOTE-UUID-1','route_id':'ROUTE-A1',"
-            + "'route_destination_id':5002,'contents':'Left at the "
-                    + "door','activity_type':'dropoff','lat':40.5,'lng':-74.5}");
+            + "'route_destination_id':3000000002,'contents':'Left at the door',"
+            + "'activity_type':'dropoff','lat':40.5,'lng':-74.5}");
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -34,7 +34,7 @@ public class NotesManagerV5Test {
     private static NoteStoreRequest storeRequest() {
         NoteStoreRequest request = new NoteStoreRequest();
         request.setRouteId("ROUTE-A1");
-        request.setAddressId(5002);
+        request.setAddressId(5002L);
         request.setNoteContents("Left at the door");
         request.setDeviceType("web");
         request.setLat(40.5);
@@ -70,7 +70,24 @@ public class NotesManagerV5Test {
                 .assertJson("strNoteContents", "Left with the neighbour");
         http.request(3).assertEndpoint("DELETE", HOST, NOTES_EP + "/9001").assertNoBody();
         assertEquals("NOTE-UUID-1", created.getNoteUuid());
-        assertEquals(Integer.valueOf(9001), deleted.getNoteId());
+        assertEquals("64-bit stop IDs", Long.valueOf(3000000002L), created.getRouteDestinationId());
+        assertEquals(Long.valueOf(9001), deleted.getNoteId());
+    }
+
+    @Test
+    public void noteAndAddressIdsBeyondTheIntRangeAreRead() throws Exception {
+        NotesManagerV5 manager = manager();
+        http.respond(200, json("{'note_id':3000000001,'route_destination_id':3000000002}"))
+                .respond(200, json("{'status':true,'note_id':3000000001}"));
+        NoteStoreRequest request = storeRequest();
+        request.setAddressId(3000000002L);
+
+        RouteNoteResource created = manager.createNote(request);
+        DeleteNoteResponse deleted = manager.deleteNote("3000000001");
+
+        http.request(0).assertJson("address_id", 3000000002L);
+        assertEquals(Long.valueOf(3000000001L), created.getNoteId());
+        assertEquals(Long.valueOf(3000000001L), deleted.getNoteId());
     }
 
     @Test
@@ -192,14 +209,16 @@ public class NotesManagerV5Test {
         http.expectThrows(IllegalArgumentException.class, () -> manager.deleteNote(""));
         http.expectThrows(IllegalArgumentException.class, () -> manager.getNotesByRoute("", null, null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.getNotesByDestination(null, null, null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateNote("a/b", update));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteNote("a\\b"));
         http.assertNoRequests();
 
         http.respondToAll(200, NOTE);
-        manager.updateNote("a/b", update);
-        manager.deleteNote("a/b");
+        manager.updateNote("a b", update);
+        manager.deleteNote("a?b");
 
-        assertEquals(NOTES_EP + "/a%2Fb", http.request(0).getUri().getRawPath());
-        assertEquals(NOTES_EP + "/a%2Fb", http.request(1).getUri().getRawPath());
+        assertEquals(NOTES_EP + "/a%20b", http.request(0).getUri().getRawPath());
+        assertEquals(NOTES_EP + "/a%3Fb", http.request(1).getUri().getRawPath());
     }
 
     @Test

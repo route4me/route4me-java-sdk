@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.territories;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
@@ -12,7 +13,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class TerritoriesManagerV5 extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String TERRITORIES_EP = V5_BASE + "/territories";
     private static final String AVOIDANCE_EP = V5_BASE + "/avoidance";
     private static final String AUTOMATIC_TERRITORIES_EP = V5_BASE + "/automatic-territories";
@@ -36,14 +36,6 @@ public class TerritoriesManagerV5 extends Manager {
      */
     public TerritoriesManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /** Checks that a latitude and a longitude are given together or not at all, as the spec requires. */
@@ -104,19 +96,22 @@ public class TerritoriesManagerV5 extends Manager {
      * https://wh.route4me.com/modules/api/v5.0/automatic-territories}, with the request as the JSON body.
      *
      * <p>The API accepts the job with {@code 202 Accepted} and puts the job ID in the {@code X-job-id} response
-     * header, and the status URL in {@code Location}. This SDK does not return response headers yet, so this method
-     * returns only the body, and the job ID cannot be read through it yet.
+     * header, and the status URL in {@code Location}. Follow the job with
+     * {@link #getAutomaticTerritoriesJobStatus(String)}, then read the clusters with
+     * {@link #getAutomaticTerritoriesJobResult(String)}:
+     * <pre>{@code
+     * AsyncJob job = manager.createAutomaticTerritoriesJob(request);
+     * AutomaticTerritoriesJobStatus status = manager.getAutomaticTerritoriesJobStatus(job.getJobId());
+     * }</pre>
      *
      * @param request the addresses or the temporary address storage, the mode and the parameters
-     * @return the body of the answer, as text; it is empty or {@code {}} when the job is accepted
+     * @return the accepted job: its ID, status URL and reply body (empty, or {@code {}} or {@code []})
      * @throws APIException if the request fails or the server answers with an error status
      * @throws IllegalArgumentException if the request is {@code null}, has neither addresses nor a storage ID, or has
      *                                  an address without an ID
      */
-    public String createAutomaticTerritoriesJob(AutomaticTerritoriesJobRequest request) throws APIException {
-        if (request == null) {
-            throw new IllegalArgumentException("The request is required");
-        }
+    public AsyncJob createAutomaticTerritoriesJob(AutomaticTerritoriesJobRequest request) throws APIException {
+        requireRequest(request);
         boolean noStorage = request.getTemporaryAddressesStorageId() == null
                 || request.getTemporaryAddressesStorageId().isEmpty();
         boolean noAddresses = request.getAddresses() == null || request.getAddresses().isEmpty();
@@ -131,17 +126,19 @@ public class TerritoriesManagerV5 extends Manager {
             }
         }
         URIBuilder builder = v5Builder(AUTOMATIC_TERRITORIES_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), String.class);
+        return this.makeJobRequest(RequestMethod.POST, builder, this.gson.toJson(request));
     }
 
     /**
      * Gets the status of an automatic territories job: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/automatic-territories/job-tracker/status/{jobId}}.
      *
-     * @param jobId the job ID
+     * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of
+     *              {@link #createAutomaticTerritoriesJob(AutomaticTerritoriesJobRequest)}
      * @return the status of the job
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}
+     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}
      */
     public AutomaticTerritoriesJobStatus getAutomaticTerritoriesJobStatus(String jobId) throws APIException {
         URIBuilder builder = v5Builder(AUTOMATIC_JOB_STATUS_EP, jobId);
@@ -152,11 +149,13 @@ public class TerritoriesManagerV5 extends Manager {
      * Gets the clusters of a finished automatic territories job: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/automatic-territories/job-tracker/result/{jobId}}.
      *
-     * @param jobId the job ID
+     * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of
+     *              {@link #createAutomaticTerritoriesJob(AutomaticTerritoriesJobRequest)}
      * @return the clusters
      * @throws APIException if the request fails, the server answers with an error status (409 while the job runs) or
      *                      the answer cannot be parsed
-     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}
+     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}
      */
     public AutomaticTerritoriesJobResult getAutomaticTerritoriesJobResult(String jobId) throws APIException {
         URIBuilder builder = v5Builder(AUTOMATIC_JOB_RESULT_EP, jobId);

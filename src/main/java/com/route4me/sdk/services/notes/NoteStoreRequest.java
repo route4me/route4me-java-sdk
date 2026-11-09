@@ -12,7 +12,7 @@ public class NoteStoreRequest {
     /** Route ID (required, 32-char hex string) ({@code route_id}). */
     @SerializedName("route_id") private String routeId;
     /** Address ID (nullable, integer) ({@code address_id}). */
-    @SerializedName("address_id") private Integer addressId;
+    @SerializedName("address_id") private Long addressId;
     /** The UUID of the destination, instead of its address ID ({@code destination_uuid}). */
     @SerializedName("destination_uuid") private String destinationUuid;
     /** Note contents (required, up to 1000 characters) ({@code strNoteContents}). */

@@ -13,11 +13,11 @@ import lombok.Data;
 @Data
 public class SlowDowns {
 
-    /** Service time slowdowon (percent) ({@code service_time}). */
+    /** Service time slowdown (percent) ({@code service_time}). */
     @SerializedName("service_time")
     @QueryParameter("service_time")
     private Integer serviceTime;
-    /** Travel time slowdowon (percent) ({@code travel_time}). */
+    /** Travel time slowdown (percent) ({@code travel_time}). */
     @SerializedName("travel_time")
     @QueryParameter("travel_time")
     private Integer travelTime;
