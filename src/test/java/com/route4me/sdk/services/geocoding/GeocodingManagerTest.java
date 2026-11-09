@@ -541,7 +541,7 @@ public class GeocodingManagerTest {
         boolean logged = false;
         for (Log4jCapture.Event event : log.events()) {
             assertFalse(String.valueOf(event.getMessage()).contains(MockHttp.API_KEY));
-            logged |= event.getLevel() == Level.ERROR && event.getMessage().contains("upload failed");
+            logged |= event.getLevel() == Level.ERROR && String.valueOf(event.getMessage()).contains("upload failed");
         }
         assertTrue("the failure is logged through Log4j 2, like the rest of the manager", logged);
         http.request().assertPath("/actions/upload/json-geocode.php");
