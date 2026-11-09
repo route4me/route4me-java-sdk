@@ -35,6 +35,15 @@ public class RouteDestinationsManagerTest {
         return http.install(new RouteDestinationsManager(MockHttp.API_KEY));
     }
 
+    /** Returns a list request with the filters the API requires. */
+    private static GetDestinationsRequest listRequest() {
+        DestinationFilters filters = new DestinationFilters();
+        filters.setRouteId("ROUTE-A1");
+        GetDestinationsRequest request = new GetDestinationsRequest();
+        request.setFilters(filters);
+        return request;
+    }
+
     @Test
     public void getDestinationPutsTheIdInThePath() throws Exception {
         RouteDestinationsManager manager = manager();
@@ -83,6 +92,19 @@ public class RouteDestinationsManagerTest {
         http.respond(200, json("{'facilities':[{'facility_id':101,'coordinates':49.8}]}"));
 
         http.expectApiException(() -> manager.getDestination("5002"));
+    }
+
+    @Test
+    public void workflowIdIsReadAsTextFromAStringOrANumber() throws Exception {
+        RouteDestinationsManager manager = manager();
+        http.respond(200, json("{'items':[{'route_destination_id':5002,"
+                + "'workflow_id':'C0FFEE0000000000000000000000000B'},"
+                + "{'route_destination_id':5003,'workflow_id':789}]}"));
+
+        RouteDestinationsListResponse list = manager.getDestinationsList(listRequest());
+
+        assertEquals("C0FFEE0000000000000000000000000B", list.getItems().get(0).getWorkflowId());
+        assertEquals("789", list.getItems().get(1).getWorkflowId());
     }
 
     @Test

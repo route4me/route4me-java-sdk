@@ -123,9 +123,12 @@ public abstract class AbstractRouteDestinationResource {
     @SerializedName("stop_status_id")
     private String stopStatusId;
 
-    /** Workflow identifier (hexadecimal UUID) associated with this stop ({@code workflow_id}). */
+    /**
+     * The ID of the POD workflow of this stop, a 32-character hex ID ({@code workflow_id}); a numeric ID is read as its
+     * text.
+     */
     @SerializedName("workflow_id")
-    private Integer workflowId;
+    private String workflowId;
 
     /** Stop type (e.g., "Dropoff", "Pickup", "Service") ({@code address_stop_type}). */
     @SerializedName("address_stop_type")
