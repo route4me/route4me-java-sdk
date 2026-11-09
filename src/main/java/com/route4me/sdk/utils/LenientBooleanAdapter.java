@@ -7,7 +7,13 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
 import com.google.gson.stream.JsonWriter;
 import java.io.IOException;
+import java.math.BigDecimal;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Pattern;
 
 /**
  * Reads a JSON boolean that the Route4Me API sends as {@code true}/{@code false}, as a number
@@ -18,12 +24,22 @@ import java.util.Locale;
  * rejects numbers, so the whole reply failed to parse. {@link #register(GsonBuilder)} installs
  * this adapter for both {@code Boolean} and {@code boolean}.
  *
- * <p>A number is {@code true} unless it is 0. A string is {@code true} when it is {@code "1"}
- * or {@code "true"} in any case, and {@code false} otherwise ({@code "0"}, {@code "false"},
- * {@code ""} or any other text), as Gson's own adapter read strings in 1.16.1 (with
- * {@code Boolean.parseBoolean}), so a string never makes a reply fail.
+ * <p>A number is {@code true} unless it is 0. A string, trimmed and in any case, is
+ * {@code true} when it is a number other than 0 (such as {@code "1"} or {@code "2"}, as the
+ * number would be) or one of the words PHP reads as true ({@code "true"}, {@code "yes"},
+ * {@code "on"}), and {@code false} otherwise ({@code "0"}, {@code "false"}, {@code "no"},
+ * {@code "off"}, {@code ""} or any other text). So a string never makes a reply fail, and
+ * every string that Gson's own adapter read as {@code true} in SDK 1.16.1 (with
+ * {@code Boolean.parseBoolean}) is still {@code true}.
  */
 public final class LenientBooleanAdapter extends TypeAdapter<Boolean> {
+
+    /** A decimal number written as text, such as {@code 1}, {@code -2} or {@code 0.0}. */
+    private static final Pattern DECIMAL = Pattern.compile("[+-]?[0-9]+(\\.[0-9]+)?");
+
+    /** The words, besides numbers, that PHP's {@code FILTER_VALIDATE_BOOLEAN} reads as true. */
+    private static final Set<String> TRUE_WORDS =
+            Collections.unmodifiableSet(new HashSet<>(Arrays.asList("true", "yes", "on")));
 
     private LenientBooleanAdapter() {
     }
@@ -59,8 +75,9 @@ public final class LenientBooleanAdapter extends TypeAdapter<Boolean> {
      * Reads a JSON boolean, number or string as a boolean.
      *
      * @param in the JSON reader
-     * @return the value; {@code null} for a JSON {@code null}; for a string, {@code true} for
-     *     {@code "1"} and {@code "true"} (any case) and {@code false} for any other text
+     * @return the value; {@code null} for a JSON {@code null}; for a string, {@code true} for a
+     *     number other than 0 and for {@code "true"}, {@code "yes"} and {@code "on"} (any case),
+     *     and {@code false} for any other text
      * @throws IOException if the reader fails
      * @throws JsonSyntaxException if the value is an object or an array
      */
@@ -82,9 +99,12 @@ public final class LenientBooleanAdapter extends TypeAdapter<Boolean> {
         }
     }
 
-    /** Reads a string as Gson's own adapter did, and {@code "1"} as {@code true} too. */
+    /** Reads a string: a number as a number, a word that PHP reads as true as {@code true}, anything else as false. */
     private static Boolean parse(String text) {
         String value = text.trim().toLowerCase(Locale.ROOT);
-        return "1".equals(value) || "true".equals(value);
+        if (DECIMAL.matcher(value).matches()) {
+            return new BigDecimal(value).signum() != 0;
+        }
+        return TRUE_WORDS.contains(value);
     }
 }
