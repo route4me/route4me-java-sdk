@@ -6,7 +6,7 @@ import lombok.Data;
 /** The answer of {@link VehiclesManagerV5#getVehicleByLicensePlate(String)}. */
 @Data
 public class VehicleResponse {
-    /** Vehicle data ({@code data}). */
+    /** The vehicle, under {@code data.vehicle} ({@code data}). */
     @SerializedName("data")
-    private VehicleV5 data;
+    private VehicleResponseData data;
 }

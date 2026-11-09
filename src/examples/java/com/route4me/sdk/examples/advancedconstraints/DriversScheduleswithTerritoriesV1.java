@@ -18,7 +18,6 @@ import com.route4me.sdk.services.routing.OptimizationParameters;
 import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -26,18 +25,16 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
- * Optimizes the stops of {@code locations.csv} for the driver schedules of {@code schedules.csv} (50 drivers),
- * with {@link RoutingManager#runOptimization}.
+ * Optimizes the stops of {@code locations.csv} for the 60 driver schedules of {@code schedules.csv} (at most 50
+ * routes), with {@link RoutingManager#runOptimization}.
  */
 public class DriversScheduleswithTerritoriesV1 {
 
     /**
      * Reads the stops of a CSV file with {@link CsvRows}: each row gives the address (also its alias), the latitude and
-     * the longitude. If the file cannot be read, the error is logged and the stops read so far are returned.
+     * the longitude.
      *
      * @param filename the path of the CSV file
      * @param zone1 not used
@@ -45,24 +42,18 @@ public class DriversScheduleswithTerritoriesV1 {
      * @param zone3 not used
      * @param serviceTime not used
      * @return the stops
+     * @throws IOException if the file cannot be read
      */
     public static List<Address> readAddressesFromCSV(String filename, List<String> zone1, List<String> zone2,
-            List<String> zone3, Integer serviceTime) {
+            List<String> zone3, Integer serviceTime) throws IOException {
         List<Address> addresses = new ArrayList<>();
-        try {
-            for (String[] nextRecord : CsvRows.read(filename)) {
-                Address address = new Address();
-                address.setAlias(nextRecord[0]);
-                address.setAddress(nextRecord[0]);
-                address.setLatitude(Double.parseDouble(nextRecord[1]));
-                address.setLongitude(Double.parseDouble(nextRecord[2]));
-                addresses.add(address);
-            }
-
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
+        for (String[] nextRecord : CsvRows.read(filename)) {
+            Address address = new Address();
+            address.setAlias(nextRecord[0]);
+            address.setAddress(nextRecord[0]);
+            address.setLatitude(Double.parseDouble(nextRecord[1]));
+            address.setLongitude(Double.parseDouble(nextRecord[2]));
+            addresses.add(address);
         }
 
         return addresses;
@@ -97,7 +88,6 @@ public class DriversScheduleswithTerritoriesV1 {
         // Schedules
         // **********************
         AdvancedConstraints schedule;
-        List<String> zone = new ArrayList<>();
         List<AdvancedConstraints> advancedConstraints = new ArrayList<>();
 
         Path currentPath = Paths.get(System.getProperty("user.dir"));
@@ -121,10 +111,10 @@ public class DriversScheduleswithTerritoriesV1 {
 
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("Cannot read " + filePath + " (" + ex.getMessage()
+                    + "). Run the example from the root of the SDK repository; nothing was sent.");
+            return;
         }
 
 
@@ -158,10 +148,10 @@ public class DriversScheduleswithTerritoriesV1 {
                 addresses.add(address);
             }
 
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(DriversScheduleswithTerritoriesV1.class.getName()).log(Level.SEVERE, null, ex);
+            System.err.println("Cannot read " + filePath + " (" + ex.getMessage()
+                    + "). Run the example from the root of the SDK repository; nothing was sent.");
+            return;
         }
 
 
@@ -173,7 +163,8 @@ public class DriversScheduleswithTerritoriesV1 {
         try {
             DataObject responseObject = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-            System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+            System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                    : OptimizationState.get(responseObject.getState().intValue())));
             if (responseObject.getAddresses() != null) {
                 for (Iterator<Address> it = responseObject.getAddresses().iterator(); it.hasNext();) {
                     address = it.next();

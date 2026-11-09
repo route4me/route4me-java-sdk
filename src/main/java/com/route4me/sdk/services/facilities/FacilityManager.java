@@ -3,6 +3,8 @@ package com.route4me.sdk.services.facilities;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import java.util.ArrayList;
+import java.util.List;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -12,7 +14,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class FacilityManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String FACILITIES_EP = V5_BASE + "/facilities";
     private static final String FACILITY_TYPES_EP = FACILITIES_EP + "/types";
 
@@ -35,19 +36,13 @@ public class FacilityManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
-    }
-
     /**
      * Gets one facility: {@code GET https://wh.route4me.com/modules/api/v5.0/facilities/{facilityId}}.
      *
      * @param facilityId the facility ID
      * @return the facility
+     * @throws IllegalArgumentException if {@code facilityId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public FacilityResource getFacility(String facilityId) throws APIException {
@@ -93,11 +88,15 @@ public class FacilityManager extends Manager {
      * Creates a facility: {@code POST https://wh.route4me.com/modules/api/v5.0/facilities}, with the request as the
      * JSON body.
      *
-     * @param request the facility
+     * @param request the facility: its alias, address, coordinates and types are required
      * @return the created facility
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if the request is {@code null} or a required field is missing
      */
     public FacilityResource createFacility(FacilityCreateRequest request) throws APIException {
+        requireRequest(request);
+        requireFields(request.getFacilityAlias(), request.getAddress(), request.getCoordinates(),
+                request.getFacilityTypes());
         URIBuilder builder = v5Builder(FACILITIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), FacilityResource.class);
     }
@@ -107,12 +106,17 @@ public class FacilityManager extends Manager {
      * request as the JSON body.
      *
      * @param facilityId the facility ID
-     * @param request the new values of the facility
+     * @param request the new values of the facility: its alias, address, coordinates and types are required
      * @return the updated facility
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if the facility ID is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}, the request is {@code null} or a required field is missing
      */
     public FacilityResource updateFacility(String facilityId, FacilityUpdateRequest request) throws APIException {
         URIBuilder builder = v5Builder(FACILITIES_EP, facilityId);
+        requireRequest(request);
+        requireFields(request.getFacilityAlias(), request.getAddress(), request.getCoordinates(),
+                request.getFacilityTypes());
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), FacilityResource.class);
     }
 
@@ -121,6 +125,8 @@ public class FacilityManager extends Manager {
      *
      * @param facilityId the facility ID
      * @return the deleted facility, in an array, as the API returns it
+     * @throws IllegalArgumentException if {@code facilityId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public FacilityResource[] deleteFacility(String facilityId) throws APIException {
@@ -149,5 +155,33 @@ public class FacilityManager extends Manager {
     public FacilityTypeResource getFacilityType(int typeId) throws APIException {
         URIBuilder builder = v5Builder(FACILITY_TYPES_EP, typeId);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, FacilityTypeResource.class);
+    }
+
+    /**
+     * Checks the fields the facilities spec requires in a create or update body.
+     *
+     * @param alias the {@code facility_alias}
+     * @param address the {@code address}
+     * @param coordinates the {@code coordinates}
+     * @param types the {@code facility_types}
+     * @throws IllegalArgumentException if a field is {@code null}
+     */
+    private static void requireFields(Object alias, Object address, Object coordinates, Object types) {
+        List<String> missing = new ArrayList<>();
+        if (alias == null) {
+            missing.add("facility_alias");
+        }
+        if (address == null) {
+            missing.add("address");
+        }
+        if (coordinates == null) {
+            missing.add("coordinates");
+        }
+        if (types == null) {
+            missing.add("facility_types");
+        }
+        if (!missing.isEmpty()) {
+            throw new IllegalArgumentException("Missing required field(s): " + String.join(", ", missing));
+        }
     }
 }

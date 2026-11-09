@@ -9,7 +9,7 @@ import java.util.List;
 public class CustomerListResource {
     /** Root member ID ({@code root_member_id}). */
     @SerializedName("root_member_id")
-    private Integer rootMemberId;
+    private Long rootMemberId;
 
     /** Customer ID ({@code customer_id}). */
     @SerializedName("customer_id")
@@ -57,7 +57,7 @@ public class CustomerListResource {
 
     /** Created by member ID ({@code created_by_member_id}). */
     @SerializedName("created_by_member_id")
-    private Integer createdByMemberId;
+    private Long createdByMemberId;
 
     /** Updated timestamp ({@code updated_timestamp}). */
     @SerializedName("updated_timestamp")

@@ -6,21 +6,23 @@ import com.route4me.sdk.exception.APIException;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Manages optimization profiles, saved sets of optimization settings, through the V5 API ({@code
- * https://wh.route4me.com/modules/api/v5.0/optimization-profiles}).
+ * https://wh.route4me.com/modules/api/v5.0/optimization-profiles}), and assigns them to groups of orders ({@code
+ * https://wh.route4me.com/modules/api/v5.0/orders/aggregation/assign-optimization-profile}).
  */
 public class OptimizationProfileManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String PROFILES_EP = V5_BASE + "/optimization-profiles";
     private static final String PROFILES_DATA_LIST_EP = PROFILES_EP + "/data-list";
     private static final String PROFILES_SAVE_ENTITIES_EP = PROFILES_EP + "/save-entities";
     private static final String PROFILES_DELETE_ENTITIES_EP = PROFILES_EP + "/delete-entities";
     private static final String PROFILES_GET_ENTITIES_EP = PROFILES_EP + "/get-entities";
     private static final String PROFILES_GET_ENTITIES_TEMPLATE_EP = PROFILES_EP + "/get-entities-template";
-    private static final String PROFILES_LIST_EP = PROFILES_EP + "/list";
-    private static final String PROFILES_LIST_CONFIG_EP = PROFILES_EP + "/list/config";
+    private static final String ASSIGN_TO_ORDERS_GROUP_EP = V5_BASE + "/orders/aggregation/assign-optimization-profile";
 
     /**
      * Creates a manager that sends its requests with an API key.
@@ -41,14 +43,6 @@ public class OptimizationProfileManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
-    }
-
     /**
      * Lists the optimization profiles: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/optimization-profiles/data-list}.
@@ -67,6 +61,8 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param profileId the profile ID
      * @return the profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfile getOptimizationProfileById(String profileId) throws APIException {
@@ -80,9 +76,11 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param request the profile
      * @return the created profile
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfile createOptimizationProfile(OptimizationProfileCreateRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(PROFILES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), OptimizationProfile.class);
     }
@@ -94,10 +92,13 @@ public class OptimizationProfileManager extends Manager {
      * @param profileId the profile ID
      * @param request the new values
      * @return the updated profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}, or {@code request} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfile updateOptimizationProfile(String profileId, OptimizationProfileCreateRequest request)
             throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(PROFILES_EP, profileId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), OptimizationProfile.class);
     }
@@ -108,6 +109,8 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param profileId the profile ID
      * @return {@code true}; an error status throws instead
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public boolean deleteOptimizationProfile(String profileId) throws APIException {
@@ -122,9 +125,11 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param request the entities
      * @return the saved entities
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfileSaveEntities saveEntities(OptimizationProfileSaveEntities request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(PROFILES_SAVE_ENTITIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 OptimizationProfileSaveEntities.class);
@@ -137,38 +142,84 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param request the IDs of the entities
      * @return the answer of the API
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfileSaveEntities deleteEntities(OptimizationProfileDeleteEntitiesRequest request)
             throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(PROFILES_DELETE_ENTITIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 OptimizationProfileSaveEntities.class);
     }
 
     /**
-     * Gets the entities of an optimization profile: {@code GET
-     * https://wh.route4me.com/modules/api/v5.0/optimization-profiles/get-entities?optimization_profile_id=...}.
+     * Gets the entities of optimization profiles: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/optimization-profiles/get-entities}, with {@code {"items": [{"id":
+     * ...}]}} as the JSON body, one item per profile.
      *
-     * @param profileId the profile ID
+     * @param profileIds the profile IDs
      * @return the entities
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public OptimizationProfileSaveEntities getEntities(String profileId) throws APIException {
+    public OptimizationProfileSaveEntities getEntities(String... profileIds) throws APIException {
+        List<OptimizationProfileDeleteEntitiesRequestItem> items = new ArrayList<>();
+        if (profileIds != null) {
+            for (String profileId : profileIds) {
+                OptimizationProfileDeleteEntitiesRequestItem item = new OptimizationProfileDeleteEntitiesRequestItem();
+                item.setId(profileId);
+                items.add(item);
+            }
+        }
+        OptimizationProfileDeleteEntitiesRequest request = new OptimizationProfileDeleteEntitiesRequest();
+        request.setItems(items);
         URIBuilder builder = v5Builder(PROFILES_GET_ENTITIES_EP);
-        builder.setParameter("optimization_profile_id", profileId);
-        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, OptimizationProfileSaveEntities.class);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                OptimizationProfileSaveEntities.class);
     }
 
     /**
-     * Gets the template of the optimization profile entities: {@code GET
-     * https://wh.route4me.com/modules/api/v5.0/optimization-profiles/get-entities-template}.
+     * Gets the template of the optimization profile entities: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/optimization-profiles/get-entities-template}, with no body.
      *
      * @return the template
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfileSaveEntities getEntitiesTemplate() throws APIException {
         URIBuilder builder = v5Builder(PROFILES_GET_ENTITIES_TEMPLATE_EP);
-        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, OptimizationProfileSaveEntities.class);
+        return this.makeRequest(RequestMethod.POST, builder, (HttpEntity) null, OptimizationProfileSaveEntities.class);
+    }
+
+    /**
+     * Assigns an optimization profile to a group of orders: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/orders/aggregation/assign-optimization-profile}, with {@code
+     * {"group_id": ..., "optimization_profile_id": ...}} as the JSON body.
+     *
+     * @param groupId the ID of the group of orders; required
+     * @param optimizationProfileId the ID of the optimization profile, from {@link #getOptimizationProfiles()};
+     *     required
+     * @return the answer of the API
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code groupId} or {@code optimizationProfileId} is {@code null} or empty;
+     *     nothing is sent
+     */
+    public OptimizationProfileAssignResponse assignOptimizationProfile(String groupId, String optimizationProfileId)
+            throws APIException {
+        requireText(groupId, "group_id");
+        requireText(optimizationProfileId, "optimization_profile_id");
+        OptimizationProfileAssignRequest request = new OptimizationProfileAssignRequest();
+        request.setGroupId(groupId);
+        request.setOptimizationProfileId(optimizationProfileId);
+        URIBuilder builder = v5Builder(ASSIGN_TO_ORDERS_GROUP_EP);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                OptimizationProfileAssignResponse.class);
+    }
+
+
+    /** Rejects a required text that is {@code null} or empty, before any request is sent. */
+    private static void requireText(String value, String name) {
+        if (value == null || value.isEmpty()) {
+            throw new IllegalArgumentException(name + " is required");
+        }
     }
 }

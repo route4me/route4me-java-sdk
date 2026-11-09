@@ -9,6 +9,15 @@ public class TrackingHistory {
     /** Speed at the time of the location transaction event ({@code s}). */
     @SerializedName("s")
     private String s;
+    /** The unit of the speed, such as {@code mph} or {@code kph} ({@code su}). */
+    @SerializedName("su")
+    private String speedUnit;
+    /** The member ID ({@code m}). */
+    @SerializedName("m")
+    private String memberId;
+    /** The source of the position, such as {@code R4M} ({@code src}). */
+    @SerializedName("src")
+    private String source;
     /** Latitude at the time of the location transaction event ({@code lt}). */
     @SerializedName("lt")
     private Double latitude;

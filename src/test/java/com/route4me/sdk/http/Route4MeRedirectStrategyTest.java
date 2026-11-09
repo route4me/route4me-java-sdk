@@ -97,7 +97,14 @@ public class Route4MeRedirectStrategyTest {
         assertFalse(Route4MeRedirectStrategy.isAllowed(null));
         assertFalse(Route4MeRedirectStrategy.isAllowed(URI.create("/relative")));
         assertFalse(Route4MeRedirectStrategy.isAllowed(URI.create("https:opaque")));
-        assertTrue(Route4MeRedirectStrategy.isAllowed(URI.create("https://rapid.route4me.com/timezone")));
+        assertTrue(Route4MeRedirectStrategy.isAllowed(URI.create("https://wh.route4me.com/modules/api/v5.0/x")));
+    }
+
+    @Test
+    public void refusesTheOtherRoute4MeHosts() {
+        assertRefused("https://rapid.route4me.com/timezone?api_key=secret");
+        assertRefused("https://validator.route4me.com/?api_key=secret");
+        assertRefused("https://telematics.route4me.com/api/vendors.php?api_key=secret");
     }
 
     @Test
@@ -116,7 +123,7 @@ public class Route4MeRedirectStrategyTest {
             Route4MeRedirectStrategy.ALLOWED_HOSTS.add("example.com");
             fail("ALLOWED_HOSTS must be read-only");
         } catch (UnsupportedOperationException expected) {
-            assertEquals(4, Route4MeRedirectStrategy.ALLOWED_HOSTS.size());
+            assertEquals("[api.route4me.com, wh.route4me.com]", Route4MeRedirectStrategy.ALLOWED_HOSTS.toString());
         }
     }
 }

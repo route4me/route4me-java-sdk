@@ -28,5 +28,5 @@ public class LocationTypeResource {
 
     /** Root member ID that owns this location type ({@code root_member_id}). */
     @SerializedName("root_member_id")
-    private Integer rootMemberId;
+    private Long rootMemberId;
 }

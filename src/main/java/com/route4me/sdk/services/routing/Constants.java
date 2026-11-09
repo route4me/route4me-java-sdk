@@ -231,10 +231,13 @@ public class Constants {
         DRIVING("Driving"),
         /** Walking ({@code Walking}). */
         WALKING("Walking"),
-        /** Bicycling ({@code Bicycling}). */
-        BICYCLING("Bicycling"),
         /** Truck driving ({@code Trucking}). */
-        TRUCKING("Trucking");
+        TRUCKING("Trucking"),
+        /**
+         * Bicycling ({@code Bicycling}). Added after the older constants so their ordinals
+         * stay the same.
+         */
+        BICYCLING("Bicycling");
 
         private final String value;
 

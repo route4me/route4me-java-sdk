@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Optimizes routes from several depots for several drivers with capacity, cargo volume and weight limits, with
+ * Optimizes routes from one depot for several drivers with capacity, cargo volume and weight limits, with
  * {@link RoutingManager#runOptimization}; each stop gets a random cube and weight.
  */
 public class MultipleDepotMultipleDriverCapacity {
@@ -105,7 +105,8 @@ public class MultipleDepotMultipleDriverCapacity {
         try {
             DataObject responseObject = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-            System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+            System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                    : OptimizationState.get(responseObject.getState().intValue())));
             if (responseObject.getAddresses() != null) {
                 for (Address a : responseObject.getAddresses()) {
                     System.out.println(a);

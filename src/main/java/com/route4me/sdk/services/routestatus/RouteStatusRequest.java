@@ -13,13 +13,27 @@ public class RouteStatusRequest {
     @SerializedName("status")
     private String status;
 
-    /** The latitude where the status changes ({@code lat}). */
+    /** The latitude where the status changes; {@code null} leaves it out ({@code lat}). */
     @SerializedName("lat")
-    private double latitude;
+    private Double latitude;
 
-    /** The longitude where the status changes ({@code lng}). */
+    /** The longitude where the status changes; {@code null} leaves it out ({@code lng}). */
     @SerializedName("lng")
-    private double longitude;
+    private Double longitude;
+
+    /**
+     * The {@code status_reason_id} (32-character hex) of a cancel reason from the account's reasons list ({@code
+     * reason}). Only with the status {@code canceled}, and not together with {@link #getReasonCode() reasonCode}.
+     */
+    @SerializedName("reason")
+    private String reason;
+
+    /**
+     * The 3-character code of a cancel reason from the account's reasons list, instead of {@link #getReason() reason}
+     * ({@code reason_code}). Only with the status {@code canceled}, and not together with {@code reason}.
+     */
+    @SerializedName("reason_code")
+    private String reasonCode;
 
     /** Event timestamp (Unix timestamp in seconds) ({@code event_timestamp}). */
     @SerializedName("event_timestamp")

@@ -14,7 +14,11 @@ public class GPSPosition {
     /** Unique ID of a route the device assigned to ({@code route_id}). */
     @QueryParameter("route_id")
     private String routeId;
-    /** The format of the answer: {@code json} or {@code xml} ({@code format}). */
+    /**
+     * The format of the answer: {@code csv}, {@code serialized} or {@code xml} ({@code format}); leave it
+     * {@code null} for the default. {@link TrackingManager#setGPS} reads a JSON answer into its fields and keeps
+     * any other answer as text, in {@code SetGpsResponse.getAnswerText()}.
+     */
     @QueryParameter("format")
     private Format format;
     /** Latitude of a device position ({@code lat}). */

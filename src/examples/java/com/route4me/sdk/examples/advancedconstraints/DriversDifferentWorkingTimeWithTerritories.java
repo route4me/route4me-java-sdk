@@ -15,7 +15,6 @@ import com.route4me.sdk.services.routing.OptimizationParameters;
 import com.route4me.sdk.services.routing.Parameters;
 import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.routing.advancedconstraints.AdvancedConstraints;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -23,8 +22,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Optimizes the stops of {@code locations.csv} for drivers with different working hours in three territories
@@ -34,8 +31,7 @@ public class DriversDifferentWorkingTimeWithTerritories {
 
     /**
      * Reads the stops of a CSV file with {@link CsvRows}: each row gives the address (also its alias), the latitude,
-     * the longitude and a group, 0, 1 or 2, that gives the stop the tags of the first, second or third list. If
-     * the file cannot be read, the error is logged and the stops read so far are returned.
+     * the longitude and a group, 0, 1 or 2, that gives the stop the tags of the first, second or third list.
      *
      * @param filename the path of the CSV file
      * @param territory1 the tags of the stops of group 0
@@ -43,39 +39,33 @@ public class DriversDifferentWorkingTimeWithTerritories {
      * @param territory3 the tags of the stops of group 2
      * @param serviceTime not used
      * @return the stops
+     * @throws IOException if the file cannot be read
      */
     public static List<Address> readAddressesFromCSV(String filename, List<String> territory1, List<String> territory2,
-            List<String> territory3, Integer serviceTime) {
+            List<String> territory3, Integer serviceTime) throws IOException {
         List<Address> addresses = new ArrayList<>();
-        try {
-            for (String[] nextRecord : CsvRows.read(filename)) {
-                Address address = new Address();
-                address.setAlias(nextRecord[0]);
-                address.setAddress(nextRecord[0]);
-                address.setLatitude(Double.parseDouble(nextRecord[1]));
-                address.setLongitude(Double.parseDouble(nextRecord[2]));
-                int group = Integer.parseInt(nextRecord[3]);
+        for (String[] nextRecord : CsvRows.read(filename)) {
+            Address address = new Address();
+            address.setAlias(nextRecord[0]);
+            address.setAddress(nextRecord[0]);
+            address.setLatitude(Double.parseDouble(nextRecord[1]));
+            address.setLongitude(Double.parseDouble(nextRecord[2]));
+            int group = Integer.parseInt(nextRecord[3]);
 
-                switch (group) {
-                    case 0:
-                        address.setTags(territory1);
-                        break;
-                    case 1:
-                        address.setTags(territory2);
-                        break;
-                    case 2:
-                        address.setTags(territory3);
-                        break;
-                    default:
-                        break;
-                }
-                addresses.add(address);
+            switch (group) {
+                case 0:
+                    address.setTags(territory1);
+                    break;
+                case 1:
+                    address.setTags(territory2);
+                    break;
+                case 2:
+                    address.setTags(territory3);
+                    break;
+                default:
+                    break;
             }
-
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DriversDifferentWorkingTimeWithTerritories.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(DriversDifferentWorkingTimeWithTerritories.class.getName()).log(Level.SEVERE, null, ex);
+            addresses.add(address);
         }
 
         return addresses;
@@ -178,7 +168,13 @@ public class DriversDifferentWorkingTimeWithTerritories {
                 "examples", "advancedconstraints", "locations.csv");
 
 
-        addresses = readAddressesFromCSV(filePath.toString(), territory1, territory2, territory3, serviceTime);
+        try {
+            addresses = readAddressesFromCSV(filePath.toString(), territory1, territory2, territory3, serviceTime);
+        } catch (IOException ex) {
+            System.err.println("Cannot read " + filePath + " (" + ex.getMessage()
+                    + "). Run the example from the root of the SDK repository; nothing was sent.");
+            return;
+        }
 
         Address address = new Address("DEPOT", true, 25.723025, -80.452883, 0);
         addresses.add(address);
@@ -193,7 +189,8 @@ public class DriversDifferentWorkingTimeWithTerritories {
         try {
             DataObject responseObject = manager.runOptimization(optParameters);
             System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-            System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+            System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                    : OptimizationState.get(responseObject.getState().intValue())));
             if (responseObject.getAddresses() != null) {
                 for (Iterator<Address> it = responseObject.getAddresses().iterator(); it.hasNext();) {
                     address = it.next();

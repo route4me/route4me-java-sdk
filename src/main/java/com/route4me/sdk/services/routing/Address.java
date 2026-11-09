@@ -237,7 +237,7 @@ public class Address {
     @SerializedName("pieces")
     private Integer pieces;
     /**
-     * Server-side generated amount of km/miles that it will take to get to the next location on the route ({@code
+     * Server-side generated time, in seconds, to drive to the next location on the route ({@code
      * drive_time_to_next_destination}).
      */
     @SerializedName("drive_time_to_next_destination")
@@ -252,7 +252,7 @@ public class Address {
     @SerializedName("traffic_time_to_next_destination")
     private Long trafficTimetoNextDestination;
     /**
-     * Server-side generated amount of seconds that it will take to get to the next location ({@code
+     * Server-side generated distance to the next location, in the route's distance unit ({@code
      * distance_to_next_destination}).
      */
     @SerializedName("distance_to_next_destination")

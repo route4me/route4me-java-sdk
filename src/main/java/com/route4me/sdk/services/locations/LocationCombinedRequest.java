@@ -16,7 +16,7 @@ public class LocationCombinedRequest {
 
     /** Sort order as array of [field, direction] pairs (e.g., [["name", "asc"]]) ({@code order_by}). */
     @SerializedName("order_by")
-    private List<String[]> orderBy;
+    private List<List<String>> orderBy;
 
     /** Page number for pagination ({@code page}). */
     @SerializedName("page")
@@ -29,6 +29,10 @@ public class LocationCombinedRequest {
     /** Field name to group results by ({@code group_by}). */
     @SerializedName("group_by")
     private String groupBy;
+
+    /** The fields to return for each location ({@code fields}). */
+    @SerializedName("fields")
+    private List<String> fields;
 
     /** Array of field names to include in the response ({@code selected_fields}). */
     @SerializedName("selected_fields")

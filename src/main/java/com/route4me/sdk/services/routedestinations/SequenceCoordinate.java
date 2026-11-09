@@ -8,9 +8,9 @@ import lombok.Data;
 public class SequenceCoordinate {
     /** Latitude of the location ({@code lat}). */
     @SerializedName("lat")
-    private float lat;
+    private double lat;
 
     /** Longitude of the location ({@code lng}). */
     @SerializedName("lng")
-    private float lng;
+    private double lng;
 }
