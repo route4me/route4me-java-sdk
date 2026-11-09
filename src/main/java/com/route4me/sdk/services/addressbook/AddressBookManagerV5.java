@@ -8,6 +8,7 @@ import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import java.util.List;
 import org.apache.http.HttpEntity;
 import org.apache.http.client.utils.URIBuilder;
 
@@ -187,8 +188,10 @@ public class AddressBookManagerV5 extends Manager {
      * @param contactIds the contact IDs
      * @return the contacts
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code contactIds} is {@code null} or empty; nothing is sent
      */
     public AddressBookContactsResponse getContactsByIds(long[] contactIds) throws APIException {
+        requireIds(contactIds);
         ContactIdsRequest request = new ContactIdsRequest();
         request.setAddressIds(contactIds);
         return this.makeRequest(RequestMethod.POST, v5Builder(CONTACTS_SHOW_EP), this.gson.toJson(request),
@@ -248,11 +251,18 @@ public class AddressBookManagerV5 extends Manager {
      * body. The API runs the update as a background job and answers {@code 202 Accepted}, with the job status URL
      * in {@code Location}; follow it with {@link #getJobStatus(String)}.
      *
-     * @param request the areas and the fields to set
+     * @param request the areas and the fields to set; the filter must select at least one area
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code request} or its {@code filter} is {@code null}, or the filter has
+     *     neither a {@code selected_areas} entry nor a {@code bounding_box} with its four edges; nothing is sent, since
+     *     an update with an empty filter could change every contact
      */
     public AsyncJob updateAddressBookContactByAreas(UpdateContactsByAreasRequest request) throws APIException {
+        if (request == null) {
+            throw new IllegalArgumentException("The request is required");
+        }
+        requireArea(request.getFilter());
         return this.makeJobRequest(RequestMethod.PUT, v5Builder(CONTACTS_UPDATE_BY_AREAS_EP),
                 this.gson.toJson(request));
     }
@@ -283,12 +293,15 @@ public class AddressBookManagerV5 extends Manager {
      * {@code 200} with {@code {"status": true}}, or queues the deletion as a background job: {@code 202 Accepted},
      * no body, and the job ID in {@code x-job-id}; follow it with {@link #getJobStatus(String)}.
      *
-     * @param contactIds the contact IDs
+     * @param contactIds the contact IDs; at least one
      * @return the accepted job: its ID, status URL and reply body; the job ID is {@code null} when the contacts were
      *     deleted at once, and {@code getBodyAs(StatusResponse.class)} then reads the status
      * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code contactIds} is {@code null} or empty; nothing is sent, since the
+     *     endpoint also selects contacts by filters and an empty list must not reach it
      */
     public AsyncJob deleteContacts(long[] contactIds) throws APIException {
+        requireIds(contactIds);
         ContactIdsRequest request = new ContactIdsRequest();
         request.setAddressIds(contactIds);
         return this.makeJobRequest(RequestMethod.DELETE, v5Builder(CONTACTS_DELETE_EP), this.gson.toJson(request));
@@ -301,11 +314,15 @@ public class AddressBookManagerV5 extends Manager {
      * {@code 202 Accepted}, with the job status URL in {@code Location}; follow it with
      * {@link #getJobStatus(String)}.
      *
-     * @param filter the contacts to delete: a text, a rectangle or drawn areas
+     * @param filter the contacts to delete: drawn areas or a rectangle, and optionally a text that narrows them
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code filter} is {@code null}, or has neither a {@code selected_areas} entry
+     *     nor a {@code bounding_box} with its four edges; nothing is sent, since a deletion with an empty filter could
+     *     delete every contact
      */
     public AsyncJob removeAddressBookContactsByAreas(AddressBookAreasFilter filter) throws APIException {
+        requireArea(filter);
         return this.makeJobRequest(RequestMethod.DELETE, v5Builder(CONTACTS_DELETE_BY_AREAS_EP),
                 this.gson.toJson(new FilterBody(filter)));
     }
@@ -503,6 +520,45 @@ public class AddressBookManagerV5 extends Manager {
         }
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 AddressBookContactsResponse.class);
+    }
+
+    /** Rejects a {@code null} or empty list of contact IDs, before any request is sent. */
+    private static void requireIds(long[] contactIds) {
+        if (contactIds == null || contactIds.length == 0) {
+            throw new IllegalArgumentException("At least one contact ID is required");
+        }
+    }
+
+    /**
+     * Rejects an area filter that selects no area, before any request is sent: it needs a drawn area or a complete
+     * rectangle. A text alone is not enough, since the spec makes {@code query} and {@code bounding_box} optional and
+     * only {@code selected_areas} required.
+     */
+    private static void requireArea(AddressBookAreasFilter filter) {
+        if (filter == null) {
+            throw new IllegalArgumentException("The filter is required");
+        }
+        if (!hasArea(filter.getSelectedAreas()) && !isComplete(filter.getBoundingBox())) {
+            throw new IllegalArgumentException("The filter needs selected_areas or a bounding_box with four edges");
+        }
+    }
+
+    /** Tells whether a list of drawn areas has at least one area. */
+    private static boolean hasArea(List<SelectedArea> areas) {
+        if (areas != null) {
+            for (SelectedArea area : areas) {
+                if (area != null) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** Tells whether a rectangle has its four edges. */
+    private static boolean isComplete(BoundingBox box) {
+        return box != null && box.getTop() != null && box.getLeft() != null && box.getBottom() != null
+                && box.getRight() != null;
     }
 
     /** Checks the fields the spec requires in a contact, before any request is sent. */

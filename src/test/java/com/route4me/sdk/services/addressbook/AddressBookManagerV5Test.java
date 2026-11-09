@@ -371,6 +371,61 @@ public class AddressBookManagerV5Test {
         assertQueuedJob(removed);
     }
 
+    /** Regression: no IDs sent {@code {}} or {@code {"address_ids":[]}} to an endpoint that also deletes by filter. */
+    @Test
+    public void contactIdsAreRequiredBeforeSending() {
+        final AddressBookManagerV5 manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteContacts(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteContacts(new long[0]));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getContactsByIds(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getContactsByIds(new long[0]));
+        http.assertNoRequests();
+    }
+
+    /** Regression: a missing or empty filter was sent as {@code {}}, which could match every contact. */
+    @Test
+    public void areaDeletesAndUpdatesNeedAnAreaBeforeSending() {
+        final AddressBookManagerV5 manager = manager();
+        final AddressBookAreasFilter textOnly = new AddressBookAreasFilter();
+        textOnly.setQuery("Bakery");
+        final AddressBookAreasFilter noAreas = new AddressBookAreasFilter();
+        noAreas.setSelectedAreas(Collections.<SelectedArea>emptyList());
+        final AddressBookAreasFilter nullArea = new AddressBookAreasFilter();
+        nullArea.setSelectedAreas(Collections.<SelectedArea>singletonList(null));
+        final AddressBookAreasFilter partialBox = new AddressBookAreasFilter();
+        BoundingBox box = box();
+        box.setRight(null);
+        partialBox.setBoundingBox(box);
+        final UpdateContactsByAreasRequest noFilter = new UpdateContactsByAreasRequest();
+        final UpdateContactsByAreasRequest textOnlyUpdate = new UpdateContactsByAreasRequest();
+        textOnlyUpdate.setFilter(textOnly);
+
+        for (final AddressBookAreasFilter filter : Arrays.asList(null, new AddressBookAreasFilter(), textOnly, noAreas,
+                nullArea, partialBox)) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.removeAddressBookContactsByAreas(filter));
+        }
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateAddressBookContactByAreas(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateAddressBookContactByAreas(noFilter));
+        http.expectThrows(IllegalArgumentException.class,
+            () -> manager.updateAddressBookContactByAreas(textOnlyUpdate));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void aDrawnAreaAloneIsEnoughToDeleteByAreas() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        respondWithQueuedJob();
+        AddressBookAreasFilter areas = new AddressBookAreasFilter();
+        areas.setSelectedAreas(filter().getSelectedAreas());
+
+        assertQueuedJob(manager.removeAddressBookContactsByAreas(areas));
+
+        http.request().assertEndpoint("DELETE", HOST, ADDRESSES_EP + "/delete-by-areas")
+                .assertJson("filter.selected_areas[0].type", "circle")
+                .assertJsonLacks("filter.query", "filter.bounding_box");
+    }
+
     /** Regression: the answer was read as {@code data}; the spec names it {@code custom_fields}. */
     @Test
     public void customFieldsAndDepots() throws Exception {
@@ -509,6 +564,7 @@ public class AddressBookManagerV5Test {
                 .respond(200, json("{'status':'processing'}"));
         AddressBookAreasFilter areas = new AddressBookAreasFilter();
         areas.setQuery("Bakery");
+        areas.setBoundingBox(box());
 
         AsyncJob job = manager.removeAddressBookContactsByAreas(areas);
         JobStatusResponse status = manager.getJobStatus(job.getJobId());
