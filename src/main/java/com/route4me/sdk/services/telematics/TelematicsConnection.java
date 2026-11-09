@@ -126,9 +126,9 @@ public class TelematicsConnection {
 
     /**
      * Reads {@code is_enabled} from a number, a boolean ({@code true} is {@code 1}) or a string, and writes it as a
-     * number. A whole number, or a string of one, is kept as it is; any other value reads as {@code 1} or {@code 0}:
-     * a number unless it is 0, and a string as {@link LenientBooleanAdapter#readString(String)} reads it. So a flag
-     * never fails the reply.
+     * number. A whole number, or a string of one, is kept as it is; any other number or string reads as {@code 1} or
+     * {@code 0}: a number unless it is 0, and a string as {@link LenientBooleanAdapter#readString(String)} reads it.
+     * An object or an array is skipped and reads as {@code null}. So a flag never fails the reply.
      */
     static final class EnabledFlagAdapter extends TypeAdapter<Integer> {
 
@@ -157,6 +157,10 @@ public class TelematicsConnection {
                     return (int) number;
                 }
                 return number != 0 ? 1 : 0;
+            }
+            if (token == JsonToken.BEGIN_OBJECT || token == JsonToken.BEGIN_ARRAY) {
+                in.skipValue();
+                return null;
             }
             String text = in.nextString().trim();
             try {

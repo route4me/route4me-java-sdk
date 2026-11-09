@@ -292,6 +292,25 @@ public class TelematicsManagerTest {
         assertEquals(Integer.valueOf(0), fetched.getIsEnabled());
     }
 
+    /** Regression: an {@code is_enabled} sent as an object or an array failed the whole reply. */
+    @Test
+    public void anIsEnabledObjectOrArrayIsSkippedAndReadsAsNull() throws Exception {
+        TelematicsManager manager = manager();
+        Gson gson = new Gson();
+        for (String shape : new String[] {"{}", "{\"value\":1}", "[]", "[1]", "[{\"a\":[true]}]"}) {
+            TelematicsConnection read = gson.fromJson("{\"is_enabled\":" + shape + ",\"vendor_id\":7}",
+                    TelematicsConnection.class);
+            assertNull(shape, read.getIsEnabled());
+            assertEquals("the fields after it are still read: " + shape, Integer.valueOf(7), read.getVendorID());
+        }
+        http.respond(200, json("{'is_enabled':{'on':true},'connection_token':'CONNECTION-1'}"));
+
+        TelematicsConnection fetched = manager.getTelematicsConnection(TOKEN, "CONNECTION-1");
+
+        assertEquals("CONNECTION-1", fetched.getConnectionToken());
+        assertNull(fetched.getIsEnabled());
+    }
+
     @Test
     public void metadataKeepsWholeNumbersOnARoundTrip() throws Exception {
         TelematicsManager manager = manager();
