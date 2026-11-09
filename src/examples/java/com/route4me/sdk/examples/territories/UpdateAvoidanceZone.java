@@ -9,13 +9,14 @@ import java.util.Arrays;
 
 /**
  * Turns an avoidance zone into a 5 km circle with {@link TerritoriesManager#updateAvoidanceZone}. Set
- * {@code TERRITORY_ID} to the ID of one of your avoidance zones.
+ * {@code TERRITORY_ID} to an avoidance zone of a test account: the example replaces its shape.
  */
 public class UpdateAvoidanceZone {
     public static void main(String[] args) {
         String territoryId = System.getenv("TERRITORY_ID");
         if (territoryId == null || territoryId.isEmpty()) {
-            System.err.println("Set TERRITORY_ID to the ID of one of your avoidance zones; this example changes it.");
+            System.err.println("Set TERRITORY_ID to the ID of an avoidance zone of a test account; this example"
+                    + " replaces its shape.");
             return;
         }
         String apiKey = System.getenv("R4M_API_KEY");

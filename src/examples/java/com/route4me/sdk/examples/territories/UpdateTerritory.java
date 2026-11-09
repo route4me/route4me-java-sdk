@@ -8,14 +8,15 @@ import com.route4me.sdk.services.territories.TerritoryData;
 import java.util.Arrays;
 
 /**
- * Turns a territory into a rectangle with {@link TerritoriesManager#updateTerritory}. Set {@code TERRITORY_ID} to the
- * ID of one of your territories.
+ * Turns a territory into a rectangle with {@link TerritoriesManager#updateTerritory}. Set {@code TERRITORY_ID} to a
+ * territory of a test account: the example replaces its shape.
  */
 public class UpdateTerritory {
     public static void main(String[] args) {
         String territoryId = System.getenv("TERRITORY_ID");
         if (territoryId == null || territoryId.isEmpty()) {
-            System.err.println("Set TERRITORY_ID to the ID of one of your territories; this example changes it.");
+            System.err.println("Set TERRITORY_ID to the ID of a territory of a test account; this example replaces"
+                    + " its shape.");
             return;
         }
         String apiKey = System.getenv("R4M_API_KEY");
