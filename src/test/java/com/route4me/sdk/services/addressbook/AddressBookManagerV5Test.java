@@ -5,12 +5,14 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -451,7 +453,7 @@ public class AddressBookManagerV5Test {
 
         AsyncJob job = manager.exportAddresses(request);
         String status = manager.getExportStatus(job.getJobId());
-        String file = manager.getExportResult(job.getJobId());
+        byte[] file = manager.getExportResult(job.getJobId());
 
         assertEquals(JOB_ID, job.getJobId());
         http.request(1).assertEndpoint("GET", HOST, ADDRESSES_EP + "/export/status/" + JOB_ID).assertApiKeyAsBearer()
@@ -459,7 +461,21 @@ public class AddressBookManagerV5Test {
         http.request(2).assertEndpoint("GET", HOST, ADDRESSES_EP + "/export/result/" + JOB_ID).assertApiKeyAsBearer()
                 .assertNoBody();
         assertEquals("processing", status);
-        assertEquals("address_id,address_1\n12345,100 Example St\n", file);
+        assertEquals("address_id,address_1\n12345,100 Example St\n", new String(file, StandardCharsets.UTF_8));
+    }
+
+    /** Regression: the export file was decoded as text, which broke xls and xlsx files. */
+    @Test
+    public void exportResultReturnsTheBytesOfTheFileUnchanged() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        // The start of an xlsx (ZIP) file: not valid UTF-8, so a text round trip would change it.
+        byte[] xlsx = {0x50, 0x4B, 0x03, 0x04, 0x14, 0x00, 0x06, 0x00, (byte) 0x88, (byte) 0xC3, (byte) 0xFF, 0x00};
+        http.respondWithBytes(200, xlsx, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .respondWithoutBody(200);
+
+        assertArrayEquals(xlsx, manager.getExportResult(JOB_ID));
+        assertArrayEquals(new byte[0], manager.getExportResult(JOB_ID));
+        http.request(0).assertEndpoint("GET", HOST, ADDRESSES_EP + "/export/result/" + JOB_ID).assertNoBody();
     }
 
     @Test

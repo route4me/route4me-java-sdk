@@ -32,8 +32,8 @@ public class ExportAddressesV5 {
             for (int attempt = 1; attempt <= 30; attempt++) {
                 System.out.println("Status: " + manager.getExportStatus(job.getJobId()));
                 try {
-                    String file = manager.getExportResult(job.getJobId());
-                    System.out.println("Downloaded " + file.length() + " characters");
+                    byte[] file = manager.getExportResult(job.getJobId());
+                    System.out.println("Downloaded " + file.length + " bytes");
                     return;
                 } catch (APIException notReady) {
                     Thread.sleep(2000);

@@ -409,17 +409,19 @@ public class AddressBookManagerV5 extends Manager {
     /**
      * Downloads the file of a finished address book export: {@code GET
      * https://wh.route4me.com/modules/api/v5.0/address-book/addresses/export/result/{jobId}}. The API answers the file
-     * itself, for example as {@code text/csv}.
+     * itself, for example as {@code text/csv}, and this method returns its bytes unchanged, so an {@code xls} or
+     * {@code xlsx} file can be saved as it is. Decode a CSV file to read it as text, for example with
+     * {@code new String(file, StandardCharsets.UTF_8)}. The whole file is held in memory.
      *
      * @param jobId the export ID: {@link AsyncJob#getJobId()} of the export job
-     * @return the content of the file, as text; {@code ""} for an empty answer
+     * @return the bytes of the file, as the API sent them; an empty array for an empty answer
      * @throws APIException if the request fails or the server answers with an error status, for example while the
      *     export is still running
      * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
      */
-    public String getExportResult(String jobId) throws APIException {
+    public byte[] getExportResult(String jobId) throws APIException {
         return this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_EXPORT_RESULT_EP, jobId), (HttpEntity) null,
-                String.class);
+                byte[].class);
     }
 
     /** Returns the value of a JSON string answer, or the answer as it is when it is not a JSON string. */
