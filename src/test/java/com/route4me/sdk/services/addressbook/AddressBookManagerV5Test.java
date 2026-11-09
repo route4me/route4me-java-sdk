@@ -133,7 +133,7 @@ public class AddressBookManagerV5Test {
         request.setQuery("Main");
         request.setFields(Arrays.asList("address_id", "address_1"));
         request.setFilter(filter());
-        request.setOrderBy(Collections.singletonList(new String[] {"address_alias", "asc"}));
+        request.setOrderBy(Collections.singletonList(Arrays.asList("address_alias", "asc")));
         request.setLimit(10);
         request.setOffset(20);
 

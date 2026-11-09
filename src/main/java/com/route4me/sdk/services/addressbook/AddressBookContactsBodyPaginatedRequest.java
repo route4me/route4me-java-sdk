@@ -28,7 +28,7 @@ public class AddressBookContactsBodyPaginatedRequest {
      * are those of the {@code order_by} of {@link AddressBookContactsBodyRequest} ({@code order_by}).
      */
     @SerializedName("order_by")
-    private List<String[]> orderBy;
+    private List<List<String>> orderBy;
 
     /** The page number, from 1 ({@code page}). */
     @SerializedName("page")

@@ -26,5 +26,5 @@ public class LocationTerritoriesRequest extends LocationCombinedRequest {
 
     /** Sort order for territories as array of [field, direction] pairs ({@code territories_order_by}). */
     @SerializedName("territories_order_by")
-    private List<String[]> territoriesOrderBy;
+    private List<List<String>> territoriesOrderBy;
 }

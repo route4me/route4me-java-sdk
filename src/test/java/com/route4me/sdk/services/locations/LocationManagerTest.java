@@ -108,8 +108,33 @@ public class LocationManagerTest {
         LocationHeatmapCollection heatmap = manager.getLocationsHeatmap(request);
 
         http.request().assertEndpoint("POST", HOST, LOCATIONS_EP + "/heatmap").assertJson("zoom", 8);
-        assertEquals(3.0, heatmap.getData().get(0)[2], 0.0);
+        assertEquals(Arrays.asList(40.1, -74.1, 3.0), heatmap.getData().get(0));
         assertEquals("weight", heatmap.getFields().get(2));
+    }
+
+    /** Regression: {@code List<double[]>} failed the whole heat map when one number was {@code null}. */
+    @Test
+    public void heatmapKeepsANullNumber() throws Exception {
+        LocationManager manager = manager();
+        http.respond(200, json("{'data':[[40.1,-74.1,null]],'fields':['lat','lng','weight']}"));
+
+        LocationHeatmapCollection heatmap = manager.getLocationsHeatmap(new LocationHeatmapRequest());
+
+        assertEquals(Arrays.asList(40.1, -74.1, null), heatmap.getData().get(0));
+    }
+
+    /** Regression: {@code List<String[]>} compared the pairs by identity, so equal requests were not equal. */
+    @Test
+    public void requestsWithTheSameOrderAreEqual() {
+        LocationTerritoriesRequest first = new LocationTerritoriesRequest();
+        first.setOrderBy(Collections.singletonList(Arrays.asList("address_1", "asc")));
+        first.setTerritoriesOrderBy(Collections.singletonList(Arrays.asList("territory_name", "desc")));
+        LocationTerritoriesRequest second = new LocationTerritoriesRequest();
+        second.setOrderBy(Collections.singletonList(Arrays.asList("address_1", "asc")));
+        second.setTerritoriesOrderBy(Collections.singletonList(Arrays.asList("territory_name", "desc")));
+
+        assertEquals(first, second);
+        assertEquals(first.hashCode(), second.hashCode());
     }
 
     @Test
@@ -290,7 +315,7 @@ public class LocationManagerTest {
         http.respondToAll(200, "{}");
         LocationCombinedRequest list = new LocationCombinedRequest();
         list.setFields(Arrays.asList("address_id", "address_1"));
-        list.setOrderBy(Collections.singletonList(new String[] {"address_1", "asc"}));
+        list.setOrderBy(Collections.singletonList(Arrays.asList("address_1", "asc")));
         ClusteringParameters clustering = new ClusteringParameters();
         clustering.setZoom(5);
         clustering.setCountThreshold(3);

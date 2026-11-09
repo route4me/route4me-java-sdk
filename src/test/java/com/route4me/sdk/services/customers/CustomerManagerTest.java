@@ -69,7 +69,7 @@ public class CustomerManagerTest {
         parameters.setFilters(filters);
         parameters.setPage(1);
         parameters.setPerPage(25);
-        parameters.setOrderBy(Arrays.asList(new String[] {"name", "asc"}, new String[] {"created_timestamp", "desc"}));
+        parameters.setOrderBy(Arrays.asList(Arrays.asList("name", "asc"), Arrays.asList("created_timestamp", "desc")));
 
         CustomerListResponse response = manager.getCustomersList(parameters);
 
@@ -125,7 +125,7 @@ public class CustomerManagerTest {
         CustomerManager manager = manager();
         http.respond(200, json("{'items':[]}"));
         CustomerListParameters parameters = new CustomerListParameters();
-        parameters.setOrderBy(Collections.singletonList(new String[] {"name", "desc"}));
+        parameters.setOrderBy(Collections.singletonList(Arrays.asList("name", "desc")));
 
         manager.getCustomersList(parameters);
 
@@ -134,6 +134,18 @@ public class CustomerManagerTest {
         assertTrue(orderBy.get(0).isJsonArray());
         assertEquals("[\"name\",\"desc\"]", orderBy.get(0).toString());
         http.request().assertNoQuery("order_by").assertNoQuery("order_by[0][]");
+    }
+
+    /** Regression: {@code List<String[]>} compared the pairs by identity, so equal parameters were not equal. */
+    @Test
+    public void parametersWithTheSameOrderAreEqual() {
+        CustomerListParameters first = new CustomerListParameters();
+        first.setOrderBy(Collections.singletonList(Arrays.asList("name", "asc")));
+        CustomerListParameters second = new CustomerListParameters();
+        second.setOrderBy(Collections.singletonList(Arrays.asList("name", "asc")));
+
+        assertEquals(first, second);
+        assertEquals(first.hashCode(), second.hashCode());
     }
 
     @Test

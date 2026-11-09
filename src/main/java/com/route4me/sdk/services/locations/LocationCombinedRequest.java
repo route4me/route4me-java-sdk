@@ -16,7 +16,7 @@ public class LocationCombinedRequest {
 
     /** Sort order as array of [field, direction] pairs (e.g., [["name", "asc"]]) ({@code order_by}). */
     @SerializedName("order_by")
-    private List<String[]> orderBy;
+    private List<List<String>> orderBy;
 
     /** Page number for pagination ({@code page}). */
     @SerializedName("page")
