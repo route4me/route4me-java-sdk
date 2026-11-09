@@ -43,13 +43,7 @@ public class AddRemoveAddressReOtimizeOptimization {
 
         try {
             optimizationResponse = manager.runOptimization(optParameters);
-            System.out.println("Optimization Problem ID:" + optimizationResponse.getOptimizationProblemId());
-            printState(optimizationResponse);
-            if (optimizationResponse.getAddresses() != null) {
-                for (Address address : optimizationResponse.getAddresses()) {
-                    System.out.println(address.getAddress());
-                }
-            }
+            printOptimization(optimizationResponse);
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();
@@ -78,24 +72,24 @@ public class AddRemoveAddressReOtimizeOptimization {
 
         try {
             optimizationUpdated = manager.reOptimization(optParameters, optimizationResponse);
-            System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
-            printState(optimizationUpdated);
-            if (optimizationUpdated.getAddresses() != null) {
-                for (Address address : optimizationUpdated.getAddresses()) {
-                    System.out.println(address.getAddress());
-                }
-            }
+            printOptimization(optimizationUpdated);
         } catch (APIException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
+            return;
         } catch (IllegalAccessException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
+            return;
         }
-
 
         // Removing Stops from Optimization
         System.out.println("\nRemoving an Address from Optimization");
 
-
+        if (optimizationUpdated.getRoutes() == null || optimizationUpdated.getRoutes().isEmpty()
+                || optimizationUpdated.getRoutes().get(0).getAddresses() == null
+                || optimizationUpdated.getRoutes().get(0).getAddresses().size() < 6) {
+            System.err.println("The re-optimized route has fewer than 6 stops; nothing to remove");
+            return;
+        }
         Address addressToBeRemoved = optimizationUpdated.getRoutes().get(0).getAddresses().get(5);
 
         System.out.println("Removing Address: " + addressToBeRemoved.getAddress()
@@ -106,6 +100,7 @@ public class AddRemoveAddressReOtimizeOptimization {
                     addressToBeRemoved.getRouteDestinationId());
         } catch (APIException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
+            return;
         }
 
         optParameters = new OptimizationParameters();
@@ -114,17 +109,13 @@ public class AddRemoveAddressReOtimizeOptimization {
 
         try {
             optimizationUpdated = manager.reOptimizationByOptimizationID(optParameters);
-            System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
-            printState(optimizationUpdated);
-            if (optimizationUpdated.getAddresses() != null) {
-                for (Address address : optimizationUpdated.getAddresses()) {
-                    System.out.println(address.getAddress());
-                }
-            }
+            printOptimization(optimizationUpdated);
         } catch (APIException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
+            return;
         } catch (IllegalAccessException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
+            return;
         }
 
         // Getting Updated Optimization
@@ -136,6 +127,11 @@ public class AddRemoveAddressReOtimizeOptimization {
             optimizationResponse = manager.getOptimization(optParameters);
         } catch (APIException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
+            return;
+        }
+        if (optimizationResponse == null || optimizationResponse.getAddresses() == null) {
+            System.err.println("The optimization has no addresses to add to");
+            return;
         }
 
 
@@ -155,13 +151,7 @@ public class AddRemoveAddressReOtimizeOptimization {
 
         try {
             optimizationUpdated = manager.reOptimization(optParameters, optimizationResponse);
-            System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
-            printState(optimizationUpdated);
-            if (optimizationUpdated.getAddresses() != null) {
-                for (Address address : optimizationUpdated.getAddresses()) {
-                    System.out.println(address.getAddress());
-                }
-            }
+            printOptimization(optimizationUpdated);
         } catch (APIException ex) {
             Logger.getLogger(AddRemoveAddressReOtimizeOptimization.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IllegalAccessException ex) {
@@ -189,11 +179,17 @@ public class AddRemoveAddressReOtimizeOptimization {
         return parameters;
     }
 
-    /** Prints the state of an optimization, or that the reply had none. */
-    private static void printState(DataObject optimization) {
+    /** Prints the ID, the state (or that the reply had none) and the addresses of an optimization. */
+    private static void printOptimization(DataObject optimization) {
+        System.out.println("Optimization Problem ID:" + optimization.getOptimizationProblemId());
         Number state = optimization.getState();
         System.out.println("State:" + (state == null ? "not returned"
                 : Constants.OptimizationState.get(state.intValue())));
+        if (optimization.getAddresses() != null) {
+            for (Address address : optimization.getAddresses()) {
+                System.out.println(address.getAddress());
+            }
+        }
     }
 
 }

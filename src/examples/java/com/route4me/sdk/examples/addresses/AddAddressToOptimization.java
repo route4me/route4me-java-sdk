@@ -63,8 +63,12 @@ public class AddAddressToOptimization {
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();
+            return;
         }
-
+        if (optimizationResponse.getAddresses() == null) {
+            System.err.println("The optimization has no addresses to add to");
+            return;
+        }
 
         // Adding More Addresses to Optimization
         System.out.println("\nAdding More Stops and Reoptimizing");
@@ -85,7 +89,7 @@ public class AddAddressToOptimization {
             System.out.println("Optimization Problem ID:" + optimizationUpdated.getOptimizationProblemId());
             System.out.println("State:" + (optimizationUpdated.getState() == null ? "not returned"
                     : Constants.OptimizationState.get(optimizationUpdated.getState().intValue())));
-            if (optimizationResponse.getAddresses() != null) {
+            if (optimizationUpdated.getAddresses() != null) {
                 for (Address address : optimizationUpdated.getAddresses()) {
                     System.out.println(address.getAddress());
                 }
