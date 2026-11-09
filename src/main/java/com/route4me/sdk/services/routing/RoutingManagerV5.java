@@ -15,7 +15,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class RoutingManagerV5 extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String ROUTES_EP = V5_BASE + "/routes";
     private static final String ROUTES_LIST_EP = ROUTES_EP + "/list";
     private static final String ROUTES_DATATABLE_EP = ROUTES_EP + "/datatable";
@@ -39,14 +38,6 @@ public class RoutingManagerV5 extends Manager {
      */
     public RoutingManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**
@@ -106,11 +97,15 @@ public class RoutingManagerV5 extends Manager {
      * Exports a route: {@code POST https://wh.route4me.com/modules/api/v5.0/route-export/{routeId}/export}, with the
      * request as the JSON body.
      *
+     * <p>The reply is decoded as text, with the charset it declares or UTF-8, so this method is for the text formats
+     * the API specification lists for this call: CSV, JSON, XML and HTML.
+     *
      * @param routeId the route ID
      * @param request the format and what to include; {@code null} sends an empty body, {@code {}}, which exports in
      *     the default format
      * @return the exported route, as the text of the chosen format (CSV, JSON, XML or HTML)
-     * @throws IllegalArgumentException if {@code routeId} is {@code null} or empty
+     * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}
      * @throws APIException if the request fails or the server answers with an error status
      */
     public String exportRoute(String routeId, RouteExportRequest request) throws APIException {

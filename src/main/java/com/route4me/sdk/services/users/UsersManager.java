@@ -59,7 +59,11 @@ public class UsersManager extends Manager {
      * @param user the user
      * @return the created user
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V4 {@code /api.v4/user.php} endpoint is obsolete: the C# SDK marks {@code CreateUser} as
+     *     {@code [Obsolete]}. Use {@link TeamManagementManagerV5#createTeamMember(TeamMemberRequest)}. This method
+     *     will be removed in the next major version.
      */
+    @Deprecated
     public User createUser(User user) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(USER_EP);
         return this.makeJSONRequest(RequestMethod.POST, builder, user, User.class);
@@ -72,7 +76,11 @@ public class UsersManager extends Manager {
      * @param user the user, with its member ID
      * @return the updated user
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V4 {@code /api.v4/user.php} endpoint is obsolete: the C# SDK marks {@code UserUpdate} as
+     *     {@code [Obsolete]}. Use {@link TeamManagementManagerV5#updateTeamMember(long, TeamMemberRequest)}. This
+     *     method will be removed in the next major version.
      */
+    @Deprecated
     public User updateUser(User user) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(USER_EP);
         return this.makeJSONRequest(RequestMethod.PUT, builder, user, User.class);
@@ -84,7 +92,11 @@ public class UsersManager extends Manager {
      * @param memberId the member ID
      * @return the user
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V4 {@code /api.v4/user.php} endpoint is obsolete: the C# SDK marks {@code GetUserById} as
+     *     {@code [Obsolete]}. Use {@link TeamManagementManagerV5#getTeamMemberById(long)}. This method will be
+     *     removed in the next major version.
      */
+    @Deprecated
     public User getUser(String memberId) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(USER_EP);
         builder.setParameter("member_id", memberId);
@@ -100,7 +112,11 @@ public class UsersManager extends Manager {
      * @return {@code status} {@code true} when the user was deleted
      * @throws IllegalArgumentException if {@code memberId} is {@code null} or empty
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V4 {@code /api.v4/user.php} endpoint is obsolete: the C# SDK marks {@code UserDelete} as
+     *     {@code [Obsolete]}. Use {@link TeamManagementManagerV5#deleteTeamMember(long)}. This method will be removed
+     *     in the next major version.
      */
+    @Deprecated
     public StatusResponse userDelete(String memberId) throws APIException {
         requireText(memberId, "memberId");
         URIBuilder builder = Manager.defaultBuilder(USER_EP);
@@ -115,7 +131,11 @@ public class UsersManager extends Manager {
      *
      * @return the users
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V4 {@code /api.v4/user.php} endpoint is obsolete: the C# SDK marks {@code GetUsers} as
+     *     {@code [Obsolete]}. Use {@link TeamManagementManagerV5#getTeamMembers()}. This method will be removed in
+     *     the next major version.
      */
+    @Deprecated
     public UsersResponse getUsers() throws APIException {
         URIBuilder builder = Manager.defaultBuilder(USER_EP);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, UsersResponse.class);

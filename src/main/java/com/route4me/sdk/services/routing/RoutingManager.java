@@ -49,14 +49,6 @@ public class RoutingManager extends Manager {
     private static final String MARK_ADDRESS_VISITED_EP = "/actions/address/update_address_visited.php";
     private static final String DELETE_ROUTE_DESTINATION_EP = "/actions/route/delete_route_destination.php";
 
-    private URIBuilder getRouteSearchURI(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
-    }
-
     /**
      * Creates a manager that sends its requests with an API key.
      *
@@ -268,9 +260,9 @@ public class RoutingManager extends Manager {
 
     /**
      * Adds depots to a hybrid optimization, or replaces its depots: {@code POST
-     * https://api.route4me.com/api/change_hybrid_optimization_depot.php}, with {@code optimization_problem_id},
-     * {@code delete_old_depots} and {@code new_depots} as the JSON body. A {@code null} argument is left out of the
-     * body.
+     * https://api.route4me.com/api/change_hybrid_optimization_depot.php?optimization_problem_id=...}, with {@code
+     * optimization_problem_id}, {@code delete_old_depots} and {@code new_depots} as the JSON body. The ID goes in both
+     * the query and the body, as the PHP SDK sends it. A {@code null} argument is left out of the query and the body.
      *
      * @param optimizationProblemId the ID of the hybrid optimization, from
      *     {@link #getHybridOptimization(String, Integer)} ({@code optimization_problem_id})
@@ -282,6 +274,7 @@ public class RoutingManager extends Manager {
     public StatusResponse addDepotsToHybridOptimization(String optimizationProblemId, Boolean deleteOldDepots,
             List<Address> newDepots) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(HYBRID_DEPOTS_EP);
+        addParameter(builder, "optimization_problem_id", optimizationProblemId);
         HybridDepots body = new HybridDepots(optimizationProblemId, deleteOldDepots, newDepots);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(body), StatusResponse.class);
     }
@@ -484,7 +477,7 @@ public class RoutingManager extends Manager {
     public RouteSearchResult getRoutesbyDateTimeZone(String scheduledForStart, String scheduledForEnd, String timeZone,
             Integer page, Integer perPage) throws APIException {
 
-        URIBuilder builder = this.getRouteSearchURI(ROUTE_SEARCH_V5_1);
+        URIBuilder builder = v5Builder(ROUTE_SEARCH_V5_1);
 
         RouteSearch request = new RouteSearch();
         request.setTimeZone(timeZone);
@@ -543,6 +536,7 @@ public class RoutingManager extends Manager {
      * @param route the route, with its ID
      * @return the updated route
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code route} or its ID is {@code null} or empty; nothing is sent
      */
     public Route updateRoute(Route route) throws APIException {
         return this.updateRoute(route, null);
@@ -562,8 +556,12 @@ public class RoutingManager extends Manager {
      * @param parameters the query flags; {@code null} sends none
      * @return the updated route
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code route} or its ID is {@code null} or empty; nothing is sent
      */
     public Route updateRoute(Route route, RouteUpdateParameters parameters) throws APIException {
+        if (route == null || route.getId() == null || route.getId().isEmpty()) {
+            throw new IllegalArgumentException("The route and its ID are required");
+        }
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         builder.setParameter("route_id", route.getId());
         return this.makeJSONRequest(RequestMethod.PUT, builder, route, parameters, Route.class);
@@ -576,6 +574,7 @@ public class RoutingManager extends Manager {
      * @param memberID the member ID of the driver
      * @return the updated route
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code routeId} is {@code null} or empty; nothing is sent
      */
     public Route assignDriver(String routeId, String memberID) throws APIException {
         Parameters params = new Parameters();
@@ -594,6 +593,7 @@ public class RoutingManager extends Manager {
      * @param vehicleId the vehicle ID
      * @return the updated route
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code routeId} is {@code null} or empty; nothing is sent
      */
     public Route assignVehicle(String routeId, String vehicleId) throws APIException {
         Parameters params = new Parameters();
@@ -610,7 +610,8 @@ public class RoutingManager extends Manager {
      *
      * @param routeIds the IDs of the routes to delete; at least one
      * @return the deletion result
-     * @throws IllegalArgumentException if no route ID is given, or one is {@code null} or empty
+     * @throws IllegalArgumentException if no route ID is given, or one is {@code null}, empty or contains a comma
+     *     (the API would read it as several IDs); nothing is sent
      * @throws APIException             if the request fails
      */
     public RouteDeletedResponse deleteRoutes(String... routeIds) throws APIException {
@@ -618,9 +619,7 @@ public class RoutingManager extends Manager {
             throw new IllegalArgumentException("At least one route ID is required");
         }
         for (String routeId : routeIds) {
-            if (routeId == null || routeId.isEmpty()) {
-                throw new IllegalArgumentException("A route ID must not be null or empty");
-            }
+            requireListedRouteId(routeId);
         }
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         builder.addParameter("route_id", String.join(",", routeIds));
@@ -678,7 +677,8 @@ public class RoutingManager extends Manager {
      * @param depotLat the latitude of the depot ({@code depot_lat})
      * @param depotLng the longitude of the depot ({@code depot_lng})
      * @return whether the routes were merged, and the optimization of the merged route
-     * @throws IllegalArgumentException if no route ID is given, or one is {@code null} or empty
+     * @throws IllegalArgumentException if no route ID is given, or one is {@code null}, empty or contains a comma
+     *     (the API would read it as several IDs); nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public MergeRoutesResponse mergeRoutes(List<String> routeIds, String depotAddress, Boolean removeOrigin,
@@ -687,9 +687,7 @@ public class RoutingManager extends Manager {
             throw new IllegalArgumentException("At least one route ID is required");
         }
         for (String routeId : routeIds) {
-            if (routeId == null || routeId.isEmpty()) {
-                throw new IllegalArgumentException("A route ID must not be null or empty");
-            }
+            requireListedRouteId(routeId);
         }
         URIBuilder builder = Manager.defaultBuilder(MERGE_ROUTES_EP);
         List<NameValuePair> form = new ArrayList<>();
@@ -706,12 +704,17 @@ public class RoutingManager extends Manager {
      * https://api.route4me.com/actions/route/share_route.php?route_id=...&response_format=json}, with
      * {@code recipient_email} as a form.
      *
-     * @param routeId the route ID ({@code route_id})
-     * @param recipientEmail the e-mail address to send the route to ({@code recipient_email})
+     * @param routeId the route ID ({@code route_id}); required
+     * @param recipientEmail the e-mail address to send the route to ({@code recipient_email}); required
      * @return whether the route was shared
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code routeId} or {@code recipientEmail} is {@code null} or empty; nothing
+     *     is sent
      */
     public StatusResponse routeSharing(String routeId, String recipientEmail) throws APIException {
+        if (routeId == null || routeId.isEmpty() || recipientEmail == null || recipientEmail.isEmpty()) {
+            throw new IllegalArgumentException("The route ID and the recipient email are required");
+        }
         URIBuilder builder = Manager.defaultBuilder(SHARE_ROUTE_EP);
         addParameter(builder, "route_id", routeId);
         builder.setParameter("response_format", "json");
@@ -723,8 +726,7 @@ public class RoutingManager extends Manager {
     /**
      * Re-sequences all the stops of a route: {@code GET
      * https://api.route4me.com/api.v3/route/reoptimize_2.php?route_id=...&disable_optimization=...&optimize=...}.
-     * Every {@code null} argument is left out of the query. {@link #updateRoute(Route, RouteUpdateParameters)} with
-     * {@code reoptimize} re-optimizes a route through the V4 API instead.
+     * Every {@code null} argument is left out of the query.
      *
      * @param routeId the route ID ({@code route_id})
      * @param disableOptimization {@code true} to keep the order of the stops and only recompute the route, sent as
@@ -733,7 +735,12 @@ public class RoutingManager extends Manager {
      *     ({@code optimize}; see {@link Constants.Optimize})
      * @return whether the route was re-sequenced
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V3 endpoint is obsolete, as in the C# SDK ({@code ResequenceReoptimizeRoute}). Use
+     *             {@link #updateRoute(Route, RouteUpdateParameters)} with {@code reoptimize} ({@code PUT
+     *             https://api.route4me.com/api.v4/route.php?route_id=...&reoptimize=1}), which C# calls
+     *             {@code ReoptimizeRoute}; {@code remaining} re-optimizes only the stops not visited yet.
      */
+    @Deprecated
     public StatusResponse resequenceReoptimizeRoute(String routeId, Boolean disableOptimization, String optimize)
             throws APIException {
         URIBuilder builder = Manager.defaultBuilder(REOPTIMIZE_V3_EP);
@@ -795,7 +802,8 @@ public class RoutingManager extends Manager {
     /**
      * Deletes destinations from their routes: {@code POST
      * https://api.route4me.com/actions/route/delete_route_destination.php?format=json}, with
-     * {@code route_destination_ids} (the IDs, separated by commas) as a form.
+     * {@code route_destination_id} (the IDs, separated by commas) as a form. The API reads that singular name, also
+     * for several IDs; it rejects {@code route_destination_ids} (409, "Unspecified required destination ID").
      * {@link #deleteAddress(String, Number)} deletes one destination through the V4 API instead.
      *
      * @param routeDestinationIds the route destination IDs; at least one
@@ -817,8 +825,18 @@ public class RoutingManager extends Manager {
         URIBuilder builder = Manager.defaultBuilder(DELETE_ROUTE_DESTINATION_EP);
         builder.setParameter("format", "json");
         List<NameValuePair> form = new ArrayList<>();
-        form.add(new BasicNameValuePair("route_destination_ids", ids.toString()));
+        form.add(new BasicNameValuePair("route_destination_id", ids.toString()));
         return this.makeRequest(RequestMethod.POST, builder, form, JsonElement.class);
+    }
+
+    /**
+     * Refuses a route ID of a comma-separated list: one that is {@code null}, empty or contains a comma, which the
+     * API would split into several route IDs.
+     */
+    private static void requireListedRouteId(String routeId) {
+        if (routeId == null || routeId.isEmpty() || routeId.indexOf(',') >= 0) {
+            throw new IllegalArgumentException("A route ID must not be null, empty or contain ','");
+        }
     }
 
     /** Adds the query of the mark-visited and mark-departed requests, leaving out the {@code null} values. */

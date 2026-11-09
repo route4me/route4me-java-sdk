@@ -17,6 +17,7 @@ import java.util.Map;
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -343,6 +344,7 @@ public class RoutingManagerTest {
 
         http.request(0).assertEndpoint("POST", API, "/api/change_hybrid_optimization_depot.php")
                 .assertApiKeyInQuery()
+                .assertQuery("optimization_problem_id", "OPT-1")
                 .assertContentType("application/json")
                 .assertJson("optimization_problem_id", "OPT-1")
                 .assertJson("delete_old_depots", true)
@@ -350,6 +352,16 @@ public class RoutingManagerTest {
                 .assertJson("new_depots[0].is_depot", true);
         http.request(1).assertJsonLacks("delete_old_depots");
         assertTrue(result.getStatus());
+    }
+
+    @Test
+    public void addDepotsToHybridOptimizationLeavesANullIdOutOfTheQuery() throws Exception {
+        RoutingManager manager = manager();
+        http.respond(200, json("{'status':true}"));
+
+        manager.addDepotsToHybridOptimization(null, true, Collections.<Address>emptyList());
+
+        http.request().assertNoQuery("optimization_problem_id").assertJsonLacks("optimization_problem_id");
     }
 
     @Test
@@ -558,6 +570,18 @@ public class RoutingManagerTest {
     }
 
     @Test
+    public void deleteRoutesRefusesAnIdWithAComma() {
+        final RoutingManager manager = manager();
+
+        IllegalArgumentException refused = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.deleteRoutes("ROUTE-A1,ROUTE-A2"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes("ROUTE-A1", "ROUTE-A2,"));
+
+        assertTrue(refused.getMessage(), refused.getMessage().contains("','"));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void duplicateRouteSendsTheRouteIdAndTarget() throws Exception {
         RoutingManager manager = manager();
         http.respond(200, json("{'optimization_problem_id':'OPT-2','success':true}"));
@@ -593,6 +617,33 @@ public class RoutingManagerTest {
     }
 
     // ------------------------------------------------------------------ route updates with query flags
+
+    @Test
+    public void updateRouteRejectsAMissingRouteOrIdBeforeSending() {
+        final RoutingManager manager = manager();
+        final Route noId = new Route();
+        final Route emptyId = new Route();
+        emptyId.setId("");
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRoute(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRoute(noId));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRoute(emptyId, null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateRoute(null, new RouteUpdateParameters().setReoptimize(true)));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.assignDriver(null, "1"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.assignVehicle("", "V1"));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void routeSharingRequiresTheRouteAndTheRecipient() {
+        final RoutingManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.routeSharing(null, "dispatcher@example.com"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.routeSharing("ROUTE-A1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.routeSharing("ROUTE-A1", ""));
+        http.assertNoRequests();
+    }
 
     @Test
     public void updateRouteWithParametersSendsTheFlagsInTheQuery() throws Exception {
@@ -691,6 +742,8 @@ public class RoutingManagerTest {
                 () -> manager.mergeRoutes(Collections.<String>emptyList(), null, null, null, null));
         http.expectThrows(IllegalArgumentException.class,
                 () -> manager.mergeRoutes(Arrays.asList("ROUTE-A1", ""), null, null, null, null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.mergeRoutes(Collections.singletonList("ROUTE-A1,ROUTE-A2"), null, true, null, null));
         http.assertNoRequests();
     }
 
@@ -710,6 +763,7 @@ public class RoutingManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation")
     public void resequenceReoptimizeRouteSendsTheV3Query() throws Exception {
         RoutingManager manager = manager();
         http.respondToAll(200, json("{'status':true}"));
@@ -725,6 +779,12 @@ public class RoutingManagerTest {
                 .assertNoBody();
         http.request(1).assertNoQuery("disable_optimization").assertNoQuery("optimize");
         assertTrue(result.getStatus());
+    }
+
+    @Test
+    public void resequenceReoptimizeRouteIsDeprecatedForUpdateRoute() throws Exception {
+        assertNotNull(RoutingManager.class.getMethod("resequenceReoptimizeRoute", String.class, Boolean.class,
+                String.class).getAnnotation(Deprecated.class));
     }
 
     @Test
@@ -784,7 +844,8 @@ public class RoutingManagerTest {
                 .assertApiKeyInQuery()
                 .assertQuery("format", "json")
                 .assertContentType("application/x-www-form-urlencoded")
-                .assertForm("route_destination_ids", "5002,5003");
+                .assertForm("route_destination_id", "5002,5003");
+        assertEquals("the API rejects the plural name (409)", 1, http.request().formFields().size());
         assertTrue(result.getAsJsonObject().get("deleted").getAsBoolean());
     }
 

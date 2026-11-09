@@ -31,10 +31,18 @@ import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
-/** Adds a stop to a route at a chosen sequence number with {@link RoutingManager#addAddressesToRoute}. */
+/**
+ * Adds a stop to a route at a chosen sequence number with {@link RoutingManager#addAddressesToRoute}. Set
+ * {@code ROUTE_ID} to a route of a test account: the example adds the stop to it.
+ */
 public class InsertStopAtDesiredPosition {
 
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        if (routeId == null || routeId.isEmpty()) {
+            System.err.println("Set ROUTE_ID to the ID of a route of a test account; this example adds a stop to it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
 
         RoutingManager routeManager = new RoutingManager(apiKey);
@@ -46,7 +54,7 @@ public class InsertStopAtDesiredPosition {
 
             List<Address> addresses = Arrays.asList(address);
 
-            routeManager.addAddressesToRoute("5B705E1F9DE8A9CE58A8D735CA07FB9D", addresses);
+            routeManager.addAddressesToRoute(routeId, addresses);
 
         } catch (APIException ex) {
             Logger.getLogger(InsertStopAtDesiredPosition.class.getName()).log(Level.SEVERE, null, ex);

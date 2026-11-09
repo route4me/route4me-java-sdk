@@ -19,11 +19,15 @@ public class TelematicsGetVendorsInfo {
 
         try {
             TelematicsVendorsV5Response vendors = manager.getTelematicsVendorsV5();
+            if (vendors == null || vendors.getData() == null) {
+                System.out.println("No vendors");
+                return;
+            }
             for (TelematicsVendorInfo vendor : vendors.getData()) {
                 System.out.println(vendor);
             }
         } catch (APIException ex) {
-            Logger.getLogger(TelematicsGetVendorsInfo.class.getName()).log(Level.INFO, ex.toString());
+            Logger.getLogger(TelematicsGetVendorsInfo.class.getName()).log(Level.SEVERE, ex.toString());
         }
     }
 }

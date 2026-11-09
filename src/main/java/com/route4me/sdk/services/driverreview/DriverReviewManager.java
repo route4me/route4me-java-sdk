@@ -13,7 +13,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class DriverReviewManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String DRIVER_REVIEW_EP = V5_BASE + "/driver-reviews";
     private static final String SETTINGS_BY_MEMBER_EP = DRIVER_REVIEW_EP + "/settings/get-by-member";
     private static final String SETTINGS_UPLOAD_EP = DRIVER_REVIEW_EP + "/settings/upload";
@@ -35,14 +34,6 @@ public class DriverReviewManager extends Manager {
      */
     public DriverReviewManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**
@@ -88,6 +79,8 @@ public class DriverReviewManager extends Manager {
      *
      * @param ratingId the review ID
      * @return the review
+     * @throws IllegalArgumentException if {@code ratingId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public DriverReviewResponse getDriverReviewById(String ratingId) throws APIException {
@@ -101,9 +94,11 @@ public class DriverReviewManager extends Manager {
      *
      * @param review the tracking number, the rating and the text
      * @return the added review
+     * @throws IllegalArgumentException if {@code review} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public DriverReviewResponse createDriverReview(DriverReview review) throws APIException {
+        requireReview(review);
         URIBuilder builder = v5Builder(DRIVER_REVIEW_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(review), DriverReviewResponse.class);
     }
@@ -116,9 +111,12 @@ public class DriverReviewManager extends Manager {
      * @param ratingId the review ID
      * @param review the new values of the review
      * @return the updated review
+     * @throws IllegalArgumentException if {@code ratingId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}, or {@code review} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public DriverReviewResponse updateDriverReview(String ratingId, DriverReview review) throws APIException {
+        requireReview(review);
         URIBuilder builder = v5Builder(DRIVER_REVIEW_EP, ratingId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(review), DriverReviewResponse.class);
     }
@@ -131,13 +129,12 @@ public class DriverReviewManager extends Manager {
      * @param review the fields to change ({@code tracking_number}, {@code rating}, {@code review}); fields left
      *     {@code null} are not sent
      * @return the updated review
-     * @throws IllegalArgumentException if {@code ratingId} is {@code null} or empty, or {@code review} is {@code null}
+     * @throws IllegalArgumentException if {@code ratingId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}, or {@code review} is {@code null}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public DriverReviewResponse patchDriverReview(String ratingId, DriverReview review) throws APIException {
-        if (review == null) {
-            throw new IllegalArgumentException("The review must not be null");
-        }
+        requireReview(review);
         URIBuilder builder = v5Builder(DRIVER_REVIEW_EP, ratingId);
         return this.makeRequest(RequestMethod.PATCH, builder, this.gson.toJson(review), DriverReviewResponse.class);
     }
@@ -174,5 +171,12 @@ public class DriverReviewManager extends Manager {
         }
         return this.makeRequest(RequestMethod.POST, v5Builder(SETTINGS_UPLOAD_EP), this.gson.toJson(settings),
                 DriverReviewSettingsResponse.class);
+    }
+
+    /** Refuses a {@code null} review before any request is sent. */
+    private static void requireReview(DriverReview review) {
+        if (review == null) {
+            throw new IllegalArgumentException("The review must not be null");
+        }
     }
 }

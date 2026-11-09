@@ -12,7 +12,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class RouteDestinationsManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String ROUTE_DESTINATIONS_EP = V5_BASE + "/route-destinations";
     private static final String COLUMNS_EP = ROUTE_DESTINATIONS_EP + "/columns";
     private static final String SORTING_EP = ROUTE_DESTINATIONS_EP + "/sorting";
@@ -40,19 +39,13 @@ public class RouteDestinationsManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
-    }
-
     /**
      * Gets one route destination: {@code GET https://wh.route4me.com/modules/api/v5.0/route-destinations/{id}}.
      *
      * @param id the route destination ID
      * @return the destination
+     * @throws IllegalArgumentException if {@code id} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteDestinationResource getDestination(String id) throws APIException {
@@ -152,6 +145,8 @@ public class RouteDestinationsManager extends Manager {
      *
      * @param orderUuid the order UUID
      * @return the destinations
+     * @throws IllegalArgumentException if {@code orderUuid} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteDestinationsByOrderResponse getDestinationsByOrder(String orderUuid) throws APIException {

@@ -1,15 +1,20 @@
 package com.route4me.sdk.services.addressbook;
 
+import com.route4me.sdk.AsyncJob;
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
@@ -28,6 +33,8 @@ public class AddressBookManagerV5Test {
             + "'service_time':300,'address_stop_type':'DELIVERY','tags':['vip'],'in_route_count':2}");
     private static final String CONTACTS = "{\"results\":[" + CONTACT + "],\"total\":1}";
     private static final String STATUS_TRUE = json("{'status':true}");
+    private static final String JOB_ID = "C0FFEE0000000000000000000000000E";
+    private static final String JOB_STATUS_URL = "https://" + HOST + BOOK_EP + "/job-tracker/status/" + JOB_ID;
 
     @Rule
     public final MockHttp http = new MockHttp();
@@ -35,6 +42,19 @@ public class AddressBookManagerV5Test {
     /** Returns a manager that sends its requests to the mocked client. */
     private AddressBookManagerV5 manager() {
         return http.install(new AddressBookManagerV5(MockHttp.API_KEY));
+    }
+
+    /** Queues a {@code 202 Accepted} reply without a body, with the job ID and the job status URL. */
+    private void respondWithQueuedJob() {
+        http.respondWithHeaders(202, null, "x-job-id", JOB_ID, "Location", JOB_STATUS_URL);
+    }
+
+    /** Asserts that a job came back from {@link #respondWithQueuedJob()}. */
+    private static void assertQueuedJob(AsyncJob job) {
+        assertEquals(202, job.getStatusCode());
+        assertEquals(JOB_ID, job.getJobId());
+        assertEquals(JOB_STATUS_URL, job.getLocation());
+        assertEquals("", job.getBody());
     }
 
     /** Builds a sample address book contact with fake data. */
@@ -113,7 +133,7 @@ public class AddressBookManagerV5Test {
         request.setQuery("Main");
         request.setFields(Arrays.asList("address_id", "address_1"));
         request.setFilter(filter());
-        request.setOrderBy(Collections.singletonList(new String[] {"address_alias", "asc"}));
+        request.setOrderBy(Collections.singletonList(Arrays.asList("address_alias", "asc")));
         request.setLimit(10);
         request.setOffset(20);
 
@@ -162,6 +182,23 @@ public class AddressBookManagerV5Test {
                 .assertJson("filter.query", "Bakery")
                 .assertJsonLacks("limit", "offset");
         assertEquals(1, page.getResults().size());
+    }
+
+    @Test
+    public void paginatedListsExposeThePagingFields() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        http.respond(200, json("{'results':[],'total':45,'current_page':2,'last_page':3,'per_page':20,"
+                + "'fields':['address_id','address_1']}"));
+        AddressBookContactsPaginatedQuery query = new AddressBookContactsPaginatedQuery();
+        query.setPage(2);
+
+        AddressBookContactsResponse page = manager.getContactsPaginated(query);
+
+        assertEquals(Integer.valueOf(45), page.getTotal());
+        assertEquals(Integer.valueOf(2), page.getCurrentPage());
+        assertEquals(Integer.valueOf(3), page.getLastPage());
+        assertEquals(Integer.valueOf(20), page.getPerPage());
+        assertEquals(Arrays.asList("address_id", "address_1"), page.getFields());
     }
 
     @Test
@@ -286,27 +323,31 @@ public class AddressBookManagerV5Test {
     @Test
     public void batchCreateAndDelete() throws Exception {
         AddressBookManagerV5 manager = manager();
-        http.respond(200, STATUS_TRUE).respond(200, STATUS_TRUE).respondWithoutBody(202);
+        http.respond(200, STATUS_TRUE).respond(200, STATUS_TRUE);
+        respondWithQueuedJob();
         BatchCreateContactsRequest create = new BatchCreateContactsRequest();
         create.setData(Collections.singletonList(contact()));
 
         StatusResponse created = manager.batchCreateContacts(create);
-        boolean deleted = manager.deleteContacts(new long[] {12345L});
-        boolean queued = manager.deleteContacts(new long[] {12346L});
+        AsyncJob deleted = manager.deleteContacts(new long[] {12345L});
+        AsyncJob queued = manager.deleteContacts(new long[] {12346L});
 
         http.request(0).assertEndpoint("POST", HOST, ADDRESSES_EP + "/batch-create")
                 .assertJson("data[0].first_name", "Alex");
         http.request(1).assertEndpoint("DELETE", HOST, ADDRESSES_EP + "/delete").assertJson("address_ids[0]", 12345);
-        http.request(2).assertJson("address_ids[0]", 12346);
+        http.request(2).assertEndpoint("DELETE", HOST, ADDRESSES_EP + "/delete").assertJson("address_ids[0]", 12346);
         assertTrue(created.getStatus());
-        assertTrue(deleted);
-        assertTrue(queued);
+        assertEquals(200, deleted.getStatusCode());
+        assertNull(deleted.getJobId());
+        assertTrue(deleted.getBodyAs(StatusResponse.class).getStatus());
+        assertQueuedJob(queued);
     }
 
     @Test
     public void areaOperationsSendTheFilterAndAcceptAQueuedJob() throws Exception {
         AddressBookManagerV5 manager = manager();
-        http.respondWithoutBody(202).respondWithoutBody(202);
+        respondWithQueuedJob();
+        respondWithQueuedJob();
         AddressBookAreasFilter areas = new AddressBookAreasFilter();
         areas.setQuery("Bakery");
         areas.setBoundingBox(box());
@@ -317,8 +358,8 @@ public class AddressBookManagerV5Test {
         update.setFilter(areas);
         update.setData(data);
 
-        assertNull(manager.updateAddressBookContactByAreas(update));
-        assertNull(manager.removeAddressBookContactsByAreas(areas));
+        AsyncJob updated = manager.updateAddressBookContactByAreas(update);
+        AsyncJob removed = manager.removeAddressBookContactsByAreas(areas);
 
         http.request(0).assertEndpoint("PUT", HOST, ADDRESSES_EP + "/update-by-areas")
                 .assertJson("filter.query", "Bakery")
@@ -328,6 +369,182 @@ public class AddressBookManagerV5Test {
         http.request(1).assertEndpoint("DELETE", HOST, ADDRESSES_EP + "/delete-by-areas")
                 .assertJson("filter.query", "Bakery")
                 .assertJson("filter.bounding_box.bottom", 40.0);
+        assertQueuedJob(updated);
+        assertQueuedJob(removed);
+    }
+
+    /** Regression: a {@code null} body was sent as the JSON text {@code null}. */
+    @Test
+    public void aNullRequestIsRejectedBeforeSending() {
+        final AddressBookManagerV5 manager = manager();
+        final BatchCreateContactsRequest noData = new BatchCreateContactsRequest();
+        final BatchCreateContactsRequest emptyData = new BatchCreateContactsRequest();
+        emptyData.setData(Collections.<AddressBookContactV5>emptyList());
+        final BatchUpdateContactsRequest noIds = new BatchUpdateContactsRequest();
+        noIds.setAddressGroup("North");
+        final BatchUpdateContactsRequest emptyIds = new BatchUpdateContactsRequest();
+        emptyIds.setAddressIds(Collections.<Long>emptyList());
+
+        http.expectThrows(IllegalArgumentException.class,
+            () -> manager.getContacts((AddressBookContactsBodyRequest) null));
+        http.expectThrows(IllegalArgumentException.class,
+            () -> manager.getContactsPaginated((AddressBookContactsBodyPaginatedRequest) null));
+        http.expectThrows(IllegalArgumentException.class,
+            () -> manager.getAddressBookContactsClustering((AddressBookClusteringRequest) null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchCreateContacts(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchCreateContacts(noData));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchCreateContacts(emptyData));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchUpdateContacts(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchUpdateContacts(noIds));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.batchUpdateContacts(emptyIds));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.exportAddresses(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.exportAddressesByAreas(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.exportAddressesByAreaIds(null));
+        http.assertNoRequests();
+    }
+
+    /** Regression: no IDs sent {@code {}} or {@code {"address_ids":[]}} to an endpoint that also deletes by filter. */
+    @Test
+    public void contactIdsAreRequiredBeforeSending() {
+        final AddressBookManagerV5 manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteContacts(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteContacts(new long[0]));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getContactsByIds(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getContactsByIds(new long[0]));
+        http.assertNoRequests();
+    }
+
+    /** Regression: a missing or empty filter was sent as {@code {}}, which could match every contact. */
+    @Test
+    public void areaDeletesAndUpdatesNeedAnAreaBeforeSending() {
+        final AddressBookManagerV5 manager = manager();
+        final AddressBookAreasFilter textOnly = new AddressBookAreasFilter();
+        textOnly.setQuery("Bakery");
+        final AddressBookAreasFilter noAreas = new AddressBookAreasFilter();
+        noAreas.setSelectedAreas(Collections.<SelectedArea>emptyList());
+        final AddressBookAreasFilter nullArea = new AddressBookAreasFilter();
+        nullArea.setSelectedAreas(Collections.<SelectedArea>singletonList(null));
+        final AddressBookAreasFilter partialBox = new AddressBookAreasFilter();
+        BoundingBox box = box();
+        box.setRight(null);
+        partialBox.setBoundingBox(box);
+        // Gson would send an area without a type or a geometry as {}, which draws nothing.
+        final AddressBookAreasFilter emptyArea = new AddressBookAreasFilter();
+        emptyArea.setSelectedAreas(Collections.singletonList(new SelectedArea()));
+        SelectedArea typeOnly = new SelectedArea();
+        typeOnly.setType("circle");
+        typeOnly.setValue(Collections.<String, Object>emptyMap());
+        SelectedArea valueOnly = new SelectedArea();
+        valueOnly.setType("");
+        valueOnly.setValue(Collections.<String, Object>singletonMap("distance", 500));
+        final AddressBookAreasFilter incompleteAreas = new AddressBookAreasFilter();
+        incompleteAreas.setSelectedAreas(Arrays.asList(typeOnly, valueOnly));
+        final UpdateContactsByAreasRequest noFilter = new UpdateContactsByAreasRequest();
+        final UpdateContactsByAreasRequest textOnlyUpdate = new UpdateContactsByAreasRequest();
+        textOnlyUpdate.setFilter(textOnly);
+        final UpdateContactsByAreasRequest emptyAreaUpdate = new UpdateContactsByAreasRequest();
+        emptyAreaUpdate.setFilter(emptyArea);
+
+        for (final AddressBookAreasFilter filter : Arrays.asList(null, new AddressBookAreasFilter(), textOnly, noAreas,
+                nullArea, partialBox, emptyArea, incompleteAreas)) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.removeAddressBookContactsByAreas(filter));
+        }
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateAddressBookContactByAreas(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateAddressBookContactByAreas(noFilter));
+        http.expectThrows(IllegalArgumentException.class,
+            () -> manager.updateAddressBookContactByAreas(textOnlyUpdate));
+        http.expectThrows(IllegalArgumentException.class,
+            () -> manager.updateAddressBookContactByAreas(emptyAreaUpdate));
+        http.assertNoRequests();
+    }
+
+    /** Regression: one complete area let empty ({@code {}}) and {@code null} areas next to it be sent. */
+    @Test
+    public void oneIncompleteAreaRefusesTheWholeFilter() {
+        final AddressBookManagerV5 manager = manager();
+        SelectedArea circle = filter().getSelectedAreas().get(0);
+        SelectedArea typeOnly = new SelectedArea();
+        typeOnly.setType("circle");
+        List<List<SelectedArea>> mixedLists = Arrays.asList(Arrays.asList(circle, new SelectedArea()),
+                Arrays.asList(circle, null), Arrays.asList(null, circle), Arrays.asList(circle, typeOnly));
+
+        for (List<SelectedArea> areas : mixedLists) {
+            // A complete rectangle next to them does not make the incomplete area acceptable.
+            for (BoundingBox box : Arrays.asList(null, box())) {
+                final AddressBookAreasFilter filter = new AddressBookAreasFilter();
+                filter.setSelectedAreas(areas);
+                filter.setBoundingBox(box);
+                final UpdateContactsByAreasRequest update = new UpdateContactsByAreasRequest();
+                update.setFilter(filter);
+
+                IllegalArgumentException error = http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.removeAddressBookContactsByAreas(filter));
+                assertEquals("Every selected_areas entry needs a type and a value", error.getMessage());
+                http.expectThrows(IllegalArgumentException.class,
+                    () -> manager.updateAddressBookContactByAreas(update));
+            }
+        }
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void aDrawnAreaAloneIsEnoughToDeleteByAreas() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        respondWithQueuedJob();
+        AddressBookAreasFilter areas = new AddressBookAreasFilter();
+        areas.setSelectedAreas(filter().getSelectedAreas());
+
+        assertQueuedJob(manager.removeAddressBookContactsByAreas(areas));
+
+        http.request().assertEndpoint("DELETE", HOST, ADDRESSES_EP + "/delete-by-areas")
+                .assertJson("filter.selected_areas[0].type", "circle")
+                .assertJsonLacks("filter.query", "filter.bounding_box");
+    }
+
+    /** Regression: one contact with a bare date string in {@code schedule_blacklist} failed the whole list. */
+    @Test
+    public void scheduleBlacklistReadsEveryShapeTheSpecAllows() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        http.respond(200, json("{'results':[{'address_id':1,'schedule_blacklist':'2026-12-25'},"
+                + "{'address_id':2,'schedule_blacklist':''},"
+                + "{'address_id':3,'schedule_blacklist':['2026-12-24','2026-12-31']},"
+                + "{'address_id':4,'schedule_blacklist':[['2026-01-01'],'2026-01-02',null,'']},"
+                + "{'address_id':5,'schedule_blacklist':null},{'address_id':6}],'total':6}"));
+
+        List<AddressBookContactV5> contacts = manager.getContacts(new AddressBookContactsBodyRequest()).getResults();
+
+        assertEquals(Collections.singletonList("2026-12-25"), contacts.get(0).getScheduleBlacklist());
+        assertEquals(Collections.<String>emptyList(), contacts.get(1).getScheduleBlacklist());
+        assertEquals(Arrays.asList("2026-12-24", "2026-12-31"), contacts.get(2).getScheduleBlacklist());
+        assertEquals(Arrays.asList("2026-01-01", "2026-01-02"), contacts.get(3).getScheduleBlacklist());
+        assertNull(contacts.get(4).getScheduleBlacklist());
+        assertNull(contacts.get(5).getScheduleBlacklist());
+    }
+
+    @Test
+    public void scheduleBlacklistIsSentAsAnArrayAndLeftOutWhenNull() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        http.respondToAll(200, CONTACT);
+        AddressBookContactV5 withDates = contact();
+        withDates.setScheduleBlacklist(Arrays.asList("2026-12-24", "2026-12-31"));
+
+        manager.addContact(withDates);
+        manager.addContact(contact());
+
+        http.request(0).assertJson("schedule_blacklist[0]", "2026-12-24")
+                .assertJson("schedule_blacklist[1]", "2026-12-31");
+        http.request(1).assertJsonLacks("schedule_blacklist");
+    }
+
+    @Test
+    public void aScheduleBlacklistThatIsNotDatesFailsTheParse() {
+        final AddressBookManagerV5 manager = manager();
+        http.respond(200, json("{'results':[{'address_id':1,'schedule_blacklist':{'start':'2026-12-24'}}]}"))
+                .respond(200, json("{'results':[{'address_id':1,'schedule_blacklist':[true]}]}"));
+
+        http.expectApiException(() -> manager.getContacts(new AddressBookContactsBodyRequest()));
+        http.expectApiException(() -> manager.getContacts(new AddressBookContactsBodyRequest()));
     }
 
     /** Regression: the answer was read as {@code data}; the spec names it {@code custom_fields}. */
@@ -354,7 +571,9 @@ public class AddressBookManagerV5Test {
     @Test
     public void exportsSendTheSpecBodiesAndAcceptAQueuedJob() throws Exception {
         AddressBookManagerV5 manager = manager();
-        http.respondWithoutBody(202).respond(200, STATUS_TRUE).respondWithoutBody(202);
+        respondWithQueuedJob();
+        http.respond(200, STATUS_TRUE);
+        respondWithQueuedJob();
         AddressExportRequest byIds = new AddressExportRequest();
         byIds.setIds(Arrays.asList(12345L, 12346L));
         byIds.setFilename("contacts");
@@ -370,9 +589,9 @@ public class AddressBookManagerV5Test {
         byAreaIds.setFilename("territory-contacts");
         byAreaIds.setTimezone("UTC");
 
-        assertNull(manager.exportAddresses(byIds));
-        assertTrue(manager.exportAddressesByAreas(byAreas).getStatus());
-        assertNull(manager.exportAddressesByAreaIds(byAreaIds));
+        AsyncJob exported = manager.exportAddresses(byIds);
+        AsyncJob answered = manager.exportAddressesByAreas(byAreas);
+        AsyncJob exportedByAreaIds = manager.exportAddressesByAreaIds(byAreaIds);
 
         http.request(0).assertEndpoint("POST", HOST, ADDRESSES_EP + "/export")
                 .assertJson("ids[1]", 12346)
@@ -390,6 +609,92 @@ public class AddressBookManagerV5Test {
                 .assertJson("territory_ids[0]", "C0FFEE0000000000000000000000000A")
                 .assertJson("filename", "territory-contacts")
                 .assertJson("tz", "UTC");
+        assertQueuedJob(exported);
+        assertEquals(200, answered.getStatusCode());
+        assertNull(answered.getJobId());
+        assertTrue(answered.getBodyAs(StatusResponse.class).getStatus());
+        assertQueuedJob(exportedByAreaIds);
+    }
+
+    @Test
+    public void anExportIsFollowedThroughItsStatusAndResult() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        // As the live API answers: 202, no X-Job-Id, only the export status URL in Location.
+        http.respondWithHeaders(202, null, "Location", "https://" + HOST + ADDRESSES_EP + "/export/status/" + JOB_ID)
+                .respond(200, "\"processing\"")
+                .respond(200, "address_id,address_1\n12345,100 Example St\n", "text/csv");
+        AddressExportRequest request = new AddressExportRequest();
+        request.setIds(Collections.singletonList(12345L));
+        request.setExtension("csv");
+
+        AsyncJob job = manager.exportAddresses(request);
+        String status = manager.getExportStatus(job.getJobId());
+        byte[] file = manager.getExportResult(job.getJobId());
+
+        assertEquals(JOB_ID, job.getJobId());
+        http.request(1).assertEndpoint("GET", HOST, ADDRESSES_EP + "/export/status/" + JOB_ID).assertApiKeyAsBearer()
+                .assertNoBody();
+        http.request(2).assertEndpoint("GET", HOST, ADDRESSES_EP + "/export/result/" + JOB_ID).assertApiKeyAsBearer()
+                .assertNoBody();
+        assertEquals("processing", status);
+        assertEquals("address_id,address_1\n12345,100 Example St\n", new String(file, StandardCharsets.UTF_8));
+    }
+
+    /** Regression: the export file was decoded as text, which broke xls and xlsx files. */
+    @Test
+    public void exportResultReturnsTheBytesOfTheFileUnchanged() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        // The start of an xlsx (ZIP) file: not valid UTF-8, so a text round trip would change it.
+        byte[] xlsx = {0x50, 0x4B, 0x03, 0x04, 0x14, 0x00, 0x06, 0x00, (byte) 0x88, (byte) 0xC3, (byte) 0xFF, 0x00};
+        http.respondWithBytes(200, xlsx, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+                .respondWithoutBody(200);
+
+        assertArrayEquals(xlsx, manager.getExportResult(JOB_ID));
+        assertArrayEquals(new byte[0], manager.getExportResult(JOB_ID));
+        http.request(0).assertEndpoint("GET", HOST, ADDRESSES_EP + "/export/result/" + JOB_ID).assertNoBody();
+    }
+
+    @Test
+    public void exportStatusKeepsAnAnswerThatIsNotAJsonString() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        http.respond(200, json("{'status':'done'}")).respond(200, "not json", "text/plain").respondWithoutBody(204);
+
+        assertEquals(json("{'status':'done'}"), manager.getExportStatus(JOB_ID));
+        assertEquals("not json", manager.getExportStatus(JOB_ID));
+        assertEquals("", manager.getExportStatus(JOB_ID));
+    }
+
+    @Test
+    public void exportStatusAndResultNeedAJobIdInOneSegment() throws Exception {
+        final AddressBookManagerV5 manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getExportStatus(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getExportResult(""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getExportStatus("../secret"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getExportResult("..\\secret"));
+        http.assertNoRequests();
+        http.respondToAll(200, "\"done\"");
+        manager.getExportStatus("a b");
+        manager.getExportResult("a?b");
+        assertEquals(ADDRESSES_EP + "/export/status/a%20b", http.request(0).getUri().getRawPath());
+        assertEquals(ADDRESSES_EP + "/export/result/a%3Fb", http.request(1).getUri().getRawPath());
+    }
+
+    @Test
+    public void jobIdOfAStartedJobFeedsTheJobStatus() throws Exception {
+        AddressBookManagerV5 manager = manager();
+        http.respondWithHeaders(202, null, "Location", BOOK_EP + "/job-tracker/status/" + JOB_ID)
+                .respond(200, json("{'status':'processing'}"));
+        AddressBookAreasFilter areas = new AddressBookAreasFilter();
+        areas.setQuery("Bakery");
+        areas.setBoundingBox(box());
+
+        AsyncJob job = manager.removeAddressBookContactsByAreas(areas);
+        JobStatusResponse status = manager.getJobStatus(job.getJobId());
+
+        assertEquals(JOB_ID, job.getJobId());
+        http.request(1).assertEndpoint("GET", HOST, BOOK_EP + "/job-tracker/status/" + JOB_ID);
+        assertEquals("processing", status.getStatus());
     }
 
     @Test
@@ -411,12 +716,14 @@ public class AddressBookManagerV5Test {
         final AddressBookManagerV5 manager = manager();
         http.expectThrows(IllegalArgumentException.class, () -> manager.getJobStatus(""));
         http.expectThrows(IllegalArgumentException.class, () -> manager.getJobResult(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getJobResult("JOB/1"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getJobStatus("JOB\\1"));
         http.assertNoRequests();
         http.respondToAll(200, STATUS_TRUE);
 
-        manager.getJobResult("JOB/1");
+        manager.getJobResult("JOB 1");
 
-        assertEquals(BOOK_EP + "/job-tracker/result/JOB%2F1", http.request().getUri().getRawPath());
+        assertEquals(BOOK_EP + "/job-tracker/result/JOB%201", http.request().getUri().getRawPath());
     }
 
     @Test

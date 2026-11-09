@@ -32,7 +32,7 @@ public class Geocodings {
     /** The longitude of the geocoded address ({@code lng}). */
     @SerializedName("lng")
     private Double longitude;
-    /** Confidance level in the address geocoding: high, medium, low ({@code confidence}). */
+    /** Confidence level in the address geocoding: high, medium, low ({@code confidence}). */
     @SerializedName("confidence")
     @QueryParameter("confidence")
     private String confidence;

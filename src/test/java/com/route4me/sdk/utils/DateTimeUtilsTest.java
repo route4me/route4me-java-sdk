@@ -28,7 +28,8 @@ public class DateTimeUtilsTest {
 
     @Test
     public void testOffsetCrossingMidnightChangesDate() {
-        String result = DateTimeUtils.localDateTimeToUTCParser("2023-06-15T23:00:00:000+05:00");
+        // 03:00 at +05:00 on the 16th is 22:00 UTC on the 15th.
+        String result = DateTimeUtils.localDateTimeToUTCParser("2023-06-16T03:00:00:000+05:00");
         assertEquals("2023-06-15", result);
     }
 

@@ -6,6 +6,7 @@ import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.DeleteResponse;
+import com.route4me.sdk.responses.StatusResponse;
 import java.util.ArrayList;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;
@@ -37,14 +38,6 @@ public class AddressBookManager extends Manager {
         super(apiKey);
     }
 
-    private URIBuilder getAPIV5URI(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
-    }
-
 
 
     /**
@@ -54,7 +47,12 @@ public class AddressBookManager extends Manager {
      * @param contact the contact
      * @return the created contact
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V4 {@code /api.v4/address_book.php} call is obsolete: the C# SDK marks
+     *     {@code AddAddressBookContact} as {@code [Obsolete]}. Use
+     *     {@link AddressBookManagerV5#addContact(AddressBookContactV5)}. This method will be removed in the next
+     *     major version.
      */
+    @Deprecated
     public Contact createContact(Contact contact) throws APIException {
         return this.makeRequest(RequestMethod.POST,
                 Manager.defaultBuilder(ADDRESS_BOOK_EP),
@@ -69,7 +67,12 @@ public class AddressBookManager extends Manager {
      * @param contact the contact, with its address ID
      * @return the updated contact
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @deprecated the V4 {@code /api.v4/address_book.php} call is obsolete: the C# SDK marks
+     *     {@code UpdateAddressBookContact} as {@code [Obsolete]}. Use
+     *     {@link AddressBookManagerV5#updateContact(long, AddressBookContactV5)}. This method will be removed in the
+     *     next major version.
      */
+    @Deprecated
     public Contact updateContact(Contact contact) throws APIException {
         return this.makeRequest(RequestMethod.PUT,
                 Manager.defaultBuilder(ADDRESS_BOOK_EP),
@@ -83,8 +86,12 @@ public class AddressBookManager extends Manager {
      * @param addressID the contact's address ID
      * @return the contact, or {@code null} when the address book has no contact with that ID
      * @throws APIException if the request fails
+     * @throws IllegalArgumentException if {@code addressID} is {@code null}; nothing is sent
      */
     public Contact getContact(Number addressID) throws APIException {
+        if (addressID == null) {
+            throw new IllegalArgumentException("address_id is required");
+        }
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
         builder.setParameter("address_id", addressID.toString());
         ContactsResponse response = this.makeRequest(RequestMethod.GET, builder, "", ContactsResponse.class);
@@ -103,8 +110,15 @@ public class AddressBookManager extends Manager {
      * @param request the IDs or search parameters
      * @return the contacts, or {@code null} when the answer has no results
      * @throws APIException if the request fails
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
+     * @deprecated the V4 {@code /api.v4/address_book.php} call is obsolete: the C# SDK marks
+     *     {@code GetAddressBookContacts} as {@code [Obsolete]}. Use
+     *     {@link AddressBookManagerV5#getContacts(AddressBookContactsQuery)}. This method will be removed in the next
+     *     major version.
      */
+    @Deprecated
     public List<Contact> getContacts(ContactsRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = contactsQuery(request);
         ContactsResponse cr = this.makeJSONRequest(RequestMethod.GET, builder, request, ContactsResponse.class);
         return cr == null ? null : cr.getResults();
@@ -120,8 +134,12 @@ public class AddressBookManager extends Manager {
      *     {@code address_id,address_1}
      * @return the rows (or contacts) and their total
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public AddressBookSearchResponse searchAddressBookLocation(ContactsRequest request) throws APIException {
+        if (request == null) {
+            throw new IllegalArgumentException("The search (request) is required");
+        }
         URIBuilder builder = contactsQuery(request);
         return this.makeJSONRequest(RequestMethod.GET, builder, request, AddressBookSearchResponse.class);
     }
@@ -131,14 +149,19 @@ public class AddressBookManager extends Manager {
      * range in the query ({@code offset}, {@code limit}) and the request as the JSON body. The {@code filter} of the
      * body tells this search apart from {@link #createContact(Contact)}, which uses the same endpoint.
      *
-     * @param request the filter and the fields to return
+     * @param request the filter and the fields to return; the filter is required
      * @param offset the number of contacts to skip; {@code null} leaves {@code offset} out
      * @param limit the number of contacts to return; {@code null} leaves {@code limit} out
      * @return the contacts that match, as rows of values when the request names the fields
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} or its {@code filter} is {@code null}; nothing is sent
+     *     (without the filter, the same POST would be a {@link #createContact(Contact)} attempt)
      */
     public AddressBookSearchResponse searchAddressBookContactsByFilter(AddressBookFilterSearchRequest request,
             Integer offset, Integer limit) throws APIException {
+        if (request == null || request.getFilter() == null) {
+            throw new IllegalArgumentException("The filter is required");
+        }
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
         if (offset != null) {
             builder.setParameter("offset", String.valueOf(offset));
@@ -193,11 +216,13 @@ public class AddressBookManager extends Manager {
      * Creates an address book group: {@code POST https://api.route4me.com/api.v4/address_book_group.php}, with the
      * group as the JSON body.
      *
-     * @param group the group: its name, color, icon and the rules ({@code filter}) its contacts match
+     * @param group the group: its name (required), color, icon and the rules ({@code filter}) its contacts match
      * @return the created group, with its ID
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code group} is {@code null} or has no {@code group_name}; nothing is sent
      */
     public AddressBookGroup addAddressBookGroup(AddressBookGroup group) throws APIException {
+        requireText(group == null ? null : group.getGroupName(), "group_name");
         return this.makeRequest(RequestMethod.POST, Manager.defaultBuilder(ADDRESS_BOOK_GROUP_EP),
                 this.gson.toJson(group), AddressBookGroup.class);
     }
@@ -297,7 +322,11 @@ public class AddressBookManager extends Manager {
      * @param addressIds the contacts' address IDs
      * @return whether they were deleted; {@code false} also when the answer is empty
      * @throws APIException if the request fails
+     * @deprecated the V4 {@code /api.v4/address_book.php} call is obsolete: the C# SDK marks
+     *     {@code RemoveAddressBookContacts} as {@code [Obsolete]}. Use
+     *     {@link AddressBookManagerV5#deleteContacts(long[])}. This method will be removed in the next major version.
      */
+    @Deprecated
     public boolean deleteContact(List<Number> addressIds) throws APIException {
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
         DeleteResponse response = this.makeRequest(RequestMethod.DELETE, builder,
@@ -313,7 +342,7 @@ public class AddressBookManager extends Manager {
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public List<Contact> getDepotsFromAddressBook() throws APIException {
-        URIBuilder builder = this.getAPIV5URI(ADDRESS_BOOK_DEPOTS);
+        URIBuilder builder = v5Builder(ADDRESS_BOOK_DEPOTS);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Contact>>() {
         }.getType());
     }
@@ -321,10 +350,10 @@ public class AddressBookManager extends Manager {
     @Getter
     static class ContactsResponse {
 
-        /** An array of the Order type objects ({@code results}). */
+        /** The contacts ({@code results}). */
         @SerializedName("results")
         private List<Contact> results;
-        /** Total number of the returned orders ({@code total}). */
+        /** The total number of matching contacts ({@code total}). */
         @SerializedName("total")
         private int total;
     }

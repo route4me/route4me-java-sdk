@@ -20,7 +20,7 @@ public class TelematicsGetVendorInfo {
             TelematicsVendorV5 vendor = manager.getTelematicsVendorV5(3L);
             System.out.println(vendor);
         } catch (APIException ex) {
-            Logger.getLogger(TelematicsGetVendorInfo.class.getName()).log(Level.INFO, ex.toString());
+            Logger.getLogger(TelematicsGetVendorInfo.class.getName()).log(Level.SEVERE, ex.toString());
         }
     }
 }

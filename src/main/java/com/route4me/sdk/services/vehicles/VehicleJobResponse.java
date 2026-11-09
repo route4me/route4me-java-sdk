@@ -4,9 +4,9 @@ import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 
 /**
- * The answer about an asynchronous vehicle job: from a bulk method of {@link VehiclesManagerV5} that starts one,
- * when it has a body, and from {@link VehiclesManagerV5#getVehicleJobStatus(String)} and
- * {@link VehiclesManagerV5#getVehicleJobResult(String)}.
+ * The answer about an asynchronous vehicle job, from {@link VehiclesManagerV5#getVehicleJobStatus(String)} and
+ * {@link VehiclesManagerV5#getVehicleJobResult(String)}. A bulk method of {@link VehiclesManagerV5} returns an
+ * {@link com.route4me.sdk.AsyncJob}; when its reply has a body, {@code getBodyAs(VehicleJobResponse.class)} reads it.
  */
 @Data
 public class VehicleJobResponse {

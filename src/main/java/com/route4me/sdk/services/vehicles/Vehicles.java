@@ -6,8 +6,15 @@
 package com.route4me.sdk.services.vehicles;
 import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.queryconverter.QueryParameter;
+import lombok.AccessLevel;
 import lombok.Data;
-/** A vehicle, as the older vehicle API of {@link VehiclesManager} takes and returns it. */
+import lombok.Getter;
+import lombok.Setter;
+/**
+ * A vehicle, as the older vehicle API of {@link VehiclesManager} takes and returns it. {@code is_deleted} and
+ * {@code is_operational} start as {@code null} and are sent only when set, so an update that does not set them
+ * leaves them as they are.
+ */
 @Data
 public class Vehicles {
 
@@ -90,9 +97,11 @@ public class Vehicles {
     /** The member ID ({@code member_id}). */
     @SerializedName("member_id")
     private String memberId;
-    /** Specifies if the vehicle is marked as deleted ({@code is_deleted}). */
+    /** Specifies if the vehicle is marked as deleted ({@code is_deleted}); {@code null} is not sent. */
     @SerializedName("is_deleted")
-    private boolean isDeleted;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Boolean isDeleted;
     /** Vehicle alias ({@code vehicle_alias}). */
     @SerializedName("vehicle_alias")
     private String vehicleAlias;
@@ -138,9 +147,11 @@ public class Vehicles {
     /** End date of the license ({@code license_end_date}). */
     @SerializedName("license_end_date")
     private String licenseEndDate;
-    /** Whether the vehicle is operational ({@code is_operational}). */
+    /** Whether the vehicle is operational ({@code is_operational}); {@code null} is not sent. */
     @SerializedName("is_operational")
-    private boolean isOperational;
+    @Getter(AccessLevel.NONE)
+    @Setter(AccessLevel.NONE)
+    private Boolean isOperational;
     /** The fuel type, such as {@code diesel} or {@code electric} ({@code fuel_type}). */
     @SerializedName("fuel_type")
     private String fuelType;
@@ -178,5 +189,75 @@ public class Vehicles {
     @SerializedName("fuel_consumption_highway_uf_value")
     private String fuelConsumptionHighwayUFValue;
 
+    /**
+     * Returns whether the vehicle is marked as deleted.
+     *
+     * @return the value; {@code false} when it is not set
+     */
+    public boolean isDeleted() {
+        return Boolean.TRUE.equals(this.isDeleted);
+    }
 
+    /**
+     * Returns {@code is_deleted} as it is sent.
+     *
+     * @return the value, or {@code null} when it is not set and so not sent
+     */
+    public Boolean getDeleted() {
+        return this.isDeleted;
+    }
+
+    /**
+     * Sets whether the vehicle is marked as deleted.
+     *
+     * @param deleted the value
+     */
+    public void setDeleted(boolean deleted) {
+        this.isDeleted = deleted;
+    }
+
+    /**
+     * Sets whether the vehicle is marked as deleted.
+     *
+     * @param deleted the value; {@code null} leaves {@code is_deleted} out of the request
+     */
+    public void setDeleted(Boolean deleted) {
+        this.isDeleted = deleted;
+    }
+
+    /**
+     * Returns whether the vehicle is operational.
+     *
+     * @return the value; {@code false} when it is not set
+     */
+    public boolean isOperational() {
+        return Boolean.TRUE.equals(this.isOperational);
+    }
+
+    /**
+     * Returns {@code is_operational} as it is sent.
+     *
+     * @return the value, or {@code null} when it is not set and so not sent
+     */
+    public Boolean getOperational() {
+        return this.isOperational;
+    }
+
+    /**
+     * Sets whether the vehicle is operational.
+     *
+     * @param operational the value
+     */
+    public void setOperational(boolean operational) {
+        this.isOperational = operational;
+    }
+
+    /**
+     * Sets whether the vehicle is operational.
+     *
+     * @param operational the value; {@code null} leaves {@code is_operational} out of the request
+     */
+    public void setOperational(Boolean operational) {
+        this.isOperational = operational;
+    }
 }

@@ -2,6 +2,8 @@ package com.route4me.sdk;
 
 import org.apache.http.impl.client.CloseableHttpClient;
 
+import java.lang.reflect.Field;
+
 /**
  * Test-only bridge to the package-private HTTP client hook in {@link Manager}.
  *
@@ -26,6 +28,17 @@ public final class ManagerTestAccess {
     }
 
     /**
+     * Returns the client {@code manager} sends its requests through, such as the mocked client
+     * of {@code MockHttp} once the manager is installed.
+     *
+     * @param manager the manager under test
+     * @return its client
+     */
+    public static CloseableHttpClient httpClient(Manager manager) {
+        return manager.httpClient();
+    }
+
+    /**
      * Returns how many connections the pool of {@code manager} may hold.
      *
      * @param manager the manager under test
@@ -36,11 +49,19 @@ public final class ManagerTestAccess {
     }
 
     /**
-     * Makes {@code manager} create its own HTTP client again on the next request.
+     * Returns the API key a manager was created with, so that {@code MockHttp} can refuse a
+     * manager whose key its guard would not recognise.
      *
      * @param manager the manager under test
+     * @return the key, or {@code null} for a manager without one
      */
-    public static void useDefaultHttpClient(Manager manager) {
-        manager.setHttpClient(null);
+    public static String apiKey(Manager manager) {
+        try {
+            Field field = Manager.class.getDeclaredField("apiKey");
+            field.setAccessible(true);
+            return (String) field.get(manager);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new IllegalStateException("Cannot read the API key field of Manager", e);
+        }
     }
 }

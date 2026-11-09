@@ -9,15 +9,23 @@ import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Route;
 import com.route4me.sdk.services.routing.RoutingManager;
 
-/** Assigns a driver to a route with {@link RoutingManager#assignDriver}. */
+/**
+ * Assigns a driver to a route with {@link RoutingManager#assignDriver}. Set {@code ROUTE_ID} to a route of a test
+ * account and {@code MEMBER_ID} to one of its drivers: the example assigns the route to the driver.
+ */
 public class AssignDriver {
 
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        String driverId = System.getenv("MEMBER_ID");
+        if (routeId == null || routeId.isEmpty() || driverId == null || driverId.isEmpty()) {
+            System.err.println("Set ROUTE_ID to a route of a test account and MEMBER_ID to one of its drivers; this"
+                    + " example assigns the route to the driver.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
         try {
-            String routeId = "FA249A8FAC4D7FA7938C77784737481F";
-            String driverId = "1";
             Route newRoute = routeManager.assignDriver(routeId, driverId);
             System.out.println(newRoute);
         } catch (APIException e) {

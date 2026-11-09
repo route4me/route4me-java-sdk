@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.locations;
 
+import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
@@ -16,15 +17,15 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class LocationManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0/address-book";
-    private static final String LOCATIONS_LIST_COMBINED_EP = V5_BASE + "/locations/list/combined";
-    private static final String LOCATIONS_LIST_EP = V5_BASE + "/locations/list";
-    private static final String LOCATIONS_CLUSTERING_EP = V5_BASE + "/locations/clustering";
-    private static final String LOCATIONS_HEATMAP_EP = V5_BASE + "/locations/heatmap";
-    private static final String LOCATIONS_TERRITORIES_EP = V5_BASE + "/locations/territories";
-    private static final String LOCATIONS_EXPORT_COLUMNS_EP = V5_BASE + "/locations/export/columns";
-    private static final String LOCATIONS_EXPORT_EP = V5_BASE + "/locations/export";
-    private static final String LOCATION_TYPES_EP = V5_BASE + "/locations/types";
+    private static final String ADDRESS_BOOK_BASE = V5_BASE + "/address-book";
+    private static final String LOCATIONS_LIST_COMBINED_EP = ADDRESS_BOOK_BASE + "/locations/list/combined";
+    private static final String LOCATIONS_LIST_EP = ADDRESS_BOOK_BASE + "/locations/list";
+    private static final String LOCATIONS_CLUSTERING_EP = ADDRESS_BOOK_BASE + "/locations/clustering";
+    private static final String LOCATIONS_HEATMAP_EP = ADDRESS_BOOK_BASE + "/locations/heatmap";
+    private static final String LOCATIONS_TERRITORIES_EP = ADDRESS_BOOK_BASE + "/locations/territories";
+    private static final String LOCATIONS_EXPORT_COLUMNS_EP = ADDRESS_BOOK_BASE + "/locations/export/columns";
+    private static final String LOCATIONS_EXPORT_EP = ADDRESS_BOOK_BASE + "/locations/export";
+    private static final String LOCATION_TYPES_EP = ADDRESS_BOOK_BASE + "/locations/types";
 
     /**
      * Creates a manager that sends its requests with an API key.
@@ -45,14 +46,6 @@ public class LocationManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
-    }
-
     /**
      * Lists locations, with their column configuration: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/address-book/locations/list/combined}, with the request as the JSON
@@ -61,8 +54,10 @@ public class LocationManager extends Manager {
      * @param request the filters, sort order, page and fields
      * @return the page of locations and the columns
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationCombinedResource getLocationsCombined(LocationCombinedRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_LIST_COMBINED_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationCombinedResource.class);
     }
@@ -74,8 +69,10 @@ public class LocationManager extends Manager {
      * @param request the filters, sort order, page and fields
      * @return the page of locations
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationListResource getLocationsList(LocationCombinedRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_LIST_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), LocationListResource.class);
     }
@@ -88,8 +85,10 @@ public class LocationManager extends Manager {
      * @param request the filters and the zoom level
      * @return the clusters, and the locations that are not in one
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationClusteringResource getLocationsClustering(LocationClusteringRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_CLUSTERING_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 LocationClusteringResource.class);
@@ -102,8 +101,10 @@ public class LocationManager extends Manager {
      * @param request the filters and the zoom level
      * @return the heat map
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationHeatmapCollection getLocationsHeatmap(LocationHeatmapRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_HEATMAP_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 LocationHeatmapCollection.class);
@@ -117,9 +118,11 @@ public class LocationManager extends Manager {
      * @param request the location filters and the territory page
      * @return the page of territories
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationTerritoriesCollection getLocationsTerritories(LocationTerritoriesRequest request)
             throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_TERRITORIES_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 LocationTerritoriesCollection.class);
@@ -133,9 +136,11 @@ public class LocationManager extends Manager {
      * @param request the location filters
      * @return the columns
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
     public LocationExportColumnsResource[] getLocationsExportColumns(LocationCombinedRequest request)
             throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_EXPORT_COLUMNS_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
                 LocationExportColumnsResource[].class);
@@ -144,16 +149,18 @@ public class LocationManager extends Manager {
     /**
      * Starts an export of locations to a file: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/address-book/locations/export}, with the request as the JSON body.
-     * The API builds the file in a background job and answers {@code 202 Accepted} with no body; the
-     * {@code Location} header of that answer, the link to the export status, is not exposed by this SDK.
+     * The API builds the file in a background job and answers {@code 202 Accepted} with no body, and with the link
+     * to the export status in {@code Location} ({@link AsyncJob#getLocation()}).
      *
      * @param request the locations, the columns, the file name and the format
-     * @return the status in the answer, or {@code null} when the answer has no body (the job was queued)
-     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @return the accepted job: its ID, status URL and reply body
+     * @throws APIException if the request fails or the server answers with an error status
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      */
-    public StatusResponse exportLocations(LocationExportRequest request) throws APIException {
+    public AsyncJob exportLocations(LocationExportRequest request) throws APIException {
+        requireRequest(request);
         URIBuilder builder = v5Builder(LOCATIONS_EXPORT_EP);
-        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request), StatusResponse.class);
+        return this.makeJobRequest(RequestMethod.POST, builder, this.gson.toJson(request));
     }
 
     /**
@@ -209,7 +216,8 @@ public class LocationManager extends Manager {
      * @param locationTypeId the location type ID
      * @return the location type
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      */
     public LocationTypeResource getLocationTypeById(String locationTypeId) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
@@ -240,8 +248,8 @@ public class LocationManager extends Manager {
      * @param request the new values; {@code name}, {@code is_parent_type} and {@code is_child_type} are required
      * @return the updated location type
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null} or empty, or a required field is
-     *     missing; nothing is sent
+     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}, or a required field is missing; nothing is sent
      */
     public LocationTypeResource updateLocationType(String locationTypeId, StoreLocationTypeRequest request)
             throws APIException {
@@ -257,12 +265,14 @@ public class LocationManager extends Manager {
      * @param locationTypeId the location type ID
      * @return whether it was deleted
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      */
     public DeleteLocationTypeResponse deleteLocationType(String locationTypeId) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
         return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteLocationTypeResponse.class);
     }
+
 
     /** Checks the fields the spec requires in a location type, before any request is sent. */
     private static void checkLocationType(StoreLocationTypeRequest request) {

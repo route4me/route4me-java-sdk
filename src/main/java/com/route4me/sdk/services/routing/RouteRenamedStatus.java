@@ -12,10 +12,10 @@ import lombok.Data;
 @Data
 public class RouteRenamedStatus {
 
-    /** Whether legs for this vendor were recomputed and persisted ({@code success}). */
+    /** Whether the route was renamed ({@code success}). */
     @SerializedName("success")
     private Boolean success;
-    /** Human-readable error message when `success=false` ({@code error}). */
+    /** The error message when {@code success} is {@code false} ({@code error}). */
     @SerializedName("error")
     private String error;
 

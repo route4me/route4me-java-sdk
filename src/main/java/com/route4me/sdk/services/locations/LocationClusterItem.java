@@ -8,7 +8,7 @@ import lombok.Data;
 public class LocationClusterItem {
     /** Unique identifier for the address ({@code address_id}). */
     @SerializedName("address_id")
-    private Integer addressId;
+    private Long addressId;
 
     /** Latitude coordinate ({@code lat}). */
     @SerializedName("lat")

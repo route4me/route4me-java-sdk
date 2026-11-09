@@ -42,6 +42,7 @@ public class UsersManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the user.php methods are deprecated (obsolete in C#) but stay tested
     public void createUserPostsTheUser() throws Exception {
         UsersManager manager = manager();
         http.respond(200, USER_JSON);
@@ -58,6 +59,7 @@ public class UsersManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the user.php methods are deprecated (obsolete in C#) but stay tested
     public void updateUserPutsTheUser() throws Exception {
         UsersManager manager = manager();
         http.respond(200, USER_JSON);
@@ -70,6 +72,7 @@ public class UsersManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the user.php methods are deprecated (obsolete in C#) but stay tested
     public void getUserSendsTheMemberId() throws Exception {
         UsersManager manager = manager();
         http.respond(200, USER_JSON);
@@ -123,6 +126,7 @@ public class UsersManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the user.php methods are deprecated (obsolete in C#) but stay tested
     public void userDeleteSendsTheMemberIdInTheQuery() throws Exception {
         UsersManager manager = manager();
         http.respond(200, json("{'status':true}"));
@@ -135,6 +139,7 @@ public class UsersManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the user.php methods are deprecated (obsolete in C#) but stay tested
     public void userDeleteRejectsAMissingMemberId() {
         final UsersManager manager = manager();
 
@@ -144,6 +149,7 @@ public class UsersManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the user.php methods are deprecated (obsolete in C#) but stay tested
     public void getUsersWithoutArgumentsListsTheV4Users() throws Exception {
         UsersManager manager = manager();
         http.respond(200, "{\"results\":[" + USER_JSON + "]}");
@@ -259,7 +265,7 @@ public class UsersManagerTest {
                 .assertJson("token", "example-token")
                 .assertJson("payload", "example-receipt")
                 .assertJson("format", "json");
-        assertTrue(answer.contains("true"));
+        assertEquals("the answer is returned as the server sent it", json("{'status':true}"), answer);
         assertFalse(license.toString().contains("SESSION-GUID-1"));
         assertFalse(license.toString().contains("example-token"));
         assertFalse(license.toString().contains("example-receipt"));
@@ -294,6 +300,7 @@ public class UsersManagerTest {
     }
 
     @Test
+    @SuppressWarnings("deprecation") // the user.php methods are deprecated (obsolete in C#) but stay tested
     public void errorBecomesApiException() {
         final UsersManager manager = manager();
         http.respondWithFixture(400, "error_400.json");

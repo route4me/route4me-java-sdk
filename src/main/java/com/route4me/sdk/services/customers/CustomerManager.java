@@ -11,7 +11,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class CustomerManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String CUSTOMERS_EP = V5_BASE + "/customers";
     private static final String CUSTOMERS_LIST_EP = CUSTOMERS_EP + "/list";
 
@@ -34,23 +33,18 @@ public class CustomerManager extends Manager {
         super(apiKey, disableRedirects);
     }
 
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
-    }
-
     /**
      * Lists customers, with filters, sorting and paging: {@code POST
      * https://wh.route4me.com/modules/api/v5.0/customers/list}, with the parameters as the JSON body.
      *
-     * @param parameters the filters, sort order, page and fields
+     * @param parameters the filters, sort order, page and fields; empty parameters for the first page of all the
+     *     customers
      * @return the page of customers
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code parameters} is {@code null}; nothing is sent
      */
     public CustomerListResponse getCustomersList(CustomerListParameters parameters) throws APIException {
+        requireRequest(parameters);
         URIBuilder builder = v5Builder(CUSTOMERS_LIST_EP);
         return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(parameters), CustomerListResponse.class);
     }
@@ -61,6 +55,8 @@ public class CustomerManager extends Manager {
      * @param customerId the customer ID
      * @return the customer, with its location count and accountable person
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code customerId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      */
     public CustomerShowResource getCustomerById(String customerId) throws APIException {
         URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);
@@ -95,9 +91,12 @@ public class CustomerManager extends Manager {
      * @param request the new values of the customer
      * @return the updated customer
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code customerId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}, or {@code request} is {@code null}; nothing is sent
      */
     public CustomerResource updateCustomer(String customerId, CustomerStoreRequest request) throws APIException {
         URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);
+        requireRequest(request);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(request), CustomerResource.class);
     }
 
@@ -107,9 +106,12 @@ public class CustomerManager extends Manager {
      *
      * @param customerId the customer ID
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code customerId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /}, {@code \} or {@code ;}; nothing is sent
      */
     public void deleteCustomer(String customerId) throws APIException {
         URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);
         this.makeRequest(RequestMethod.DELETE, builder, "", String.class);
     }
+
 }
