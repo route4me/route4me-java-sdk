@@ -10,25 +10,41 @@ import com.route4me.sdk.services.routing.Route;
 import com.route4me.sdk.services.routing.RoutesRequest;
 import com.route4me.sdk.services.routing.RoutingManager;
 
-import java.util.List;
-
 /**
- * Adds a note to a destination of a route with {@link NotesManager#addAddressNotes}, after finding the route
- * with {@link RoutingManager#getRoutes} and {@link RoutingManager#getRoute}.
+ * Adds a note to a destination of a route with {@link NotesManager#addAddressNotes}, after reading the stop's
+ * position with {@link RoutingManager#getRoute}. Set {@code ROUTE_ID} and {@code ROUTE_DESTINATION_ID} to a route of a
+ * test account and one of its stops: the example adds a note to that stop.
  */
 public class AddAddressNotes {
 
     public static void main(String[] args) throws APIException {
+        String routeId = System.getenv("ROUTE_ID");
+        String stopId = System.getenv("ROUTE_DESTINATION_ID");
+        if (routeId == null || routeId.isEmpty() || stopId == null || stopId.isEmpty()) {
+            System.err.println("Set ROUTE_ID and ROUTE_DESTINATION_ID to a route of a test account and one of its"
+                    + " stops; this example adds a note to that stop.");
+            return;
+        }
+        long routeDestinationId = Long.parseLong(stopId);
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
-        List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(10));
-        Route responseObject = routeManager.getRoute(new RoutesRequest().setId(routes.get(0).getId()));
+        Route route = routeManager.getRoute(new RoutesRequest().setId(routeId));
+        Address address = null;
+        if (route != null && route.getAddresses() != null) {
+            for (Address stop : route.getAddresses()) {
+                if (stop.getRouteDestinationId() != null && stop.getRouteDestinationId() == routeDestinationId) {
+                    address = stop;
+                }
+            }
+        }
+        if (address == null) {
+            System.err.println("Route " + routeId + " has no stop " + routeDestinationId + ".");
+            return;
+        }
         NotesManager notesManager = new NotesManager(apiKey);
-        Address address = responseObject.getAddresses().get(0);
-        long routeDestinationID = address.getRouteDestinationId();
         String noteContent = "Adding a note to an Address";
-        NoteRequest request = new NoteRequest().setRouteId(routes.get(0).getId())
-                .setAddressId(Long.toString(routeDestinationID))
+        NoteRequest request = new NoteRequest().setRouteId(routeId)
+                .setAddressId(Long.toString(routeDestinationId))
                 .setLatitude(address.getLatitude())
                 .setLongitude(address.getLongitude())
                 .setDeviceType(Constants.DeviceType.WEB);
