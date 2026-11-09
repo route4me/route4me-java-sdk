@@ -74,6 +74,10 @@ import org.apache.logging.log4j.LogManager;
  * <p>Every request carries the connect, socket (read) and connection-request timeouts of
  * the manager; see {@link #setConnectTimeout(int)}, {@link #setSocketTimeout(int)} and
  * {@link #setConnectionRequestTimeout(int)}.
+ *
+ * <p>Every reply is read whole into memory, up to the maximum response size of the manager
+ * (see {@link #setMaxResponseSize(int)}); a larger reply fails the request with an
+ * {@link APIException}.
  */
 public abstract class Manager implements Closeable {
 
@@ -83,6 +87,11 @@ public abstract class Manager implements Closeable {
     public static final int DEFAULT_SOCKET_TIMEOUT_MS = 30000;
     /** Default time to wait for a free connection from the pool, in milliseconds. */
     public static final int DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS = 6050;
+    /**
+     * Default and largest maximum response size, in bytes: {@code Integer.MAX_VALUE - 8}, the
+     * largest array that Java VMs can allocate.
+     */
+    public static final int DEFAULT_MAX_RESPONSE_SIZE = Integer.MAX_VALUE - 8;
 
     /** The default number of pooled connections of a manager, per route and in total. */
     private static final int DEFAULT_MAX_CONNECTIONS = 10;
@@ -105,6 +114,10 @@ public abstract class Manager implements Closeable {
      * and PDF exports acceptable.
      */
     private static final String V5_ACCEPT = "application/json, */*;q=0.8";
+    /** The size of the buffer that reads a response body, and its first size when the length is unknown. */
+    private static final int READ_BUFFER_SIZE = 8192;
+    /** The largest first size of the buffer of a body whose length is declared, so that a false length costs little. */
+    private static final int MAX_PRESIZE = 1 << 20;
 
     /** The logger of the managers; protected, and named in lower case, since subclasses use it. */
     @SuppressWarnings("checkstyle:ConstantName") // public API of subclasses: renaming it would break them
@@ -120,6 +133,7 @@ public abstract class Manager implements Closeable {
     private volatile int connectTimeout = DEFAULT_CONNECT_TIMEOUT_MS;
     private volatile int socketTimeout = DEFAULT_SOCKET_TIMEOUT_MS;
     private volatile int connectionRequestTimeout = DEFAULT_CONNECTION_REQUEST_TIMEOUT_MS;
+    private volatile int maxResponseSize = DEFAULT_MAX_RESPONSE_SIZE;
     /** Guards the creation, replacement and closing of {@link #httpClient}. */
     private final Object clientLock = new Object();
     /** The client of this manager; {@code null} until the first request or after {@link #close()}. */
@@ -709,7 +723,7 @@ public abstract class Manager implements Closeable {
         try (CloseableHttpResponse resp = client.execute(hrb)) {
             int status = resp.getStatusLine().getStatusCode();
             HttpEntity entity = resp.getEntity();
-            byte[] bytes = readBody(entity);
+            byte[] bytes = readBody(entity, this.maxResponseSize);
             Charset charset = charsetOf(entity);
             if (status < 200 || status > 303) {
                 throw APIException.forErrorStatus(method.name(), safeUrl, status,
@@ -818,29 +832,79 @@ public abstract class Manager implements Closeable {
     }
 
     /**
-     * Reads a whole response body.
+     * Reads a whole response body, up to a limit.
+     *
+     * <p>A body over the limit fails before it fills the memory: at once when its
+     * {@code Content-Length} is larger, otherwise as soon as more bytes arrive. Its stream is
+     * then left open, because closing it would read the rest of the body to reuse the
+     * connection; {@link #send} closes the response, which drops the connection instead.
      *
      * @param entity the response entity, or {@code null} when the response has none (such
      *               as a {@code 204 No Content})
+     * @param limit  the largest body to read, in bytes
      * @return the body; empty when there is no entity or no content
-     * @throws IOException if the body cannot be read
+     * @throws IOException if the body cannot be read or is larger than {@code limit}
      */
-    private static byte[] readBody(HttpEntity entity) throws IOException {
+    private static byte[] readBody(HttpEntity entity, int limit) throws IOException {
         if (entity == null) {
             return new byte[0];
         }
-        try (InputStream in = entity.getContent()) {
-            if (in == null) {
-                return new byte[0];
-            }
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            byte[] buffer = new byte[8192];
-            int read;
-            while ((read = in.read(buffer)) != -1) {
-                out.write(buffer, 0, read);
-            }
-            return out.toByteArray();
+        long declared = entity.getContentLength();
+        if (declared > limit) {
+            throw tooLarge("declares " + declared + " bytes, more", limit);
         }
+        InputStream in = entity.getContent();
+        if (in == null) {
+            return new byte[0];
+        }
+        ByteArrayOutputStream out = new ByteArrayOutputStream(
+                declared >= 0 ? (int) Math.min(declared, MAX_PRESIZE) : READ_BUFFER_SIZE);
+        boolean withinLimit;
+        try {
+            withinLimit = copyAtMost(in, out, limit);
+        } catch (IOException | RuntimeException ex) {
+            try {
+                in.close();
+            } catch (IOException | RuntimeException closeFailure) {
+                ex.addSuppressed(closeFailure);
+            }
+            throw ex;
+        }
+        if (!withinLimit) {
+            throw tooLarge("is larger", limit);
+        }
+        in.close();
+        return out.toByteArray();
+    }
+
+    /**
+     * Copies a stream until its end, unless it holds more than {@code limit} bytes.
+     *
+     * @param in    the stream
+     * @param out   where to copy it
+     * @param limit the most bytes to copy
+     * @return {@code true} when the stream ended within the limit; {@code false} when it holds
+     *         more, and nothing past the limit was copied
+     * @throws IOException if the stream cannot be read
+     */
+    private static boolean copyAtMost(InputStream in, ByteArrayOutputStream out, int limit) throws IOException {
+        byte[] buffer = new byte[READ_BUFFER_SIZE];
+        long total = 0;
+        int read;
+        while ((read = in.read(buffer)) != -1) {
+            total += read;
+            if (total > limit) {
+                return false;
+            }
+            out.write(buffer, 0, read);
+        }
+        return true;
+    }
+
+    /** The error of a reply over the maximum response size; {@link #send} reports it as an {@link APIException}. */
+    private static IOException tooLarge(String size, int limit) {
+        return new IOException("The response " + size + " than the maximum response size of " + limit
+                + " bytes; see Manager.setMaxResponseSize");
     }
 
     /**
@@ -1072,6 +1136,35 @@ public abstract class Manager implements Closeable {
      */
     public void setConnectionRequestTimeout(int millis) {
         this.connectionRequestTimeout = checkTimeout(millis);
+    }
+
+    /**
+     * Returns the largest response body, in bytes, that a request of this manager reads.
+     *
+     * @return the limit; {@link #DEFAULT_MAX_RESPONSE_SIZE} unless changed
+     */
+    public int getMaxResponseSize() {
+        return maxResponseSize;
+    }
+
+    /**
+     * Sets the largest response body, in bytes, that a request of this manager reads. Every
+     * reply is held in memory, so a lower limit keeps a huge reply from exhausting the heap. A
+     * larger reply fails the request with an {@link APIException}, not an
+     * {@link OutOfMemoryError}: before its body is read when its {@code Content-Length} is
+     * larger, otherwise as soon as more bytes arrive. It applies to the requests sent after the
+     * call.
+     *
+     * @param bytes the limit, from {@code 0} to {@link #DEFAULT_MAX_RESPONSE_SIZE}
+     * @throws IllegalArgumentException if {@code bytes} is negative or larger than
+     *                                  {@link #DEFAULT_MAX_RESPONSE_SIZE}
+     */
+    public void setMaxResponseSize(int bytes) {
+        if (bytes < 0 || bytes > DEFAULT_MAX_RESPONSE_SIZE) {
+            throw new IllegalArgumentException("The maximum response size must be from 0 to "
+                    + DEFAULT_MAX_RESPONSE_SIZE + " bytes: " + bytes);
+        }
+        this.maxResponseSize = bytes;
     }
 
     /** Rejects negative timeouts, which Apache HttpClient would read as "system default". */

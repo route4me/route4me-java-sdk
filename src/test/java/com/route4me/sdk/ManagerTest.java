@@ -27,6 +27,7 @@ import org.mockito.Mockito;
 
 import com.sun.net.httpserver.HttpServer;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.InetAddress;
@@ -1029,6 +1030,112 @@ public class ManagerTest {
 
         assertArrayEquals(xls, manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
         assertArrayEquals(new byte[0], manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
+    }
+
+    /** Answers the next request with a 200 whose body is a stream, which records whether it was closed. */
+    private boolean[] respondWithStream(byte[] body, long declaredLength) {
+        final boolean[] closed = new boolean[1];
+        final CloseableHttpResponse reply = Mockito.mock(CloseableHttpResponse.class);
+        Mockito.when(reply.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+        Mockito.when(reply.getEntity()).thenReturn(new InputStreamEntity(new ByteArrayInputStream(body) {
+            @Override
+            public void close() {
+                closed[0] = true;
+            }
+        }, declaredLength));
+        http.answerNextRequest(request -> reply);
+        return closed;
+    }
+
+    @Test
+    public void theMaxResponseSizeDefaultsToTheLargestArrayAndRefusesOtherValues() {
+        final TestManager manager = new TestManager(MockHttp.API_KEY);
+
+        assertEquals(Integer.MAX_VALUE - 8, Manager.DEFAULT_MAX_RESPONSE_SIZE);
+        assertEquals(Manager.DEFAULT_MAX_RESPONSE_SIZE, manager.getMaxResponseSize());
+        http.expectThrows(IllegalArgumentException.class, () -> manager.setMaxResponseSize(-1));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.setMaxResponseSize(Manager.DEFAULT_MAX_RESPONSE_SIZE + 1));
+        assertEquals(Manager.DEFAULT_MAX_RESPONSE_SIZE, manager.getMaxResponseSize());
+        manager.setMaxResponseSize(0);
+        assertEquals(0, manager.getMaxResponseSize());
+    }
+
+    @Test
+    public void aReplyThatDeclaresMoreThanTheMaxResponseSizeFailsBeforeItIsRead() throws Exception {
+        final TestManager manager = manager();
+        manager.setMaxResponseSize(4);
+        http.respondWithBytes(200, new byte[] {1, 2, 3, 4}, "application/octet-stream")
+                .respondWithBytes(200, new byte[] {1, 2, 3, 4, 5}, "application/octet-stream");
+
+        assertArrayEquals(new byte[] {1, 2, 3, 4}, manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
+
+        assertEquals("GET https://api.route4me.com" + PATH + " failed: The response declares 5 bytes, more than the"
+                + " maximum response size of 4 bytes; see Manager.setMaxResponseSize", error.getMessage());
+        assertEquals(0, error.getStatusCode());
+    }
+
+    @Test
+    public void aReplyOfUnknownLengthOverTheMaxResponseSizeFailsWhileItIsRead() throws Exception {
+        final TestManager manager = manager();
+        manager.setMaxResponseSize(4);
+        boolean[] within = respondWithStream("abcd".getBytes(StandardCharsets.UTF_8), -1);
+        boolean[] over = respondWithStream("abcde".getBytes(StandardCharsets.UTF_8), -1);
+        // A Content-Length that understates the body does not get past the count either.
+        boolean[] understated = respondWithStream("abcde".getBytes(StandardCharsets.UTF_8), 2);
+
+        assertEquals("abcd", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+        APIException understatedError = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
+
+        String reason = "The response is larger than the maximum response size of 4 bytes;"
+                + " see Manager.setMaxResponseSize";
+        assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: " + reason));
+        assertTrue(understatedError.getMessage(), understatedError.getMessage().endsWith(" failed: " + reason));
+        assertTrue("a body read to its end is closed", within[0]);
+        assertFalse("closing would read the rest of the body; the response close drops the connection", over[0]);
+        assertFalse(understated[0]);
+    }
+
+    @Test
+    public void aZeroMaxResponseSizeTakesOnlyEmptyReplies() throws Exception {
+        final TestManager manager = manager();
+        manager.setMaxResponseSize(0);
+        http.respondWithoutBody(204).respond(200, "{}");
+
+        assertNull(manager.makeRequest(RequestMethod.DELETE, builder(), "", Reply.class));
+        http.expectApiException(() -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+    }
+
+    @Test
+    public void aFailureToCloseTheBodyAfterAReadFailureIsKeptAsSuppressed() throws Exception {
+        final TestManager manager = manager();
+        final CloseableHttpResponse reply = Mockito.mock(CloseableHttpResponse.class);
+        Mockito.when(reply.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+        Mockito.when(reply.getEntity()).thenReturn(new InputStreamEntity(new InputStream() {
+            @Override
+            public int read() throws IOException {
+                throw new SocketException("Connection reset");
+            }
+
+            @Override
+            public void close() throws IOException {
+                throw new IOException("close failed");
+            }
+        }));
+        http.answerNextRequest(request -> reply);
+
+        APIException error = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: Connection reset"));
+        Throwable cause = error.getCause();
+        assertEquals(1, cause.getSuppressed().length);
+        assertEquals("close failed", cause.getSuppressed()[0].getMessage());
     }
 
     // ------------------------------------------------------------------ background jobs
