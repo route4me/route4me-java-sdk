@@ -1,25 +1,34 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
 package com.route4me.sdk.examples.vehicles;
 
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.vehicles.Vehicles;
-import com.route4me.sdk.services.vehicles.VehiclesManager;
 
 /**
- * Reads a vehicle with {@link VehiclesManager#getVehicle} and changes it with {@link VehiclesManager#updateVehicle}.
+ * Reads a vehicle with the deprecated {@link com.route4me.sdk.services.vehicles.VehiclesManager#getVehicle} and
+ * changes it with {@link com.route4me.sdk.services.vehicles.VehiclesManager#updateVehicle}, of the older vehicle API.
+ * New code uses {@code VehiclesManagerV5.updateVehicle}; see {@link UpdateVehicleV5}. Set {@code VEHICLE_ID} to a
+ * vehicle of a test account: the example changes its alias.
  */
 public class UpdateVehicle {
+    // VehiclesManager is deprecated (obsolete in the C# SDK); this example shows it until it is removed. It is named in
+    // full because Java 8 warns on an import of a deprecated class.
+    @SuppressWarnings("deprecation")
     public static void main(String[] args) {
+        String vehicleID = System.getenv("VEHICLE_ID");
+        if (vehicleID == null || vehicleID.isEmpty()) {
+            System.err.println("Set VEHICLE_ID to a vehicle of a test account; this example changes it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
-        VehiclesManager manager = new VehiclesManager(apiKey);
-        String vehicleID = "01832374020A5C8471875C2D098D52FC";
+        com.route4me.sdk.services.vehicles.VehiclesManager manager =
+                new com.route4me.sdk.services.vehicles.VehiclesManager(apiKey);
         try {
             Vehicles vehicle = manager.getVehicle(vehicleID);
-            vehicle.setVehicleAlias("Ford Transit Test 6 v2");
+            if (vehicle == null) {
+                System.err.println("No vehicle has the ID " + vehicleID);
+                return;
+            }
+            vehicle.setVehicleAlias("Example vehicle, renamed");
             vehicle = manager.updateVehicle(vehicle);
             System.out.println(vehicle);
 

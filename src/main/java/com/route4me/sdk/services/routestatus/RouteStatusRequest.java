@@ -21,11 +21,17 @@ public class RouteStatusRequest {
     @SerializedName("lng")
     private Double longitude;
 
-    /** Why the status changes, in words ({@code reason}). */
+    /**
+     * The {@code status_reason_id} (32-character hex) of a cancel reason from the account's reasons list ({@code
+     * reason}). Only with the status {@code canceled}, and not together with {@link #getReasonCode() reasonCode}.
+     */
     @SerializedName("reason")
     private String reason;
 
-    /** The code of the reason for the change ({@code reason_code}). */
+    /**
+     * The 3-character code of a cancel reason from the account's reasons list, instead of {@link #getReason() reason}
+     * ({@code reason_code}). Only with the status {@code canceled}, and not together with {@code reason}.
+     */
     @SerializedName("reason_code")
     private String reasonCode;
 

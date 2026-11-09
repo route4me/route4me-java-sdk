@@ -171,12 +171,15 @@ public class RoutingManagerV5Test {
 
     @Test
     public void exportRouteKeepsTheRouteIdInOneSegment() throws Exception {
-        RoutingManagerV5 manager = manager();
+        final RoutingManagerV5 manager = manager();
+        http.expectThrows(IllegalArgumentException.class, () -> manager.exportRoute("../secret", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.exportRoute("..\\secret", null));
+        http.assertNoRequests();
         http.respond(200, "");
 
-        manager.exportRoute("../secret", null);
+        manager.exportRoute("a b", null);
 
-        assertEquals(EXPORT_EP + "/..%2Fsecret/export", http.request().getUri().getRawPath());
+        assertEquals(EXPORT_EP + "/a%20b/export", http.request().getUri().getRawPath());
     }
 
     @Test

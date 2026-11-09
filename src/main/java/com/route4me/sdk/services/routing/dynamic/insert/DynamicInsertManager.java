@@ -49,15 +49,6 @@ public class DynamicInsertManager extends Manager {
         super(apiKey);
     }
 
-    private URIBuilder getURI(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
-
-    }
-
     /**
      * Finds the routes that a new destination fits best:
      * {@code POST https://wh.route4me.com/modules/api/v5.0/routes/lookup-for-new-destination}.
@@ -80,7 +71,7 @@ public class DynamicInsertManager extends Manager {
         if (lat == null || lng == null) {
             throw new IllegalArgumentException("The latitude and the longitude of the new destination are required");
         }
-        URIBuilder builder = this.getURI(ROUTE_DYNAMIC_INSERT);
+        URIBuilder builder = v5Builder(ROUTE_DYNAMIC_INSERT);
         DynamicInsert body = new DynamicInsert();
         body.setRouteInfoServer("v5");
         body.setScheduledFor(scheduledFor);
@@ -107,6 +98,7 @@ public class DynamicInsertManager extends Manager {
      * @param recommendedBy what the ranking minimises; {@code null} leaves it out and the API uses its default
      * @param limit         the maximum number of routes to return
      * @return the matching routes, best first
+     * @throws IllegalArgumentException if {@code lat} or {@code lng} is {@code null}: the API requires both
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public List<MatchedRoute> lookForNewDestination(String scheduledFor, Double lat, Double lng, InsertMode insertMode,
@@ -125,6 +117,7 @@ public class DynamicInsertManager extends Manager {
      * @param limit         the maximum number of routes to return
      * @param routeIDs      the routes to consider
      * @return the matching routes, best first
+     * @throws IllegalArgumentException if {@code lat} or {@code lng} is {@code null}: the API requires both
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public List<MatchedRoute> lookForNewDestination(Double lat, Double lng, InsertMode insertMode,

@@ -24,11 +24,20 @@ import java.util.logging.Logger;
 
 /**
  * Finds the orders with a custom data value with {@link OrdersManager#getOrdersByCustomField} and optimizes routes
- * from one depot for several drivers to them, with {@link RoutingManager#runOptimization}.
+ * from one depot for several drivers to them, with {@link RoutingManager#runOptimization}. Set
+ * {@code ORDER_CUSTOM_FIELD_KEY} and {@code ORDER_CUSTOM_FIELD_VALUE} to a custom data key of your orders and the value
+ * to match; the example stops when no order matches.
  */
 public class SingleDepotMultipleDriverByOrderTag {
 
     public static void main(String[] args) {
+        String key = System.getenv("ORDER_CUSTOM_FIELD_KEY");
+        String value = System.getenv("ORDER_CUSTOM_FIELD_VALUE");
+        if (key == null || key.isEmpty() || value == null || value.isEmpty()) {
+            System.err.println("Set ORDER_CUSTOM_FIELD_KEY and ORDER_CUSTOM_FIELD_VALUE to a custom data key of your"
+                    + " orders and the value to match; this example optimizes routes to the matching orders.");
+            return;
+        }
         try {
             String apiKey = System.getenv("R4M_API_KEY");
             RoutingManager manager = new RoutingManager(apiKey, true);
@@ -44,7 +53,11 @@ public class SingleDepotMultipleDriverByOrderTag {
             parameters.setTravelMode(TravelMode.DRIVING.toString());
             optParameters.setParameters(parameters);
             List<Address> addresses = new ArrayList<>();
-            List<Order> orders = ordersManager.getOrdersByCustomField("CustomDataKey", "CustomDataValue");
+            List<Order> orders = ordersManager.getOrdersByCustomField(key, value);
+            if (orders == null || orders.isEmpty()) {
+                System.out.println("No order has " + key + " = " + value + "; nothing to optimize.");
+                return;
+            }
             for (Order order:  orders) {
                 Address address = new Address();
                 address.setOrderId(order.getId().intValue());
@@ -54,7 +67,8 @@ public class SingleDepotMultipleDriverByOrderTag {
             try {
                 DataObject responseObject = manager.runOptimization(optParameters);
                 System.out.println("Optimization Problem ID:" + responseObject.getOptimizationProblemId());
-                System.out.println("State:" + OptimizationState.get(responseObject.getState().intValue()));
+                System.out.println("State:" + (responseObject.getState() == null ? "not returned"
+                        : OptimizationState.get(responseObject.getState().intValue())));
                 if (responseObject.getAddresses() != null) {
                     for (Address address : responseObject.getAddresses()) {
                         System.out.println(address);

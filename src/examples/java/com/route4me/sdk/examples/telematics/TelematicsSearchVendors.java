@@ -35,7 +35,7 @@ public class TelematicsSearchVendors {
             print(manager.getTelematicsVendorsV5(new TelematicsVendorsV5Request().setSearch("fleet")
                     .setPage(1).setPerPage(2)));
         } catch (APIException ex) {
-            Logger.getLogger(TelematicsSearchVendors.class.getName()).log(Level.INFO, ex.toString());
+            Logger.getLogger(TelematicsSearchVendors.class.getName()).log(Level.SEVERE, ex.toString());
         }
     }
 
@@ -45,6 +45,10 @@ public class TelematicsSearchVendors {
      * @param vendors the answer of the search
      */
     private static void print(TelematicsVendorsV5Response vendors) {
+        if (vendors == null || vendors.getData() == null) {
+            System.out.println("No vendors");
+            return;
+        }
         for (TelematicsVendorInfo vendor : vendors.getData()) {
             System.out.println(vendor);
         }

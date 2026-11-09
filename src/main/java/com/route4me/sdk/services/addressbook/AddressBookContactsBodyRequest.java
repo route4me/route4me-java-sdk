@@ -30,7 +30,7 @@ public class AddressBookContactsBodyRequest {
      * {@code visited_count}, {@code last_visited_timestamp} and {@code last_routed_timestamp} ({@code order_by}).
      */
     @SerializedName("order_by")
-    private List<String[]> orderBy;
+    private List<List<String>> orderBy;
 
     /** The number of contacts to return, up to 10000, the default ({@code limit}). */
     @SerializedName("limit")

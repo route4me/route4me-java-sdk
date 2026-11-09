@@ -27,7 +27,7 @@ public class VehicleV5 {
     /** Vehicle registration country ID ({@code vehicle_reg_country_id}). */
     @SerializedName("vehicle_reg_country_id")
     private Integer vehicleRegCountryId;
-    /** Vehicle registration country ID ({@code vehicle_license_plate}). */
+    /** The license plate of the vehicle ({@code vehicle_license_plate}). */
     @SerializedName("vehicle_license_plate")
     private String vehicleLicensePlate;
     /** The type of the vehicle, such as {@code sedan}, {@code van} or {@code 18wheeler} ({@code vehicle_type_id}). */
@@ -57,9 +57,13 @@ public class VehicleV5 {
      */
     @SerializedName("fuel_type")
     private String fuelType;
-    /** External telematics vehicle IDs ({@code external_telematics_vehicle_ids}). */
-    @SerializedName("external_telematics_vehicle_ids")
-    private Long externalTelematicsVehicleIds;
+    /**
+     * The ID of the vehicle in an external telematics system ({@code external_telematics_vehicle_id}). The API
+     * returns it as a number and takes it as a string of up to 50 characters, so it is kept as text; the plural
+     * name {@code external_telematics_vehicle_ids} is read too.
+     */
+    @SerializedName(value = "external_telematics_vehicle_id", alternate = {"external_telematics_vehicle_ids"})
+    private String externalTelematicsVehicleId;
     /** When the vehicle was removed ({@code timestamp_removed}). */
     @SerializedName("timestamp_removed")
     private String timestampRemoved;

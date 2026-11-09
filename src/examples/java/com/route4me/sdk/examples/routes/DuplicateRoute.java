@@ -1,21 +1,24 @@
 package com.route4me.sdk.examples.routes;
 
 import com.route4me.sdk.exception.APIException;
-import com.route4me.sdk.services.routing.Route;
-import com.route4me.sdk.services.routing.RoutesRequest;
 import com.route4me.sdk.services.routing.RoutingManager;
 
-import java.util.List;
-
-/** Takes a route from {@link RoutingManager#getRoutes} and copies it with {@link RoutingManager#duplicateRoute}. */
+/**
+ * Copies a route with {@link RoutingManager#duplicateRoute}. Set {@code ROUTE_ID} to a route of a test account: the
+ * example adds a copy of it to the account.
+ */
 public class DuplicateRoute {
 
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        if (routeId == null || routeId.isEmpty()) {
+            System.err.println("Set ROUTE_ID to the ID of a route of a test account; this example copies it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
         try {
-            List<Route> routes = routeManager.getRoutes(new RoutesRequest().setLimit(10));
-            RoutingManager.DuplicateRouteResponse resp = routeManager.duplicateRoute(routes.get(0).getId());
+            RoutingManager.DuplicateRouteResponse resp = routeManager.duplicateRoute(routeId);
             System.out.println(resp);
         } catch (APIException e) {
             //handle exceptions
