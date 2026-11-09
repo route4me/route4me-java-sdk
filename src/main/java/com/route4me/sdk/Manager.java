@@ -341,7 +341,8 @@ public abstract class Manager implements Closeable {
      * @param body    the form fields
      * @param clazz   the response type
      * @param <T>     the response type
-     * @return the parsed response, or {@code null} when the response has no content
+     * @return the parsed response; for a reply without content, {@code null}, or {@code ""} for
+     *         {@code String.class} and an empty array for {@code byte[].class}
      * @throws APIException if the request fails, the server answers with an error status or
      *                      the response cannot be parsed
      */
@@ -360,7 +361,8 @@ public abstract class Manager implements Closeable {
      * @param clazz   the response type; {@code String.class} returns the body as text and
      *                {@code byte[].class} returns its bytes unchanged, such as a file download
      * @param <T>     the response type
-     * @return the parsed response, or {@code null} when the response has no content
+     * @return the parsed response; for a reply without content, {@code null}, or {@code ""} for
+     *         {@code String.class} and an empty array for {@code byte[].class}
      * @throws APIException if the request fails, the server answers with an error status or
      *                      the response cannot be parsed
      */
@@ -395,7 +397,8 @@ public abstract class Manager implements Closeable {
      * @param clazz   the response type; {@code String.class} returns the body as text and
      *                {@code byte[].class} returns its bytes unchanged, such as a file download
      * @param <T>     the response type
-     * @return the parsed response, or {@code null} when the response has no content
+     * @return the parsed response; for a reply without content, {@code null}, or {@code ""} for
+     *         {@code String.class} and an empty array for {@code byte[].class}
      * @throws APIException if the request fails, the server answers with an error status or
      *                      the response cannot be parsed
      */
@@ -448,7 +451,8 @@ public abstract class Manager implements Closeable {
      * @param requestParams the object whose query fields to add, or {@code null} for none
      * @param clazz         the response type
      * @param <T>           the response type
-     * @return the parsed response, or {@code null} when the response has no content
+     * @return the parsed response; for a reply without content, {@code null}, or {@code ""} for
+     *         {@code String.class} and an empty array for {@code byte[].class}
      * @throws APIException if {@code requestParams} cannot be read, the request fails, the
      *                      server answers with an error status or the response cannot be parsed
      */
@@ -495,18 +499,20 @@ public abstract class Manager implements Closeable {
      * @param requestParams the request object, or {@code null} to send neither query fields nor a body
      * @param clazz         the response type
      * @param <T>           the response type
-     * @return the parsed response, or {@code null} when the response has no content
-     * @throws APIException if {@code requestParams} cannot be read, the request fails, the
-     *                      server answers with an error status or the response cannot be parsed
+     * @return the parsed response; for a reply without content, {@code null}, or {@code ""} for
+     *         {@code String.class} and an empty array for {@code byte[].class}
+     * @throws APIException if, on {@code GET}, {@code requestParams} cannot be read, or if the
+     *                      request fails, the server answers with an error status or the
+     *                      response cannot be parsed
      */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Class<T> clazz)
             throws APIException {
         if (requestParams != null) {
-            List<NameValuePair> params = queryParametersOf(builder, requestParams);
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), clazz, null);
             }
-            return this.makeRequest(method, withQuery(builder, params), (HttpEntity) null, clazz, null);
+            URIBuilder target = withQuery(builder, queryParametersOf(builder, requestParams));
+            return this.makeRequest(method, target, (HttpEntity) null, clazz, null);
         }
         return this.makeRequest(method, builder, (HttpEntity) null, clazz, null);
     }
@@ -523,17 +529,18 @@ public abstract class Manager implements Closeable {
      * @param type          the response type, such as a {@code TypeToken} type
      * @param <T>           the response type
      * @return the parsed response, or {@code null} when the response has no content
-     * @throws APIException if {@code requestParams} cannot be read, the request fails, the
-     *                      server answers with an error status or the response cannot be parsed
+     * @throws APIException if, on {@code GET}, {@code requestParams} cannot be read, or if the
+     *                      request fails, the server answers with an error status or the
+     *                      response cannot be parsed
      */
     protected <T> T makeJSONRequest(RequestMethod method, URIBuilder builder, Object requestParams, Type type)
             throws APIException {
         if (requestParams != null) {
-            List<NameValuePair> params = queryParametersOf(builder, requestParams);
             if (method != RequestMethod.GET) {
                 return this.makeRequest(method, builder, jsonEntity(this.gson.toJson(requestParams)), null, type);
             }
-            return this.makeRequest(method, withQuery(builder, params), (HttpEntity) null, null, type);
+            URIBuilder target = withQuery(builder, queryParametersOf(builder, requestParams));
+            return this.makeRequest(method, target, (HttpEntity) null, null, type);
         }
         return this.makeRequest(method, builder, (HttpEntity) null, null, type);
     }

@@ -585,6 +585,33 @@ public class ManagerTest {
         }
     }
 
+    /** A request object whose query field fails when it is read; Gson skips it, being transient. */
+    static final class UnreadableQuery {
+        @QueryParameter("ids")
+        private transient Iterable<String> ids = () -> {
+            throw new IllegalStateException("the query fields were read");
+        };
+        @SerializedName("route_name")
+        private String routeName = "Morning";
+    }
+
+    @Test
+    public void jsonPostAndPutDoNotReadTheQueryFields() throws Exception {
+        final TestManager manager = manager();
+        http.respondToAll(200, "{}");
+
+        manager.makeJSONRequest(RequestMethod.POST, builder(), new UnreadableQuery(), Reply.class);
+        manager.makeJSONRequest(RequestMethod.PUT, builder(), new UnreadableQuery(), (Type) Reply.class);
+        IllegalStateException onGet = http.expectThrows(IllegalStateException.class,
+                () -> manager.makeJSONRequest(RequestMethod.GET, builder(), new UnreadableQuery(), Reply.class));
+
+        for (int i = 0; i < 2; i++) {
+            http.request(i).assertJson("route_name", "Morning").assertNoQuery("ids");
+        }
+        assertEquals("the query fields were read", onGet.getMessage());
+        assertEquals("only the GET reads the query fields, and fails before sending", 2, http.requestCount());
+    }
+
     @Test
     public void v5JsonGetSendsListsAndMapsWithBracketedKeys() throws Exception {
         TestManager manager = manager();
