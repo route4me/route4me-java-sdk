@@ -112,6 +112,8 @@ public class VehiclesManager extends Manager {
      *
      * @param vehicle the vehicle, with its vehicle ID
      * @return the updated vehicle
+     * @throws IllegalArgumentException if {@code vehicle} is {@code null}, or its vehicle ID is {@code null} or empty;
+     *     nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @deprecated the older vehicle API is obsolete: the C# SDK marks {@code UpdateVehicle} as {@code [Obsolete]}.
      *     Use {@link VehiclesManagerV5#updateVehicle(String, VehicleV5)}. This method will be removed in the next major
@@ -119,6 +121,9 @@ public class VehiclesManager extends Manager {
      */
     @Deprecated
     public Vehicles updateVehicle(Vehicles vehicle) throws APIException {
+        if (vehicle == null) {
+            throw new IllegalArgumentException("The vehicle is required");
+        }
         URIBuilder builder = this.getURI(VEHICLES_EP, vehicle.getVehicleId());
         return this.makeJSONRequest(RequestMethod.PUT, builder, vehicle, Vehicles.class);
     }
