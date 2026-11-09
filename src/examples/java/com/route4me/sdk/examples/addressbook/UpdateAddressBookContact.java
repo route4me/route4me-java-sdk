@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.addressbook;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.addressbook.AddressBookContactV5;
 import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
@@ -18,10 +19,13 @@ public class UpdateAddressBookContact {
                     + " changes it.");
             return;
         }
+        Long addressId = ExampleInput.toLong("CONTACT_ID", contactId);
+        if (addressId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         AddressBookManagerV5 addressBookManager = new AddressBookManagerV5(apiKey);
         try {
-            long addressId = Long.parseLong(contactId);
             AddressBookContactV5 contact = addressBookManager.getContactById(addressId);
             if (contact == null) {
                 System.err.println("No contact has the address ID " + contactId);

@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.orders;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.services.orders.OrderManagerV5;
@@ -16,10 +17,14 @@ public class DeleteOrderCustomFieldV5 {
                     + " example deletes it.");
             return;
         }
+        Long customFieldId = ExampleInput.toLong("ORDER_CUSTOM_FIELD_ID", fieldId);
+        if (customFieldId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrderManagerV5 manager = new OrderManagerV5(apiKey);
         try {
-            StatusResponse response = manager.deleteOrderCustomField(Long.parseLong(fieldId));
+            StatusResponse response = manager.deleteOrderCustomField(customFieldId);
             System.out.println("Deleted: " + response.getStatus());
         } catch (APIException e) {
             e.printStackTrace();

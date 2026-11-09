@@ -1,11 +1,11 @@
 package com.route4me.sdk.examples.addressbook;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.addressbook.AddressBookContactsResponse;
 import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
 import com.route4me.sdk.services.addressbook.BatchUpdateContactsRequest;
 
-import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -14,8 +14,8 @@ import java.util.List;
  */
 public class BatchUpdateContactsV5 {
     public static void main(String[] args) {
-        String ids = System.getenv("CONTACT_IDS");
-        if (ids == null || ids.trim().isEmpty()) {
+        List<Long> contactIds = ExampleInput.toLongs("CONTACT_IDS", System.getenv("CONTACT_IDS"));
+        if (contactIds == null || contactIds.isEmpty()) {
             System.err.println("Set CONTACT_IDS to the comma-separated IDs of contacts of a test account;"
                     + " this example changes them.");
             return;
@@ -23,10 +23,6 @@ public class BatchUpdateContactsV5 {
         String apiKey = System.getenv("R4M_API_KEY");
         AddressBookManagerV5 manager = new AddressBookManagerV5(apiKey);
         try {
-            List<Long> contactIds = new ArrayList<>();
-            for (String id : ids.split(",")) {
-                contactIds.add(Long.valueOf(id.trim()));
-            }
             BatchUpdateContactsRequest request = new BatchUpdateContactsRequest();
             request.setAddressIds(contactIds);
             request.setAddressGroup("Midtown");

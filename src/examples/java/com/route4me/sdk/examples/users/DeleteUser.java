@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.users;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.users.TeamManagementManagerV5;
 import com.route4me.sdk.services.users.TeamMember;
@@ -16,10 +17,14 @@ public class DeleteUser {
             System.err.println("Set MEMBER_ID to a member of a test account; this example deletes it.");
             return;
         }
+        Long id = ExampleInput.toLong("MEMBER_ID", memberId);
+        if (id == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         TeamManagementManagerV5 manager = new TeamManagementManagerV5(apiKey);
         try {
-            TeamMember deleted = manager.deleteTeamMember(Long.parseLong(memberId));
+            TeamMember deleted = manager.deleteTeamMember(id);
             System.out.println("Deleted: " + (deleted == null ? memberId : deleted.getMemberId()));
         } catch (APIException e) {
             e.printStackTrace();

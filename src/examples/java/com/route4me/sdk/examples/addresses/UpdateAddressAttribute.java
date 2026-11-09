@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.addresses;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.RoutingManager;
@@ -19,10 +20,13 @@ public class UpdateAddressAttribute {
                     + " stops; this example changes the stop.");
             return;
         }
+        Long destinationId = ExampleInput.toLong("ROUTE_DESTINATION_ID", routeDestinationId);
+        if (destinationId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         try {
-            Long destinationId = Long.valueOf(routeDestinationId);
             Address addr = manager.getAddress(routeId, destinationId);
             addr.setAlias("New Alias");
             addr.addCustomField("NOTE 1", "Adding Custom Fields");

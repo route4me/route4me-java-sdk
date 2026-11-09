@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.addresses;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.MovedAddressesResponse;
 import com.route4me.sdk.services.routing.RoutingManager;
@@ -21,13 +22,20 @@ public class MoveAddressesToRouteAfterDestination {
                     + " and a stop of that route of a test account; this example moves the first stop.");
             return;
         }
+        Long stopId = ExampleInput.toLong("ROUTE_DESTINATION_ID", routeDestinationId);
+        if (stopId == null) {
+            return;
+        }
+        Long afterStopId = ExampleInput.toLong("AFTER_ROUTE_DESTINATION_ID", afterRouteDestinationId);
+        if (afterStopId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         try {
             System.out.println("Moving Destination " + routeDestinationId + " to Route " + toRouteId
                     + " after Destination " + afterRouteDestinationId);
-            MovedAddressesResponse response = manager.moveAddresses(Long.valueOf(routeDestinationId), toRouteId,
-                    Long.valueOf(afterRouteDestinationId));
+            MovedAddressesResponse response = manager.moveAddresses(stopId, toRouteId, afterStopId);
             System.out.println(response);
         } catch (APIException e) {
             //handle exception

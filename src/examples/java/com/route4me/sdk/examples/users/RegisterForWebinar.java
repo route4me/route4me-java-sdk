@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.users;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.users.UsersManager;
 import com.route4me.sdk.services.users.WebinarRegistration;
@@ -16,6 +17,10 @@ public class RegisterForWebinar {
                     + " webinar.");
             return;
         }
+        Long id = ExampleInput.toLong("MEMBER_ID", memberId);
+        if (id == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         UsersManager manager = new UsersManager(apiKey);
         try {
@@ -25,7 +30,7 @@ public class RegisterForWebinar {
             registration.setLastName("Sample");
             registration.setPhoneNumber("555-0100");
             registration.setCompanyName("Example Co");
-            registration.setMemberId(Long.parseLong(memberId));
+            registration.setMemberId(id);
             registration.setWebinarDate("2026-11-05 10:00:00");
             System.out.println(manager.registerForWebinar(registration));
         } catch (APIException e) {

@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.addressbarcode;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.services.addressbarcode.AddressBarcodeManager;
@@ -23,12 +24,16 @@ public class SaveAddressBarcodes {
                     + " stops; this example adds a barcode to the stop.");
             return;
         }
+        Long stopId = ExampleInput.toLong("ROUTE_DESTINATION_ID", routeDestinationId);
+        if (stopId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         AddressBarcodeManager manager = new AddressBarcodeManager(apiKey);
         try {
             SaveAddressBarcodesRequest request = new SaveAddressBarcodesRequest();
             request.setRouteId(routeId);
-            request.setRouteDestinationId(Long.valueOf(routeDestinationId));
+            request.setRouteDestinationId(stopId);
 
             List<BarcodeDataRequest> barcodes = new ArrayList<BarcodeDataRequest>();
             BarcodeDataRequest barcode = new BarcodeDataRequest();

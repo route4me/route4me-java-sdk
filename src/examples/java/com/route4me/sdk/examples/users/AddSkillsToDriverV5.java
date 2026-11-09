@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.users;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.users.TeamManagementManagerV5;
 import com.route4me.sdk.services.users.TeamMember;
@@ -19,10 +20,13 @@ public class AddSkillsToDriverV5 {
             System.err.println("Set MEMBER_ID to a driver of a test account; this example adds skills to it.");
             return;
         }
+        Long driverId = ExampleInput.toLong("MEMBER_ID", memberId);
+        if (driverId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         TeamManagementManagerV5 manager = new TeamManagementManagerV5(apiKey);
         try {
-            long driverId = Long.parseLong(memberId);
             TeamMember driver = manager.getTeamMemberById(driverId);
             TeamMemberRequest request = new TeamMemberRequest();
             request.setMemberEmail(driver.getMemberEmail());

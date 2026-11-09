@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.vehicles;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.vehicles.AssignedVehicle;
 import com.route4me.sdk.services.vehicles.AssignedVehiclesResponse;
@@ -21,12 +22,16 @@ public class CreateTemporaryVehicleV5 {
                     + " for 24 hours.");
             return;
         }
+        Long assignedMemberId = ExampleInput.toLong("MEMBER_ID", memberId);
+        if (assignedMemberId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         VehiclesManagerV5 manager = new VehiclesManagerV5(apiKey);
         try {
             long tomorrow = System.currentTimeMillis() / 1000L + 24L * 60L * 60L;
             VehicleTemporaryRequest request = new VehicleTemporaryRequest().setVehicleId(vehicleId)
-                    .setAssignedMemberId(Long.parseLong(memberId)).setExpiresAt(tomorrow);
+                    .setAssignedMemberId(assignedMemberId).setExpiresAt(tomorrow);
             AssignedVehiclesResponse assigned = manager.createTemporaryVehicle(request);
             if (assigned.getData() != null) {
                 for (AssignedVehicle a : assigned.getData()) {

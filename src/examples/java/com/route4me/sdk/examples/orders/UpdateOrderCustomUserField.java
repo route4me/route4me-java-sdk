@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.orders;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.orders.OrderCustomUserField;
 import com.route4me.sdk.services.orders.OrderCustomUserFieldResponse;
@@ -17,10 +18,14 @@ public class UpdateOrderCustomUserField {
                     + " example changes it.");
             return;
         }
+        Long customFieldId = ExampleInput.toLong("ORDER_CUSTOM_FIELD_ID", fieldId);
+        if (customFieldId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrdersManager manager = new OrdersManager(apiKey);
         OrderCustomUserField field = new OrderCustomUserField();
-        field.setOrderCustomFieldId(Long.parseLong(fieldId));
+        field.setOrderCustomFieldId(customFieldId);
         field.setOrderCustomFieldLabel("Fragile goods");
         field.setOrderCustomFieldType("checkbox");
         try {

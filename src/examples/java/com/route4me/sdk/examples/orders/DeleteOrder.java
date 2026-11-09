@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.orders;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.services.orders.OrdersManager;
@@ -15,13 +16,15 @@ public class DeleteOrder {
             System.err.println("Set ORDER_ID to the ID of an order of a test account; this example deletes it.");
             return;
         }
+        Long id = ExampleInput.toLong("ORDER_ID", orderId);
+        if (id == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrdersManager manager = new OrdersManager(apiKey);
         try {
-            StatusResponse resp = manager.deleteOrders(Long.parseLong(orderId));
+            StatusResponse resp = manager.deleteOrders(id);
             System.out.println(resp);
-        } catch (NumberFormatException e) {
-            System.err.println("ORDER_ID must be a number: " + orderId);
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();

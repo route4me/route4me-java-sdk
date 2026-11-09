@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.orders;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.orders.OrderCustomFieldResource;
 import com.route4me.sdk.services.orders.OrderManagerV5;
@@ -17,12 +18,16 @@ public class UpdateOrderCustomFieldV5 {
                     + " example renames it.");
             return;
         }
+        Long customFieldId = ExampleInput.toLong("ORDER_CUSTOM_FIELD_ID", fieldId);
+        if (customFieldId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrderManagerV5 manager = new OrderManagerV5(apiKey);
         UpdateCustomUserFieldRequest request = new UpdateCustomUserFieldRequest();
         request.setOrderCustomFieldLabel("Gate access code");
         try {
-            OrderCustomFieldResource updated = manager.updateOrderCustomField(Long.parseLong(fieldId), request);
+            OrderCustomFieldResource updated = manager.updateOrderCustomField(customFieldId, request);
             System.out.println("Updated field: " + updated.getData().getOrderCustomFieldLabel());
         } catch (APIException e) {
             e.printStackTrace();

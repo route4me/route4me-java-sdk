@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.addresses;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.RoutingManager;
 
@@ -18,11 +19,15 @@ public class MarkAddressVisited {
                     + " stops; this example marks the stop as visited.");
             return;
         }
+        Long stopId = ExampleInput.toLong("ROUTE_DESTINATION_ID", routeDestinationId);
+        if (stopId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         try {
             long now = System.currentTimeMillis() / 1000L;
-            Integer marked = manager.markAddressVisited(routeId, Long.valueOf(routeDestinationId), true, null, now,
+            Integer marked = manager.markAddressVisited(routeId, stopId, true, null, now,
                     38.141598, -85.793846);
             System.out.println("Marked as visited: " + marked);
         } catch (APIException e) {

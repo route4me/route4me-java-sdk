@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.trackinghistory;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.trackinghistory.TrackingHistoryExportRequest;
 import com.route4me.sdk.services.trackinghistory.TrackingHistoryManager;
@@ -16,10 +17,14 @@ public class ExportTrackingHistory {
                     + " history.");
             return;
         }
+        Long id = ExampleInput.toLong("MEMBER_ID", memberId);
+        if (id == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         TrackingHistoryManager manager = new TrackingHistoryManager(apiKey);
         TrackingHistoryExportRequest request = new TrackingHistoryExportRequest()
-                .setMemberId(Long.parseLong(memberId))
+                .setMemberId(id)
                 .setTimePeriod("7days")
                 .setFormat("csv");
         try {

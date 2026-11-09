@@ -1,6 +1,7 @@
 package com.route4me.sdk.examples.addressbook;
 
 import com.route4me.sdk.AsyncJob;
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
@@ -17,13 +18,17 @@ public class DeleteContactsV5 {
             System.err.println("Pass the IDs of contacts of a test account as arguments; this example deletes them.");
             return;
         }
+        long[] contactIds = new long[args.length];
+        for (int i = 0; i < args.length; i++) {
+            Long id = ExampleInput.toLong("Each contact ID argument", args[i]);
+            if (id == null) {
+                return;
+            }
+            contactIds[i] = id;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         AddressBookManagerV5 manager = new AddressBookManagerV5(apiKey);
         try {
-            long[] contactIds = new long[args.length];
-            for (int i = 0; i < args.length; i++) {
-                contactIds[i] = Long.parseLong(args[i]);
-            }
             AsyncJob job = manager.deleteContacts(contactIds);
             if (job.getJobId() != null) {
                 JobStatusResponse status = manager.getJobStatus(job.getJobId());

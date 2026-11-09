@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.notes;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.notes.NoteRequest;
 import com.route4me.sdk.services.notes.NotesManager;
@@ -25,14 +26,17 @@ public class AddAddressNotes {
                     + " stops; this example adds a note to that stop.");
             return;
         }
-        long routeDestinationId = Long.parseLong(stopId);
+        Long routeDestinationId = ExampleInput.toLong("ROUTE_DESTINATION_ID", stopId);
+        if (routeDestinationId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager routeManager = new RoutingManager(apiKey);
         Route route = routeManager.getRoute(new RoutesRequest().setId(routeId));
         Address address = null;
         if (route != null && route.getAddresses() != null) {
             for (Address stop : route.getAddresses()) {
-                if (stop.getRouteDestinationId() != null && stop.getRouteDestinationId() == routeDestinationId) {
+                if (routeDestinationId.equals(stop.getRouteDestinationId())) {
                     address = stop;
                 }
             }

@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.addresses;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.RoutingManager;
 import com.route4me.sdk.services.routing.StatusResponse;
@@ -19,10 +20,14 @@ public class MarkAddressDeparted {
                     + " stops; this example marks the stop as departed.");
             return;
         }
+        Long stopId = ExampleInput.toLong("ROUTE_DESTINATION_ID", routeDestinationId);
+        if (stopId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
         try {
-            StatusResponse departed = manager.markAddressDeparted(routeId, Long.valueOf(routeDestinationId), true,
+            StatusResponse departed = manager.markAddressDeparted(routeId, stopId, true,
                     null, null, null, null);
             System.out.println("Marked as departed: " + departed.getStatus());
         } catch (APIException e) {

@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.orders;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.orders.OrderCustomUserFieldResponse;
 import com.route4me.sdk.services.orders.OrdersManager;
@@ -16,10 +17,14 @@ public class RemoveOrderCustomUserField {
                     + " example removes it.");
             return;
         }
+        Long customFieldId = ExampleInput.toLong("ORDER_CUSTOM_FIELD_ID", fieldId);
+        if (customFieldId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrdersManager manager = new OrdersManager(apiKey);
         try {
-            OrderCustomUserFieldResponse response = manager.removeOrderCustomUserField(Long.parseLong(fieldId));
+            OrderCustomUserFieldResponse response = manager.removeOrderCustomUserField(customFieldId);
             System.out.println("Removed fields: " + response.getAffected());
         } catch (APIException e) {
             e.printStackTrace();

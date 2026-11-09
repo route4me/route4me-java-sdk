@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.vehicles;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.vehicles.VehicleV5;
 import com.route4me.sdk.services.vehicles.VehiclesManagerV5;
@@ -20,13 +21,21 @@ public class SyncPendingTelematicsDataV5 {
                     + " and a vehicle on it; this example syncs the vehicle into the account.");
             return;
         }
+        Long gatewayConnectionId = ExampleInput.toLong("TELEMATICS_CONNECTION_ID", connectionId);
+        if (gatewayConnectionId == null) {
+            return;
+        }
+        Long gatewayVehicleId = ExampleInput.toLong("TELEMATICS_VEHICLE_ID", telematicsVehicleId);
+        if (gatewayVehicleId == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         VehiclesManagerV5 manager = new VehiclesManagerV5(apiKey);
         try {
             VehicleV5 pending = new VehicleV5();
             pending.setVehicleAlias("Synced vehicle");
-            pending.setR4mTelematicsGatewayConnectionId(Long.parseLong(connectionId));
-            pending.setR4mTelematicsGatewayVehicleId(Long.parseLong(telematicsVehicleId));
+            pending.setR4mTelematicsGatewayConnectionId(gatewayConnectionId);
+            pending.setR4mTelematicsGatewayVehicleId(gatewayVehicleId);
             VehicleV5 synced = manager.syncPendingTelematicsData(pending);
             System.out.println("Synced vehicle: " + synced.getVehicleId());
         } catch (APIException e) {

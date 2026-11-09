@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.users;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.users.MemberResponse;
 import com.route4me.sdk.services.users.UsersManager;
@@ -18,10 +19,14 @@ public class ValidateSession {
                     + " session; this example checks whether the session is valid.");
             return;
         }
+        Long id = ExampleInput.toLong("MEMBER_ID", memberId);
+        if (id == null) {
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         UsersManager manager = new UsersManager(apiKey);
         try {
-            MemberResponse session = manager.validateSession(sessionGuid, Long.parseLong(memberId));
+            MemberResponse session = manager.validateSession(sessionGuid, id);
             System.out.println("Session valid: " + session.getAuthenticated());
         } catch (APIException e) {
             e.printStackTrace();
