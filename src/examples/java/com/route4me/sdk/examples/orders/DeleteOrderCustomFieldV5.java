@@ -1,8 +1,8 @@
 package com.route4me.sdk.examples.orders;
 
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.services.orders.OrderManagerV5;
-import com.route4me.sdk.services.orders.StatusResponse;
 
 /**
  * Deletes an order custom field of {@code /orders/custom-fields} with {@link OrderManagerV5#deleteOrderCustomField}.

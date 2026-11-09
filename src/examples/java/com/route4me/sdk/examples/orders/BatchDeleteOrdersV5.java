@@ -1,9 +1,9 @@
 package com.route4me.sdk.examples.orders;
 
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.services.orders.BatchDeleteOrdersRequest;
 import com.route4me.sdk.services.orders.OrderManagerV5;
-import com.route4me.sdk.services.orders.StatusResponse;
 import java.util.ArrayList;
 import java.util.List;
 

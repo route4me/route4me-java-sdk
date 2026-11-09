@@ -7,6 +7,7 @@ import com.google.gson.annotations.SerializedName;
 import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.responses.StatusResponse;
 import java.util.ArrayList;
 import java.util.List;
 import lombok.AllArgsConstructor;
