@@ -86,15 +86,20 @@ public class RouteDestinationsManagerTest {
         assertNull(destination.getFacilities().get(4).getCoordinates());
     }
 
+    /** No source gives the order of a coordinates array, so it is not guessed: GeoJSON's is [lng, lat]. */
     @Test
-    public void facilityCoordinatesAreReadFromALatLngArray() throws Exception {
+    public void facilityCoordinatesInAnArrayAreReadAsNull() throws Exception {
         RouteDestinationsManager manager = manager();
-        http.respond(200, json("{'facilities':[{'facility_id':101,'coordinates':[49.8397,24.0297]}]}"));
+        http.respond(200, json("{'route_destination_id':5002,'facilities':["
+                + "{'facility_id':101,'coordinates':[49.8397,24.0297]},"
+                + "{'facility_id':102,'coordinates':[24.0297,49.8397]}]}"));
 
-        FacilityDataResource facility = manager.getDestination("5002").getFacilities().get(0);
+        RouteDestinationResource destination = manager.getDestination("5002");
 
-        assertEquals(49.8397, facility.getCoordinates().getLat(), 0.0);
-        assertEquals(24.0297, facility.getCoordinates().getLng(), 0.0);
+        assertEquals(5002L, destination.getRouteDestinationId().longValue());
+        assertEquals("102", destination.getFacilities().get(1).getFacilityId());
+        assertNull("[lat, lng] is not guessed", destination.getFacilities().get(0).getCoordinates());
+        assertNull("[lng, lat] is not guessed", destination.getFacilities().get(1).getCoordinates());
     }
 
     @Test

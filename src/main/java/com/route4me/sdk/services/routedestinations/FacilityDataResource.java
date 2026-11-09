@@ -1,6 +1,5 @@
 package com.route4me.sdk.services.routedestinations;
 
-import com.google.gson.JsonArray;
 import com.google.gson.JsonDeserializationContext;
 import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonElement;
@@ -18,7 +17,8 @@ import java.util.List;
  *
  * <p>The destinations spec types {@code facility_id} as an integer and {@code coordinates} as a {@code "lat,lng"}
  * string, while the facilities API and the C# SDK use a 32-character hex ID and a {@code {"lat", "lng"}} object.
- * Both shapes are read, and coordinates also from a {@code [lat, lng]} array.
+ * Both shapes are read. No source gives the order of a coordinates array ({@code [lat, lng]} or GeoJSON's
+ * {@code [lng, lat]}), so an array reads as {@code null} instead of a guess.
  */
 @Data
 public class FacilityDataResource {
@@ -42,9 +42,9 @@ public class FacilityDataResource {
     private String statusCode;
 
     /**
-     * The coordinates of the facility ({@code coordinates}), read from a {@code {"lat", "lng"}} object, a
-     * {@code "lat,lng"} string or a {@code [lat, lng]} array; {@code null} for any other value, such as {@code false},
-     * a number, an empty array or text that is not two numbers.
+     * The coordinates of the facility ({@code coordinates}), read from a {@code {"lat", "lng"}} object or a
+     * {@code "lat,lng"} string; {@code null} for any other value, such as {@code false}, a number, an array or text
+     * that is not two numbers.
      */
     @SerializedName("coordinates")
     @JsonAdapter(CoordinatesReader.class)
@@ -59,9 +59,9 @@ public class FacilityDataResource {
     private List<FacilityType> facilityTypes;
 
     /**
-     * Reads {@code coordinates} from a {@code {"lat", "lng"}} object, a {@code "lat,lng"} string or a
-     * {@code [lat, lng]} array, and any other value as {@code null}, so that one odd facility does not fail the
-     * whole reply. Writing is Gson's own.
+     * Reads {@code coordinates} from a {@code {"lat", "lng"}} object or a {@code "lat,lng"} string, and any other
+     * value as {@code null}, so that one odd facility does not fail the whole reply. An array is one of those other
+     * values: no source says whether it is {@code [lat, lng]} or {@code [lng, lat]}. Writing is Gson's own.
      */
     static final class CoordinatesReader implements JsonDeserializer<FacilityCoordinates> {
         @Override
@@ -69,11 +69,8 @@ public class FacilityDataResource {
             if (json.isJsonPrimitive() && json.getAsJsonPrimitive().isString()) {
                 return parse(json.getAsString());
             }
-            if (json.isJsonArray()) {
-                return pair(json.getAsJsonArray());
-            }
             if (!json.isJsonObject()) {
-                // false (a PHP "none"), a number or null
+                // false (a PHP "none"), a number, an array of unknown order, or null
                 return null;
             }
             try {
@@ -82,27 +79,6 @@ public class FacilityDataResource {
                 // Gson's Double reader throws the last two for a lat or lng that is text or an object.
                 return null;
             }
-        }
-
-        /**
-         * Reads {@code [lat, lng]}.
-         *
-         * @param array the array
-         * @return the coordinates, or {@code null} when the array is not two numbers
-         */
-        private static FacilityCoordinates pair(JsonArray array) {
-            if (array.size() != 2 || !isNumber(array.get(0)) || !isNumber(array.get(1))) {
-                return null;
-            }
-            FacilityCoordinates coordinates = new FacilityCoordinates();
-            coordinates.setLat(array.get(0).getAsDouble());
-            coordinates.setLng(array.get(1).getAsDouble());
-            return coordinates;
-        }
-
-        /** Tells whether an element is a JSON number. */
-        private static boolean isNumber(JsonElement element) {
-            return element.isJsonPrimitive() && element.getAsJsonPrimitive().isNumber();
         }
 
         /**
