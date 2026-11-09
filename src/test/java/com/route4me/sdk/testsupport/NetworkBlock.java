@@ -86,8 +86,12 @@ public final class NetworkBlock extends ProxySelector {
         // nothing to record
     }
 
-    /** Returns whether a host string is a loopback name or literal, without any DNS lookup. */
-    private static boolean isLoopback(String host) {
+    /**
+     * Returns whether a host string is {@code localhost} or a loopback literal, without any DNS
+     * lookup. A name that only starts like one, such as {@code 127.0.0.1.example.net}, is not:
+     * the JVM would resolve it and connect to whatever it points at.
+     */
+    static boolean isLoopback(String host) {
         if (host == null) {
             return false;
         }
@@ -95,7 +99,21 @@ public final class NetworkBlock extends ProxySelector {
         if (name.startsWith("[") && name.endsWith("]")) {
             name = name.substring(1, name.length() - 1);
         }
-        return "localhost".equals(name) || name.startsWith("127.") || "::1".equals(name)
+        return "localhost".equals(name) || isIpv4Loopback(name) || "::1".equals(name)
                 || "0:0:0:0:0:0:0:1".equals(name);
+    }
+
+    /** Returns whether a text is a dotted-quad IPv4 literal in {@code 127.0.0.0/8}, such as {@code 127.0.0.1}. */
+    private static boolean isIpv4Loopback(String name) {
+        String[] octets = name.split("\\.", -1);
+        if (octets.length != 4 || !"127".equals(octets[0])) {
+            return false;
+        }
+        for (String octet : octets) {
+            if (!octet.matches("[0-9]{1,3}") || Integer.parseInt(octet) > 255) {
+                return false;
+            }
+        }
+        return true;
     }
 }

@@ -28,6 +28,7 @@ import java.net.Proxy;
 import java.net.ProxySelector;
 import java.net.Socket;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.logging.Level;
 
@@ -266,6 +267,23 @@ public class MockHttpTest {
         }
         assertEquals(Collections.singletonList(Proxy.NO_PROXY),
                 ProxySelector.getDefault().select(URI.create("socket://127.0.0.1:8080")));
+    }
+
+    @Test
+    public void onlyLoopbackLiteralsPassTheNetworkBlock() {
+        for (String host : Arrays.asList("127.0.0.1", "127.1.2.3", "localhost", "[::1]", "0:0:0:0:0:0:0:1")) {
+            assertTrue(host, NetworkBlock.isLoopback(host));
+        }
+        for (String host : Arrays.asList("127.0.0.1.example.net", "127.example.com", "127.0.0.256", "127.0.0",
+                "127.0.0.1.", "127.0.0.x", "128.0.0.1", "0127.0.0.1", "", null)) {
+            assertFalse(String.valueOf(host), NetworkBlock.isLoopback(host));
+        }
+        try {
+            ProxySelector.getDefault().select(URI.create("socket://127.0.0.1.example.net:443"));
+            fail("expected the network block to refuse a name that only starts like a loopback address");
+        } catch (AssertionError expected) {
+            assertTrue(expected.getMessage(), expected.getMessage().startsWith(NetworkBlock.MESSAGE));
+        }
     }
 
     @Test
