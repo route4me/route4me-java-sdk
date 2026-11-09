@@ -9,15 +9,26 @@ import com.route4me.sdk.services.addressbarcode.SaveAddressBarcodesRequest;
 import java.util.ArrayList;
 import java.util.List;
 
-/** Saves a scanned barcode for a route destination with {@link AddressBarcodeManager#saveAddressBarcodes}. */
+/**
+ * Saves a scanned barcode for a route destination with {@link AddressBarcodeManager#saveAddressBarcodes}. Set
+ * {@code ROUTE_ID} and {@code ROUTE_DESTINATION_ID} to a route of a test account and one of its stops: the example
+ * adds the barcode to the stop.
+ */
 public class SaveAddressBarcodes {
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        String routeDestinationId = System.getenv("ROUTE_DESTINATION_ID");
+        if (routeId == null || routeId.isEmpty() || routeDestinationId == null || routeDestinationId.isEmpty()) {
+            System.err.println("Set ROUTE_ID and ROUTE_DESTINATION_ID to a route of a test account and one of its"
+                    + " stops; this example adds a barcode to the stop.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         AddressBarcodeManager manager = new AddressBarcodeManager(apiKey);
         try {
             SaveAddressBarcodesRequest request = new SaveAddressBarcodesRequest();
-            request.setRouteId("ROUTE_ID_HERE");
-            request.setRouteDestinationId(123456L);
+            request.setRouteId(routeId);
+            request.setRouteDestinationId(Long.valueOf(routeDestinationId));
 
             List<BarcodeDataRequest> barcodes = new ArrayList<BarcodeDataRequest>();
             BarcodeDataRequest barcode = new BarcodeDataRequest();

@@ -12,11 +12,17 @@ import com.route4me.sdk.services.tracking.TrackingManager;
  */
 public class GetDeviceLocationHistory {
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        if (routeId == null || routeId.isEmpty()) {
+            System.err.println("Set ROUTE_ID to the ID of one of your routes; this example prints the positions"
+                    + " recorded on it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         TrackingManager manager = new TrackingManager(apiKey);
         long now = System.currentTimeMillis() / 1000L;
         DeviceLocationHistoryRequest request = new DeviceLocationHistoryRequest()
-                .setRouteId(System.getenv("ROUTE_ID"))
+                .setRouteId(routeId)
                 .setTimePeriod("custom")
                 .setStartDate(now - 2L * 24L * 60L * 60L)
                 .setEndDate(now);

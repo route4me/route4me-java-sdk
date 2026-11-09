@@ -11,17 +11,24 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Adds a break after a given service time to two routes with
- * {@link RouteBreaksManager#insertBreakAfterCertainServiceTime}.
+ * Adds a break after a given service time to routes with
+ * {@link RouteBreaksManager#insertBreakAfterCertainServiceTime}. Set {@code ROUTE_IDS}
+ * to the comma-separated IDs of routes of a test account: the example adds the break to them.
  */
 public class InsertRouteBreaksAfterCertainServiceTime {
 
     public static void main(String[] args) {
+        String routeIds = System.getenv("ROUTE_IDS");
+        if (routeIds == null || routeIds.trim().isEmpty()) {
+            System.err.println("Set ROUTE_IDS to the comma-separated IDs of routes of a test account; this example"
+                    + " adds a break to them.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RouteBreaksManager manager = new RouteBreaksManager(apiKey);
         try {
             Object response = manager.insertBreakAfterCertainServiceTime(900, 3600, true,
-                    "E206A767D62BBE4A179A82BB12A1C8D1", "C7330B977303A221ED75501F782F5928");
+                    routeIds.trim().split("\\s*,\\s*"));
             System.out.println(response);
         } catch (APIException ex) {
             Logger.getLogger(InsertRouteBreaksAfterCertainServiceTime.class.getName()).log(Level.SEVERE, null, ex);
