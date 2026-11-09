@@ -1,9 +1,11 @@
 package com.route4me.sdk.examples.vehicles;
 
 import com.route4me.sdk.AsyncJob;
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.vehicles.VehicleJobResponse;
 import com.route4me.sdk.services.vehicles.VehiclesManagerV5;
+import java.util.List;
 
 /**
  * Activates vehicles in one asynchronous job with {@link VehiclesManagerV5#activateVehicles}, then reads the job
@@ -15,8 +17,9 @@ import com.route4me.sdk.services.vehicles.VehiclesManagerV5;
  */
 public class ActivateVehiclesV5 {
     public static void main(String[] args) {
-        String ids = args.length > 0 ? String.join(",", args) : System.getenv("VEHICLE_IDS");
-        if (ids == null || ids.trim().isEmpty()) {
+        String text = args.length > 0 ? String.join(",", args) : System.getenv("VEHICLE_IDS");
+        List<String> ids = ExampleInput.toList(text);
+        if (ids.isEmpty()) {
             System.err.println("Pass vehicle IDs as arguments or set VEHICLE_IDS to the comma-separated IDs of"
                     + " vehicles of a test account; this example activates them.");
             return;
@@ -24,7 +27,7 @@ public class ActivateVehiclesV5 {
         String apiKey = System.getenv("R4M_API_KEY");
         VehiclesManagerV5 manager = new VehiclesManagerV5(apiKey);
         try {
-            String[] vehicleIds = ids.trim().split("\\s*,\\s*");
+            String[] vehicleIds = ids.toArray(new String[0]);
             AsyncJob job = manager.activateVehicles(vehicleIds);
             System.out.println("Activation accepted as job " + job.getJobId());
             if (job.getJobId() != null) {

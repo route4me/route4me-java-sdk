@@ -5,8 +5,10 @@
  */
 package com.route4me.sdk.examples.routes.breaks;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.breaks.RouteBreaksManager;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -18,8 +20,8 @@ import java.util.logging.Logger;
 public class InsertRouteBreaksAfterCertainTravelTime {
 
     public static void main(String[] args) {
-        String routeIds = System.getenv("ROUTE_IDS");
-        if (routeIds == null || routeIds.trim().isEmpty()) {
+        List<String> routeIds = ExampleInput.toList(System.getenv("ROUTE_IDS"));
+        if (routeIds.isEmpty()) {
             System.err.println("Set ROUTE_IDS to the comma-separated IDs of routes of a test account; this example"
                     + " adds a break to them.");
             return;
@@ -28,7 +30,7 @@ public class InsertRouteBreaksAfterCertainTravelTime {
         RouteBreaksManager manager = new RouteBreaksManager(apiKey);
         try {
             Object response = manager.insertBreakAfterCertainTravelTime(900, 1800, true,
-                    routeIds.trim().split("\\s*,\\s*"));
+                    routeIds.toArray(new String[0]));
             System.out.println(response);
         } catch (APIException ex) {
             Logger.getLogger(InsertRouteBreaksAfterCertainTravelTime.class.getName()).log(Level.SEVERE, null, ex);

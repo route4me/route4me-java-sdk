@@ -1,6 +1,7 @@
 package com.route4me.sdk.examples.vehicles;
 
 import com.route4me.sdk.AsyncJob;
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.vehicles.VehicleJobResponse;
 import com.route4me.sdk.services.vehicles.VehicleV5;
@@ -17,8 +18,9 @@ import java.util.List;
  */
 public class UpdateVehiclesBulkV5 {
     public static void main(String[] args) {
-        String ids = args.length > 0 ? String.join(",", args) : System.getenv("VEHICLE_IDS");
-        if (ids == null || ids.trim().isEmpty()) {
+        String text = args.length > 0 ? String.join(",", args) : System.getenv("VEHICLE_IDS");
+        List<String> ids = ExampleInput.toList(text);
+        if (ids.isEmpty()) {
             System.err.println("Pass vehicle IDs as arguments or set VEHICLE_IDS to the comma-separated IDs of"
                     + " vehicles of a test account; this example renames them.");
             return;
@@ -27,7 +29,7 @@ public class UpdateVehiclesBulkV5 {
         VehiclesManagerV5 manager = new VehiclesManagerV5(apiKey);
         try {
             List<VehicleV5> vehicles = new ArrayList<>();
-            for (String vehicleId : ids.trim().split("\\s*,\\s*")) {
+            for (String vehicleId : ids) {
                 VehicleV5 vehicle = new VehicleV5();
                 vehicle.setVehicleId(vehicleId);
                 vehicle.setVehicleAlias("Renamed " + vehicleId);

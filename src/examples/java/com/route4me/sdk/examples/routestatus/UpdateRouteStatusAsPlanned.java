@@ -1,8 +1,10 @@
 package com.route4me.sdk.examples.routestatus;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routestatus.RouteStatusManager;
 import com.route4me.sdk.services.routestatus.UpdateRouteStatusAsPlannedResponse;
+import java.util.List;
 
 /**
  * Marks routes as planned with {@link RouteStatusManager#updateRouteStatusAsPlanned}. Set {@code ROUTE_IDS} to the
@@ -10,8 +12,8 @@ import com.route4me.sdk.services.routestatus.UpdateRouteStatusAsPlannedResponse;
  */
 public class UpdateRouteStatusAsPlanned {
     public static void main(String[] args) {
-        String routeIds = System.getenv("ROUTE_IDS");
-        if (routeIds == null || routeIds.isEmpty()) {
+        List<String> routeIds = ExampleInput.toList(System.getenv("ROUTE_IDS"));
+        if (routeIds.isEmpty()) {
             System.err.println("Set ROUTE_IDS to the comma-separated IDs of routes of a test account; this example"
                     + " changes their status.");
             return;
@@ -20,7 +22,7 @@ public class UpdateRouteStatusAsPlanned {
         RouteStatusManager manager = new RouteStatusManager(apiKey);
         try {
             UpdateRouteStatusAsPlannedResponse response = manager.updateRouteStatusAsPlanned(
-                    routeIds.trim().split("\\s*,\\s*"));
+                    routeIds.toArray(new String[0]));
             System.out.println(response.getData());
         } catch (APIException e) {
             e.printStackTrace();
