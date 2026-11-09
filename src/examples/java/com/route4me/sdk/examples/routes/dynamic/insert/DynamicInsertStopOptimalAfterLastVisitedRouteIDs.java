@@ -30,6 +30,7 @@ import com.route4me.sdk.services.routing.dynamic.insert.DynamicInsertManager;
 import com.route4me.sdk.services.routing.dynamic.insert.InsertMode;
 import com.route4me.sdk.services.routing.dynamic.insert.MatchedRoute;
 import com.route4me.sdk.services.routing.dynamic.insert.RecommendedBy;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -38,28 +39,49 @@ import java.util.logging.Logger;
 /**
  * Finds, among some routes, where a new stop fits best after the last visited stop with
  * {@link DynamicInsertManager#lookForNewDestination} and adds it to the best one with
- * {@link RoutingManager#addAddressesToRoute}.
+ * {@link RoutingManager#addAddressesToRoute}. Set {@code ROUTE_IDS} to the IDs of routes of a test account, separated
+ * by commas: the example adds the stop to the best of them.
  */
 public class DynamicInsertStopOptimalAfterLastVisitedRouteIDs {
 
     public static void main(String[] args) {
+        String routeIdList = System.getenv("ROUTE_IDS");
+        List<String> routeIDs = new ArrayList<>();
+        if (routeIdList != null) {
+            for (String routeId : routeIdList.split(",")) {
+                if (!routeId.trim().isEmpty()) {
+                    routeIDs.add(routeId.trim());
+                }
+            }
+        }
+        if (routeIDs.isEmpty()) {
+            System.err.println("Set ROUTE_IDS to the IDs of routes of a test account, separated by commas; this example"
+                    + " adds a stop to one of them.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
 
         DynamicInsertManager dynamicManager = new DynamicInsertManager(apiKey);
         RoutingManager routeManager = new RoutingManager(apiKey);
 
         Address address = new Address("Address 1", 43.103865, -79.093727);
-        List<String> routeIDs = Arrays.asList("A42056A8120AF6EEDFAE3886B9909780", "724E95A9A4773F83B7236E8CA20E8F96");
 
         try {
             List<MatchedRoute> matchedRoutes = dynamicManager.lookForNewDestination(address.getLatitude(),
                     address.getLongitude(), InsertMode.OPTIMAL_AFTER_LAST_VISITED, RecommendedBy.DISTANCE, 5, routeIDs);
+            if (matchedRoutes == null || matchedRoutes.isEmpty()) {
+                System.out.println("None of the routes fits the stop; nothing was inserted.");
+                return;
+            }
             for (MatchedRoute matchedRoute : matchedRoutes) {
                 System.out.println(matchedRoute);
             }
-            System.out.println("Inserting Stop into first Route from the List");
-
             MatchedRoute matchedRoute = matchedRoutes.get(0);
+            if (!routeIDs.contains(matchedRoute.getRouteID())) {
+                System.out.println("The best route is not in ROUTE_IDS; nothing was inserted.");
+                return;
+            }
+            System.out.println("Inserting the stop into route " + matchedRoute.getRouteID());
             address.setSequenceNo(matchedRoute.getRecommendedInsertionStopNumber());
 
             List<Address> addresses = Arrays.asList(address);

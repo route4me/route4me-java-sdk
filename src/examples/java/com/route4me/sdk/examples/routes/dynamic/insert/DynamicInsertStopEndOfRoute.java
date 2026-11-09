@@ -30,6 +30,7 @@ import com.route4me.sdk.services.routing.dynamic.insert.DynamicInsertManager;
 import com.route4me.sdk.services.routing.dynamic.insert.InsertMode;
 import com.route4me.sdk.services.routing.dynamic.insert.MatchedRoute;
 import com.route4me.sdk.services.routing.dynamic.insert.RecommendedBy;
+import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -37,12 +38,24 @@ import java.util.logging.Logger;
 
 /**
  * Finds the routes where a new stop fits at the end ({@code InsertMode.END_OF_ROUTE}) with
- * {@link DynamicInsertManager#lookForNewDestination} and adds it to the best one with
+ * {@link DynamicInsertManager#lookForNewDestination} and adds it to one of them with
  * {@link RoutingManager#addAddressesToRoute}.
+ * Set {@code ROUTE_ID} to a route of a test account: the example adds the stop to that route, at the recommended
+ * position, only when the route is among those found. {@code ROUTE_DATE} sets the date of the routes to search, as
+ * {@code YYYY-MM-DD}; it defaults to today.
  */
 public class DynamicInsertStopEndOfRoute {
 
     public static void main(String[] args) {
+        String routeId = System.getenv("ROUTE_ID");
+        if (routeId == null || routeId.isEmpty()) {
+            System.err.println("Set ROUTE_ID to the ID of a route of a test account; this example adds a stop to it.");
+            return;
+        }
+        String routeDate = System.getenv("ROUTE_DATE");
+        if (routeDate == null || routeDate.isEmpty()) {
+            routeDate = LocalDate.now().toString();
+        }
         String apiKey = System.getenv("R4M_API_KEY");
 
         DynamicInsertManager dynamicManager = new DynamicInsertManager(apiKey);
@@ -51,20 +64,29 @@ public class DynamicInsertStopEndOfRoute {
         Address address = new Address("Ascension St. Vincent Hospital - Indianapolis", 39.921478, -86.175649);
 
         try {
-            List<MatchedRoute> matchedRoutes = dynamicManager.lookForNewDestination("2022-04-27",
+            List<MatchedRoute> matchedRoutes = dynamicManager.lookForNewDestination(routeDate,
                     address.getLatitude(), address.getLongitude(), InsertMode.END_OF_ROUTE,
                     RecommendedBy.DISTANCE, 5);
-            for (MatchedRoute matchedRoute : matchedRoutes) {
-                System.out.println(matchedRoute);
+            MatchedRoute target = null;
+            if (matchedRoutes != null) {
+                for (MatchedRoute matchedRoute : matchedRoutes) {
+                    System.out.println(matchedRoute);
+                    if (routeId.equals(matchedRoute.getRouteID())) {
+                        target = matchedRoute;
+                    }
+                }
             }
-            System.out.println("Inserting Stop into first Route from the List");
-
-            MatchedRoute matchedRoute = matchedRoutes.get(0);
-            address.setSequenceNo(matchedRoute.getRecommendedInsertionStopNumber());
+            if (target == null) {
+                System.out.println("Route " + routeId + " is not among the routes found for " + routeDate
+                        + "; nothing was inserted.");
+                return;
+            }
+            System.out.println("Inserting the stop into route " + routeId);
+            address.setSequenceNo(target.getRecommendedInsertionStopNumber());
 
             List<Address> addresses = Arrays.asList(address);
 
-            routeManager.addAddressesToRoute(matchedRoute.getRouteID(), addresses);
+            routeManager.addAddressesToRoute(routeId, addresses);
 
         } catch (APIException ex) {
             Logger.getLogger(DynamicInsertStopEndOfRoute.class.getName()).log(Level.SEVERE, null, ex);
