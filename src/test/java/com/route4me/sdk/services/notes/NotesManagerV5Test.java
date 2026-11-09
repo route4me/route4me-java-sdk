@@ -209,14 +209,16 @@ public class NotesManagerV5Test {
         http.expectThrows(IllegalArgumentException.class, () -> manager.deleteNote(""));
         http.expectThrows(IllegalArgumentException.class, () -> manager.getNotesByRoute("", null, null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.getNotesByDestination(null, null, null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateNote("a/b", update));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteNote("a\\b"));
         http.assertNoRequests();
 
         http.respondToAll(200, NOTE);
-        manager.updateNote("a/b", update);
-        manager.deleteNote("a/b");
+        manager.updateNote("a b", update);
+        manager.deleteNote("a?b");
 
-        assertEquals(NOTES_EP + "/a%2Fb", http.request(0).getUri().getRawPath());
-        assertEquals(NOTES_EP + "/a%2Fb", http.request(1).getUri().getRawPath());
+        assertEquals(NOTES_EP + "/a%20b", http.request(0).getUri().getRawPath());
+        assertEquals(NOTES_EP + "/a%3Fb", http.request(1).getUri().getRawPath());
     }
 
     @Test

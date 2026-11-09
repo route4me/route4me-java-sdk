@@ -182,12 +182,23 @@ public class ManagerTest {
 
     @Test
     public void v5BuilderTargetsTheV5ApiHostOverHttpsAndEncodesSegments() throws Exception {
-        URIBuilder builder = Manager.v5Builder(Manager.V5_BASE + "/vehicles", "a/../b c");
+        URIBuilder builder = Manager.v5Builder(Manager.V5_BASE + "/vehicles", "a..b c?d#e");
         assertEquals("https", builder.getScheme());
         assertEquals("wh.route4me.com", builder.getHost());
-        assertEquals("https://wh.route4me.com/modules/api/v5.0/vehicles/a%2F..%2Fb%20c", builder.build().toString());
+        assertEquals("https://wh.route4me.com/modules/api/v5.0/vehicles/a..b%20c%3Fd%23e", builder.build().toString());
         assertEquals("/modules/api/v5.0/orders", Manager.v5Builder(Manager.V5_BASE + "/orders").getPath());
         http.expectThrows(IllegalArgumentException.class, () -> Manager.v5Builder(Manager.V5_BASE + "/vehicles", ".."));
+    }
+
+    @Test
+    public void v5BuilderRefusesASegmentWithASlashOrBackslash() {
+        // Some front ends decode %2F and %5C before they resolve "..", so encoding is not enough.
+        for (String id : new String[] {"a/../b", "../users", "a/b", "/", "a\\..\\b", "..\\users", "\\"}) {
+            IllegalArgumentException error = http.expectThrows(IllegalArgumentException.class,
+                    () -> Manager.v5Builder(Manager.V5_BASE + "/vehicles", "V1", id));
+            assertTrue(error.getMessage(), error.getMessage().startsWith("Invalid value for a URL path segment"));
+        }
+        http.assertNoRequests();
     }
 
     /** A reply with a boolean that the API sends as a number. */

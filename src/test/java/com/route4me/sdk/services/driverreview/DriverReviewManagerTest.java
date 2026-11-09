@@ -101,14 +101,16 @@ public class DriverReviewManagerTest {
         http.expectThrows(IllegalArgumentException.class, () -> manager.patchDriverReview("RATE-1", null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.createDriverReview(null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.updateDriverReview("RATE-1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateDriverReview("a/b", review()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.patchDriverReview("a\\b", review()));
         http.assertNoRequests();
 
         http.respondToAll(200, "{\"data\":" + REVIEW + "}");
-        manager.updateDriverReview("a/b", review());
-        manager.patchDriverReview("a/b", review());
+        manager.updateDriverReview("a b", review());
+        manager.patchDriverReview("a?b", review());
 
-        assertEquals(REVIEWS_EP + "/a%2Fb", http.request(0).getUri().getRawPath());
-        assertEquals(REVIEWS_EP + "/a%2Fb", http.request(1).getUri().getRawPath());
+        assertEquals(REVIEWS_EP + "/a%20b", http.request(0).getUri().getRawPath());
+        assertEquals(REVIEWS_EP + "/a%3Fb", http.request(1).getUri().getRawPath());
     }
 
     @Test

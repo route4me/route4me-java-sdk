@@ -335,11 +335,13 @@ public class OrderManagerV5Test {
 
         http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomUserField("", update));
         http.expectThrows(IllegalArgumentException.class, () -> manager.deleteCustomUserField(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteCustomUserField("FIELD/1"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomUserField("FIELD\\1", update));
         http.assertNoRequests();
 
         http.respondToAll(200, FIELD);
-        manager.deleteCustomUserField("FIELD/1");
-        assertEquals(FIELDS_EP + "/FIELD%2F1", http.request().getUri().getRawPath());
+        manager.deleteCustomUserField("FIELD 1");
+        assertEquals(FIELDS_EP + "/FIELD%201", http.request().getUri().getRawPath());
     }
 
     @Test

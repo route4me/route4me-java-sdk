@@ -288,13 +288,17 @@ public class RouteDestinationsManagerTest {
     }
 
     @Test
-    public void pathIdsWithASlashStayInOneSegment() throws Exception {
-        RouteDestinationsManager manager = manager();
+    public void pathIdsWithASlashAreRefused() throws Exception {
+        final RouteDestinationsManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getDestinationsByOrder("../secret"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getDestinationsByOrder("..\\secret"));
+        http.assertNoRequests();
+
         http.respondToAll(200, "{\"items\":[]}");
+        manager.getDestinationsByOrder("a b");
 
-        manager.getDestinationsByOrder("../secret");
-
-        assertEquals(DESTINATIONS_EP + "/order/..%2Fsecret", http.request().getUri().getRawPath());
+        assertEquals(DESTINATIONS_EP + "/order/a%20b", http.request().getUri().getRawPath());
     }
 
     @Test

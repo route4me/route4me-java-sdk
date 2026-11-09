@@ -137,7 +137,8 @@ public class TerritoriesManagerV5 extends Manager {
      *              {@link #createAutomaticTerritoriesJob(AutomaticTerritoriesJobRequest)}
      * @return the status of the job
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}
+     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}
      */
     public AutomaticTerritoriesJobStatus getAutomaticTerritoriesJobStatus(String jobId) throws APIException {
         URIBuilder builder = v5Builder(AUTOMATIC_JOB_STATUS_EP, jobId);
@@ -153,7 +154,8 @@ public class TerritoriesManagerV5 extends Manager {
      * @return the clusters
      * @throws APIException if the request fails, the server answers with an error status (409 while the job runs) or
      *                      the answer cannot be parsed
-     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}
+     * @throws IllegalArgumentException if the job ID is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}
      */
     public AutomaticTerritoriesJobResult getAutomaticTerritoriesJobResult(String jobId) throws APIException {
         URIBuilder builder = v5Builder(AUTOMATIC_JOB_RESULT_EP, jobId);

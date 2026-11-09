@@ -626,12 +626,14 @@ public class AddressBookManagerV5Test {
 
         http.expectThrows(IllegalArgumentException.class, () -> manager.getExportStatus(null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.getExportResult(""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getExportStatus("../secret"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getExportResult("..\\secret"));
         http.assertNoRequests();
         http.respondToAll(200, "\"done\"");
-        manager.getExportStatus("../secret");
-        manager.getExportResult("../secret");
-        assertEquals(ADDRESSES_EP + "/export/status/..%2Fsecret", http.request(0).getUri().getRawPath());
-        assertEquals(ADDRESSES_EP + "/export/result/..%2Fsecret", http.request(1).getUri().getRawPath());
+        manager.getExportStatus("a b");
+        manager.getExportResult("a?b");
+        assertEquals(ADDRESSES_EP + "/export/status/a%20b", http.request(0).getUri().getRawPath());
+        assertEquals(ADDRESSES_EP + "/export/result/a%3Fb", http.request(1).getUri().getRawPath());
     }
 
     @Test
@@ -670,12 +672,14 @@ public class AddressBookManagerV5Test {
         final AddressBookManagerV5 manager = manager();
         http.expectThrows(IllegalArgumentException.class, () -> manager.getJobStatus(""));
         http.expectThrows(IllegalArgumentException.class, () -> manager.getJobResult(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getJobResult("JOB/1"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getJobStatus("JOB\\1"));
         http.assertNoRequests();
         http.respondToAll(200, STATUS_TRUE);
 
-        manager.getJobResult("JOB/1");
+        manager.getJobResult("JOB 1");
 
-        assertEquals(BOOK_EP + "/job-tracker/result/JOB%2F1", http.request().getUri().getRawPath());
+        assertEquals(BOOK_EP + "/job-tracker/result/JOB%201", http.request().getUri().getRawPath());
     }
 
     @Test

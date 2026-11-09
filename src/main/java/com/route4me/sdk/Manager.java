@@ -254,7 +254,8 @@ public abstract class Manager implements Closeable {
      * @param endpoint the endpoint path, such as {@code /modules/api/v5.0/vehicles}
      * @param segments the segments to append after it, such as IDs; none leaves the endpoint as it is
      * @return a new builder
-     * @throws IllegalArgumentException if a segment is {@code null}, empty, {@code .} or {@code ..}
+     * @throws IllegalArgumentException if a segment is {@code null}, empty, {@code .} or {@code ..}, or
+     *                                  contains {@code /} or {@code \}
      */
     protected static URIBuilder v5Builder(String endpoint, Object... segments) {
         URIBuilder builder = new URIBuilder();
@@ -266,9 +267,13 @@ public abstract class Manager implements Closeable {
     /**
      * Sets the path of a builder to an endpoint followed by path segments, such as IDs.
      *
-     * <p>Each segment is percent-encoded as one segment: a {@code /} in it becomes
-     * {@code %2F}, so a value such as {@code ../secret} cannot climb out of the endpoint and
-     * send the request, with the API key, to another one.
+     * <p>Each segment is percent-encoded as one segment, so that a space, {@code ?} or
+     * {@code #} in it stays in the path. A segment that could leave its endpoint is refused
+     * before any request is sent: one that is empty, {@code .} or {@code ..}, and one that
+     * contains {@code /} or {@code \}. Encoding a slash is not enough: some front ends decode
+     * {@code %2F} or {@code %5C} before they resolve {@code ..}, which would send a value such
+     * as {@code ../secret}, with the API key, to another endpoint. No Route4Me ID contains
+     * either character.
      *
      * @param builder  the builder to change
      * @param endpoint the endpoint path, such as {@code /modules/api/v5.0/vehicles}
@@ -276,7 +281,7 @@ public abstract class Manager implements Closeable {
      *                 {@link String#valueOf(Object)}; none leaves the endpoint as it is
      * @return {@code builder}
      * @throws IllegalArgumentException if a segment is {@code null}, empty, {@code .} or
-     *                                  {@code ..}
+     *                                  {@code ..}, or contains {@code /} or {@code \}
      */
     protected static URIBuilder withPathSegments(URIBuilder builder, String endpoint, Object... segments) {
         if (segments == null || segments.length == 0) {
@@ -290,7 +295,8 @@ public abstract class Manager implements Closeable {
         }
         for (Object segment : segments) {
             String value = segment == null ? null : String.valueOf(segment);
-            if (value == null || value.isEmpty() || ".".equals(value) || "..".equals(value)) {
+            if (value == null || value.isEmpty() || ".".equals(value) || "..".equals(value)
+                    || value.indexOf('/') >= 0 || value.indexOf('\\') >= 0) {
                 throw new IllegalArgumentException("Invalid value for a URL path segment: "
                         + (value == null ? "null" : "'" + Sanitizer.forLog(value, 100) + "'"));
             }

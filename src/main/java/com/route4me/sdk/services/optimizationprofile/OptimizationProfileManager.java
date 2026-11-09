@@ -61,6 +61,8 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param profileId the profile ID
      * @return the profile
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfile getOptimizationProfileById(String profileId) throws APIException {
@@ -90,8 +92,8 @@ public class OptimizationProfileManager extends Manager {
      * @param profileId the profile ID
      * @param request the new values
      * @return the updated profile
-     * @throws IllegalArgumentException if {@code profileId} is {@code null} or empty, or {@code request} is
-     *     {@code null}; nothing is sent
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}, or {@code request} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public OptimizationProfile updateOptimizationProfile(String profileId, OptimizationProfileCreateRequest request)
@@ -107,6 +109,8 @@ public class OptimizationProfileManager extends Manager {
      *
      * @param profileId the profile ID
      * @return {@code true}; an error status throws instead
+     * @throws IllegalArgumentException if {@code profileId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public boolean deleteOptimizationProfile(String profileId) throws APIException {

@@ -130,14 +130,16 @@ public class PodWorkflowManagerTest {
         http.expectThrows(IllegalArgumentException.class, () -> manager.getPodWorkflow(""));
         http.expectThrows(IllegalArgumentException.class, () -> manager.updatePodWorkflow(null, workflow()));
         http.expectThrows(IllegalArgumentException.class, () -> manager.deletePodWorkflow(""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updatePodWorkflow("a/b", workflow()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deletePodWorkflow("a\\b"));
         http.assertNoRequests();
 
         http.respondToAll(200, "{\"data\":" + WORKFLOW + "}");
-        manager.updatePodWorkflow("a/b", workflow());
-        manager.deletePodWorkflow("a/b");
+        manager.updatePodWorkflow("a b", workflow());
+        manager.deletePodWorkflow("a?b");
 
-        assertEquals(WORKFLOWS_EP + "/a%2Fb", http.request(0).getUri().getRawPath());
-        assertEquals(WORKFLOWS_EP + "/a%2Fb", http.request(1).getUri().getRawPath());
+        assertEquals(WORKFLOWS_EP + "/a%20b", http.request(0).getUri().getRawPath());
+        assertEquals(WORKFLOWS_EP + "/a%3Fb", http.request(1).getUri().getRawPath());
     }
 
     @Test

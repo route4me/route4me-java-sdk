@@ -216,7 +216,8 @@ public class LocationManager extends Manager {
      * @param locationTypeId the location type ID
      * @return the location type
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}; nothing is sent
      */
     public LocationTypeResource getLocationTypeById(String locationTypeId) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);
@@ -247,8 +248,8 @@ public class LocationManager extends Manager {
      * @param request the new values; {@code name}, {@code is_parent_type} and {@code is_child_type} are required
      * @return the updated location type
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null} or empty, or a required field is
-     *     missing; nothing is sent
+     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}, or a required field is missing; nothing is sent
      */
     public LocationTypeResource updateLocationType(String locationTypeId, StoreLocationTypeRequest request)
             throws APIException {
@@ -264,7 +265,8 @@ public class LocationManager extends Manager {
      * @param locationTypeId the location type ID
      * @return whether it was deleted
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code locationTypeId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}; nothing is sent
      */
     public DeleteLocationTypeResponse deleteLocationType(String locationTypeId) throws APIException {
         URIBuilder builder = v5Builder(LOCATION_TYPES_EP, locationTypeId);

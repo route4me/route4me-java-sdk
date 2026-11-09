@@ -430,7 +430,8 @@ public class AddressBookManagerV5 extends Manager {
      *     {@link #exportAddressesByAreas} or {@link #exportAddressesByAreaIds} started
      * @return the status: the value of the JSON string; any other answer as it came; {@code ""} for an empty answer
      * @throws APIException if the request fails or the server answers with an error status
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}; nothing is sent
      */
     public String getExportStatus(String jobId) throws APIException {
         String body = this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_EXPORT_STATUS_EP, jobId),
@@ -449,7 +450,8 @@ public class AddressBookManagerV5 extends Manager {
      * @return the bytes of the file, as the API sent them; an empty array for an empty answer
      * @throws APIException if the request fails or the server answers with an error status, for example while the
      *     export is still running
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}; nothing is sent
      */
     public byte[] getExportResult(String jobId) throws APIException {
         return this.makeRequest(RequestMethod.GET, v5Builder(CONTACTS_EXPORT_RESULT_EP, jobId), (HttpEntity) null,
@@ -480,7 +482,8 @@ public class AddressBookManagerV5 extends Manager {
      * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of the job a method of this manager started
      * @return the status
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}; nothing is sent
      */
     public JobStatusResponse getJobStatus(String jobId) throws APIException {
         return this.makeRequest(RequestMethod.GET, v5Builder(JOB_STATUS_EP, jobId), (HttpEntity) null,
@@ -494,7 +497,8 @@ public class AddressBookManagerV5 extends Manager {
      * @param jobId the job ID, such as {@link AsyncJob#getJobId()} of the job a method of this manager started
      * @return the result: {@code status} is {@code true} when the job succeeded
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code jobId} is {@code null} or empty; nothing is sent
+     * @throws IllegalArgumentException if {@code jobId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}; nothing is sent
      */
     public StatusResponse getJobResult(String jobId) throws APIException {
         return this.makeRequest(RequestMethod.GET, v5Builder(JOB_RESULT_EP, jobId), (HttpEntity) null,

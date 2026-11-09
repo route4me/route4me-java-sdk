@@ -131,7 +131,7 @@ public final class EndpointRegistry {
      *
      * @param method the HTTP method, such as {@code GET}
      * @param host   the host name
-     * @param path   the decoded request path, without the query string
+     * @param path   the raw request path, as sent (percent-encoding kept), without the query string
      * @return the matching entry, or {@code null} when the request is not a known endpoint
      */
     public Entry findEndpoint(String method, String host, String path) {
@@ -149,7 +149,7 @@ public final class EndpointRegistry {
      * Finds the deprecated entry that matches a request. Deprecated entries match any method.
      *
      * @param host the host name
-     * @param path the decoded request path, without the query string
+     * @param path the raw request path, as sent (percent-encoding kept), without the query string
      * @return the matching entry, or {@code null} when the request is not deprecated
      */
     public Entry findDeprecated(String host, String path) {
@@ -166,7 +166,7 @@ public final class EndpointRegistry {
      * more helpful (for example "known methods: GET, PATCH").
      *
      * @param host the host name
-     * @param path the decoded request path
+     * @param path the raw request path, as sent (percent-encoding kept), without the query string
      * @return the known methods, possibly empty
      */
     public List<String> knownMethods(String host, String path) {
@@ -181,12 +181,14 @@ public final class EndpointRegistry {
 
     /**
      * Matches a path against a registry pattern. Segments must be equal, except that a
-     * {@code {}} segment in the pattern matches exactly one non-empty segment. A dot segment
-     * ({@code .} or {@code ..}, also written {@code %2e}) never matches {@code {}}: a server or
-     * proxy would resolve it to another endpoint.
+     * {@code {}} segment in the pattern matches exactly one non-empty segment. A {@code {}}
+     * never matches a dot segment ({@code .} or {@code ..}, also written {@code %2e}), which a
+     * server or proxy would resolve to another endpoint, nor a segment with an encoded slash or
+     * backslash ({@code %2F} or {@code %5C}, in any case), which some front ends decode before
+     * they resolve {@code ..}. {@code Manager.withPathSegments} refuses both before sending.
      *
      * @param pattern the registry path, such as {@code /modules/api/v5.0/vehicles/{}}
-     * @param path    the request path, as sent (raw)
+     * @param path    the raw request path, as sent (percent-encoding kept), without the query string
      * @return whether the path matches
      */
     static boolean pathMatches(String pattern, String path) {
@@ -200,7 +202,7 @@ public final class EndpointRegistry {
         }
         for (int i = 0; i < expected.length; i++) {
             if (ANY_SEGMENT.equals(expected[i])) {
-                if (actual[i].isEmpty() || isDotSegment(actual[i])) {
+                if (actual[i].isEmpty() || isDotSegment(actual[i]) || hasEncodedSeparator(actual[i])) {
                     return false;
                 }
             } else if (!expected[i].equals(actual[i])) {
@@ -214,5 +216,11 @@ public final class EndpointRegistry {
     private static boolean isDotSegment(String segment) {
         String decoded = segment.toLowerCase(Locale.ROOT).replace("%2e", ".");
         return ".".equals(decoded) || "..".equals(decoded);
+    }
+
+    /** Returns whether a raw path segment holds an encoded {@code /} or {@code \} ({@code %2F}, {@code %5C}). */
+    private static boolean hasEncodedSeparator(String segment) {
+        String lower = segment.toLowerCase(Locale.ROOT);
+        return lower.contains("%2f") || lower.contains("%5c");
     }
 }

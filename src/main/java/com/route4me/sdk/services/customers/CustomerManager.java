@@ -55,8 +55,8 @@ public class CustomerManager extends Manager {
      * @param customerId the customer ID
      * @return the customer, with its location count and accountable person
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code customerId} is {@code null}, empty, {@code .} or {@code ..}; nothing
-     *     is sent
+     * @throws IllegalArgumentException if {@code customerId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}; nothing is sent
      */
     public CustomerShowResource getCustomerById(String customerId) throws APIException {
         URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);
@@ -92,7 +92,7 @@ public class CustomerManager extends Manager {
      * @return the updated customer
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      * @throws IllegalArgumentException if {@code customerId} is {@code null}, empty, {@code .} or {@code ..}, or
-     *     {@code request} is {@code null}; nothing is sent
+     *     contains {@code /} or {@code \}, or {@code request} is {@code null}; nothing is sent
      */
     public CustomerResource updateCustomer(String customerId, CustomerStoreRequest request) throws APIException {
         URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);
@@ -106,8 +106,8 @@ public class CustomerManager extends Manager {
      *
      * @param customerId the customer ID
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
-     * @throws IllegalArgumentException if {@code customerId} is {@code null}, empty, {@code .} or {@code ..}; nothing
-     *     is sent
+     * @throws IllegalArgumentException if {@code customerId} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}; nothing is sent
      */
     public void deleteCustomer(String customerId) throws APIException {
         URIBuilder builder = v5Builder(CUSTOMERS_EP, customerId);

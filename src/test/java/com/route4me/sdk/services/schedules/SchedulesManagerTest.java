@@ -406,23 +406,25 @@ public class SchedulesManagerTest {
     }
 
     @Test
-    public void pathIdsWithASlashStayInOneSegment() throws Exception {
-        SchedulesManager manager = manager();
+    public void pathIdsWithASlashAreRefused() throws Exception {
+        final SchedulesManager manager = manager();
+
+        for (final String id : Arrays.asList("../secret", "..\\secret")) {
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateSchedule(id, schedule()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteSchedule(id, false));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteSchedule(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteSchedule(id, routeSchedule()));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRouteSchedule(id));
+            http.expectThrows(IllegalArgumentException.class, () -> manager.replaceRouteSchedule(id, replacement()));
+        }
+        http.assertNoRequests();
+
         http.respondToAll(200, STATUS_TRUE);
+        manager.updateSchedule("a b", schedule());
+        manager.replaceRouteSchedule("a?b", replacement());
 
-        manager.updateSchedule("../secret", schedule());
-        manager.deleteSchedule("../secret", false);
-        manager.getRouteSchedule("../secret");
-        manager.updateRouteSchedule("../secret", routeSchedule());
-        manager.deleteRouteSchedule("../secret");
-        manager.replaceRouteSchedule("../secret", replacement());
-
-        assertEquals(BASE + "/schedules/..%2Fsecret", http.request(0).getUri().getRawPath());
-        assertEquals(BASE + "/schedules/..%2Fsecret", http.request(1).getUri().getRawPath());
-        assertEquals(BASE + "/route-schedules/..%2Fsecret", http.request(2).getUri().getRawPath());
-        assertEquals(BASE + "/route-schedules/..%2Fsecret", http.request(3).getUri().getRawPath());
-        assertEquals(BASE + "/route-schedules/..%2Fsecret", http.request(4).getUri().getRawPath());
-        assertEquals(BASE + "/route-schedules/replace/..%2Fsecret", http.request(5).getUri().getRawPath());
+        assertEquals(BASE + "/schedules/a%20b", http.request(0).getUri().getRawPath());
+        assertEquals(BASE + "/route-schedules/replace/a%3Fb", http.request(1).getUri().getRawPath());
     }
 
     @Test

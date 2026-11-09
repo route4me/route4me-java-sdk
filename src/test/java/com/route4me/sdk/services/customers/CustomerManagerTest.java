@@ -192,14 +192,16 @@ public class CustomerManagerTest {
         final CustomerManager manager = manager();
         http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomer("", storeRequest()));
         http.expectThrows(IllegalArgumentException.class, () -> manager.deleteCustomer(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateCustomer("CUST/1", storeRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteCustomer("..\\CUST"));
         http.assertNoRequests();
         http.respondToAll(200, CUSTOMER);
 
-        manager.updateCustomer("CUST/1", storeRequest());
-        manager.deleteCustomer("CUST/1");
+        manager.updateCustomer("CUST 1", storeRequest());
+        manager.deleteCustomer("CUST?1");
 
-        assertEquals(CUSTOMERS_EP + "/CUST%2F1", http.request(0).getUri().getRawPath());
-        assertEquals(CUSTOMERS_EP + "/CUST%2F1", http.request(1).getUri().getRawPath());
+        assertEquals(CUSTOMERS_EP + "/CUST%201", http.request(0).getUri().getRawPath());
+        assertEquals(CUSTOMERS_EP + "/CUST%3F1", http.request(1).getUri().getRawPath());
     }
 
     @Test

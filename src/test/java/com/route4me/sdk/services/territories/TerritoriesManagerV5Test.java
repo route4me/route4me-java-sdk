@@ -187,12 +187,16 @@ public class TerritoriesManagerV5Test {
         }
         http.assertNoRequests();
 
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getAutomaticTerritoriesJobStatus("JOB/../x"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getAutomaticTerritoriesJobResult("JOB\\1"));
+        http.assertNoRequests();
+
         http.respondToAll(200, "{}");
-        manager.getAutomaticTerritoriesJobStatus("JOB/../x");
-        manager.getAutomaticTerritoriesJobResult("JOB/1");
-        assertEquals(V5 + "/automatic-territories/job-tracker/status/JOB%2F..%2Fx", http.request(0).getUri()
+        manager.getAutomaticTerritoriesJobStatus("JOB ..x");
+        manager.getAutomaticTerritoriesJobResult("JOB?1");
+        assertEquals(V5 + "/automatic-territories/job-tracker/status/JOB%20..x", http.request(0).getUri()
                 .getRawPath());
-        assertEquals(V5 + "/automatic-territories/job-tracker/result/JOB%2F1", http.request(1).getUri()
+        assertEquals(V5 + "/automatic-territories/job-tracker/result/JOB%3F1", http.request(1).getUri()
                 .getRawPath());
     }
 

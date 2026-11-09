@@ -42,7 +42,17 @@ public class EndpointRegistryTest {
         }
         assertTrue(EndpointRegistry.pathMatches("/a/{}/c", "/a/.b/c"));
         assertTrue(EndpointRegistry.pathMatches("/a/{}/c", "/a/.../c"));
-        assertTrue(EndpointRegistry.pathMatches("/a/{}/c", "/a/%2e%2fx/c"));
+    }
+
+    @Test
+    public void placeholderSegmentNeverMatchesAnEncodedSlashOrBackslash() {
+        // Some front ends decode %2F and %5C before they resolve "..": /a/..%2Fusers would become /users.
+        for (String segment : new String[] {"%2e%2fx", "..%2Fusers", "a%2F..%2Fb", "%2f", "x%2F", "..%5Cusers",
+            "a%5c..%5cb", "%5C", "%5c"}) {
+            assertFalse(segment, EndpointRegistry.pathMatches("/a/{}/c", "/a/" + segment + "/c"));
+        }
+        assertTrue(EndpointRegistry.pathMatches("/a/{}/c", "/a/x%20y/c"));
+        assertTrue(EndpointRegistry.pathMatches("/a/{}/c", "/a/x%252Fy/c"));
     }
 
     @Test

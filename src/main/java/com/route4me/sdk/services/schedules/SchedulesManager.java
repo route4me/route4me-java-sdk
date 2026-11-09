@@ -106,6 +106,8 @@ public class SchedulesManager extends Manager {
      *
      * @param scheduleUid the schedule ID
      * @return the schedule
+     * @throws IllegalArgumentException if {@code scheduleUid} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public ScheduleList getSchedule(String scheduleUid) throws APIException {
@@ -121,8 +123,8 @@ public class SchedulesManager extends Manager {
      * @param scheduleUid the schedule ID
      * @param schedule the new values of the schedule
      * @return the updated schedule
-     * @throws IllegalArgumentException if {@code scheduleUid} is {@code null} or empty, or {@code schedule} is
-     *     {@code null}; nothing is sent
+     * @throws IllegalArgumentException if {@code scheduleUid} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}, or {@code schedule} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public ScheduleList updateSchedule(String scheduleUid, Schedule schedule) throws APIException {
@@ -141,6 +143,8 @@ public class SchedulesManager extends Manager {
      * @param withRoutes {@code true} to delete the routes it created too; sent as {@code with-routes=1} or
      *     {@code with-routes=0}, as the API requires the parameter
      * @return the answer of the API
+     * @throws IllegalArgumentException if {@code scheduleUid} is {@code null}, empty, {@code .} or {@code ..}, or
+     *     contains {@code /} or {@code \}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public ScheduleList deleteSchedule(String scheduleUid, boolean withRoutes) throws APIException {
@@ -207,6 +211,8 @@ public class SchedulesManager extends Manager {
      *
      * @param routeId the route ID
      * @return the route schedule
+     * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteScheduleResponse getRouteSchedule(String routeId) throws APIException {
@@ -223,8 +229,8 @@ public class SchedulesManager extends Manager {
      * @param routeId the route ID
      * @param routeSchedule the new values
      * @return the updated route schedule
-     * @throws IllegalArgumentException if {@code routeId} is {@code null} or empty, or {@code routeSchedule} is
-     *     {@code null}; nothing is sent
+     * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}, or {@code routeSchedule} is {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteScheduleList updateRouteSchedule(String routeId, RouteSchedule routeSchedule) throws APIException {
@@ -241,6 +247,8 @@ public class SchedulesManager extends Manager {
      *
      * @param routeId the route ID
      * @return whether it was removed
+     * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public StatusResponse deleteRouteSchedule(String routeId) throws APIException {
@@ -257,6 +265,8 @@ public class SchedulesManager extends Manager {
      *
      * @param routeId the route ID
      * @return the answer: {@code status} or {@code data}, whichever the reply carries
+     * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public DeleteRouteScheduleItemsResponse deleteRouteScheduleItems(String routeId) throws APIException {
@@ -273,7 +283,8 @@ public class SchedulesManager extends Manager {
      * @param start the first date of the preview ({@code start}), which the API requires
      * @param end the last date of the preview ({@code end}), which the API requires
      * @return the dates of the period, and what happens on each
-     * @throws IllegalArgumentException if {@code routeId}, {@code start} or {@code end} is {@code null} or empty
+     * @throws IllegalArgumentException if {@code start} or {@code end} is {@code null} or empty, or {@code routeId} is
+     *     {@code null}, empty, {@code .} or {@code ..}, or contains {@code /} or {@code \}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteSchedulePreview getRouteSchedulePreview(String routeId, String start, String end) throws APIException {
@@ -294,8 +305,8 @@ public class SchedulesManager extends Manager {
      * @param routeId the route ID
      * @param request the new schedule, driver and vehicle; the API requires the recurrence rules ({@code schedule})
      * @return the new route schedule
-     * @throws IllegalArgumentException if {@code routeId} is {@code null} or empty, or {@code request} or its
-     *     recurrence rules are {@code null}
+     * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}, or {@code request} or its recurrence rules are {@code null}
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteScheduleResponse replaceRouteSchedule(String routeId, ReplaceRouteScheduleRequest request)
@@ -340,6 +351,8 @@ public class SchedulesManager extends Manager {
      *
      * @param routeId the route ID
      * @return the answer, in {@code status}
+     * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /} or {@code \}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public StatusResponse isRouteScheduleCopied(String routeId) throws APIException {

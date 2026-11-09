@@ -321,14 +321,16 @@ public class LocationManagerTest {
         http.expectThrows(IllegalArgumentException.class, () -> manager.getLocationTypeById(""));
         http.expectThrows(IllegalArgumentException.class, () -> manager.updateLocationType(null, store));
         http.expectThrows(IllegalArgumentException.class, () -> manager.deleteLocationType(""));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateLocationType("LT/1", store));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteLocationType("LT\\1"));
         http.assertNoRequests();
         http.respondToAll(200, LOCATION_TYPE);
 
-        manager.updateLocationType("LT/1", store);
-        manager.deleteLocationType("LT/1");
+        manager.updateLocationType("LT 1", store);
+        manager.deleteLocationType("LT?1");
 
-        assertEquals(LOCATIONS_EP + "/types/LT%2F1", http.request(0).getUri().getRawPath());
-        assertEquals(LOCATIONS_EP + "/types/LT%2F1", http.request(1).getUri().getRawPath());
+        assertEquals(LOCATIONS_EP + "/types/LT%201", http.request(0).getUri().getRawPath());
+        assertEquals(LOCATIONS_EP + "/types/LT%3F1", http.request(1).getUri().getRawPath());
     }
 
     @Test

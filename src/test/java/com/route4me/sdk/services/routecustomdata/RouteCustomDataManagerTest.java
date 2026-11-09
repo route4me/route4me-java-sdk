@@ -96,13 +96,14 @@ public class RouteCustomDataManagerTest {
     }
 
     @Test
-    public void routeIdsWithASlashStayInOneSegment() throws Exception {
-        RouteCustomDataManager manager = manager();
-        http.respondToAll(200, json("{'region':'north'}"));
+    public void routeIdsWithASlashAreRefused() throws Exception {
+        final RouteCustomDataManager manager = manager();
 
-        manager.updateRouteCustomData("../secret", Collections.singletonMap("region", "north"));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateRouteCustomData("../secret", Collections.singletonMap("region", "north")));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteCustomData("..\\secret"));
 
-        assertEquals(ROUTES_EP + "/..%2Fsecret/custom-data", http.request().getUri().getRawPath());
+        http.assertNoRequests();
     }
 
     @Test

@@ -80,7 +80,8 @@ public final class RequestGuard {
     public List<String> check(CapturedRequest request, String testName) {
         List<String> problems = new ArrayList<>();
         String host = request.getHost();
-        // Match on the raw path: an encoded "/" (%2F) inside an ID stays inside its segment.
+        // Match on the raw path, as the server gets it: the registry refuses a {} segment with an
+        // encoded "/" or "\" (%2F, %5C), which some front ends decode before they resolve "..".
         String path = request.getUri().getRawPath();
 
         if (!"https".equals(request.getScheme())) {

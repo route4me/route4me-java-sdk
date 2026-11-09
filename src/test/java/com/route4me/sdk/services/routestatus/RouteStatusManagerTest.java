@@ -126,13 +126,17 @@ public class RouteStatusManagerTest {
     }
 
     @Test
-    public void routeIdsWithASlashStayInOneSegment() throws Exception {
-        RouteStatusManager manager = manager();
+    public void routeIdsWithASlashAreRefused() throws Exception {
+        final RouteStatusManager manager = manager();
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateRouteStatus("../secret", new RouteStatusRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.rollbackRouteStatus("..\\secret"));
+        http.assertNoRequests();
         http.respondToAll(200, ROUTE_STATUS);
 
-        manager.updateRouteStatus("../secret", new RouteStatusRequest());
+        manager.updateRouteStatus("a b", new RouteStatusRequest());
 
-        assertEquals(STATUS_EP + "/..%2Fsecret", http.request().getUri().getRawPath());
+        assertEquals(STATUS_EP + "/a%20b", http.request().getUri().getRawPath());
     }
 
     @Test
