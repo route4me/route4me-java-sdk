@@ -1072,9 +1072,14 @@ public class ManagerTest {
 
     /** Answers the next request with a 200 whose body is a stream, which records whether it was closed. */
     private boolean[] respondWithStream(byte[] body, long declaredLength) {
+        return respondWithStream(200, body, declaredLength);
+    }
+
+    /** Answers the next request with a status and a body that is a stream, which records whether it was closed. */
+    private boolean[] respondWithStream(int status, byte[] body, long declaredLength) {
         final boolean[] closed = new boolean[1];
         final CloseableHttpResponse reply = Mockito.mock(CloseableHttpResponse.class);
-        Mockito.when(reply.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, 200, "OK"));
+        Mockito.when(reply.getStatusLine()).thenReturn(new BasicStatusLine(HttpVersion.HTTP_1_1, status, null));
         Mockito.when(reply.getEntity()).thenReturn(new InputStreamEntity(new ByteArrayInputStream(body) {
             @Override
             public void close() {
@@ -1137,6 +1142,34 @@ public class ManagerTest {
         assertTrue("a body read to its end is closed", within[0]);
         assertFalse("closing would read the rest of the body; the response close drops the connection", over[0]);
         assertFalse(understated[0]);
+    }
+
+    /** Regression: an error reply over the max response size lost its status, so the exception had status 0. */
+    @Test
+    public void anErrorReplyOverTheMaxResponseSizeKeepsItsStatusWithoutItsBody() throws Exception {
+        final TestManager manager = manager();
+        manager.setMaxResponseSize(4);
+        // A proxy's HTML error page, with a Content-Length, and a body of unknown length.
+        http.respond(404, "<html><body>Not Found</body></html>", "text/html");
+        boolean[] streamed = respondWithStream(503, "{\"errors\":[\"Down\"]}".getBytes(StandardCharsets.UTF_8), -1);
+        http.respond(500, "{}");
+
+        APIException declared = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+        APIException unknown = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+        APIException within = http.expectApiException(
+                () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
+
+        assertEquals("Invalid status code 404 for GET https://api.route4me.com" + PATH, declared.getMessage());
+        assertEquals(404, declared.getStatusCode());
+        assertNull(declared.getResponseBody());
+        assertEquals(503, unknown.getStatusCode());
+        assertNull(unknown.getResponseBody());
+        assertTrue(unknown.getErrors().isEmpty());
+        assertFalse("closing would read the rest of the body; the response close drops the connection", streamed[0]);
+        assertEquals("a body within the limit is kept", 500, within.getStatusCode());
+        assertEquals("{}", within.getResponseBody());
     }
 
     @Test

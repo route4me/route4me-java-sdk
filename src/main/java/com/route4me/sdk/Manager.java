@@ -734,7 +734,17 @@ public abstract class Manager implements Closeable {
         try (CloseableHttpResponse resp = client.execute(hrb)) {
             int status = resp.getStatusLine().getStatusCode();
             HttpEntity entity = resp.getEntity();
-            byte[] bytes = readBody(entity, this.maxResponseSize);
+            byte[] bytes;
+            try {
+                bytes = readBody(entity, this.maxResponseSize);
+            } catch (ResponseTooLargeException ex) {
+                if (status < 200 || status > 303) {
+                    // The status tells the caller more than the start of an oversized error page
+                    // (APIException keeps only 2,000 characters of a body), so keep it and drop the body.
+                    throw APIException.forErrorStatus(method.name(), safeUrl, status, null);
+                }
+                throw ex;
+            }
             Charset charset = charsetOf(entity);
             if (status < 200 || status > 303) {
                 throw APIException.forErrorStatus(method.name(), safeUrl, status,
@@ -854,7 +864,8 @@ public abstract class Manager implements Closeable {
      *               as a {@code 204 No Content})
      * @param limit  the largest body to read, in bytes
      * @return the body; empty when there is no entity or no content
-     * @throws IOException if the body cannot be read or is larger than {@code limit}
+     * @throws IOException if the body cannot be read; a {@link ResponseTooLargeException} if it is larger
+     *                     than {@code limit}
      */
     private static byte[] readBody(HttpEntity entity, int limit) throws IOException {
         if (entity == null) {
@@ -912,9 +923,22 @@ public abstract class Manager implements Closeable {
         return true;
     }
 
-    /** The error of a reply over the maximum response size; {@link #send} reports it as an {@link APIException}. */
-    private static IOException tooLarge(String size, int limit) {
-        return new IOException("The response " + size + " than the maximum response size of " + limit
+    /**
+     * The error of a reply over the maximum response size. {@link #send} reports it as an
+     * {@link APIException}: with the HTTP status when the reply has an error status, as a failed
+     * request otherwise.
+     */
+    private static final class ResponseTooLargeException extends IOException {
+        private static final long serialVersionUID = 1L;
+
+        ResponseTooLargeException(String message) {
+            super(message);
+        }
+    }
+
+    /** Builds the error of a reply over the maximum response size; see {@link ResponseTooLargeException}. */
+    private static ResponseTooLargeException tooLarge(String size, int limit) {
+        return new ResponseTooLargeException("The response " + size + " than the maximum response size of " + limit
                 + " bytes; see Manager.setMaxResponseSize");
     }
 
@@ -1163,8 +1187,9 @@ public abstract class Manager implements Closeable {
      * reply is held in memory, so a lower limit keeps a huge reply from exhausting the heap. A
      * larger reply fails the request with an {@link APIException}, not an
      * {@link OutOfMemoryError}: before its body is read when its {@code Content-Length} is
-     * larger, otherwise as soon as more bytes arrive. It applies to the requests sent after the
-     * call.
+     * larger, otherwise as soon as more bytes arrive. A larger reply with an error status keeps
+     * that status ({@link APIException#getStatusCode()}) but not its body; any other has status
+     * {@code 0}. It applies to the requests sent after the call.
      *
      * @param bytes the limit, from {@code 0} to {@link #DEFAULT_MAX_RESPONSE_SIZE}
      * @throws IllegalArgumentException if {@code bytes} is negative or larger than
