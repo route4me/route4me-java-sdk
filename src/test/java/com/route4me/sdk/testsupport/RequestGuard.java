@@ -18,7 +18,8 @@ import java.util.Set;
  *
  * <p>A request passes when:
  * <ul>
- *   <li>its scheme is {@code https}, on the default port;</li>
+ *   <li>its scheme is {@code https}, on the default port, and its URL has no user
+ *       information ({@code https://user@host/});</li>
  *   <li>its (host, path) is on the registry's {@code deprecated} list, which is allowed but
  *       recorded for the {@link DeprecatedEndpointReport}; or its host is in
  *       {@code allowed_hosts} and its (method, host, path) matches an {@code endpoints}
@@ -89,6 +90,10 @@ public final class RequestGuard {
         if (port != -1 && port != HTTPS_PORT) {
             problems.add(request + ": port must be the https default (443), not " + port);
         }
+        if (request.getUri().getRawUserInfo() != null) {
+            problems.add(request.getMethod() + " https://" + host + path
+                    + ": the URL must not carry user information (user@host)");
+        }
         EndpointRegistry.Entry deprecated = registry.findDeprecated(host, path);
         if (deprecated != null) {
             deprecatedHits.record(request.getMethod(), host, path, deprecated.getReason(), testName);
@@ -134,6 +139,10 @@ public final class RequestGuard {
                             + (v5 ? "" : "; outside the V5 API it goes in the api_key query parameter"));
                 }
             }
+        }
+        if (contains(request.getUri().getRawUserInfo()) || contains(request.getUri().getUserInfo())) {
+            leaks.add(request.getMethod() + " https://" + host + request.getUri().getRawPath()
+                    + ": the API key appears in the URL user information");
         }
         if (contains(request.getPath())) {
             leaks.add(request + ": the API key appears in the URL path");

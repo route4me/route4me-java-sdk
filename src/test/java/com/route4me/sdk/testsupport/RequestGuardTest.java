@@ -175,6 +175,24 @@ public class RequestGuardTest {
     }
 
     @Test
+    public void rejectsTheKeyInTheUserInfoOfAKeyHost() throws IOException {
+        List<String> problems = check(new HttpGet("https://" + KEY + "@api.route4me.com/api.v4/route.php"));
+
+        assertEquals(problems.toString(), 2, problems.size());
+        assertTrue(problems.toString(), problems.get(0).contains("must not carry user information"));
+        assertTrue(problems.toString(), problems.get(1).contains("the API key appears in the URL user information"));
+    }
+
+    @Test
+    public void rejectsAnyUserInfo() throws IOException {
+        List<String> problems = check(new HttpGet("https://someone:secret@wh.route4me.com/modules/api/v5.0/vehicles"));
+
+        assertEquals(problems.toString(), 1, problems.size());
+        assertTrue(problems.get(0), problems.get(0).contains("must not carry user information"));
+        assertFalse("the message leaves the user information out", problems.get(0).contains("secret"));
+    }
+
+    @Test
     public void rejectsKeyInBody() throws IOException {
         HttpPost request = new HttpPost("https://api.route4me.com/api.v4/route.php");
         request.setEntity(new StringEntity("{\"key\":\"" + KEY + "\"}", "UTF-8"));
