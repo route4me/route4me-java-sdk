@@ -23,6 +23,7 @@
  */
 package com.route4me.sdk.examples.routes.dynamic.insert;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.RoutingManager;
@@ -30,7 +31,6 @@ import com.route4me.sdk.services.routing.dynamic.insert.DynamicInsertManager;
 import com.route4me.sdk.services.routing.dynamic.insert.InsertMode;
 import com.route4me.sdk.services.routing.dynamic.insert.MatchedRoute;
 import com.route4me.sdk.services.routing.dynamic.insert.RecommendedBy;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.logging.Level;
@@ -45,15 +45,7 @@ import java.util.logging.Logger;
 public class DynamicInsertStopOptimalAfterLastVisitedRouteIDs {
 
     public static void main(String[] args) {
-        String routeIdList = System.getenv("ROUTE_IDS");
-        List<String> routeIDs = new ArrayList<>();
-        if (routeIdList != null) {
-            for (String routeId : routeIdList.split(",")) {
-                if (!routeId.trim().isEmpty()) {
-                    routeIDs.add(routeId.trim());
-                }
-            }
-        }
+        List<String> routeIDs = ExampleInput.toList(System.getenv("ROUTE_IDS"));
         if (routeIDs.isEmpty()) {
             System.err.println("Set ROUTE_IDS to the IDs of routes of a test account, separated by commas; this example"
                     + " adds a stop to one of them.");
@@ -77,7 +69,11 @@ public class DynamicInsertStopOptimalAfterLastVisitedRouteIDs {
                 System.out.println(matchedRoute);
             }
             MatchedRoute matchedRoute = matchedRoutes.get(0);
-            if (!routeIDs.contains(matchedRoute.getRouteID())) {
+            boolean listed = false;
+            for (String routeId : routeIDs) {
+                listed = listed || routeId.equalsIgnoreCase(matchedRoute.getRouteID());
+            }
+            if (!listed) {
                 System.out.println("The best route is not in ROUTE_IDS; nothing was inserted.");
                 return;
             }

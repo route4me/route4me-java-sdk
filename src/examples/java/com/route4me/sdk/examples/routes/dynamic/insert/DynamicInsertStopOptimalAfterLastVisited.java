@@ -71,7 +71,7 @@ public class DynamicInsertStopOptimalAfterLastVisited {
             if (matchedRoutes != null) {
                 for (MatchedRoute matchedRoute : matchedRoutes) {
                     System.out.println(matchedRoute);
-                    if (routeId.equals(matchedRoute.getRouteID())) {
+                    if (routeId.equalsIgnoreCase(matchedRoute.getRouteID())) {
                         target = matchedRoute;
                     }
                 }
