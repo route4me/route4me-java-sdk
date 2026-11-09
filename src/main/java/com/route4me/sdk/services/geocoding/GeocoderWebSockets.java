@@ -33,6 +33,15 @@ import org.json.JSONObject;
  * <p>One instance runs one job: {@link #startGeocoding(String, int)} can be called once, and a second call throws
  * {@link IllegalStateException}. Create a new geocoder for another batch.
  *
+ * <p>The job completes when the number of addresses received reaches the size of the batch. Every {@code address}
+ * message and every entry of an {@code addresses_bulk} message counts, so a message more than expected, such as a
+ * duplicate, does not keep the job open.
+ *
+ * <p>Socket.IO connects again after a dropped connection and fires its connect event again. The geocoder then sends
+ * its {@code geocode} request again only while no {@code address} or {@code addresses_bulk} message has arrived for
+ * the job: a request lost with the old connection is retried, and a job whose addresses are already arriving is never
+ * asked twice.
+ *
  * <p>The addresses arrive on the Socket.IO event thread. Every public method can be called from any thread: the
  * state is guarded by the lock of this object, and {@link #getAddresses()} returns a copy.
  */
@@ -61,6 +70,11 @@ public class GeocoderWebSockets {
     private boolean started;
     /** Whether the {@code geocode} request of the job was sent; guarded by the lock of this object. */
     private boolean geocodeSent;
+    /**
+     * Whether an {@code address} or {@code addresses_bulk} message with a payload has arrived for the job, so that a
+     * reconnect does not send the {@code geocode} request again; guarded by the lock of this object.
+     */
+    private boolean addressMessageSeen;
 
     /** The number of addresses to download in one stage, before the chunks are split. */
     private static final int BUFFER_FAIL_SAFE_MAX_ADDRESSES = 100;
@@ -115,7 +129,8 @@ public class GeocoderWebSockets {
     /**
      * Handles an {@code address} message: one geocoded address. Every message with a payload counts as one address
      * received, as each entry of {@link #onAddressesBulk} does, so that the job completes; only a readable address
-     * is added to the list. A message without a payload is ignored.
+     * is added to the list. A message without a payload is ignored. Reaching or passing the size of the batch closes
+     * the connection.
      *
      * @param args the arguments of the message
      */
@@ -124,13 +139,14 @@ public class GeocoderWebSockets {
         if (payload == null) {
             return;
         }
+        addressMessageSeen = true;
         WebSocketsAddress message = parse(payload, WebSocketsAddress.class, "address");
         Address address = message == null ? null : message.getAddress();
         if (address != null) {
             geocodedAddresses.add(address);
         }
         addressesCount++;
-        if (totalAddresses == addressesCount) {
+        if (addressesCount >= totalAddresses) {
             closeGeoCodeSocketIO();
         }
     }
@@ -138,7 +154,8 @@ public class GeocoderWebSockets {
     /**
      * Handles an {@code addresses_bulk} message: a chunk of geocoded addresses. Every entry of the chunk counts as
      * received, so that the next download starts at the right index; entries without an address are not added to
-     * the list. A message that is not a list is ignored.
+     * the list. A message that is not a list is ignored. Reaching or passing the size of the batch closes the
+     * connection.
      *
      * @param args the arguments of the message
      */
@@ -147,6 +164,7 @@ public class GeocoderWebSockets {
         if (payload == null) {
             return;
         }
+        addressMessageSeen = true;
         WebSocketsAddress[] addressesChunk = parse(payload, WebSocketsAddress[].class, "addresses_bulk");
         if (addressesChunk == null) {
             return;
@@ -161,7 +179,7 @@ public class GeocoderWebSockets {
         if (addressesCount == nextDownloadStage) {
             downloadAddresses(addressesCount);
         }
-        if (addressesCount == totalAddresses) {
+        if (addressesCount >= totalAddresses) {
             closeGeoCodeSocketIO();
         }
     }
@@ -287,14 +305,21 @@ public class GeocoderWebSockets {
     }
 
     /**
-     * Asks the geocoder to geocode the stored addresses, once per job. The socket connects again after a dropped
-     * connection and fires its connect event again; a second request could make the validator geocode the batch
-     * again and send addresses that have already arrived. The storage ID selects the addresses, so it is not logged.
+     * Asks the geocoder to geocode the stored addresses, on every connect until an address arrives. The socket
+     * connects again after a dropped connection and fires its connect event again. Before any address has arrived,
+     * the request is sent again, since the first one may have been lost with the old connection; after that, a second
+     * request could make the validator geocode the batch again and send addresses that have already arrived, so it
+     * is not sent. The storage ID selects the addresses, so it is not logged.
      */
     private synchronized void emitTemporaryAddressesStorageID() {
         if (geocodeSent) {
-            LOG.info("Connected again to the WebSocket Geocoder; the geocode request is not sent twice");
-            return;
+            if (addressMessageSeen) {
+                LOG.info("Connected again to the WebSocket Geocoder; the addresses are arriving, so the geocode"
+                        + " request is not sent again");
+                return;
+            }
+            LOG.info("Connected again to the WebSocket Geocoder before any address arrived; sending the geocode"
+                    + " request again");
         }
         geocodeSent = true;
         LOG.debug("Asking the geocoder to geocode the stored addresses");
@@ -352,10 +377,10 @@ public class GeocoderWebSockets {
      * Tells whether every address of the batch has arrived. A geocoder that has not started has an empty batch, so
      * this is {@code true} for it too: check {@link #isStarted()} first.
      *
-     * @return {@code true} when the number of addresses received equals the size of the batch
+     * @return {@code true} when the number of addresses received has reached the size of the batch
      */
     public synchronized Boolean isCompleted() {
-        return totalAddresses == addressesCount;
+        return addressesCount >= totalAddresses;
     }
 
     /**
@@ -378,7 +403,8 @@ public class GeocoderWebSockets {
     }
 
     /**
-     * Returns how many addresses have arrived.
+     * Returns how many addresses have arrived. It can pass {@link #getTotalAddresses()} when the geocoder sends more
+     * messages than the batch holds.
      *
      * @return the number of geocoded addresses received
      */

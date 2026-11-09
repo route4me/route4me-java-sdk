@@ -114,8 +114,9 @@ public class GeocoderWebSocketsTest {
         }
     }
 
+    /** Regression: a geocode request lost with a dropped connection was never sent again, and the job hung. */
     @Test
-    public void theGeocodeRequestIsSentOncePerJobAlsoAfterAReconnect() throws Exception {
+    public void aReconnectBeforeAnyAddressSendsTheGeocodeRequestAgain() throws Exception {
         OfflineGeocoder geocoder = new OfflineGeocoder();
         geocoder.startGeocoding(STORAGE_ID, 3);
         verify(geocoder.mock, never()).emit(Mockito.eq("geocode"), Mockito.any());
@@ -124,12 +125,37 @@ public class GeocoderWebSocketsTest {
         connect.call();
         // Socket.IO connects again after a dropped connection and fires the connect event again.
         geocoder.listener(Socket.EVENT_DISCONNECT).call("transport close");
+        // A message without a payload is ignored, so it does not count as an address.
+        geocoder.listener("address").call();
         connect.call();
 
         ArgumentCaptor<Object> payload = ArgumentCaptor.forClass(Object.class);
-        verify(geocoder.mock, Mockito.times(1)).emit(Mockito.eq("geocode"), payload.capture());
-        assertEquals(STORAGE_ID, ((JSONObject) payload.getValue()).getString("temporary_addresses_storage_id"));
+        verify(geocoder.mock, Mockito.times(2)).emit(Mockito.eq("geocode"), payload.capture());
+        for (Object sent : payload.getAllValues()) {
+            assertEquals(STORAGE_ID, ((JSONObject) sent).getString("temporary_addresses_storage_id"));
+        }
         verify(geocoder.mock, Mockito.times(1)).connect();
+    }
+
+    /** Regression: every reconnect sent the geocode request again, so addresses that had arrived came twice. */
+    @Test
+    public void aReconnectAfterAnAddressArrivedDoesNotSendTheGeocodeRequestAgain() throws Exception {
+        for (String event : new String[] {"address", "addresses_bulk"}) {
+            OfflineGeocoder geocoder = new OfflineGeocoder();
+            geocoder.startGeocoding(STORAGE_ID, 3);
+            Listener connect = geocoder.listener(Socket.EVENT_CONNECT);
+
+            connect.call();
+            Object message = "address".equals(event) ? chunk("1 Main St").get(0) : chunk("1 Main St");
+            geocoder.listener(event).call(message);
+            geocoder.listener(Socket.EVENT_DISCONNECT).call("transport close");
+            connect.call();
+            connect.call();
+
+            verify(geocoder.mock, Mockito.times(1)).emit(Mockito.eq("geocode"), Mockito.any());
+            assertEquals(event, 1, geocoder.getAddressesCount());
+            assertFalse(event, geocoder.isCompleted());
+        }
     }
 
     @Test
@@ -316,6 +342,34 @@ public class GeocoderWebSocketsTest {
         assertEquals(1, geocoder.getAddresses().size());
         assertEquals("9 Side Rd", geocoder.getAddresses().get(0).getAddress());
         verify(geocoder.mock).close();
+    }
+
+    /** Regression: completion needed an exact count, so one message more than the batch kept the job open. */
+    @Test
+    public void aMessageMoreThanTheBatchStillCompletesTheJob() throws Exception {
+        OfflineGeocoder single = new OfflineGeocoder();
+        single.startGeocoding(STORAGE_ID, 2);
+        Listener address = single.listener("address");
+
+        address.call(chunk("1 Main St").get(0));
+        address.call(chunk("2 Main St").get(0));
+        assertTrue(single.isCompleted());
+        // A duplicate after the last address.
+        address.call(chunk("2 Main St").get(0));
+
+        assertTrue("passing the size of the batch completes the job", single.isCompleted());
+        assertEquals(3, single.getAddressesCount());
+        verify(single.mock, Mockito.atLeastOnce()).close();
+
+        OfflineGeocoder bulk = new OfflineGeocoder();
+        bulk.startGeocoding(STORAGE_ID, 2);
+
+        // A chunk that jumps past the size of the batch.
+        bulk.listener("addresses_bulk").call(chunk("1 Main St", "2 Main St", "2 Main St"));
+
+        assertTrue(bulk.isCompleted());
+        assertEquals(3, bulk.getAddressesCount());
+        verify(bulk.mock).close();
     }
 
     @Test
