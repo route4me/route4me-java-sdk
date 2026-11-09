@@ -999,11 +999,6 @@
   {
    "method": "GET",
    "host": "wh.route4me.com",
-   "path": "/android"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
    "path": "/api.v4/note_custom_types.php"
   },
   {
@@ -1099,27 +1094,12 @@
   {
    "method": "GET",
    "host": "wh.route4me.com",
-   "path": "/apple-app-site-association"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
    "path": "/create-session-by-geotab-credentials"
   },
   {
    "method": "GET",
    "host": "wh.route4me.com",
    "path": "/external/v5.0/geotab-integration/create-session-by-geotab-credentials"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/info/{}"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/ios-app"
   },
   {
    "method": "GET",
@@ -3624,56 +3604,6 @@
   {
    "method": "GET",
    "host": "wh.route4me.com",
-   "path": "/modules/async-export"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/async-export/{}"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/columns"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/columns/{}/by-export-type"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/export"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/export/download/{}"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/export/formats"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/export/result/{}"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/export/status/{}"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/export/{}"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
    "path": "/modules/external-api/v5.0/reset-password/reset-password/verify"
   },
   {
@@ -3755,41 +3685,6 @@
    "method": "GET",
    "host": "wh.route4me.com",
    "path": "/modules/schedules/{}"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/async-export"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/async-export/{}"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/columns"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/export"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/export-attachments"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/export/{}"
-  },
-  {
-   "method": "GET",
-   "host": "wh.route4me.com",
-   "path": "/{}"
   },
   {
    "method": "PATCH",
@@ -4160,11 +4055,6 @@
    "method": "POST",
    "host": "wh.route4me.com",
    "path": "/geotab-unlink"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/get-short-link"
   },
   {
    "method": "POST",
@@ -6919,41 +6809,6 @@
   {
    "method": "POST",
    "host": "wh.route4me.com",
-   "path": "/modules/async-export"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/async-export/{}"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/columns"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/columns/{}/by-export-type"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/export"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/export-attachments"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/export/{}"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
    "path": "/modules/external-api/v5.0/contact"
   },
   {
@@ -7050,36 +6905,6 @@
    "method": "POST",
    "host": "wh.route4me.com",
    "path": "/modules/schedules"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/async-export"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/async-export/{}"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/columns"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/export"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/export-attachments"
-  },
-  {
-   "method": "POST",
-   "host": "wh.route4me.com",
-   "path": "/modules/{}/export/{}"
   },
   {
    "method": "PUT",

@@ -46,6 +46,20 @@ public class EndpointRegistryTest {
     }
 
     @Test
+    public void theV5HostHasNoCatchAllEntries() {
+        // The URL shortener's /{short_link} and the route export paths under the spec's bare
+        // https://wh.route4me.com/modules/ server matched almost any path on the V5 host.
+        assertNull(registry.findEndpoint("GET", "wh.route4me.com", "/anything"));
+        assertNull(registry.findEndpoint("GET", "wh.route4me.com", "/info/anything"));
+        assertNull(registry.findEndpoint("GET", "wh.route4me.com", "/modules/anything/export/1"));
+        assertNull(registry.findEndpoint("POST", "wh.route4me.com", "/modules/anything/async-export"));
+        assertNull(registry.findEndpoint("GET", "wh.route4me.com", "/modules/export"));
+        assertNotNull(registry.findEndpoint("GET", "wh.route4me.com", "/modules/api/v5.0/route-export/R1/export/P1"));
+        assertNotNull(registry.findEndpoint("POST", "wh.route4me.com",
+                "/modules/api/v5.0/route-export/R1/async-export"));
+    }
+
+    @Test
     public void anyMethodEntryMatchesEveryMethod() {
         for (String method : new String[] {"GET", "POST", "PUT", "DELETE"}) {
             assertNotNull(method, registry.findEndpoint(method, "api.route4me.com", "/api.v4/route.php"));
