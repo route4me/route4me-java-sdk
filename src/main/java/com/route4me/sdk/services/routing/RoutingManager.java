@@ -617,7 +617,8 @@ public class RoutingManager extends Manager {
      *
      * @param routeIds the IDs of the routes to delete; at least one
      * @return the deletion result
-     * @throws IllegalArgumentException if no route ID is given, or one is {@code null} or empty
+     * @throws IllegalArgumentException if no route ID is given, or one is {@code null}, empty or contains a comma
+     *     (the API would read it as several IDs); nothing is sent
      * @throws APIException             if the request fails
      */
     public RouteDeletedResponse deleteRoutes(String... routeIds) throws APIException {
@@ -625,9 +626,7 @@ public class RoutingManager extends Manager {
             throw new IllegalArgumentException("At least one route ID is required");
         }
         for (String routeId : routeIds) {
-            if (routeId == null || routeId.isEmpty()) {
-                throw new IllegalArgumentException("A route ID must not be null or empty");
-            }
+            requireListedRouteId(routeId);
         }
         URIBuilder builder = Manager.defaultBuilder(ROUTE_EP);
         builder.addParameter("route_id", String.join(",", routeIds));
@@ -685,7 +684,8 @@ public class RoutingManager extends Manager {
      * @param depotLat the latitude of the depot ({@code depot_lat})
      * @param depotLng the longitude of the depot ({@code depot_lng})
      * @return whether the routes were merged, and the optimization of the merged route
-     * @throws IllegalArgumentException if no route ID is given, or one is {@code null} or empty
+     * @throws IllegalArgumentException if no route ID is given, or one is {@code null}, empty or contains a comma
+     *     (the API would read it as several IDs); nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public MergeRoutesResponse mergeRoutes(List<String> routeIds, String depotAddress, Boolean removeOrigin,
@@ -694,9 +694,7 @@ public class RoutingManager extends Manager {
             throw new IllegalArgumentException("At least one route ID is required");
         }
         for (String routeId : routeIds) {
-            if (routeId == null || routeId.isEmpty()) {
-                throw new IllegalArgumentException("A route ID must not be null or empty");
-            }
+            requireListedRouteId(routeId);
         }
         URIBuilder builder = Manager.defaultBuilder(MERGE_ROUTES_EP);
         List<NameValuePair> form = new ArrayList<>();
@@ -836,6 +834,16 @@ public class RoutingManager extends Manager {
         List<NameValuePair> form = new ArrayList<>();
         form.add(new BasicNameValuePair("route_destination_id", ids.toString()));
         return this.makeRequest(RequestMethod.POST, builder, form, JsonElement.class);
+    }
+
+    /**
+     * Refuses a route ID of a comma-separated list: one that is {@code null}, empty or contains a comma, which the
+     * API would split into several route IDs.
+     */
+    private static void requireListedRouteId(String routeId) {
+        if (routeId == null || routeId.isEmpty() || routeId.indexOf(',') >= 0) {
+            throw new IllegalArgumentException("A route ID must not be null, empty or contain ','");
+        }
     }
 
     /** Adds the query of the mark-visited and mark-departed requests, leaving out the {@code null} values. */

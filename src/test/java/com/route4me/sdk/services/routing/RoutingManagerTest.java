@@ -559,6 +559,18 @@ public class RoutingManagerTest {
     }
 
     @Test
+    public void deleteRoutesRefusesAnIdWithAComma() {
+        final RoutingManager manager = manager();
+
+        IllegalArgumentException refused = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.deleteRoutes("ROUTE-A1,ROUTE-A2"));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteRoutes("ROUTE-A1", "ROUTE-A2,"));
+
+        assertTrue(refused.getMessage(), refused.getMessage().contains("','"));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void duplicateRouteSendsTheRouteIdAndTarget() throws Exception {
         RoutingManager manager = manager();
         http.respond(200, json("{'optimization_problem_id':'OPT-2','success':true}"));
@@ -719,6 +731,8 @@ public class RoutingManagerTest {
                 () -> manager.mergeRoutes(Collections.<String>emptyList(), null, null, null, null));
         http.expectThrows(IllegalArgumentException.class,
                 () -> manager.mergeRoutes(Arrays.asList("ROUTE-A1", ""), null, null, null, null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.mergeRoutes(Collections.singletonList("ROUTE-A1,ROUTE-A2"), null, true, null, null));
         http.assertNoRequests();
     }
 
