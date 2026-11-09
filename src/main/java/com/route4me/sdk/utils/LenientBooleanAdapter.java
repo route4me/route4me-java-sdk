@@ -25,10 +25,12 @@ import java.util.regex.Pattern;
  * this adapter for both {@code Boolean} and {@code boolean}.
  *
  * <p>A number is {@code true} unless it is 0. A string, trimmed and in any case, is
- * {@code true} when it is a number other than 0 (such as {@code "1"} or {@code "2"}, as the
- * number would be) or one of the words PHP reads as true ({@code "true"}, {@code "yes"},
- * {@code "on"}), and {@code false} otherwise ({@code "0"}, {@code "false"}, {@code "no"},
- * {@code "off"}, {@code ""} or any other text). So a string never makes a reply fail, and
+ * {@code true} when it is a plain decimal number other than 0 (digits with an optional sign
+ * and fraction, such as {@code "1"}, {@code "2"} or {@code "-0.5"}, as the number would be) or
+ * one of the words PHP reads as true ({@code "true"}, {@code "yes"}, {@code "on"}), and
+ * {@code false} otherwise ({@code "0"}, {@code "false"}, {@code "no"}, {@code "off"},
+ * {@code ""} or any other text, including other number notations such as {@code "1e3"} or
+ * {@code "1."}). So a string never makes a reply fail, and
  * every string that Gson's own adapter read as {@code true} in SDK 1.16.1 (with
  * {@code Boolean.parseBoolean}) is still {@code true}.
  */

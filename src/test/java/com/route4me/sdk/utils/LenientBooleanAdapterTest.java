@@ -68,9 +68,11 @@ public class LenientBooleanAdapterTest {
     }
 
     /**
-     * A numeric string reads as the number would ({@code "2"} like {@code 2}), and PHP's own
-     * words for true ({@code FILTER_VALIDATE_BOOLEAN}) read as true, so that the API cannot send
-     * a true that the SDK reads as false. Every string that 1.16.1 read as true still is.
+     * A plain decimal string (digits, optionally with a sign and a fraction) reads as the number
+     * would ({@code "2"} like {@code 2}), and PHP's own words for true
+     * ({@code FILTER_VALIDATE_BOOLEAN}) read as true, so that the API cannot send a true that the
+     * SDK reads as false. Other number notations, such as {@code "1e3"} or {@code "1."}, are text
+     * and read as false. Every string that 1.16.1 read as true still is.
      */
     @Test
     public void nonZeroNumericStringsAndPhpTrueWordsAreTrue() {
