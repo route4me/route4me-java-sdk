@@ -17,15 +17,15 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class LocationManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0/address-book";
-    private static final String LOCATIONS_LIST_COMBINED_EP = V5_BASE + "/locations/list/combined";
-    private static final String LOCATIONS_LIST_EP = V5_BASE + "/locations/list";
-    private static final String LOCATIONS_CLUSTERING_EP = V5_BASE + "/locations/clustering";
-    private static final String LOCATIONS_HEATMAP_EP = V5_BASE + "/locations/heatmap";
-    private static final String LOCATIONS_TERRITORIES_EP = V5_BASE + "/locations/territories";
-    private static final String LOCATIONS_EXPORT_COLUMNS_EP = V5_BASE + "/locations/export/columns";
-    private static final String LOCATIONS_EXPORT_EP = V5_BASE + "/locations/export";
-    private static final String LOCATION_TYPES_EP = V5_BASE + "/locations/types";
+    private static final String ADDRESS_BOOK_BASE = V5_BASE + "/address-book";
+    private static final String LOCATIONS_LIST_COMBINED_EP = ADDRESS_BOOK_BASE + "/locations/list/combined";
+    private static final String LOCATIONS_LIST_EP = ADDRESS_BOOK_BASE + "/locations/list";
+    private static final String LOCATIONS_CLUSTERING_EP = ADDRESS_BOOK_BASE + "/locations/clustering";
+    private static final String LOCATIONS_HEATMAP_EP = ADDRESS_BOOK_BASE + "/locations/heatmap";
+    private static final String LOCATIONS_TERRITORIES_EP = ADDRESS_BOOK_BASE + "/locations/territories";
+    private static final String LOCATIONS_EXPORT_COLUMNS_EP = ADDRESS_BOOK_BASE + "/locations/export/columns";
+    private static final String LOCATIONS_EXPORT_EP = ADDRESS_BOOK_BASE + "/locations/export";
+    private static final String LOCATION_TYPES_EP = ADDRESS_BOOK_BASE + "/locations/types";
 
     /**
      * Creates a manager that sends its requests with an API key.
@@ -44,14 +44,6 @@ public class LocationManager extends Manager {
      */
     public LocationManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**

@@ -13,7 +13,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class ConfigurationSettingsManagerV5 extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String MEMBER_CONFIGURATION_SETTINGS_EP = V5_BASE + "/member-configuration-settings";
 
     /**
@@ -33,14 +32,6 @@ public class ConfigurationSettingsManagerV5 extends Manager {
      */
     public ConfigurationSettingsManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
     }
 
     /**

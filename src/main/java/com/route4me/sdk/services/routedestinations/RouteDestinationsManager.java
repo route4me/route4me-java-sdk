@@ -12,7 +12,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class RouteDestinationsManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String ROUTE_DESTINATIONS_EP = V5_BASE + "/route-destinations";
     private static final String COLUMNS_EP = ROUTE_DESTINATIONS_EP + "/columns";
     private static final String SORTING_EP = ROUTE_DESTINATIONS_EP + "/sorting";
@@ -38,14 +37,6 @@ public class RouteDestinationsManager extends Manager {
      */
     public RouteDestinationsManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**

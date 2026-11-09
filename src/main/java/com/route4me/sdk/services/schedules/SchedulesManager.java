@@ -15,7 +15,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class SchedulesManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String SCHEDULES_EP = V5_BASE + "/recurring-routes/schedules";
     private static final String SCHEDULES_PAGINATION_EP = V5_BASE + "/recurring-routes/schedules/pagination";
     private static final String ROUTE_SCHEDULES_EP = V5_BASE + "/recurring-routes/route-schedules";
@@ -47,14 +46,6 @@ public class SchedulesManager extends Manager {
      */
     public SchedulesManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     // --- Schedules ---

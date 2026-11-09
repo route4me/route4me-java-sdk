@@ -49,14 +49,6 @@ public class RoutingManager extends Manager {
     private static final String MARK_ADDRESS_VISITED_EP = "/actions/address/update_address_visited.php";
     private static final String DELETE_ROUTE_DESTINATION_EP = "/actions/route/delete_route_destination.php";
 
-    private URIBuilder getRouteSearchURI(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
-    }
-
     /**
      * Creates a manager that sends its requests with an API key.
      *
@@ -485,7 +477,7 @@ public class RoutingManager extends Manager {
     public RouteSearchResult getRoutesbyDateTimeZone(String scheduledForStart, String scheduledForEnd, String timeZone,
             Integer page, Integer perPage) throws APIException {
 
-        URIBuilder builder = this.getRouteSearchURI(ROUTE_SEARCH_V5_1);
+        URIBuilder builder = v5Builder(ROUTE_SEARCH_V5_1);
 
         RouteSearch request = new RouteSearch();
         request.setTimeZone(timeZone);

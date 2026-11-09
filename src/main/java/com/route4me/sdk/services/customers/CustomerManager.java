@@ -11,7 +11,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class CustomerManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String CUSTOMERS_EP = V5_BASE + "/customers";
     private static final String CUSTOMERS_LIST_EP = CUSTOMERS_EP + "/list";
 
@@ -32,14 +31,6 @@ public class CustomerManager extends Manager {
      */
     public CustomerManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**

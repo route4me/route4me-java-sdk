@@ -5,11 +5,9 @@ import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import org.apache.http.HttpEntity;
-import org.apache.http.client.utils.URIBuilder;
 
 /** Manages the members of the team through the V5 API ({@code https://wh.route4me.com/modules/api/v5.0/team}). */
 public class TeamManagementManagerV5 extends Manager {
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String TEAM_USERS_EP = V5_BASE + "/team/users";
     /** The bulk insert route, as C# has it; the spec's {@code /team/users/bulk-insert} answers 405. */
     private static final String TEAM_BULK_INSERT_EP = V5_BASE + "/team/bulk-insert";
@@ -33,14 +31,6 @@ public class TeamManagementManagerV5 extends Manager {
      */
     public TeamManagementManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**

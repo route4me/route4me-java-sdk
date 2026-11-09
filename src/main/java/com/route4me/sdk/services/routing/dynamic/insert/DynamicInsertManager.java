@@ -49,15 +49,6 @@ public class DynamicInsertManager extends Manager {
         super(apiKey);
     }
 
-    private URIBuilder getURI(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
-
-    }
-
     /**
      * Finds the routes that a new destination fits best:
      * {@code POST https://wh.route4me.com/modules/api/v5.0/routes/lookup-for-new-destination}.
@@ -80,7 +71,7 @@ public class DynamicInsertManager extends Manager {
         if (lat == null || lng == null) {
             throw new IllegalArgumentException("The latitude and the longitude of the new destination are required");
         }
-        URIBuilder builder = this.getURI(ROUTE_DYNAMIC_INSERT);
+        URIBuilder builder = v5Builder(ROUTE_DYNAMIC_INSERT);
         DynamicInsert body = new DynamicInsert();
         body.setRouteInfoServer("v5");
         body.setScheduledFor(scheduledFor);

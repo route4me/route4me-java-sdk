@@ -16,7 +16,6 @@ import java.util.List;
  */
 public class OptimizationProfileManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String PROFILES_EP = V5_BASE + "/optimization-profiles";
     private static final String PROFILES_DATA_LIST_EP = PROFILES_EP + "/data-list";
     private static final String PROFILES_SAVE_ENTITIES_EP = PROFILES_EP + "/save-entities";
@@ -42,14 +41,6 @@ public class OptimizationProfileManager extends Manager {
      */
     public OptimizationProfileManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**

@@ -11,7 +11,6 @@ import org.apache.http.client.utils.URIBuilder;
  * https://wh.route4me.com/modules/api/v5.0/notes}).
  */
 public class NotesManagerV5 extends Manager {
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String NOTES_EP = V5_BASE + "/notes";
     private static final String NOTES_CUSTOM_TYPES_EP = NOTES_EP + "/custom-types";
     private static final String NOTES_BULK_CREATE_EP = NOTES_EP + "/bulk-create";
@@ -33,14 +32,6 @@ public class NotesManagerV5 extends Manager {
      */
     public NotesManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**

@@ -13,7 +13,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class DriverReviewManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String DRIVER_REVIEW_EP = V5_BASE + "/driver-reviews";
     private static final String SETTINGS_BY_MEMBER_EP = DRIVER_REVIEW_EP + "/settings/get-by-member";
     private static final String SETTINGS_UPLOAD_EP = DRIVER_REVIEW_EP + "/settings/upload";
@@ -35,14 +34,6 @@ public class DriverReviewManager extends Manager {
      */
     public DriverReviewManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**

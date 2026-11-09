@@ -13,7 +13,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class AddressBarcodeManager extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String ADDRESS_BARCODES_EP = V5_BASE + "/address-barcodes";
 
     /**
@@ -33,14 +32,6 @@ public class AddressBarcodeManager extends Manager {
      */
     public AddressBarcodeManager(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
     }
 
     /**

@@ -47,10 +47,7 @@ public class TrackingHistoryManager extends Manager {
      * @throws APIException if the request fails, times out or the server answers with an error status
      */
     public String exportTrackingHistory(TrackingHistoryExportRequest request) throws APIException {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(EXPORT_EP);
+        URIBuilder builder = v5Builder(EXPORT_EP);
         String body = this.gson.toJson(request == null ? new TrackingHistoryExportRequest() : request);
         return this.makeRequest(RequestMethod.POST, builder, body, String.class);
     }

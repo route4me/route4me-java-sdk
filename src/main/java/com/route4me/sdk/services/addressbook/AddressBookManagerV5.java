@@ -29,8 +29,8 @@ import org.apache.http.client.utils.URIBuilder;
  * }</pre>
  */
 public class AddressBookManagerV5 extends Manager {
-    private static final String V5_BASE = "/modules/api/v5.0/address-book";
-    private static final String CONTACTS_EP = V5_BASE + "/addresses";
+    private static final String ADDRESS_BOOK_BASE = V5_BASE + "/address-book";
+    private static final String CONTACTS_EP = ADDRESS_BOOK_BASE + "/addresses";
     private static final String CONTACTS_ALL_EP = CONTACTS_EP + "/index/all";
     private static final String CONTACTS_PAGINATED_EP = CONTACTS_EP + "/index/pagination";
     private static final String CONTACTS_CLUSTERING_EP = CONTACTS_EP + "/index/clustering";
@@ -47,9 +47,9 @@ public class AddressBookManagerV5 extends Manager {
     private static final String CONTACTS_EXPORT_RESULT_EP = CONTACTS_EXPORT_EP + "/result";
     private static final String CONTACTS_EXPORT_BY_AREAS_EP = CONTACTS_EP + "/export-by-areas";
     private static final String CONTACTS_EXPORT_BY_AREA_IDS_EP = CONTACTS_EP + "/export-by-area-ids";
-    private static final String JOB_STATUS_EP = V5_BASE + "/job-tracker/status";
-    private static final String JOB_RESULT_EP = V5_BASE + "/job-tracker/result";
-    private static final String GROUPS_EP = V5_BASE + "/groups";
+    private static final String JOB_STATUS_EP = ADDRESS_BOOK_BASE + "/job-tracker/status";
+    private static final String JOB_RESULT_EP = ADDRESS_BOOK_BASE + "/job-tracker/result";
+    private static final String GROUPS_EP = ADDRESS_BOOK_BASE + "/groups";
     private static final String GROUPS_FILTER_ALL_EP = GROUPS_EP + "/filter/all";
 
     /**
@@ -69,14 +69,6 @@ public class AddressBookManagerV5 extends Manager {
      */
     public AddressBookManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**

@@ -23,14 +23,6 @@ public class RouteBreaksManager extends Manager {
         super(apiKey);
     }
 
-    private URIBuilder getURI(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
-    }
-
     private Object insertBreak(Integer duration, Integer amount, String type, boolean replaceExisting,
             String[] routeIDs) throws APIException {
         if (duration == null) {
@@ -42,7 +34,7 @@ public class RouteBreaksManager extends Manager {
         if (routeIDs == null || routeIDs.length == 0) {
             throw new IllegalArgumentException("At least one route ID is required");
         }
-        URIBuilder builder = this.getURI(ROUTE_BREAKS_EP);
+        URIBuilder builder = v5Builder(ROUTE_BREAKS_EP);
         RouteBreak routeBreak = new RouteBreak();
         routeBreak.setDuration(duration);
         routeBreak.setType(type);

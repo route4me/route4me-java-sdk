@@ -13,7 +13,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class TerritoriesManagerV5 extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String TERRITORIES_EP = V5_BASE + "/territories";
     private static final String AVOIDANCE_EP = V5_BASE + "/avoidance";
     private static final String AUTOMATIC_TERRITORIES_EP = V5_BASE + "/automatic-territories";
@@ -37,14 +36,6 @@ public class TerritoriesManagerV5 extends Manager {
      */
     public TerritoriesManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /** Checks that a latitude and a longitude are given together or not at all, as the spec requires. */

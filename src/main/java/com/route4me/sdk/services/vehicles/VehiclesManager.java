@@ -37,14 +37,6 @@ public class VehiclesManager extends Manager {
         super(apiKey);
     }
 
-    private URIBuilder getURI(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
-    }
-
     /**
      * Lists the vehicles: {@code GET https://wh.route4me.com/modules/api/vehicles}.
      *
@@ -56,7 +48,7 @@ public class VehiclesManager extends Manager {
      */
     @Deprecated
     public List<Vehicles> getVehicles() throws APIException {
-        URIBuilder builder = this.getURI(VEHICLES_EP);
+        URIBuilder builder = v5Builder(VEHICLES_EP);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, new TypeToken<ArrayList<Vehicles>>() {
         }.getType());
     }
@@ -72,7 +64,7 @@ public class VehiclesManager extends Manager {
      */
     @Deprecated
     public Vehicles getVehicle(String vehicleID) throws APIException {
-        URIBuilder builder = this.getURI(VEHICLES_EP, vehicleID);
+        URIBuilder builder = v5Builder(VEHICLES_EP, vehicleID);
         return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, Vehicles.class);
     }
 
@@ -87,7 +79,7 @@ public class VehiclesManager extends Manager {
      */
     @Deprecated
     public Vehicles deleteVehicle(String vehicleID) throws APIException {
-        URIBuilder builder = this.getURI(VEHICLES_EP, vehicleID);
+        URIBuilder builder = v5Builder(VEHICLES_EP, vehicleID);
         return this.makeRequest(RequestMethod.DELETE, builder, (HttpEntity) null, Vehicles.class);
     }
 
@@ -102,7 +94,7 @@ public class VehiclesManager extends Manager {
      */
     @Deprecated
     public Vehicles newVehicle(Vehicles vehicle) throws APIException {
-        URIBuilder builder = this.getURI(VEHICLES_EP);
+        URIBuilder builder = v5Builder(VEHICLES_EP);
         return this.makeJSONRequest(RequestMethod.POST, builder,  vehicle, Vehicles.class);
     }
 
@@ -124,7 +116,7 @@ public class VehiclesManager extends Manager {
         if (vehicle == null) {
             throw new IllegalArgumentException("The vehicle is required");
         }
-        URIBuilder builder = this.getURI(VEHICLES_EP, vehicle.getVehicleId());
+        URIBuilder builder = v5Builder(VEHICLES_EP, vehicle.getVehicleId());
         return this.makeJSONRequest(RequestMethod.PUT, builder, vehicle, Vehicles.class);
     }
 

@@ -92,6 +92,8 @@ public abstract class Manager implements Closeable {
     private static final String V4_HOST = "api.route4me.com";
     /** The host of the V5 API, which takes the API key as a bearer token. */
     private static final String V5_HOST = "wh.route4me.com";
+    /** The path of the V5.0 API on the V5 host: {@code /modules/api/v5.0}. */
+    protected static final String V5_BASE = "/modules/api/v5.0";
     /** The path prefixes of the V5 API on {@link #V5_HOST}. */
     private static final String[] V5_PATH_PREFIXES = {"/modules/api/v5.0", "/modules/api/v5.1"};
     private static final String USER_AGENT = "Route4Me Java SDK";
@@ -243,6 +245,22 @@ public abstract class Manager implements Closeable {
         builder.setHost(V4_HOST);
         builder.setPath(endpoint);
         return builder;
+    }
+
+    /**
+     * Creates a builder for a V5 endpoint: {@code https://wh.route4me.com}, the endpoint path and
+     * its path segments, each percent-encoded as one segment (see {@link #withPathSegments}).
+     *
+     * @param endpoint the endpoint path, such as {@code /modules/api/v5.0/vehicles}
+     * @param segments the segments to append after it, such as IDs; none leaves the endpoint as it is
+     * @return a new builder
+     * @throws IllegalArgumentException if a segment is {@code null}, empty, {@code .} or {@code ..}
+     */
+    protected static URIBuilder v5Builder(String endpoint, Object... segments) {
+        URIBuilder builder = new URIBuilder();
+        builder.setScheme("https");
+        builder.setHost(V5_HOST);
+        return withPathSegments(builder, endpoint, segments);
     }
 
     /**

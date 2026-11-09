@@ -31,7 +31,6 @@ import java.util.List;
  */
 public class VehiclesManagerV5 extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String VEHICLES_EP = V5_BASE + "/vehicles";
     private static final String VEHICLES_PAGINATE_EP = VEHICLES_EP + "/paginate";
     private static final String VEHICLES_SEARCH_EP = VEHICLES_EP + "/search";
@@ -68,14 +67,6 @@ public class VehiclesManagerV5 extends Manager {
      */
     public VehiclesManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /** Throws {@link IllegalArgumentException} when a field the API requires is {@code null}. */

@@ -21,7 +21,6 @@ import org.apache.http.client.utils.URIBuilder;
  */
 public class OrderManagerV5 extends Manager {
 
-    private static final String V5_BASE = "/modules/api/v5.0";
     private static final String ORDERS_PLATFORM_EP = V5_BASE + "/orders-platform";
     private static final String ORDERS_CREATE_EP = ORDERS_PLATFORM_EP + "/create";
     private static final String ORDERS_BATCH_UPDATE_FILTER_EP = ORDERS_PLATFORM_EP + "/batch-update/filter";
@@ -51,14 +50,6 @@ public class OrderManagerV5 extends Manager {
      */
     public OrderManagerV5(String apiKey, boolean disableRedirects) {
         super(apiKey, disableRedirects);
-    }
-
-    private static URIBuilder v5Builder(String endpoint, Object... segments) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        Manager.withPathSegments(builder, endpoint, segments);
-        return builder;
     }
 
     /**

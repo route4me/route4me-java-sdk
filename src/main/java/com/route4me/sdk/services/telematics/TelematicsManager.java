@@ -595,15 +595,6 @@ public class TelematicsManager extends Manager {
         return makeRequest(RequestMethod.GET, builder, "", TelematicsVendorV5.class);
     }
 
-    /** Returns a builder for a V5 path on {@code wh.route4me.com}. */
-    private static URIBuilder v5Builder(String endpoint) {
-        URIBuilder builder = new URIBuilder();
-        builder.setScheme("https");
-        builder.setHost("wh.route4me.com");
-        builder.setPath(endpoint);
-        return builder;
-    }
-
     /** Sets a query parameter unless its value is {@code null}. */
     private static void setIfPresent(URIBuilder builder, String name, Object value) {
         if (value != null) {

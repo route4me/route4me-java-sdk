@@ -180,6 +180,16 @@ public class ManagerTest {
         assertEquals("/api.v4/order.php", builder.getPath());
     }
 
+    @Test
+    public void v5BuilderTargetsTheV5ApiHostOverHttpsAndEncodesSegments() throws Exception {
+        URIBuilder builder = Manager.v5Builder(Manager.V5_BASE + "/vehicles", "a/../b c");
+        assertEquals("https", builder.getScheme());
+        assertEquals("wh.route4me.com", builder.getHost());
+        assertEquals("https://wh.route4me.com/modules/api/v5.0/vehicles/a%2F..%2Fb%20c", builder.build().toString());
+        assertEquals("/modules/api/v5.0/orders", Manager.v5Builder(Manager.V5_BASE + "/orders").getPath());
+        http.expectThrows(IllegalArgumentException.class, () -> Manager.v5Builder(Manager.V5_BASE + "/vehicles", ".."));
+    }
+
     /** A reply with a boolean that the API sends as a number. */
     static final class FlagReply {
         @SerializedName("is_predefined")
