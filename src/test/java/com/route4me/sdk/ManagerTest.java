@@ -12,13 +12,11 @@ import org.apache.http.HttpEntity;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.RedirectException;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.client.utils.URIBuilder;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.message.BasicNameValuePair;
 import org.junit.Rule;
 import org.junit.Test;
-import org.mockito.Mockito;
 
 import com.sun.net.httpserver.HttpServer;
 
@@ -755,13 +753,11 @@ public class ManagerTest {
 
     @Test
     public void closingTheManagerDuringARequestGivesAnApiException() throws Exception {
-        final TestManager manager = new TestManager(MockHttp.API_KEY);
-        CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
-        Mockito.when(client.execute(Mockito.any(HttpUriRequest.class))).thenAnswer(invocation -> {
+        final TestManager manager = manager();
+        http.answerNextRequest(request -> {
             manager.close();
             throw new IllegalStateException("Connection pool shut down");
         });
-        manager.setHttpClient(client);
 
         APIException error = http.expectApiException(
                 () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
@@ -769,20 +765,21 @@ public class ManagerTest {
         assertEquals("GET https://api.route4me.com" + PATH + " failed: the manager was closed while the request ran",
                 error.getMessage());
         assertTrue(error.getCause().getCause() instanceof IllegalStateException);
+        assertEquals("close() closed the client", 1, http.closeCount());
     }
 
     @Test
     public void anUncheckedClientFailureGivesAnApiException() throws Exception {
-        final TestManager manager = new TestManager(MockHttp.API_KEY);
-        CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class);
-        Mockito.when(client.execute(Mockito.any(HttpUriRequest.class)))
-                .thenThrow(new IllegalStateException("Connection is still allocated"));
-        manager.setHttpClient(client);
+        final TestManager manager = manager();
+        http.answerNextRequest(request -> {
+            throw new IllegalStateException("Connection is still allocated");
+        });
 
         APIException error = http.expectApiException(
                 () -> manager.makeRequest(RequestMethod.GET, builder(), "", Reply.class));
 
         assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: Connection is still allocated"));
+        assertTrue(error.getCause().getCause() instanceof IllegalStateException);
     }
 
     @Test

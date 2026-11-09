@@ -3,10 +3,17 @@ package com.route4me.sdk.testsupport;
 import com.google.gson.JsonObject;
 import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.Manager;
+import com.route4me.sdk.ManagerTestAccess;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
+import org.apache.http.HttpHost;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.utils.URIBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.protocol.BasicHttpContext;
+import org.apache.http.util.EntityUtils;
 import org.apache.logging.log4j.LogManager;
 import org.junit.AssumptionViolatedException;
 import org.junit.Rule;
@@ -27,6 +34,7 @@ import java.util.logging.Level;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -141,6 +149,78 @@ public class MockHttpTest {
     }
 
     @Test
+    public void everyUriRequestOverloadGoesThroughTheGuard() throws Exception {
+        CloseableHttpClient client = ManagerTestAccess.httpClient(http.install(new ProbeManager()));
+        String url = "https://api.route4me.com/api.v4/route.php?route_id=R";
+        http.respond(200, "one", "text/plain").respond(200, "two", "text/plain")
+                .respond(200, "three", "text/plain").respond(200, "four", "text/plain");
+
+        try (CloseableHttpResponse plain = client.execute(new HttpGet(url + 1))) {
+            assertEquals("one", EntityUtils.toString(plain.getEntity()));
+        }
+        try (CloseableHttpResponse withContext = client.execute(new HttpGet(url + 2), new BasicHttpContext())) {
+            assertEquals("two", EntityUtils.toString(withContext.getEntity()));
+        }
+        ResponseHandler<String> text = response -> EntityUtils.toString(response.getEntity());
+        assertEquals("three", client.execute(new HttpGet(url + 3), text));
+        assertEquals("four", client.execute(new HttpGet(url + 4), text, null));
+
+        assertEquals(4, http.requestCount());
+        for (int i = 0; i < 4; i++) {
+            http.request(i).assertQuery("route_id", "R" + (i + 1));
+        }
+    }
+
+    @Test
+    public void theGuardChecksTheContextAndHandlerOverloadsToo() {
+        AssertionError error = runInRule(inner -> {
+            CloseableHttpClient client = ManagerTestAccess.httpClient(inner.install(new ProbeManager()));
+            try {
+                client.execute(new HttpGet("https://example.com/collect?api_key=" + MockHttp.API_KEY),
+                        response -> "read");
+            } catch (AssertionError swallowed) {
+                // the code under test swallows the guard failure
+            }
+        });
+
+        assertTrue(error.getMessage(), error.getMessage().contains("host 'example.com' is not in allowed_hosts"));
+        assertFalse(error.getMessage(), error.getMessage().contains(MockHttp.API_KEY));
+    }
+
+    @Test
+    public void anExecuteOverloadThatBypassesTheGuardFailsTheTestEvenWhenCaught() {
+        AssertionError error = runInRule(inner -> {
+            CloseableHttpClient client = ManagerTestAccess.httpClient(inner.install(new ProbeManager()));
+            try {
+                client.execute(new HttpHost("api.route4me.com", 443, "https"), new HttpGet("/api.v4/route.php"));
+                fail("expected the mocked client to refuse an unrouted overload");
+            } catch (AssertionError swallowed) {
+                assertTrue(swallowed.getMessage(), swallowed.getMessage().contains("does not route"));
+            }
+        });
+
+        assertTrue(error.getMessage(),
+                error.getMessage().contains("CloseableHttpClient.execute(org.apache.http.HttpHost"));
+        assertTrue(error.getMessage(), error.getMessage().contains("does not route through the request guard"));
+    }
+
+    @Test
+    public void answersTheNextRequestWithCustomCode() throws Exception {
+        final ProbeManager manager = http.install(new ProbeManager());
+        final CapturedRequest[] seen = new CapturedRequest[1];
+        http.answerNextRequest(request -> {
+            seen[0] = request;
+            throw new IllegalStateException("custom failure");
+        }).respond(200, "after", "text/plain");
+
+        APIException error = http.expectApiException(() -> manager.get("/api.v4/route.php"));
+
+        assertTrue(error.getMessage(), error.getMessage().endsWith(" failed: custom failure"));
+        assertSame("the answer gets the captured request", http.request(0), seen[0]);
+        assertEquals("the queue goes on after the answer", "after", manager.get("/api.v4/route.php"));
+    }
+
+    @Test
     public void readsFixtures() {
         assertTrue(Fixtures.read("error_400.json").contains("errors"));
     }
@@ -244,6 +324,23 @@ public class MockHttpTest {
         return runInRule(call, false);
     }
 
+    /** Code that runs inside a fresh {@link MockHttp} rule and uses it. */
+    private interface RuleCall {
+        void run(MockHttp inner) throws Exception;
+    }
+
+    /** Runs code inside a fresh {@link MockHttp} rule, which it gets, and returns the guard failure it causes. */
+    private static AssertionError runInRule(final RuleCall call) {
+        final MockHttp inner = new MockHttp();
+        Statement statement = new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                call.run(inner);
+            }
+        };
+        return evaluate(inner, statement);
+    }
+
     /**
      * Runs code inside a fresh {@link MockHttp} rule, with a manager installed on it when
      * {@code installProbe} is set, and returns the guard failure it causes.
@@ -264,6 +361,11 @@ public class MockHttpTest {
                 call.run();
             }
         };
+        return evaluate(inner, statement);
+    }
+
+    /** Runs a statement inside a rule and returns the guard failure it causes. */
+    private static AssertionError evaluate(MockHttp inner, Statement statement) {
         try {
             inner.apply(statement, Description.createTestDescription(MockHttpTest.class, "inner")).evaluate();
         } catch (AssertionError expected) {

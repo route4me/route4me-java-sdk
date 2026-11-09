@@ -28,6 +28,17 @@ public final class ManagerTestAccess {
     }
 
     /**
+     * Returns the client {@code manager} sends its requests through, such as the mocked client
+     * of {@code MockHttp} once the manager is installed.
+     *
+     * @param manager the manager under test
+     * @return its client
+     */
+    public static CloseableHttpClient httpClient(Manager manager) {
+        return manager.httpClient();
+    }
+
+    /**
      * Returns how many connections the pool of {@code manager} may hold.
      *
      * @param manager the manager under test
