@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples.utils;
 
+import com.route4me.sdk.services.addressbook.BoundingBox;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
@@ -70,6 +71,44 @@ public final class ExampleInput {
             }
         }
         System.err.println(name + " must be a date as YYYY-MM-DD: " + value);
+        return null;
+    }
+
+    /**
+     * Reads a rectangle on the map written as {@code top,left,bottom,right}, in degrees, such as
+     * {@code 40.80,-74.05,40.70,-73.90}. The latitudes must be within -90..90 with the top edge north of the bottom
+     * one, and the longitudes within -180..180 and different. A left edge east of the right edge, as in
+     * {@code 20,170,10,-170}, is a box that crosses the 180th meridian, and is accepted.
+     *
+     * @param name the variable that holds the value, named in the message
+     * @param value the four edges separated by commas, surrounding spaces allowed, or {@code null}
+     * @return the rectangle, or {@code null} after printing that {@code name} must be such a rectangle
+     */
+    public static BoundingBox toBoundingBox(String name, String value) {
+        String[] edges = value == null ? new String[0] : value.split(",", -1);
+        if (edges.length == 4) {
+            try {
+                double top = Double.parseDouble(edges[0].trim());
+                double left = Double.parseDouble(edges[1].trim());
+                double bottom = Double.parseDouble(edges[2].trim());
+                double right = Double.parseDouble(edges[3].trim());
+                // Comparisons with NaN are false, so NaN fails here too. Left > right crosses the 180th meridian.
+                if (top <= 90 && bottom >= -90 && top > bottom && left >= -180 && left <= 180 && right >= -180
+                        && right <= 180 && left != right) {
+                    BoundingBox box = new BoundingBox();
+                    box.setTop(top);
+                    box.setLeft(left);
+                    box.setBottom(bottom);
+                    box.setRight(right);
+                    return box;
+                }
+            } catch (NumberFormatException e) {
+                // Not a number: say so below.
+            }
+        }
+        System.err.println(name + " must be top,left,bottom,right in degrees: latitudes from -90 to 90 with top above"
+                + " bottom, and two different longitudes from -180 to 180 (left east of right crosses the 180th"
+                + " meridian): " + value);
         return null;
     }
 
