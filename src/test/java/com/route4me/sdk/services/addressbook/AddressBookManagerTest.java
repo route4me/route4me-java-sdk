@@ -81,8 +81,7 @@ public class AddressBookManagerTest {
 
         Contact contact = manager.getContact(12345);
 
-        http.request().assertEndpoint("GET", HOST, ADDRESS_BOOK_EP).assertNoBody();
-        assertTrue(http.request().query("address_id").contains("12345"));
+        http.request().assertEndpoint("GET", HOST, ADDRESS_BOOK_EP).assertNoBody().assertQuery("address_id", "12345");
         assertEquals("Example Bakery", contact.getAddressAlias());
     }
 
