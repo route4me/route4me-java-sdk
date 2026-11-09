@@ -118,8 +118,21 @@ public class OrdersManagerTest {
 
         manager.getOrders(request);
 
-        String sent = http.request().query("filter");
-        assertFalse("filter=" + sent, sent != null && sent.startsWith("OrderFilter("));
+        http.request().assertEndpoint("POST", HOST, ORDERS_EP).assertNoQuery("filter")
+                .assertJson("filter.display", "all");
+    }
+
+    @Test
+    public void getOrdersWithoutARequestListsOrdersWithAPlainGet() throws Exception {
+        OrdersManager manager = manager();
+        http.respond(200, ordersPage());
+
+        List<Order> orders = manager.getOrders(null);
+
+        http.request().assertEndpoint("GET", HOST, ORDERS_EP).assertApiKeyInQuery()
+                .assertNoQuery("filter").assertNoQuery("limit").assertNoBody();
+        assertEquals(1, http.request().getQueryParameters().size());
+        assertEquals(1, orders.size());
     }
 
     @Test
