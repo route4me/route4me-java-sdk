@@ -1,0 +1,12 @@
+{
+  "name": "Example connection",
+  "vendor": "example-fleet",
+  "vendor_id": 55,
+  "account_id": "ACCOUNT-1",
+  "username": "fleet-user",
+  "connection_token": "CONNECTION-1",
+  "is_enabled": 1,
+  "vehicle_position_refresh_rate": 60,
+  "synced_vehicles_count": 3,
+  "total_vehicles_count": 4
+}

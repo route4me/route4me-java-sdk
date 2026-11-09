@@ -1,0 +1,112 @@
+package com.route4me.sdk.services.routecustomdata;
+
+import com.google.gson.reflect.TypeToken;
+import com.route4me.sdk.Manager;
+import com.route4me.sdk.RequestMethod;
+import com.route4me.sdk.exception.APIException;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.utils.URIBuilder;
+
+import java.lang.reflect.Type;
+import java.util.HashMap;
+import java.util.Map;
+
+/**
+ * Reads and writes the custom data of routes, free key-value pairs, through the V5 API
+ * ({@code https://wh.route4me.com/modules/api/v5.0/routes/{routeId}/custom-data}).
+ */
+public class RouteCustomDataManager extends Manager {
+
+    private static final String ROUTES_CUSTOM_DATA_EP = V5_BASE + "/routes";
+    private static final String BULK_CUSTOM_DATA_EP = V5_BASE + "/routes/custom-data/bulk";
+    private static final String CUSTOM_DATA_KEYS_EP = V5_BASE + "/routes/custom-data/keys";
+
+    /**
+     * Creates a manager that sends its requests with an API key.
+     *
+     * @param apiKey the Route4Me API key, sent as a bearer token
+     */
+    public RouteCustomDataManager(String apiKey) {
+        super(apiKey);
+    }
+
+    /**
+     * Creates a manager that sends its requests with an API key, and may refuse redirects.
+     *
+     * @param apiKey the Route4Me API key, sent as a bearer token
+     * @param disableRedirects {@code true} to add {@code redirect=0} to every request and not follow redirects
+     */
+    public RouteCustomDataManager(String apiKey, boolean disableRedirects) {
+        super(apiKey, disableRedirects);
+    }
+
+    /**
+     * Gets the custom data of a route: {@code GET
+     * https://wh.route4me.com/modules/api/v5.0/routes/{routeId}/custom-data}.
+     *
+     * @param routeId the route ID
+     * @return the key-value pairs
+     * @throws IllegalArgumentException if {@code routeId} is {@code null}, empty, {@code .} or {@code ..}, or contains
+     *     {@code /}, {@code \} or {@code ;}; nothing is sent
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public Map<String, String> getRouteCustomData(String routeId) throws APIException {
+        URIBuilder builder = v5Builder(ROUTES_CUSTOM_DATA_EP, routeId, "custom-data");
+        Type type = new TypeToken<HashMap<String, String>>() { }.getType();
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, type);
+    }
+
+    /**
+     * Replaces the custom data of a route: {@code PUT
+     * https://wh.route4me.com/modules/api/v5.0/routes/{routeId}/custom-data}, with the pairs as the JSON body.
+     *
+     * @param routeId the route ID
+     * @param customData the key-value pairs; required
+     * @return the custom data of the route after the update
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if {@code customData} is {@code null}, or the route ID is {@code null}, empty,
+     *     {@code .} or {@code ..}, or contains {@code /}, {@code \} or {@code ;}; nothing is sent
+     */
+    public Map<String, String> updateRouteCustomData(String routeId, Map<String, String> customData)
+            throws APIException {
+        if (customData == null) {
+            throw new IllegalArgumentException("The custom data is required");
+        }
+        URIBuilder builder = v5Builder(ROUTES_CUSTOM_DATA_EP, routeId, "custom-data");
+        Type type = new TypeToken<HashMap<String, String>>() { }.getType();
+        return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(customData), type);
+    }
+
+    /**
+     * Gets the custom data of several routes: {@code POST
+     * https://wh.route4me.com/modules/api/v5.0/routes/custom-data/bulk}, with {@code {"route_ids": [...]}} as
+     * the JSON body.
+     *
+     * @param routeIds the route IDs; at least one
+     * @return the custom data of each route
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     * @throws IllegalArgumentException if no route ID is given: the API requires {@code route_ids}; nothing is sent
+     */
+    public RouteCustomDataCollection getBulkRouteCustomData(String[] routeIds) throws APIException {
+        if (routeIds == null || routeIds.length == 0) {
+            throw new IllegalArgumentException("At least one route ID is required");
+        }
+        URIBuilder builder = v5Builder(BULK_CUSTOM_DATA_EP);
+        BulkRouteCustomDataRequest request = new BulkRouteCustomDataRequest();
+        request.setRouteIds(routeIds);
+        return this.makeRequest(RequestMethod.POST, builder, this.gson.toJson(request),
+                RouteCustomDataCollection.class);
+    }
+
+    /**
+     * Lists the custom data keys used in the routes of the account: {@code GET
+     * https://wh.route4me.com/modules/api/v5.0/routes/custom-data/keys}.
+     *
+     * @return the keys
+     * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
+     */
+    public String[] getCustomDataKeys() throws APIException {
+        URIBuilder builder = v5Builder(CUSTOM_DATA_KEYS_EP);
+        return this.makeRequest(RequestMethod.GET, builder, (HttpEntity) null, String[].class);
+    }
+}

@@ -1,0 +1,26 @@
+{
+  "vendors": [
+    {
+      "id": "55",
+      "name": "Example Fleet",
+      "slug": "example-fleet",
+      "description": "Example telematics vendor",
+      "size": "global",
+      "is_integrated": true,
+      "features": [
+        {"id": "1", "name": "Satellite", "slug": "satellite", "feature_group": "Tracking"},
+        {"id": "2", "name": "Engine hours", "slug": "engine-hours", "feature_group": "Engine"}
+      ]
+    },
+    {
+      "id": "56",
+      "name": "Sample Trackers",
+      "slug": "sample-trackers",
+      "size": "regional",
+      "is_integrated": false,
+      "features": [
+        {"id": "1", "name": "Satellite", "slug": "satellite", "feature_group": "Tracking"}
+      ]
+    }
+  ]
+}

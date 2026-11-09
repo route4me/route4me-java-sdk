@@ -1,0 +1,319 @@
+package com.route4me.sdk.utils;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Locale;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+/**
+ * Makes text safe to put in logs and exception messages: it hides credentials, removes
+ * line breaks and limits the length.
+ *
+ * <p>The SDK uses these helpers on every response body, URL and user-supplied value that
+ * reaches a log line or an {@link com.route4me.sdk.exception.APIException}. They never
+ * throw.
+ */
+public final class Sanitizer {
+
+    /** The text that replaces a hidden credential. */
+    public static final String REDACTED = "REDACTED";
+
+    /** The default length limit of {@link #forLog(Object)}. */
+    public static final int DEFAULT_LOG_LENGTH = 500;
+
+    /**
+     * Query parameter names whose values are credentials, in lower case. See
+     * {@link #isSensitiveParameter(String)}.
+     */
+    private static final Set<String> SENSITIVE_NAMES = Collections.unmodifiableSet(new HashSet<>(Arrays.asList(
+            "api_key", "apikey", "api-key", "api_token", "access_token", "token", "connection_token",
+            "session_guid", "member_session_id", "password", "member_password", "strpassword",
+            "strpassword_1", "strpassword_2", "secret", "client_secret")));
+
+    /**
+     * Name endings that mark a credential, such as {@code organization_api_key} (a V5 query
+     * parameter) or {@code device_token}, in lower case.
+     */
+    private static final String[] SENSITIVE_SUFFIXES = {"api_key", "apikey", "_token", "_secret", "password"};
+
+    /** The start of a query parameter value: {@code ?name=} or {@code &name=}. */
+    private static final Pattern QUERY_PARAMETER = Pattern.compile("[?&]([^=&#?\\s]+)=");
+
+    /**
+     * A JSON member whose value is a string or a number: {@code "name": "value"} or
+     * {@code "name": 12}. Group 1 is the name, group 2 the value.
+     */
+    private static final Pattern JSON_MEMBER =
+            Pattern.compile("\"((?:[^\"\\\\]|\\\\.){1,100})\"\\s*:\\s*(\"(?:[^\"\\\\]|\\\\.)*\"|-?[0-9][0-9.eE+-]*)");
+
+    /** How deep {@link #redactCause} follows a cause chain. */
+    private static final int MAX_CAUSE_DEPTH = 20;
+
+    /** Line breaks and other control characters, which could forge extra log lines. */
+    private static final Pattern CONTROL_CHARACTERS = Pattern.compile("[\\p{Cntrl}\\u0085\\u2028\\u2029]");
+
+    /** Not instantiable: static helpers only. */
+    private Sanitizer() {
+    }
+
+    /**
+     * Hides the values of credential query parameters in a URL, or in a text that contains
+     * URLs: every parameter for which {@link #isSensitiveParameter(String)} is true, such as
+     * {@code api_key}, {@code api_token}, {@code password} or {@code organization_api_key}.
+     *
+     * <p>A value runs to the next {@code &} or {@code #}, or to the first character that a URL
+     * cannot hold unencoded and that ends a URL quoted in a text: whitespace, {@code "},
+     * {@code <} or {@code >}. So a URL inside a JSON string or a sentence loses its credential
+     * value only, and the text after it stays. A backslash escapes the next character, as in a
+     * JSON string ({@code \"}, {@code \/}), so an escaped character stays in the hidden value.
+     * A parameter inside the value of another one, such as a URL passed as
+     * {@code ?next=https://...?api_key=...}, is found too.
+     *
+     * @param url the URL, or {@code null}
+     * @return the URL with each credential value replaced by {@link #REDACTED}, or
+     * {@code null} when {@code url} is {@code null}
+     */
+    public static String redactUrl(String url) {
+        if (url == null) {
+            return null;
+        }
+        Matcher parameter = QUERY_PARAMETER.matcher(url);
+        StringBuilder result = null;
+        int copied = 0;
+        int from = 0;
+        while (parameter.find(from)) {
+            if (isSensitiveParameter(parameter.group(1))) {
+                int end = valueEnd(url, parameter.end());
+                if (result == null) {
+                    result = new StringBuilder(url.length());
+                }
+                result.append(url, copied, parameter.end()).append(REDACTED);
+                copied = end;
+                from = end;
+            } else {
+                // Keep searching inside the value, which may hold a URL with its own query.
+                from = parameter.end();
+            }
+        }
+        return result == null ? url : result.append(url, copied, url.length()).toString();
+    }
+
+    /**
+     * Tells whether a query or form parameter holds a credential.
+     *
+     * <p>The name is percent-decoded and compared in lower case. It is a credential when
+     * it, or one of its bracketed keys ({@code filters[device_token]},
+     * {@code organization_api_key[]}), is one of {@code api_key}, {@code apikey},
+     * {@code api-key}, {@code api_token}, {@code access_token}, {@code token},
+     * {@code connection_token}, {@code session_guid}, {@code member_session_id},
+     * {@code password}, {@code member_password}, {@code strpassword},
+     * {@code strpassword_1}, {@code strpassword_2}, {@code secret} and
+     * {@code client_secret}, or ends with {@code api_key}, {@code apikey}, {@code _token},
+     * {@code _secret} or {@code password}.
+     *
+     * @param name the parameter name, as it appears in a query string; {@code null} is not
+     *             a credential
+     * @return {@code true} when the value of the parameter must be hidden
+     */
+    public static boolean isSensitiveParameter(String name) {
+        if (name == null) {
+            return false;
+        }
+        String decoded;
+        try {
+            decoded = URLDecoder.decode(name, "UTF-8");
+        } catch (IllegalArgumentException | UnsupportedEncodingException ex) {
+            // A malformed escape: judge the name as written.
+            decoded = name;
+        }
+        for (String part : decoded.toLowerCase(Locale.ROOT).split("[\\[\\]]")) {
+            if (part.isEmpty()) {
+                continue;
+            }
+            if (SENSITIVE_NAMES.contains(part)) {
+                return true;
+            }
+            for (String suffix : SENSITIVE_SUFFIXES) {
+                if (part.endsWith(suffix)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Returns where a query value that starts at {@code start} ends: at the next {@code &} or
+     * {@code #}, or at whitespace, {@code "}, {@code <} or {@code >}, which a URL never holds
+     * unencoded. A backslash and the character after it belong to the value.
+     */
+    private static int valueEnd(String url, int start) {
+        int i = start;
+        while (i < url.length()) {
+            char c = url.charAt(i);
+            if (c == '\\') {
+                i += 2;
+                continue;
+            }
+            if (c == '&' || c == '#' || c == '"' || c == '<' || c == '>' || Character.isWhitespace(c)) {
+                return i;
+            }
+            i++;
+        }
+        return url.length();
+    }
+
+    /**
+     * Hides the values of credential members in a JSON text, such as a response body: every
+     * string or number member whose name is a credential by
+     * {@link #isSensitiveParameter(String)}, such as {@code "api_key"}, {@code "password"},
+     * {@code "connection_token"} or {@code "session_guid"}, at any depth.
+     *
+     * <p>The text need not be valid JSON (a body cut short, an HTML page): only the
+     * {@code "name": value} pairs found in it are changed.
+     *
+     * @param json the text, or {@code null}
+     * @return the text with each credential value replaced by {@code "REDACTED"}, or
+     *     {@code null} when {@code json} is {@code null}
+     */
+    public static String redactJson(String json) {
+        if (json == null) {
+            return null;
+        }
+        Matcher member = JSON_MEMBER.matcher(json);
+        StringBuffer result = null;
+        while (member.find()) {
+            if (isSensitiveParameter(member.group(1))) {
+                if (result == null) {
+                    result = new StringBuffer(json.length());
+                }
+                String value = member.group(0);
+                String replaced = value.substring(0, member.start(2) - member.start()) + "\"" + REDACTED + "\"";
+                member.appendReplacement(result, Matcher.quoteReplacement(replaced));
+            }
+        }
+        if (result == null) {
+            return json;
+        }
+        member.appendTail(result);
+        return result.toString();
+    }
+
+    /**
+     * Makes the cause of an exception safe to keep: when the message of the cause, or of one
+     * of its own causes, contains a credential query parameter (such as an HttpClient
+     * redirect error that quotes the whole {@code Location}) or {@code secret}, the chain is
+     * replaced by plain {@link IOException}s with the same messages, redacted, and the same
+     * stack traces. A clean cause is returned as it is.
+     *
+     * @param cause  the cause, or {@code null}
+     * @param secret a value to hide as well, such as the API key; {@code null} hides none
+     * @return {@code cause}, or a redacted copy of its chain; {@code null} for {@code null}
+     */
+    public static IOException redactCause(IOException cause, String secret) {
+        if (cause == null || !needsRedaction(cause, secret)) {
+            return cause;
+        }
+        return (IOException) redactedCopy(cause, secret, 0);
+    }
+
+    /** Returns whether a message in the cause chain holds a credential. */
+    private static boolean needsRedaction(Throwable cause, String secret) {
+        Throwable current = cause;
+        for (int depth = 0; current != null && depth < MAX_CAUSE_DEPTH; depth++) {
+            String text = String.valueOf(current.getMessage());
+            if (!redact(redactUrl(text), secret).equals(text)) {
+                return true;
+            }
+            if (current.getCause() == current) {
+                break;
+            }
+            current = current.getCause();
+        }
+        return false;
+    }
+
+    /** Copies a cause chain as plain exceptions with redacted messages. */
+    private static Throwable redactedCopy(Throwable throwable, String secret, int depth) {
+        String message = throwable.getMessage() == null ? null
+                : redact(redactUrl(throwable.getMessage()), secret);
+        Throwable next = throwable.getCause();
+        Throwable cause = next == null || next == throwable || depth + 1 >= MAX_CAUSE_DEPTH ? null
+                : redactedCopy(next, secret, depth + 1);
+        IOException copy = new IOException(message, cause);
+        copy.setStackTrace(throwable.getStackTrace());
+        return copy;
+    }
+
+    /**
+     * Replaces every occurrence of a secret, as typed and URL-encoded, with
+     * {@link #REDACTED}.
+     *
+     * @param text   the text, or {@code null}
+     * @param secret the value to hide, such as the API key; {@code null} or empty hides nothing
+     * @return the text without the secret, or {@code null} when {@code text} is {@code null}
+     */
+    public static String redact(String text, String secret) {
+        if (text == null || secret == null || secret.isEmpty()) {
+            return text;
+        }
+        String result = text.replace(secret, REDACTED);
+        try {
+            String encoded = URLEncoder.encode(secret, "UTF-8");
+            if (!encoded.equals(secret)) {
+                result = result.replace(encoded, REDACTED);
+            }
+        } catch (UnsupportedEncodingException ex) {
+            // UTF-8 is always supported.
+        }
+        return result;
+    }
+
+    /**
+     * Shortens a text to at most {@code maxLength} characters, marking the cut with
+     * {@code "..."}.
+     *
+     * @param text      the text, or {@code null}
+     * @param maxLength the maximum length of the result; at least 3
+     * @return the text, shortened when it was longer, or {@code null} when it is {@code null}
+     */
+    public static String truncate(String text, int maxLength) {
+        if (text == null || text.length() <= maxLength) {
+            return text;
+        }
+        int keep = Math.max(0, maxLength - 3);
+        return text.substring(0, keep) + "...";
+    }
+
+    /**
+     * Makes a value safe for one log line: line breaks and other control characters become
+     * spaces, credential query parameters are hidden, and the text is cut to
+     * {@link #DEFAULT_LOG_LENGTH} characters.
+     *
+     * @param value the value to log; {@code null} gives {@code "null"}
+     * @return the safe text
+     */
+    public static String forLog(Object value) {
+        return forLog(value, DEFAULT_LOG_LENGTH);
+    }
+
+    /**
+     * Makes a value safe for one log line, like {@link #forLog(Object)}, with a custom
+     * length limit.
+     *
+     * @param value     the value to log; {@code null} gives {@code "null"}
+     * @param maxLength the maximum length of the result; at least 3
+     * @return the safe text
+     */
+    public static String forLog(Object value, int maxLength) {
+        String text = String.valueOf(value);
+        return truncate(redactUrl(CONTROL_CHARACTERS.matcher(text).replaceAll(" ")), maxLength);
+    }
+}

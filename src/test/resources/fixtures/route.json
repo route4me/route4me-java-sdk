@@ -1,0 +1,26 @@
+{
+  "route_id": "ROUTE-A1",
+  "optimization_problem_id": "OPT-1",
+  "member_id": 1001,
+  "member_email": "driver@example.com",
+  "vehicle_alias": "Van 1",
+  "trip_distance": 12.5,
+  "route_duration_sec": 3600,
+  "destination_count": 2,
+  "notes_count": 0,
+  "is_unrouted": false,
+  "parameters": {
+    "route_name": "Morning run",
+    "member_id": "1001",
+    "vehicle_id": "VEH-1"
+  },
+  "addresses": [
+    {
+      "route_destination_id": 5001,
+      "address": "100 Example St, Springfield",
+      "is_depot": true,
+      "lat": 40.10,
+      "lng": -74.10
+    }
+  ]
+}

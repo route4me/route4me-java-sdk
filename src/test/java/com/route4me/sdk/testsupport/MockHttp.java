@@ -1,0 +1,695 @@
+package com.route4me.sdk.testsupport;
+
+import com.route4me.sdk.Manager;
+import com.route4me.sdk.ManagerTestAccess;
+import com.route4me.sdk.exception.APIException;
+import org.apache.http.HttpVersion;
+import org.apache.http.StatusLine;
+import org.apache.http.client.ResponseHandler;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.entity.ByteArrayEntity;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.EnglishReasonPhraseCatalog;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.message.BasicHttpResponse;
+import org.apache.http.message.BasicStatusLine;
+import org.apache.http.protocol.HttpContext;
+import org.junit.rules.TestRule;
+import org.junit.runner.Description;
+import org.junit.runners.model.Statement;
+import org.mockito.Mockito;
+import org.mockito.invocation.InvocationOnMock;
+
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Locale;
+import java.util.Queue;
+import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.Formatter;
+import java.util.logging.Handler;
+import java.util.logging.Level;
+import java.util.logging.LogRecord;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
+import static org.junit.Assert.assertEquals;
+
+/**
+ * JUnit rule that replaces the HTTP client of the managers under test with a Mockito mock,
+ * records every request they send, and answers with canned responses. Nothing goes to
+ * the network.
+ *
+ * <p>Typical use:
+ * <pre>{@code
+ * @Rule
+ * public final MockHttp http = new MockHttp();
+ *
+ * @Test
+ * public void getsVehicle() throws Exception {
+ *     VehiclesManagerV5 manager = http.install(new VehiclesManagerV5(MockHttp.API_KEY));
+ *     http.respond(200, MockHttp.json("{'vehicle_id':'V1'}"));
+ *
+ *     VehicleV5 vehicle = manager.getVehicleById("V1");
+ *
+ *     http.request().assertEndpoint("GET", "wh.route4me.com", "/modules/api/v5.0/vehicles/V1");
+ *     assertEquals("V1", vehicle.getVehicleId());
+ * }
+ * }</pre>
+ *
+ * <p>Every captured request goes through the {@link RequestGuard}: a request to an unknown
+ * host or endpoint, over plain http, or with the API key outside its place (the
+ * {@code Authorization: Bearer} header on the V5 API, the {@code api_key} query parameter
+ * elsewhere on {@code api.route4me.com} and {@code wh.route4me.com}, nowhere on any other
+ * host) fails the test. The guard also fails the test when the API key appears in an
+ * exception that escapes the test (for a failed assertion: in the exception it wraps), in
+ * one returned by {@link #expectThrows}, or in a log event written during the test: a
+ * Log4j 2 event at any level (see {@link Log4jCapture}), or a {@code java.util.logging}
+ * record, for which the {@code com.route4me} loggers are set to {@code ALL} while the test
+ * runs. Guard failures are reported even when the test ends in an assumption failure.
+ *
+ * <p>Every {@code execute} overload of the mocked client that takes an {@code HttpUriRequest}
+ * (with or without an {@code HttpContext} or a {@code ResponseHandler}) goes through the guard.
+ * A non-null {@code HttpContext} fails the test: the guard cannot check the credentials, proxy or
+ * request config it may carry, and the SDK never passes one. Any other {@code execute} or
+ * {@code doExecute} call, such as {@code execute(HttpHost, HttpRequest)}, fails the test, even
+ * when the code under test catches the error: it would bypass the guard.
+ *
+ * <p>The rule also installs the {@link NetworkBlock}, so a manager that a test forgot to
+ * {@link #install} fails instead of reaching the network. Only managers created with
+ * {@link #API_KEY}, or with no key, can be installed: the guard looks for that key, so it
+ * could not see another one leak.
+ */
+public final class MockHttp implements TestRule {
+
+    /** Placeholder API key for unit tests. It is not a real key. */
+    public static final String API_KEY = "11111111111111111111111111111111";
+
+    /**
+     * A piece of test code that may throw, for {@link #expectThrows} and
+     * {@link #expectApiException}.
+     */
+    @FunctionalInterface
+    public interface Call {
+        /**
+         * Runs the code.
+         *
+         * @throws Exception whatever the code throws
+         */
+        void run() throws Exception;
+    }
+
+    /**
+     * A custom answer to one request, for what a canned response or
+     * {@link #failNextRequest(IOException)} cannot express, such as an unchecked exception or a
+     * body that fails while it is read. The request has passed the guard when it runs.
+     */
+    @FunctionalInterface
+    public interface Answer {
+        /**
+         * Answers the request.
+         *
+         * @param request the captured request
+         * @return the response {@code HttpClient.execute} returns
+         * @throws IOException an I/O error {@code HttpClient.execute} throws
+         */
+        CloseableHttpResponse answer(CapturedRequest request) throws IOException;
+    }
+
+    /** Fills in the parameters of a {@code java.util.logging} record. */
+    private static final Formatter MESSAGES = new SimpleFormatter();
+
+    private final RequestGuard guard = new RequestGuard(EndpointRegistry.load(), API_KEY);
+    /** The mocked client; a call that no stub below routes through the guard fails (see {@link #unstubbed}). */
+    private final CloseableHttpClient client = Mockito.mock(CloseableHttpClient.class, this::unstubbed);
+    private final Queue<Object> steps = new ConcurrentLinkedQueue<>();
+    private final List<CapturedRequest> requests = new CopyOnWriteArrayList<>();
+    private final List<String> violations = new CopyOnWriteArrayList<>();
+    private final AtomicInteger closeCount = new AtomicInteger();
+    private volatile CannedResponse defaultResponse;
+    private volatile IOException closeFailure;
+    private volatile long responseDelayMillis;
+    private volatile String testName;
+
+    /** Creates the rule and its mocked client. */
+    public MockHttp() {
+        try {
+            // doAnswer().when() form: calling client.execute(...) inside when() would run unstubbed().
+            Mockito.doAnswer(invocation -> execute(invocation.getArgument(0)))
+                    .when(client).execute(Mockito.any(HttpUriRequest.class));
+            Mockito.doAnswer(invocation -> {
+                refuseContext(invocation.getArgument(1));
+                return execute(invocation.getArgument(0));
+            }).when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<HttpContext>any());
+            Mockito.doAnswer(invocation -> handle(invocation.getArgument(0), invocation.getArgument(1)))
+                    .when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<ResponseHandler<Object>>any());
+            Mockito.doAnswer(invocation -> {
+                refuseContext(invocation.getArgument(2));
+                return handle(invocation.getArgument(0), invocation.getArgument(1));
+            }).when(client).execute(Mockito.any(HttpUriRequest.class), Mockito.<ResponseHandler<Object>>any(),
+                    Mockito.<HttpContext>any());
+            Mockito.doAnswer(invocation -> {
+                closeCount.incrementAndGet();
+                IOException failure = closeFailure;
+                if (failure != null) {
+                    throw failure;
+                }
+                return null;
+            }).when(client).close();
+        } catch (IOException e) {
+            throw new IllegalStateException("Cannot stub the mocked HTTP client", e);
+        }
+    }
+
+    /**
+     * Turns JSON written with single quotes into real JSON, to keep inline bodies readable:
+     * {@code json("{'id':'V1'}")} returns {@code {"id":"V1"}}.
+     *
+     * @param singleQuoted JSON text that uses {@code '} instead of {@code "}
+     * @return the JSON text
+     */
+    public static String json(String singleQuoted) {
+        return singleQuoted.replace('\'', '"');
+    }
+
+    // ------------------------------------------------------------------ setup
+
+    /**
+     * Makes a manager send its requests to the mocked client.
+     *
+     * @param manager the manager under test
+     * @param <M>     the manager type
+     * @return the same manager
+     */
+    public <M extends Manager> M install(M manager) {
+        String key = ManagerTestAccess.apiKey(manager);
+        if (key != null && !API_KEY.equals(key)) {
+            throw new IllegalArgumentException("Create the manager with MockHttp.API_KEY or no key: the request"
+                    + " guard looks for MockHttp.API_KEY, so it could not see another key in the requests, the"
+                    + " exceptions or the logs");
+        }
+        ManagerTestAccess.useHttpClient(manager, client);
+        return manager;
+    }
+
+    /**
+     * Queues a JSON response for the next request.
+     *
+     * @param status the HTTP status code
+     * @param body   the response body
+     * @return this rule
+     */
+    public MockHttp respond(int status, String body) {
+        return respond(status, body, "application/json");
+    }
+
+    /**
+     * Queues a response with a given content type for the next request.
+     *
+     * @param status      the HTTP status code
+     * @param body        the response body
+     * @param contentType the media type, such as {@code text/plain}
+     * @return this rule
+     */
+    public MockHttp respond(int status, String body, String contentType) {
+        steps.add(new CannedResponse(status, body, contentType));
+        return this;
+    }
+
+    /**
+     * Queues a JSON response read from {@code src/test/resources/fixtures/}.
+     *
+     * @param status  the HTTP status code
+     * @param fixture the fixture file name
+     * @return this rule
+     */
+    public MockHttp respondWithFixture(int status, String fixture) {
+        return respond(status, Fixtures.read(fixture));
+    }
+
+    /**
+     * Queues a response whose body is raw bytes, with a content type sent exactly as given.
+     * Use it to check how the SDK decodes a body, for example one without a declared
+     * charset.
+     *
+     * @param status      the HTTP status code
+     * @param body        the response body
+     * @param contentType the {@code Content-Type} value, such as {@code text/plain}
+     * @return this rule
+     */
+    public MockHttp respondWithBytes(int status, byte[] body, String contentType) {
+        steps.add(new CannedResponse(status, body.clone(), contentType));
+        return this;
+    }
+
+    /**
+     * Queues a response without an entity, like a real {@code 204 No Content}.
+     *
+     * @param status the HTTP status code
+     * @return this rule
+     */
+    public MockHttp respondWithoutBody(int status) {
+        steps.add(new CannedResponse(status, (String) null, null));
+        return this;
+    }
+
+    /**
+     * Queues a JSON response with response headers for the next request, such as the
+     * {@code X-Job-Id} and {@code Location} headers of a {@code 202 Accepted} job.
+     *
+     * @param status  the HTTP status code
+     * @param body    the response body, or {@code null} for a response without an entity
+     * @param headers the header names and values, in pairs:
+     *                {@code "X-Job-Id", "JOB-1", "Location", "https://..."}
+     * @return this rule
+     * @throws IllegalArgumentException if {@code headers} does not hold name and value pairs
+     */
+    public MockHttp respondWithHeaders(int status, String body, String... headers) {
+        if (headers.length % 2 != 0) {
+            throw new IllegalArgumentException("Give the headers as name and value pairs");
+        }
+        steps.add(new CannedResponse(status, body, body == null ? null : "application/json", headers.clone()));
+        return this;
+    }
+
+    /**
+     * Sets the JSON response used whenever no queued response is left, for code that sends
+     * many requests.
+     *
+     * @param status the HTTP status code
+     * @param body   the response body
+     * @return this rule
+     */
+    public MockHttp respondToAll(int status, String body) {
+        defaultResponse = new CannedResponse(status, body, "application/json");
+        return this;
+    }
+
+    /**
+     * Makes the next request fail with an I/O error, as if the network were down.
+     *
+     * @param failure the exception {@code HttpClient.execute} throws
+     * @return this rule
+     */
+    public MockHttp failNextRequest(IOException failure) {
+        steps.add(failure);
+        return this;
+    }
+
+    /**
+     * Answers the next request with custom code, for example to throw an unchecked exception
+     * or to return a body that fails while it is read. The request goes through the guard
+     * first, like any other.
+     *
+     * @param answer the code that answers the request
+     * @return this rule
+     */
+    public MockHttp answerNextRequest(Answer answer) {
+        steps.add(answer);
+        return this;
+    }
+
+    /**
+     * Makes every response arrive after a delay, to simulate a slow server.
+     *
+     * @param millis how long {@code HttpClient.execute} waits before answering
+     * @return this rule
+     */
+    public MockHttp delayResponses(long millis) {
+        responseDelayMillis = millis;
+        return this;
+    }
+
+    /**
+     * Makes {@code close()} on the mocked client throw, for every request.
+     *
+     * @param failure the exception {@code close()} throws
+     * @return this rule
+     */
+    public MockHttp failOnClose(IOException failure) {
+        closeFailure = failure;
+        return this;
+    }
+
+    // ------------------------------------------------------------------ captured requests
+
+    /** @return every request captured so far, in order */
+    public List<CapturedRequest> requests() {
+        return Collections.unmodifiableList(new ArrayList<>(requests));
+    }
+
+    /** @return the number of requests captured so far */
+    public int requestCount() {
+        return requests.size();
+    }
+
+    /**
+     * Returns the only request of the test, failing when there were zero or several.
+     *
+     * @return the request
+     */
+    public CapturedRequest request() {
+        assertEquals("Number of requests sent: " + requests, 1, requests.size());
+        return requests.get(0);
+    }
+
+    /**
+     * @param index the position of the request, starting at 0
+     * @return the request
+     */
+    public CapturedRequest request(int index) {
+        if (index >= requests.size()) {
+            throw new AssertionError("Only " + requests.size() + " request(s) were sent: " + requests);
+        }
+        return requests.get(index);
+    }
+
+    /** @return the most recent request */
+    public CapturedRequest lastRequest() {
+        if (requests.isEmpty()) {
+            throw new AssertionError("No request was sent");
+        }
+        return requests.get(requests.size() - 1);
+    }
+
+    /** Asserts that nothing was sent. */
+    public void assertNoRequests() {
+        assertEquals("Requests sent: " + requests, 0, requests.size());
+    }
+
+    /** @return how many times the SDK closed the mocked client */
+    public int closeCount() {
+        return closeCount.get();
+    }
+
+    // ------------------------------------------------------------------ exceptions
+
+    /**
+     * Runs {@code call} and returns the {@link APIException} it throws. The exception is
+     * checked by the guard, so its message must not contain the API key.
+     *
+     * @param call the code that should throw
+     * @return the exception
+     */
+    public APIException expectApiException(Call call) {
+        return expectThrows(APIException.class, call);
+    }
+
+    /**
+     * Runs {@code call} and returns the exception of the given type it throws. The
+     * exception is checked by the guard, so its message must not contain the API key.
+     * Guard failures and other assertion errors are passed through unchanged.
+     *
+     * @param type the expected exception type
+     * @param call the code that should throw
+     * @param <T>  the expected exception type
+     * @return the exception
+     */
+    public <T extends Throwable> T expectThrows(Class<T> type, Call call) {
+        try {
+            call.run();
+        } catch (Throwable thrown) {
+            if (type.isInstance(thrown)) {
+                List<String> leaks = guard.keyLeaks(thrown);
+                if (!leaks.isEmpty()) {
+                    violations.addAll(leaks);
+                    throw new AssertionError(guardMessage(leaks), thrown);
+                }
+                return type.cast(thrown);
+            }
+            if (thrown instanceof AssertionError) {
+                throw (AssertionError) thrown;
+            }
+            throw new AssertionError("Expected " + type.getName() + " but got " + thrown, thrown);
+        }
+        throw new AssertionError("Expected " + type.getName() + " but nothing was thrown");
+    }
+
+    // ------------------------------------------------------------------ rule
+
+    @Override
+    public Statement apply(final Statement base, final Description description) {
+        return new Statement() {
+            @Override
+            public void evaluate() throws Throwable {
+                testName = (description.getTestClass() == null ? description.getClassName()
+                        : description.getTestClass().getSimpleName()) + "." + description.getMethodName();
+                NetworkBlock.install();
+                LogCapture logs = LogCapture.start();
+                Log4jCapture log4j = Log4jCapture.start();
+                Throwable failure = null;
+                try {
+                    base.evaluate();
+                } catch (Throwable thrown) {
+                    failure = thrown;
+                } finally {
+                    log4j.stop();
+                    logs.stop();
+                }
+                // Checked before an assumption failure is passed on: the SDK may have caught
+                // and swallowed a guard failure before the test was skipped.
+                List<String> problems = new ArrayList<>(violations);
+                // A failed assertion is the test's own message; only what it wraps comes from the SDK.
+                problems.addAll(guard.keyLeaks(failure instanceof AssertionError ? failure.getCause() : failure));
+                for (LogRecord record : logs.records()) {
+                    if (guard.containsKey(record.getMessage()) || guard.containsKey(MESSAGES.formatMessage(record))) {
+                        problems.add("the API key appears in a log message from " + record.getLoggerName());
+                    }
+                    problems.addAll(guard.keyLeaks(record.getThrown()));
+                }
+                for (Log4jCapture.Event event : log4j.events()) {
+                    if (guard.containsKey(event.getMessage())) {
+                        problems.add("the API key appears in a Log4j " + event.getLevel() + " message from "
+                                + event.getLoggerName());
+                    }
+                    problems.addAll(guard.keyLeaks(event.getThrown()));
+                }
+                if (!problems.isEmpty()) {
+                    AssertionError error = new AssertionError(guardMessage(problems));
+                    if (failure != null) {
+                        error.addSuppressed(failure);
+                    }
+                    throw error;
+                }
+                if (failure != null) {
+                    throw failure;
+                }
+            }
+        };
+    }
+
+    /** Captures, checks and answers one request; the mocked {@code execute} calls this. */
+    private CloseableHttpResponse execute(HttpUriRequest request) throws IOException {
+        CapturedRequest captured = CapturedRequest.from(request);
+        requests.add(captured);
+        List<String> problems = guard.check(captured, testName);
+        if (!problems.isEmpty()) {
+            violations.addAll(problems);
+            throw new AssertionError(guardMessage(problems));
+        }
+        Object step = steps.poll();
+        if (step == null) {
+            step = defaultResponse;
+        }
+        if (step == null) {
+            throw new AssertionError("No canned response is queued for " + captured + "; call respond(...) first");
+        }
+        if (responseDelayMillis > 0) {
+            try {
+                Thread.sleep(responseDelayMillis);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                throw new IOException("Interrupted while delaying the response", e);
+            }
+        }
+        if (step instanceof IOException) {
+            throw (IOException) step;
+        }
+        if (step instanceof Answer) {
+            return ((Answer) step).answer(captured);
+        }
+        return ((CannedResponse) step).toHttpResponse();
+    }
+
+    /**
+     * Answers {@code execute(request, handler)} as Apache HttpClient does: the request is
+     * captured, checked and answered like any other, the handler reads the response, and the
+     * response is closed.
+     */
+    private Object handle(HttpUriRequest request, ResponseHandler<?> handler) throws IOException {
+        try (CloseableHttpResponse response = execute(request)) {
+            return handler.handleResponse(response);
+        }
+    }
+
+    /**
+     * Fails the test when the code under test passes a context to {@code execute}. A real
+     * client applies the context as it is: its credentials provider and auth cache can add an
+     * {@code Authorization} header, and its request config can set a proxy or the redirect
+     * policy. The guard sees only the request, so it could not check any of that. The SDK never
+     * passes a context; a {@code null} one is the plain overload. The failure is recorded, so the
+     * test fails even when the code under test catches the error.
+     */
+    private void refuseContext(HttpContext context) {
+        if (context != null) {
+            String problem = "the code under test passed an HttpContext to execute(...); a context can add"
+                    + " credentials, a proxy or a request config that the request guard cannot check";
+            violations.add(problem);
+            throw new AssertionError(guardMessage(Collections.singletonList(problem)));
+        }
+    }
+
+    /**
+     * The default answer of the mocked client. An {@code execute} or {@code doExecute} call that
+     * no stub routes through the guard fails the test, and is recorded so that the test fails
+     * even when the code under test catches the error; any other call gets Mockito's default.
+     */
+    private Object unstubbed(InvocationOnMock invocation) throws Throwable {
+        String name = invocation.getMethod().getName();
+        if (name.startsWith("execute") || "doExecute".equals(name)) {
+            String problem = "the code under test called " + invocation.getMethod().toGenericString()
+                    + ", which MockHttp does not route through the request guard; route it in MockHttp first";
+            violations.add(problem);
+            throw new AssertionError(guardMessage(Collections.singletonList(problem)));
+        }
+        return Mockito.RETURNS_DEFAULTS.answer(invocation);
+    }
+
+    /** Formats guard problems as one assertion message. */
+    private static String guardMessage(List<String> problems) {
+        StringBuilder message = new StringBuilder("Request guard failed:");
+        for (String problem : problems) {
+            message.append(System.lineSeparator()).append("  - ").append(problem);
+        }
+        return message.toString();
+    }
+
+    /** A status code, optional body and headers; each request gets a fresh response object. */
+    private static final class CannedResponse {
+        private static final String[] NO_HEADERS = {};
+
+        private final int status;
+        private final String body;
+        private final byte[] bytes;
+        private final String contentType;
+        /** Header names and values, in pairs. */
+        private final String[] headers;
+
+        CannedResponse(int status, String body, String contentType) {
+            this(status, body, contentType, NO_HEADERS);
+        }
+
+        CannedResponse(int status, String body, String contentType, String[] headers) {
+            this.status = status;
+            this.body = body;
+            this.bytes = null;
+            this.contentType = contentType;
+            this.headers = headers;
+        }
+
+        CannedResponse(int status, byte[] bytes, String contentType) {
+            this.status = status;
+            this.body = null;
+            this.bytes = bytes;
+            this.contentType = contentType;
+            this.headers = NO_HEADERS;
+        }
+
+        CloseableHttpResponse toHttpResponse() {
+            String reason = EnglishReasonPhraseCatalog.INSTANCE.getReason(status, Locale.ENGLISH);
+            ClosableResponse response = new ClosableResponse(new BasicStatusLine(HttpVersion.HTTP_1_1, status, reason));
+            for (int i = 0; i < headers.length; i += 2) {
+                response.addHeader(headers[i], headers[i + 1]);
+            }
+            if (body != null) {
+                response.setEntity(new StringEntity(body, ContentType.create(contentType, StandardCharsets.UTF_8)));
+            } else if (bytes != null) {
+                ByteArrayEntity entity = new ByteArrayEntity(bytes);
+                entity.setContentType(contentType);
+                response.setEntity(entity);
+            }
+            return response;
+        }
+    }
+
+    /** A plain {@link BasicHttpResponse} that can be closed, as the SDK expects. */
+    private static final class ClosableResponse extends BasicHttpResponse implements CloseableHttpResponse {
+        ClosableResponse(StatusLine statusLine) {
+            super(statusLine);
+        }
+
+        @Override
+        public void close() {
+            // nothing to release
+        }
+    }
+
+    /**
+     * Collects {@code java.util.logging} records written while a test runs. The
+     * {@code com.route4me} loggers are set to {@link Level#ALL} meanwhile, so that their
+     * {@code FINE} records are checked too; other loggers keep their level, and the console
+     * handler keeps its own. Only the most recently started capture records, so a nested rule
+     * hides the outer one until it stops.
+     */
+    private static final class LogCapture extends Handler {
+        /** The capture that records; {@code null} when none runs. */
+        private static volatile LogCapture active;
+
+        private final List<LogRecord> records = new CopyOnWriteArrayList<>();
+        /** Held strongly while the test runs: java.util.logging keeps loggers only weakly. */
+        private final Logger sdkLogger = Logger.getLogger("com.route4me");
+        private final Level sdkLevel;
+        private final LogCapture previous;
+
+        private LogCapture(LogCapture previous) {
+            this.previous = previous;
+            this.sdkLevel = sdkLogger.getLevel();
+        }
+
+        /** Starts capturing records on the root logger. */
+        static synchronized LogCapture start() {
+            LogCapture capture = new LogCapture(active);
+            capture.sdkLogger.setLevel(Level.ALL);
+            Logger.getLogger("").addHandler(capture);
+            active = capture;
+            return capture;
+        }
+
+        void stop() {
+            synchronized (LogCapture.class) {
+                Logger.getLogger("").removeHandler(this);
+                sdkLogger.setLevel(sdkLevel);
+                if (active == this) {
+                    active = previous;
+                }
+            }
+        }
+
+        List<LogRecord> records() {
+            return records;
+        }
+
+        @Override
+        public void publish(LogRecord record) {
+            if (active == this) {
+                records.add(record);
+            }
+        }
+
+        @Override
+        public void flush() {
+            // records are kept in memory
+        }
+
+        @Override
+        public void close() {
+            // nothing to release
+        }
+    }
+}

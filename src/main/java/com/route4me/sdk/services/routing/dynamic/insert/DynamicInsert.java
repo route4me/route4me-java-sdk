@@ -29,36 +29,51 @@ import java.util.List;
 import lombok.Data;
 
 /**
- *
- * @author route4me
+ * The body of {@link DynamicInsertManager#lookForNewDestination(String, Double, Double, InsertMode, RecommendedBy,
+ * Integer, List)}.
  */
 @Data
 public class DynamicInsert {
 
+    /** The route data source the lookup uses; the SDK sends {@code v5} ({@code route_info_server}). */
     @SerializedName("route_info_server")
     @QueryParameter("route_info_server")
     private String routeInfoServer;
+    /**
+     * Date (YYYY-MM-DD) used to find candidate routes when route ids are not supplied. Required without route_ids
+     * ({@code scheduled_for}).
+     */
     @SerializedName("scheduled_for")
     @QueryParameter("scheduled_for")
     private String scheduledFor;
+    /** Where the new destination may be inserted ({@code insert_mode}). */
     @SerializedName("insert_mode")
     @QueryParameter("insert_mode")
     private String insertMode;
+    /** Latitude of the new destination ({@code lat}). */
     @SerializedName("lat")
     @QueryParameter("lat")
     private Double latitude;
+    /** Longitude of the new destination ({@code lng}). */
     @SerializedName("lng")
     @QueryParameter("lng")
     private Double longitude;
+    /** Limitation of the lookup results ({@code lookup_results_limit}). */
     @SerializedName("lookup_results_limit")
     @QueryParameter("lookup_results_limit")
     private Integer lookupResultsLimit;
+    /** Metric used to rank insertion options ({@code recommend_by}). */
     @SerializedName("recommend_by")
     @QueryParameter("recommend_by")
     private String recommendBy;
+    /**
+     * Upper bound on how much a route distance or duration may grow when inserting the new destination ({@code
+     * max_increase_percent_allowed}).
+     */
     @SerializedName("max_increase_percent_allowed")
     @QueryParameter("max_increase_percent_allowed")
     private Integer maxIncreasePercentAllowed;
+    /** The routes to consider; {@code null} considers the routes of {@code scheduled_for} ({@code route_ids}). */
     @SerializedName("route_ids")
     @QueryParameter("route_ids")
     private List<String> routeIDs;
