@@ -178,6 +178,17 @@ public class OptimizationProfileManagerTest {
     }
 
     @Test
+    public void nullRequestBodiesAreRejectedBeforeSending() {
+        final OptimizationProfileManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createOptimizationProfile(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateOptimizationProfile("PROF-1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.saveEntities(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.deleteEntities(null));
+        http.assertNoRequests();
+    }
+
+    @Test
     public void slashInAProfileIdStaysInItsSegment() throws Exception {
         OptimizationProfileManager manager = manager();
         http.respond(200, PROFILE).respond(200, json("{'status':true}"));
