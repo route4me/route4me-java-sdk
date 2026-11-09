@@ -265,7 +265,7 @@ public class UsersManagerTest {
                 .assertJson("token", "example-token")
                 .assertJson("payload", "example-receipt")
                 .assertJson("format", "json");
-        assertTrue(answer.contains("true"));
+        assertEquals("the answer is returned as the server sent it", json("{'status':true}"), answer);
         assertFalse(license.toString().contains("SESSION-GUID-1"));
         assertFalse(license.toString().contains("example-token"));
         assertFalse(license.toString().contains("example-receipt"));
