@@ -102,4 +102,30 @@ public final class ExampleInput {
         }
         return numbers;
     }
+
+    /**
+     * Reads a comma-separated list of numbers that the API takes as {@code int}s, such as member IDs, as
+     * {@link #toList(String, String)} splits it.
+     *
+     * @param name the variable that holds the value, named in the message
+     * @param value the list, or {@code null}
+     * @return the numbers (an empty list for {@code null} or a blank value), or {@code null} after printing that
+     *     {@code name} has an empty item or must be comma-separated numbers up to {@link Integer#MAX_VALUE}
+     */
+    public static List<Integer> toIntegers(String name, String value) {
+        List<String> items = toList(name, value);
+        if (items == null) {
+            return null;
+        }
+        List<Integer> numbers = new ArrayList<>();
+        try {
+            for (String item : items) {
+                numbers.add(Integer.valueOf(item));
+            }
+        } catch (NumberFormatException e) {
+            System.err.println(name + " must be comma-separated numbers up to " + Integer.MAX_VALUE + ": " + value);
+            return null;
+        }
+        return numbers;
+    }
 }
