@@ -106,6 +106,9 @@ public class RoutingManagerV5 extends Manager {
      * Exports a route: {@code POST https://wh.route4me.com/modules/api/v5.0/route-export/{routeId}/export}, with the
      * request as the JSON body.
      *
+     * <p>The reply is decoded as text, with the charset it declares or UTF-8, so this method is for the text formats
+     * the API specification lists for this call: CSV, JSON, XML and HTML.
+     *
      * @param routeId the route ID
      * @param request the format and what to include; {@code null} sends an empty body, {@code {}}, which exports in
      *     the default format

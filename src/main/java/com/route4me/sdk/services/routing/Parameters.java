@@ -16,7 +16,7 @@ import lombok.Data;
 public class Parameters {
 
     /**
-     * Let the R4M API know if this SDK request is comming from a file upload within your environment (for analytics)
+     * Let the R4M API know if this SDK request is coming from a file upload within your environment (for analytics)
      * ({@code is_upload}).
      */
     @SerializedName("is_upload")
@@ -54,7 +54,7 @@ public class Parameters {
      */
     @SerializedName("disable_optimization")
     private Boolean disableOptimization;
-    /** The optimize parameter. Availabale values: Distance , Time , timeWithTraffic ({@code optimize}). */
+    /** The optimize parameter. Available values: Distance, Time, timeWithTraffic ({@code optimize}). */
     @SerializedName("optimize")
     private String optimize;
     /**
