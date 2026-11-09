@@ -93,8 +93,12 @@ public class AddressBookManager extends Manager {
      * @param addressID the contact's address ID
      * @return the contact, or {@code null} when the address book has no contact with that ID
      * @throws APIException if the request fails
+     * @throws IllegalArgumentException if {@code addressID} is {@code null}; nothing is sent
      */
     public Contact getContact(Number addressID) throws APIException {
+        if (addressID == null) {
+            throw new IllegalArgumentException("address_id is required");
+        }
         URIBuilder builder = Manager.defaultBuilder(ADDRESS_BOOK_EP);
         builder.setParameter("address_id", addressID.toString());
         ContactsResponse response = this.makeRequest(RequestMethod.GET, builder, "", ContactsResponse.class);
@@ -113,6 +117,7 @@ public class AddressBookManager extends Manager {
      * @param request the IDs or search parameters
      * @return the contacts, or {@code null} when the answer has no results
      * @throws APIException if the request fails
+     * @throws IllegalArgumentException if {@code request} is {@code null}; nothing is sent
      * @deprecated the V4 {@code /api.v4/address_book.php} call is obsolete: the C# SDK marks
      *     {@code GetAddressBookContacts} as {@code [Obsolete]}. Use
      *     {@link AddressBookManagerV5#getContacts(AddressBookContactsQuery)}. This method will be removed in the next
@@ -120,6 +125,9 @@ public class AddressBookManager extends Manager {
      */
     @Deprecated
     public List<Contact> getContacts(ContactsRequest request) throws APIException {
+        if (request == null) {
+            throw new IllegalArgumentException("The request is required");
+        }
         URIBuilder builder = contactsQuery(request);
         ContactsResponse cr = this.makeJSONRequest(RequestMethod.GET, builder, request, ContactsResponse.class);
         return cr == null ? null : cr.getResults();

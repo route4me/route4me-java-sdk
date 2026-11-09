@@ -106,6 +106,17 @@ public class AddressBookManagerTest {
         assertFalse(manager.deleteContact(Arrays.<Number>asList(12345)));
     }
 
+    /** Regression: a {@code null} ID threw a {@code NullPointerException} with no message. */
+    @Test
+    @SuppressWarnings("deprecation") // the V4 contact methods are deprecated (obsolete in C#) but stay tested
+    public void aMissingIdOrRequestIsRejectedBeforeSending() {
+        final AddressBookManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getContact(null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.getContacts(null));
+        http.assertNoRequests();
+    }
+
     @Test
     public void getContactReturnsNullWhenNothingMatches() throws Exception {
         AddressBookManager manager = manager();
