@@ -5,17 +5,27 @@ import com.route4me.sdk.services.orders.Order;
 import com.route4me.sdk.services.orders.OrdersManager;
 
 
-/** Reads an order with {@link OrdersManager#getOrder} and changes it with {@link OrdersManager#updateOrder}. */
+/**
+ * Reads an order with {@link OrdersManager#getOrder} and changes its color and alias with
+ * {@link OrdersManager#updateOrder}. Set {@code ORDER_ID} to an order of a test account: the example changes it.
+ */
 public class UpdateOrder {
     public static void main(String[] args) {
+        String orderId = System.getenv("ORDER_ID");
+        if (orderId == null || orderId.isEmpty()) {
+            System.err.println("Set ORDER_ID to the ID of an order of a test account; this example changes it.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         OrdersManager manager = new OrdersManager(apiKey);
         try {
-            Order order = manager.getOrder(1189380);
+            Order order = manager.getOrder(Long.parseLong(orderId));
             order.setColor("#333333");
             order.setAddressAlias("Updated Order");
             Order updated = manager.updateOrder(order);
             System.out.println(updated);
+        } catch (NumberFormatException e) {
+            System.err.println("ORDER_ID must be a number: " + orderId);
         } catch (APIException e) {
             //handle exception
             e.printStackTrace();
