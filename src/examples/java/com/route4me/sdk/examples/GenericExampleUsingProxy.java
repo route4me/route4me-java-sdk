@@ -1,5 +1,6 @@
 package com.route4me.sdk.examples;
 
+import com.route4me.sdk.examples.utils.ExampleInput;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.services.routing.Address;
 import com.route4me.sdk.services.routing.DataObject;
@@ -10,7 +11,8 @@ import java.util.List;
 
 /**
  * Lists optimizations through an HTTP proxy: a {@link RoutingManager} built with a proxy host and port calls
- * {@link RoutingManager#getOptimizations}.
+ * {@link RoutingManager#getOptimizations}. Set {@code PROXY_HOST} to the proxy, and {@code PROXY_PORT} to its port when
+ * it is not 8080.
  */
 public class GenericExampleUsingProxy {
 
@@ -20,8 +22,19 @@ public class GenericExampleUsingProxy {
             System.err.println("Set R4M_API_KEY to your Route4Me API key.");
             return;
         }
-        String proxyHost = "YOUR_PROXY_HOST";
-        int proxyPort = 8080;
+        String proxyHost = System.getenv("PROXY_HOST");
+        if (proxyHost == null || proxyHost.isEmpty()) {
+            System.err.println("Set PROXY_HOST to your proxy, and PROXY_PORT to its port when it is not 8080.");
+            return;
+        }
+        Integer proxyPort = 8080;
+        String port = System.getenv("PROXY_PORT");
+        if (port != null && !port.isEmpty()) {
+            proxyPort = ExampleInput.toInteger("PROXY_PORT", port);
+            if (proxyPort == null) {
+                return;
+            }
+        }
         String proxySchema = "https";
         // A manager holds a pool of HTTP connections: close it when you are done.
         try (RoutingManager manager = new RoutingManager(apiKey, proxyHost, proxyPort, proxySchema)) {
