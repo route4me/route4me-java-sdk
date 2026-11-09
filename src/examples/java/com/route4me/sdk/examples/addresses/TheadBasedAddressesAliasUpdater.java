@@ -116,7 +116,8 @@ public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
             System.out.println("\nUpdating Address in Parallel...\n");
             try {
                 if (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
-                    System.err.println("The updates did not finish within 5 minutes");
+                    System.err.println("The updates did not finish within 5 minutes; stopping the rest");
+                    executor.shutdownNow();
                 }
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -136,7 +137,8 @@ public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
                 } catch (ExecutionException ex) {
                     LOGGER.error("An update failed", ex.getCause());
                 } catch (TimeoutException ex) {
-                    LOGGER.error("An update did not finish in time");
+                    worker.cancel(true);
+                    LOGGER.error("An update did not finish in time and was cancelled");
                 }
             }
         } catch (APIException ex) {
