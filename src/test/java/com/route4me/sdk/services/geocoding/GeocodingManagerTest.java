@@ -507,12 +507,14 @@ public class GeocodingManagerTest {
     @Test
     public void websocketsGeocoderReturnsAnIdleGeocoderWhenTheUploadReplyIsIncomplete() throws Exception {
         GeocodingManager manager = manager();
+        // An empty storage ID counts as none: startGeocoding would throw IllegalArgumentException.
         http.respondWithoutBody(200).respond(200, json("{'optimization_problem_id':'P1','address_count':2}"))
-                .respond(200, json("{'temporary_addresses_storage_id':'S1'}"));
+                .respond(200, json("{'temporary_addresses_storage_id':'S1'}"))
+                .respond(200, json("{'temporary_addresses_storage_id':'','address_count':2}"));
         Field socket = GeocoderWebSockets.class.getDeclaredField("geocoderWebSocket");
         socket.setAccessible(true);
 
-        for (int i = 0; i < 3; i++) {
+        for (int i = 0; i < 4; i++) {
             GeocoderWebSockets geocoder = manager.websocketsGeocoder(new ArrayList<Address>());
 
             assertNull("no socket may be opened in a unit test", socket.get(geocoder));
@@ -520,7 +522,7 @@ public class GeocodingManagerTest {
             assertTrue(geocoder.getAddresses().isEmpty());
             geocoder.closeGeoCodeSocketIO();
         }
-        assertEquals(3, http.requestCount());
+        assertEquals(4, http.requestCount());
     }
 
     @Test

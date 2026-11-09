@@ -127,9 +127,9 @@ public class GeocodingManager extends Manager {
      * Uploads addresses with {@link #jsonUploadGeocoder(List)} and starts geocoding them over a websocket to
      * {@code https://validator.route4me.com}. The call returns at once; check {@link GeocoderWebSockets#isStarted()},
      * then poll {@link GeocoderWebSockets#isCompleted()}, with a deadline, and read
-     * {@link GeocoderWebSockets#getAddresses()}. If the upload fails, or its reply has no storage ID or address count,
-     * the error is logged and the geocoder returned has not started: {@code isStarted()} is {@code false} and its
-     * address list is empty.
+     * {@link GeocoderWebSockets#getAddresses()}. If the upload fails, or its reply has no storage ID (or an empty one)
+     * or no address count, the error is logged and the geocoder returned has not started: {@code isStarted()} is
+     * {@code false} and its address list is empty.
      *
      * @param addresses the addresses to geocode
      * @return the geocoder of the job
@@ -138,7 +138,8 @@ public class GeocodingManager extends Manager {
         GeocoderWebSockets geocoder = new GeocoderWebSockets();
         try {
             GeocoderResponse job = jsonUploadGeocoder(addresses);
-            if (job == null || job.getTemporaryAddressesStorageID() == null || job.getAddressCount() == null) {
+            if (job == null || job.getTemporaryAddressesStorageID() == null
+                    || job.getTemporaryAddressesStorageID().isEmpty() || job.getAddressCount() == null) {
                 logger.error("The address upload returned no storage ID or address count; "
                         + "the geocoder was not started");
                 return geocoder;
