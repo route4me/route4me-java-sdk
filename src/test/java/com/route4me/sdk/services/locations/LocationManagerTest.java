@@ -148,6 +148,17 @@ public class LocationManagerTest {
         assertEquals(Arrays.asList(40.1, -74.1, null), heatmap.getData().get(0));
     }
 
+    /** Regression: the request subclasses left the fields of {@link LocationCombinedRequest} out of toString. */
+    @Test
+    public void requestToStringIncludesTheInheritedFields() {
+        LocationCombinedRequest[] requests = {new LocationClusteringRequest(), new LocationExportRequest(),
+            new LocationHeatmapRequest(), new LocationTerritoriesRequest()};
+        for (LocationCombinedRequest request : requests) {
+            request.setGroupBy("customer_id");
+            assertTrue(request.toString(), request.toString().contains("groupBy=customer_id"));
+        }
+    }
+
     /** Regression: {@code List<String[]>} compared the pairs by identity, so equal requests were not equal. */
     @Test
     public void requestsWithTheSameOrderAreEqual() {

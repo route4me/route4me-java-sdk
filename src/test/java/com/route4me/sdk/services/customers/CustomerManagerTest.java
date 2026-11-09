@@ -97,6 +97,8 @@ public class CustomerManagerTest {
         assertEquals("Sam", customer.getAccountablePersonFirstName());
         assertEquals(Integer.valueOf(2), customer.getCustomerLocationCount());
         assertEquals("100 Example St", customer.getAddresses().get(0).getAddress());
+        assertTrue(customer.toString().contains("customerId=CUST-1"));
+        assertTrue(customer.toString().contains("customerLocationCount=2"));
     }
 
     @Test
