@@ -6,6 +6,7 @@ import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.DeleteResponse;
+import com.route4me.sdk.responses.StatusResponse;
 import java.util.ArrayList;
 import lombok.Getter;
 import lombok.RequiredArgsConstructor;

@@ -1,8 +1,8 @@
 package com.route4me.sdk.examples.addressbook;
 
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.services.addressbook.AddressBookManager;
-import com.route4me.sdk.services.addressbook.StatusResponse;
 
 /** Deletes an address book group with {@link AddressBookManager#removeAddressBookGroup}. */
 public class RemoveAddressBookGroup {

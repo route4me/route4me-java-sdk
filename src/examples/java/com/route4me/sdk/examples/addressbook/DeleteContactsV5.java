@@ -2,9 +2,9 @@ package com.route4me.sdk.examples.addressbook;
 
 import com.route4me.sdk.AsyncJob;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
 import com.route4me.sdk.services.addressbook.JobStatusResponse;
-import com.route4me.sdk.services.addressbook.StatusResponse;
 
 /**
  * Deletes contacts with {@link AddressBookManagerV5#deleteContacts}. The API deletes them at once, or queues a

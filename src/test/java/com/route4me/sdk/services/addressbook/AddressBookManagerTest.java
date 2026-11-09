@@ -1,5 +1,6 @@
 package com.route4me.sdk.services.addressbook;
 
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
