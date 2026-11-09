@@ -108,6 +108,18 @@ public class RouteDestinationsManagerTest {
     }
 
     @Test
+    public void requiredSkillsAreReadUnderEitherName() throws Exception {
+        RouteDestinationsManager manager = manager();
+        http.respond(200, json("{'items':[{'route_destination_id':5002,'required_skills':'Forklift, Driver'},"
+                + "{'route_destination_id':5003,'skills':'Hazmat'}]}"));
+
+        RouteDestinationsByOrderResponse response = manager.getDestinationsByOrder("ORDER-UUID-1");
+
+        assertEquals("Forklift, Driver", response.getItems().get(0).getSkills());
+        assertEquals("Hazmat", response.getItems().get(1).getSkills());
+    }
+
+    @Test
     public void getAndEditDestinationColumns() throws Exception {
         RouteDestinationsManager manager = manager();
         http.respond(200, json("{'categories':[{'category':'Main','columns':[{'id':'name','title':'Name'}]}],"

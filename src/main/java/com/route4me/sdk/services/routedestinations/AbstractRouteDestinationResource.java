@@ -111,8 +111,11 @@ public abstract class AbstractRouteDestinationResource {
     @SerializedName("bundle")
     private String bundle;
 
-    /** Comma-separated list of required driver skills ({@code skills}). */
-    @SerializedName("skills")
+    /**
+     * Comma-separated list of the driver skills the stop requires ({@code required_skills}). The older name
+     * {@code skills} is read too.
+     */
+    @SerializedName(value = "required_skills", alternate = {"skills"})
     private String skills;
 
     /** Running distance to this stop, formatted with unit (e.g., "12.34 mi") ({@code running_distance}). */
