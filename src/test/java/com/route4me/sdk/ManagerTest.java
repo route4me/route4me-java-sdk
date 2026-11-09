@@ -5,7 +5,9 @@ import com.google.gson.JsonParseException;
 import com.google.gson.annotations.SerializedName;
 import com.google.gson.reflect.TypeToken;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.http.Route4MeRedirectStrategy;
 import com.route4me.sdk.queryconverter.QueryParameter;
+import com.route4me.sdk.testsupport.EndpointRegistry;
 import com.route4me.sdk.testsupport.MockHttp;
 import com.route4me.sdk.utils.Sanitizer;
 import org.apache.http.HttpEntity;
@@ -30,6 +32,7 @@ import java.io.InputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.SocketException;
+import java.net.URI;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -306,6 +309,20 @@ public class ManagerTest {
         assertFalse(Manager.takesApiKey("https", "rapid.route4me.com", -1));
         assertFalse(Manager.takesApiKey("https", "api.route4me.com.example.com", -1));
         assertFalse(Manager.takesApiKey("https", null, -1));
+    }
+
+    @Test
+    public void theKeyHostsAndTheRedirectHostsAreOneList() {
+        assertEquals("widening this list sends the key to another host: check SECURITY.md first",
+                Arrays.asList("api.route4me.com", "wh.route4me.com"), Route4MeRedirectStrategy.ALLOWED_HOSTS);
+        assertTrue("URLs are built on a key host", Manager.takesApiKey("https", builder().getHost(), -1));
+        assertTrue("URLs are built on a key host", Manager.takesApiKey("https", wh("/x").getHost(), -1));
+        List<String> hosts = new ArrayList<>(EndpointRegistry.load().getAllowedHosts());
+        hosts.addAll(Arrays.asList("telematics.route4me.com", "route4me.com", "API.Route4Me.com", "example.com"));
+        for (String host : hosts) {
+            assertEquals(host, Route4MeRedirectStrategy.isAllowed(URI.create("https://" + host + "/x")),
+                    Manager.takesApiKey("https", host, -1));
+        }
     }
 
     @Test

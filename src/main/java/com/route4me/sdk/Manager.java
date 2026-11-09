@@ -22,6 +22,7 @@ import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
@@ -751,14 +752,17 @@ public abstract class Manager implements Closeable {
      * other request is sent without the key, neither as a bearer token nor as the
      * {@code api_key} parameter.
      *
+     * <p>The hosts are {@link Route4MeRedirectStrategy#ALLOWED_HOSTS}, the only hosts a redirect
+     * may lead to: Apache HttpClient copies the headers onto a redirect, so the two lists are one.
+     *
      * @param scheme the request scheme
      * @param host   the request host
      * @param port   the request port, {@code -1} for the scheme's default
      * @return {@code true} for https on port 443 to {@code api.route4me.com} or {@code wh.route4me.com}
      */
     static boolean takesApiKey(String scheme, String host, int port) {
-        return "https".equalsIgnoreCase(scheme) && (port == -1 || port == HTTPS_PORT)
-                && (V4_HOST.equalsIgnoreCase(host) || V5_HOST.equalsIgnoreCase(host));
+        return "https".equalsIgnoreCase(scheme) && (port == -1 || port == HTTPS_PORT) && host != null
+                && Route4MeRedirectStrategy.ALLOWED_HOSTS.contains(host.toLowerCase(Locale.ROOT));
     }
 
     /** Removes the API key of this manager from a text, for exceptions and logs. */

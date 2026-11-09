@@ -19,9 +19,10 @@ import org.apache.http.protocol.HttpContext;
  * <p>A redirect keeps the request's query string and headers, and with them the API key
  * (Apache HttpClient copies the {@code Authorization} header too). Following one to another
  * host, or to plain http, would hand the key to whoever runs it. The allowed hosts are the
- * only two that receive the key, {@code api.route4me.com} and {@code wh.route4me.com}; the
- * other Route4Me hosts, such as {@code rapid.route4me.com} and {@code validator.route4me.com},
- * are refused as well.
+ * only two that receive the key, {@code api.route4me.com} and {@code wh.route4me.com}, and
+ * {@link com.route4me.sdk.Manager} reads its key hosts from the same list; the other Route4Me
+ * hosts, such as {@code rapid.route4me.com} and {@code validator.route4me.com}, are refused as
+ * well.
  * Such a redirect fails the request with a {@link RedirectException} instead, which the
  * SDK reports as an {@link com.route4me.sdk.exception.APIException} with that cause.
  *
@@ -31,7 +32,11 @@ import org.apache.http.protocol.HttpContext;
  */
 public class Route4MeRedirectStrategy extends DefaultRedirectStrategy {
 
-    /** The hosts a redirect may lead to: the two hosts that receive the API key. */
+    /**
+     * The hosts that receive the API key, in lower case, and so the only hosts a redirect may
+     * lead to. The managers read this list too, to decide which requests carry the key, so the
+     * key hosts and the redirect hosts cannot drift apart.
+     */
     public static final List<String> ALLOWED_HOSTS = Collections.unmodifiableList(Arrays.asList(
             "api.route4me.com", "wh.route4me.com"));
 
