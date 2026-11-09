@@ -14,6 +14,11 @@ import java.util.Locale;
  * {@link AddressBookManagerV5#exportAddressesByAreas}, then follows the job with
  * {@link AddressBookManagerV5#getExportStatus} and downloads the file with
  * {@link AddressBookManagerV5#getExportResult}.
+ *
+ * <p>The API does not document the values of the export status. This example takes {@code done}, {@code completed},
+ * {@code finished}, {@code ready} and {@code success}, in any case, as done, and {@code failed} and {@code error} as
+ * failed. When it reads neither within 30 checks, it stops and prints the export ID, to download the file later with
+ * {@code GetExportResultV5}.
  */
 public class ExportAddressesByAreasV5 {
     private static final List<String> DONE = Arrays.asList("done", "completed", "finished", "ready", "success");
@@ -71,13 +76,16 @@ public class ExportAddressesByAreasV5 {
                 return true;
             }
             if (FAILED.contains(state)) {
-                System.out.println("The export failed");
+                System.out.println("The export reported " + status + ", which this example takes as failed; the API"
+                        + " does not document its status values");
                 return false;
             }
             Thread.sleep(2000);
         }
-        System.out.println("The export did not report done after 30 status checks; download it later with"
-                + " GetExportResultV5 and EXPORT_JOB_ID=" + jobId);
+        System.out.println("The export did not report done after 30 status checks. The API does not document its"
+                + " status values: this example takes " + String.join(", ", DONE) + " as done and "
+                + String.join(", ", FAILED) + " as failed. Download the file later with GetExportResultV5 and"
+                + " EXPORT_JOB_ID=" + jobId);
         return false;
     }
 }
