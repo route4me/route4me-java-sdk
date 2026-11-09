@@ -5,6 +5,7 @@ import com.route4me.sdk.Manager;
 import com.route4me.sdk.RequestMethod;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.responses.DeleteResponse;
+import com.route4me.sdk.utils.Sanitizer;
 import java.awt.Point;
 import java.awt.Polygon;
 import org.apache.http.HttpEntity;
@@ -12,8 +13,6 @@ import org.apache.http.client.utils.URIBuilder;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Manages territories and avoidance zones through the V4 API ({@code https://api.route4me.com/api.v4/territory.php} and
@@ -40,8 +39,9 @@ public class TerritoriesManager extends Manager {
     /**
      * Reads the territories with {@link #getTerritories()} and turns each polygon territory into a
      * {@link java.awt.Polygon} of its coordinates (multiplied by 1,000,000 and truncated to integers). Circle and
-     * rectangle territories are skipped, and so are territories without a shape, a type or polygon points. If the
-     * request fails, or the reply is empty, the error is logged and the list is empty.
+     * rectangle territories are skipped, and so are territories without a shape, a type or polygon points, and, with
+     * a warning, polygons with a point that is not {@code latitude,longitude}. If the request fails, or the reply is
+     * empty, the error is logged and the list is empty.
      *
      * @return the polygon of each polygon territory
      */
@@ -63,18 +63,13 @@ public class TerritoriesManager extends Manager {
                         if (coordinates == null) {
                             break;
                         }
-                        int[] pointsX = new int[coordinates.size()];
-                        int[] pointsY = new int[coordinates.size()];
-                        int i = 0;
-                        for (String coordinate : coordinates) {
-                            String[] coords = coordinate.split(",");
-                            pointsX[i] = (int) (Float.parseFloat(coords[0]) * FACTOR);
-                            pointsY[i] = (int) (Float.parseFloat(coords[1]) * FACTOR);
-                            i++;
+                        Polygon polygon = toPolygon(coordinates);
+                        if (polygon == null) {
+                            logger.warn("Territory {} has a polygon point that is not latitude,longitude; "
+                                    + "it is skipped", Sanitizer.forLog(territory.getTerritoryId()));
+                            break;
                         }
-                        Polygon polygon = new Polygon(pointsX, pointsY, coordinates.size());
-                        TerritoryPolygon territoryPolygon = new TerritoryPolygon(territory, polygon);
-                        territoryPolygons.add(territoryPolygon);
+                        territoryPolygons.add(new TerritoryPolygon(territory, polygon));
                         break;
                     case "circle":
                         break;
@@ -87,9 +82,49 @@ public class TerritoriesManager extends Manager {
             }
 
         } catch (APIException ex) {
-            Logger.getLogger(TerritoriesManager.class.getName()).log(Level.SEVERE, null, ex);
+            logger.error("Could not read the territories: {}", Sanitizer.forLog(ex.getMessage()));
         }
         return territoryPolygons;
+    }
+
+    /**
+     * Builds the polygon of a list of {@code latitude,longitude} points, multiplied by 1,000,000 and truncated.
+     *
+     * @param coordinates the points
+     * @return the polygon, or {@code null} when a point is {@code null}, has no comma or is not a number
+     */
+    private static Polygon toPolygon(List<String> coordinates) {
+        int[] pointsX = new int[coordinates.size()];
+        int[] pointsY = new int[coordinates.size()];
+        int i = 0;
+        for (String coordinate : coordinates) {
+            String[] coords = coordinate == null ? new String[0] : coordinate.split(",");
+            if (coords.length < 2) {
+                return null;
+            }
+            try {
+                pointsX[i] = (int) (Float.parseFloat(coords[0]) * FACTOR);
+                pointsY[i] = (int) (Float.parseFloat(coords[1]) * FACTOR);
+            } catch (NumberFormatException ex) {
+                return null;
+            }
+            i++;
+        }
+        return new Polygon(pointsX, pointsY, coordinates.size());
+    }
+
+    /**
+     * Returns the ID of a territory to update, or throws before any request when there is none.
+     *
+     * @param territory the territory
+     * @param what      the name of the argument, for the message
+     * @return the territory ID
+     */
+    private static String requireTerritoryId(Territory territory, String what) {
+        if (territory == null || territory.getTerritoryId() == null || territory.getTerritoryId().isEmpty()) {
+            throw new IllegalArgumentException("The " + what + " and its territory_id are required");
+        }
+        return territory.getTerritoryId();
     }
 
     /**
@@ -153,13 +188,14 @@ public class TerritoriesManager extends Manager {
      *
      * @param territory the zone, with its {@code territory_id} set
      * @return the updated zone
+     * @throws IllegalArgumentException if {@code territory} is {@code null} or has no {@code territory_id}; nothing
+     *                                  is sent
      * @throws APIException if the request fails
      */
     public Territory updateAvoidanceZone(Territory territory) throws APIException {
+        String territoryId = requireTerritoryId(territory, "avoidance zone");
         URIBuilder builder = Manager.defaultBuilder(AVOIDANCE_EP);
-        if (territory.getTerritoryId() != null) {
-            builder.setParameter("territory_id", territory.getTerritoryId());
-        }
+        builder.setParameter("territory_id", territoryId);
         return this.makeJSONRequest(RequestMethod.PUT, builder, territory, Territory.class);
     }
 
@@ -221,13 +257,14 @@ public class TerritoriesManager extends Manager {
      *
      * @param territory the territory, with its {@code territory_id} set
      * @return the updated territory
+     * @throws IllegalArgumentException if {@code territory} is {@code null} or has no {@code territory_id}; nothing is
+     *                                  sent
      * @throws APIException if the request fails
      */
     public Territory updateTerritory(Territory territory) throws APIException {
+        String territoryId = requireTerritoryId(territory, "territory");
         URIBuilder builder = Manager.defaultBuilder(TERRITORY_EP);
-        if (territory.getTerritoryId() != null) {
-            builder.setParameter("territory_id", territory.getTerritoryId());
-        }
+        builder.setParameter("territory_id", territoryId);
         return this.makeJSONRequest(RequestMethod.PUT, builder, territory, Territory.class);
     }
 
