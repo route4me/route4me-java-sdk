@@ -176,6 +176,18 @@ public class RouteDestinationsManagerTest {
     }
 
     @Test
+    public void getDestinationsListReadsThePaging() throws Exception {
+        RouteDestinationsManager manager = manager();
+        http.respond(200, "{\"items\":[" + DESTINATION + "],\"current_page_index\":2,\"total_items_count\":41}");
+
+        RouteDestinationsListResponse list = manager.getDestinationsList(listRequest());
+
+        assertEquals(Integer.valueOf(2), list.getCurrentPageIndex());
+        assertEquals(Integer.valueOf(41), list.getTotalItemsCount());
+        assertEquals(1, list.getItems().size());
+    }
+
+    @Test
     public void getDestinationFieldsListsTheFields() throws Exception {
         RouteDestinationsManager manager = manager();
         http.respond(200,
