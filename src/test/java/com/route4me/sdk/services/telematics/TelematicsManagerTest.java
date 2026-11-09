@@ -1,6 +1,7 @@
 package com.route4me.sdk.services.telematics;
 
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import com.route4me.sdk.exception.APIException;
 import com.route4me.sdk.testsupport.Fixtures;
 import com.route4me.sdk.testsupport.MockHttp;
@@ -8,10 +9,13 @@ import org.junit.Rule;
 import org.junit.Test;
 
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
@@ -37,7 +41,7 @@ public class TelematicsManagerTest {
         return http.install(new TelematicsManager(MockHttp.API_KEY));
     }
 
-    /** Builds a sample telematics connection with fake vendor credentials. */
+    /** Builds a sample telematics connection with fake vendor credentials and no vendor API key. */
     private static TelematicsConnection credentials() {
         TelematicsConnection credentials = new TelematicsConnection();
         credentials.setName("Example connection");
@@ -46,9 +50,23 @@ public class TelematicsManagerTest {
         credentials.setAccountID("ACCOUNT-1");
         credentials.setUsername("fleet-user");
         credentials.setPassword("vendor-password");
-        credentials.setApiKey("VENDOR-KEY");
         credentials.setIsEnabled(1);
         return credentials;
+    }
+
+    /** Builds a sample telematics connection with a fake vendor API key. */
+    private static TelematicsConnection credentialsWithVendorKey() {
+        TelematicsConnection credentials = credentials();
+        credentials.setApiKey("VENDOR-KEY");
+        return credentials;
+    }
+
+    /** Builds sample metadata, with a key whose value is {@code null}. */
+    private static Map<String, Object> metadata() {
+        Map<String, Object> metadata = new LinkedHashMap<>();
+        metadata.put("depot", "North");
+        metadata.put("old_key", null);
+        return metadata;
     }
 
     // ------------------------------------------------------------------ registration and connections
@@ -106,6 +124,159 @@ public class TelematicsManagerTest {
                 .assertForm("is_enabled", "1");
         assertEquals("CONNECTION-1", created.getConnectionToken());
         assertEquals(Integer.valueOf(3), created.getSyncedVehiclesCount());
+    }
+
+    @Test
+    public void v4ConnectionRequestsCarryApiKeyOnlyOnceAsTheRouteMeKey() throws Exception {
+        TelematicsManager manager = manager();
+        http.respondToAll(200, Fixtures.read("telematics_connection.json"));
+
+        manager.createTelematicsConnection(TOKEN, credentials());
+        manager.updateTelematicsConnection(TOKEN, "CONNECTION-1", credentials());
+
+        for (int i = 0; i < 2; i++) {
+            http.request(i).assertApiKeyInQuery().assertForm("api_key", null);
+        }
+    }
+
+    @Test
+    public void v4ConnectionRequestsRefuseAVendorApiKey() {
+        final TelematicsManager manager = manager();
+
+        IllegalArgumentException created = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.createTelematicsConnection(TOKEN, credentialsWithVendorKey()));
+        IllegalArgumentException updated = http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateTelematicsConnection(TOKEN, "CONNECTION-1", credentialsWithVendorKey()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createTelematicsConnection(TOKEN, null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateTelematicsConnection(TOKEN, "CONNECTION-1", null));
+
+        http.assertNoRequests();
+        assertEquals(TelematicsManager.VENDOR_KEY_ON_V4_MESSAGE, created.getMessage());
+        assertEquals(TelematicsManager.VENDOR_KEY_ON_V4_MESSAGE, updated.getMessage());
+        assertTrue(created.getMessage().contains("createTelematicsConnectionV5"));
+    }
+
+    @Test
+    public void v4ConnectionRequestsSendTheMetadataAsJsonText() throws Exception {
+        TelematicsManager manager = manager();
+        http.respondToAll(200, Fixtures.read("telematics_connection.json"));
+        TelematicsConnection withMetadata = credentials();
+        withMetadata.setMetadata(metadata());
+
+        manager.createTelematicsConnection(TOKEN, withMetadata);
+        manager.updateTelematicsConnection(TOKEN, "CONNECTION-1", withMetadata);
+        manager.createTelematicsConnection(TOKEN, credentials());
+
+        http.request(0).assertForm("metadata", "{\"depot\":\"North\",\"old_key\":null}");
+        http.request(1).assertForm("metadata", "{\"depot\":\"North\",\"old_key\":null}");
+        http.request(2).assertForm("metadata", null);
+    }
+
+    // ------------------------------------------------------------------ V5 connections
+
+    @Test
+    public void createTelematicsConnectionV5SendsTheVendorKeyAsVendorApiKey() throws Exception {
+        TelematicsManager manager = manager();
+        http.respond(200, json("{'id':7,'name':'Example connection','vendor_id':55,'connection_token':'CONNECTION-1',"
+                + "'is_enabled':true,'metadata':{'depot':'North'}}"));
+        TelematicsConnection connection = credentialsWithVendorKey();
+        connection.setHost("fleet.example.com");
+        connection.setVehiclePositionRefreshRate(60);
+        connection.setMaxIdleTime(90);
+        connection.setValidateRemoteCredentials("false");
+        connection.setMetadata(metadata());
+
+        TelematicsConnection created = manager.createTelematicsConnectionV5(connection);
+
+        http.request().assertEndpoint("POST", WH, "/modules/api/v5.0/telematics/connections").assertApiKeyAsBearer()
+                .assertContentType("application/json; charset=UTF-8")
+                .assertJson("vendor_api_key", "VENDOR-KEY").assertJsonLacks("api_key", "api_token", "connection_token")
+                .assertJson("name", "Example connection").assertJson("vendor", "example-fleet")
+                .assertJson("vendor_id", 55).assertJson("host", "fleet.example.com")
+                .assertJson("account_id", "ACCOUNT-1").assertJson("username", "fleet-user")
+                .assertJson("password", "vendor-password").assertJson("vehicle_position_refresh_rate", 60)
+                .assertJson("max_idle_time", 90).assertJson("is_enabled", true)
+                .assertJson("validate_remote_credentials", false)
+                .assertJson("metadata", "{\"depot\":\"North\",\"old_key\":null}");
+        assertTrue(http.request().getQueryParameters().isEmpty());
+        assertEquals("CONNECTION-1", created.getConnectionToken());
+        assertEquals(Integer.valueOf(1), created.getIsEnabled());
+        assertEquals("North", created.getMetadata().get("depot"));
+    }
+
+    @Test
+    public void updateTelematicsConnectionV5PutsTheTokenInTheQuery() throws Exception {
+        TelematicsManager manager = manager();
+        http.respondToAll(200, json("{'connection_token':'CONNECTION-1','is_enabled':false}"));
+        TelematicsConnection change = new TelematicsConnection();
+        change.setIsEnabled(0);
+        change.setValidateRemoteCredentials("1");
+        TelematicsConnection other = new TelematicsConnection();
+        other.setValidateRemoteCredentials("TRUE");
+        TelematicsConnection unknown = new TelematicsConnection();
+        unknown.setValidateRemoteCredentials("later");
+        TelematicsConnection off = new TelematicsConnection();
+        off.setValidateRemoteCredentials("0");
+
+        TelematicsConnection updated = manager.updateTelematicsConnectionV5("CONNECTION-1", change);
+        manager.updateTelematicsConnectionV5("CONNECTION-1", other);
+        manager.updateTelematicsConnectionV5("CONNECTION-1", unknown);
+        manager.updateTelematicsConnectionV5("CONNECTION-1", off);
+        manager.updateTelematicsConnectionV5("CONNECTION-1", new TelematicsConnection());
+
+        http.request(0).assertEndpoint("PUT", WH, "/modules/api/v5.0/telematics/connections").assertApiKeyAsBearer()
+                .assertQuery("connection_token", "CONNECTION-1")
+                .assertJson("is_enabled", false).assertJson("validate_remote_credentials", true)
+                .assertJsonLacks("vendor_api_key", "name", "metadata");
+        http.request(1).assertJson("validate_remote_credentials", true);
+        http.request(2).assertJson("validate_remote_credentials", "later");
+        http.request(3).assertJson("validate_remote_credentials", false);
+        assertTrue(http.request(4).jsonKeys().isEmpty());
+        assertEquals(Integer.valueOf(0), updated.getIsEnabled());
+    }
+
+    @Test
+    public void v5ConnectionMethodsRequireTheConnectionAndTheToken() {
+        final TelematicsManager manager = manager();
+
+        http.expectThrows(IllegalArgumentException.class, () -> manager.createTelematicsConnectionV5(null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateTelematicsConnectionV5("CONNECTION-1", null));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateTelematicsConnectionV5(null, credentials()));
+        http.expectThrows(IllegalArgumentException.class,
+                () -> manager.updateTelematicsConnectionV5("", credentials()));
+        http.assertNoRequests();
+    }
+
+    @Test
+    public void isEnabledIsReadFromNumbersBooleansAndText() {
+        Gson gson = new Gson();
+
+        assertEquals(Integer.valueOf(1), gson.fromJson("{\"is_enabled\":1}", TelematicsConnection.class)
+                .getIsEnabled());
+        assertEquals(Integer.valueOf(0), gson.fromJson("{\"is_enabled\":false}", TelematicsConnection.class)
+                .getIsEnabled());
+        assertEquals(Integer.valueOf(1), gson.fromJson("{\"is_enabled\":\"True\"}", TelematicsConnection.class)
+                .getIsEnabled());
+        assertEquals(Integer.valueOf(0), gson.fromJson("{\"is_enabled\":\"false\"}", TelematicsConnection.class)
+                .getIsEnabled());
+        assertEquals(Integer.valueOf(0), gson.fromJson("{\"is_enabled\":\"0\"}", TelematicsConnection.class)
+                .getIsEnabled());
+        assertNull(gson.fromJson("{\"is_enabled\":null}", TelematicsConnection.class).getIsEnabled());
+        assertTrue(gson.toJson(credentials()).contains("\"is_enabled\":1"));
+        assertFalse(gson.toJson(new TelematicsConnection()).contains("is_enabled"));
+        assertTrue(new GsonBuilder().serializeNulls().create().toJson(new TelematicsConnection())
+                .contains("\"is_enabled\":null"));
+    }
+
+    @Test
+    public void unreadableIsEnabledFailsAsAnUnparsableReply() {
+        final TelematicsManager manager = manager();
+        http.respond(200, json("{'connection_token':'CONNECTION-1','is_enabled':'sometimes'}"));
+
+        http.expectApiException(() -> manager.getTelematicsConnection(TOKEN, "CONNECTION-1"));
     }
 
     @Test

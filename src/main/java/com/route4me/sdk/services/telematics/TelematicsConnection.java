@@ -5,8 +5,16 @@
  */
 package com.route4me.sdk.services.telematics;
 
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.TypeAdapter;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
+import com.google.gson.stream.JsonReader;
+import com.google.gson.stream.JsonToken;
+import com.google.gson.stream.JsonWriter;
 import com.route4me.sdk.queryconverter.QueryParameter;
+import java.io.IOException;
+import java.util.Locale;
 import java.util.Map;
 import lombok.Data;
 import lombok.ToString;
@@ -30,7 +38,13 @@ public class TelematicsConnection {
     @QueryParameter("host")
     @SerializedName("host")
     private String host;
-    /** The API key at the vendor, for vendors that need one; do not log it ({@code api_key}). */
+    /**
+     * The API key at the vendor, for vendors that need one; do not log it ({@code api_key}). The V4 connection
+     * methods refuse a connection that has one, since their request carries the Route4Me API key as {@code api_key};
+     * {@link TelematicsManager#createTelematicsConnectionV5(TelematicsConnection)} and
+     * {@link TelematicsManager#updateTelematicsConnectionV5(String, TelematicsConnection)} send it as
+     * {@code vendor_api_key}.
+     */
     @ToString.Exclude
     @QueryParameter("api_key")
     @SerializedName("api_key")
@@ -57,9 +71,13 @@ public class TelematicsConnection {
     @QueryParameter("vendor_id")
     @SerializedName("vendor_id")
     private Integer vendorID;
-    /** Whether vehicle tracking through this connection is on ({@code is_enabled}). */
+    /**
+     * Whether vehicle tracking through this connection is on, as {@code 1} or {@code 0} ({@code is_enabled}). A
+     * reply that sends it as {@code true} or {@code false}, as the V5 API does, is read as {@code 1} or {@code 0}.
+     */
     @QueryParameter("is_enabled")
     @SerializedName("is_enabled")
+    @JsonAdapter(EnabledFlagAdapter.class)
     private Integer isEnabled;
     /** Vehicle tracking interval in seconds ({@code vehicle_position_refresh_rate}). */
     @QueryParameter("vehicle_position_refresh_rate")
@@ -86,12 +104,57 @@ public class TelematicsConnection {
     /** When the positions were last reloaded, as a Unix timestamp ({@code last_position_reload}). */
     @SerializedName("last_position_reload")
     private String lastPositionReload;
-    /** Metadata, custom key-value storage ({@code metadata}). */
-    @QueryParameter("metadata")
+    /**
+     * Metadata, custom key-value storage ({@code metadata}). The connection methods send it as the text of a JSON
+     * object, as the telematics API reads it; a key whose value is {@code null} is sent as {@code null}, which an
+     * update reads as "remove this key".
+     */
     @SerializedName("metadata")
     private Map<String, Object> metadata;
-    /** Whether to check the credentials with the vendor before saving ({@code validate_remote_credentials}). */
+    /**
+     * Whether to check the credentials with the vendor before saving ({@code validate_remote_credentials}), such as
+     * {@code "true"} or {@code "1"}.
+     */
     @QueryParameter("validate_remote_credentials")
     private String validateRemoteCredentials;
 
+    /**
+     * Reads {@code is_enabled} from a number, a boolean ({@code true} is {@code 1}) or a string, and writes it as a
+     * number.
+     */
+    static final class EnabledFlagAdapter extends TypeAdapter<Integer> {
+
+        @Override
+        public void write(JsonWriter out, Integer value) throws IOException {
+            if (value == null) {
+                out.nullValue();
+            } else {
+                out.value(value);
+            }
+        }
+
+        @Override
+        public Integer read(JsonReader in) throws IOException {
+            JsonToken token = in.peek();
+            if (token == JsonToken.NULL) {
+                in.nextNull();
+                return null;
+            }
+            if (token == JsonToken.BOOLEAN) {
+                return in.nextBoolean() ? 1 : 0;
+            }
+            String text = in.nextString().trim();
+            if ("true".equals(text.toLowerCase(Locale.ROOT))) {
+                return 1;
+            }
+            if ("false".equals(text.toLowerCase(Locale.ROOT))) {
+                return 0;
+            }
+            try {
+                return Integer.valueOf(text);
+            } catch (NumberFormatException ex) {
+                throw new JsonSyntaxException("is_enabled is not a number or a boolean: " + text, ex);
+            }
+        }
+    }
 }
