@@ -5,9 +5,14 @@ import com.route4me.sdk.testsupport.MockHttp;
 import org.junit.Rule;
 import org.junit.Test;
 
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -53,15 +58,48 @@ public class ConfigurationSettingsManagerV5Test {
         assertFalse(setting.toString().contains("dark"));
     }
 
+    /**
+     * The message of an error never holds the query, so checking it alone proves nothing. The
+     * error body here echoes the key as a credential member and in a URL, and the I/O failure
+     * quotes it in a URL at two levels of its cause chain, so every place an APIException keeps
+     * text is checked: the message, the URL, toString(), the body, the causes and the stack trace.
+     */
     @Test
     public void anErrorDoesNotEchoTheOrganizationKey() {
         final ConfigurationSettingsManagerV5 manager = manager();
-        http.respondWithFixture(400, "error_400.json");
+        String url = "https://" + HOST + EP + "?organization_api_key=" + ORGANIZATION_KEY;
+        http.respond(400, json("{'errors':['Invalid organization'],'organization_api_key':'" + ORGANIZATION_KEY
+                + "','request':'" + url + "'}"))
+                .failNextRequest(new IOException("Connect to " + url + " failed",
+                        new IOException("Redirect to " + url + "&page=2 refused")));
 
-        APIException error = http.expectApiException(
+        APIException statusError = http.expectApiException(
+                () -> manager.getMemberConfigurationSettings(null, null, ORGANIZATION_KEY));
+        APIException ioError = http.expectApiException(
                 () -> manager.getMemberConfigurationSettings(null, null, ORGANIZATION_KEY));
 
-        assertFalse(error.getMessage().contains(ORGANIZATION_KEY));
+        http.request(0).assertQuery("organization_api_key", ORGANIZATION_KEY);
+        assertEquals(400, statusError.getStatusCode());
+        assertTrue(statusError.getResponseBody().contains("Invalid organization"));
+        assertTrue("the URL keeps the parameter, redacted", statusError.getUrl().contains("organization_api_key="));
+        assertNotNull("the I/O failure keeps its cause chain", ioError.getCause());
+        assertNotNull(ioError.getCause().getCause());
+        assertKeyIsNotEchoed(statusError);
+        assertKeyIsNotEchoed(ioError);
+    }
+
+    /** Asserts that no text an exception keeps, or prints, holds {@link #ORGANIZATION_KEY}. */
+    private static void assertKeyIsNotEchoed(APIException error) {
+        assertFalse("message", String.valueOf(error.getMessage()).contains(ORGANIZATION_KEY));
+        assertFalse("URL", String.valueOf(error.getUrl()).contains(ORGANIZATION_KEY));
+        assertFalse("toString()", error.toString().contains(ORGANIZATION_KEY));
+        assertFalse("response body", String.valueOf(error.getResponseBody()).contains(ORGANIZATION_KEY));
+        for (Throwable cause = error.getCause(); cause != null; cause = cause.getCause()) {
+            assertFalse("cause " + cause.getClass().getName(), cause.toString().contains(ORGANIZATION_KEY));
+        }
+        StringWriter trace = new StringWriter();
+        error.printStackTrace(new PrintWriter(trace));
+        assertFalse("stack trace", trace.toString().contains(ORGANIZATION_KEY));
     }
 
     @Test
