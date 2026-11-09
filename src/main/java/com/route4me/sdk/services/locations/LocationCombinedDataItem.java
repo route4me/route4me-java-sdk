@@ -9,7 +9,7 @@ import lombok.ToString;
 public class LocationCombinedDataItem {
     /** Unique identifier for the address ({@code address_id}). */
     @SerializedName("address_id")
-    private Integer addressId;
+    private Long addressId;
 
     /** Primary address line ({@code address_1}). */
     @SerializedName("address_1")

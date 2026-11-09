@@ -136,6 +136,19 @@ public class CustomerManagerTest {
         http.request().assertNoQuery("order_by").assertNoQuery("order_by[0][]");
     }
 
+    /** Regression: member IDs were {@code Integer}, so an ID above 2^31-1 failed the whole list. */
+    @Test
+    public void memberIdsAboveTheIntRangeAreRead() throws Exception {
+        CustomerManager manager = manager();
+        http.respond(200, json("{'items':[{'customer_id':'CUST-1','root_member_id':3000000001,"
+                + "'created_by_member_id':3000000002}]}"));
+
+        CustomerListResource customer = manager.getCustomersList(new CustomerListParameters()).getItems().get(0);
+
+        assertEquals(Long.valueOf(3000000001L), customer.getRootMemberId());
+        assertEquals(Long.valueOf(3000000002L), customer.getCreatedByMemberId());
+    }
+
     /** Regression: {@code List<String[]>} compared the pairs by identity, so equal parameters were not equal. */
     @Test
     public void parametersWithTheSameOrderAreEqual() {

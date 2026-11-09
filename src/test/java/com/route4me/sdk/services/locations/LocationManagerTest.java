@@ -112,6 +112,31 @@ public class LocationManagerTest {
         assertEquals("weight", heatmap.getFields().get(2));
     }
 
+    /** Regression: address and member IDs were {@code Integer}, so an ID above 2^31-1 failed the whole answer. */
+    @Test
+    public void idsAboveTheIntRangeAreReadAndSent() throws Exception {
+        LocationManager manager = manager();
+        http.respond(200, json("{'items':[{'address_id':3000000001}],'total_items_count':1}"))
+                .respond(200, json("{'data':[{'location_type_id':'LT-1','root_member_id':3000000002}]}"))
+                .respondWithHeaders(202, null, "Location", EXPORT_STATUS_URL);
+        LocationFilters filters = new LocationFilters();
+        filters.setAddressId(Collections.singletonList(3000000001L));
+        LocationCombinedRequest request = new LocationCombinedRequest();
+        request.setFilters(filters);
+        LocationExportRequest export = new LocationExportRequest();
+        export.setAddressIds(Collections.singletonList(3000000001L));
+        export.setExcludedIds(Collections.singletonList(3000000003L));
+
+        LocationListResource list = manager.getLocationsList(request);
+        LocationTypeCollection types = manager.getLocationTypes(null, null);
+        manager.exportLocations(export);
+
+        http.request(0).assertJson("filters.address_id[0]", 3000000001L);
+        http.request(2).assertJson("address_ids[0]", 3000000001L).assertJson("excluded_ids[0]", 3000000003L);
+        assertEquals(Long.valueOf(3000000001L), list.getItems().get(0).getAddressId());
+        assertEquals(Long.valueOf(3000000002L), types.getData().get(0).getRootMemberId());
+    }
+
     /** Regression: {@code List<double[]>} failed the whole heat map when one number was {@code null}. */
     @Test
     public void heatmapKeepsANullNumber() throws Exception {
@@ -166,7 +191,7 @@ public class LocationManagerTest {
         export.setFilename("locations.csv");
         export.setFormat("csv");
         export.setTimezone("UTC");
-        export.setAddressIds(Collections.singletonList(12345));
+        export.setAddressIds(Collections.singletonList(12345L));
 
         LocationExportColumnsResource[] columns = manager.getLocationsExportColumns(new LocationCombinedRequest());
         AsyncJob job = manager.exportLocations(export);

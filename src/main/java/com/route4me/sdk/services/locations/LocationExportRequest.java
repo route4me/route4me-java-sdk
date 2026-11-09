@@ -15,11 +15,11 @@ public class LocationExportRequest extends LocationCombinedRequest {
 
     /** Specific address IDs to export (if specified, filters are ignored) ({@code address_ids}). */
     @SerializedName("address_ids")
-    private List<Integer> addressIds;
+    private List<Long> addressIds;
 
     /** Address IDs to exclude from export ({@code excluded_ids}). */
     @SerializedName("excluded_ids")
-    private List<Integer> excludedIds;
+    private List<Long> excludedIds;
 
     /** Output filename (without extension) ({@code filename}). */
     @SerializedName("filename")
