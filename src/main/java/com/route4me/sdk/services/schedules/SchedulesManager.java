@@ -31,7 +31,8 @@ public class SchedulesManager extends Manager {
     /**
      * Creates a manager that sends its requests with an API key.
      *
-     * @param apiKey the Route4Me API key, sent as a bearer token
+     * @param apiKey the Route4Me API key, sent as a bearer token to the V5 API and as the {@code api_key} query
+     *     parameter to the V4 schedule calendar ({@link #getScheduleCalendar(ScheduleCalendarRequest)})
      */
     public SchedulesManager(String apiKey) {
         super(apiKey);
@@ -40,7 +41,8 @@ public class SchedulesManager extends Manager {
     /**
      * Creates a manager that sends its requests with an API key, and may refuse redirects.
      *
-     * @param apiKey the Route4Me API key, sent as a bearer token
+     * @param apiKey the Route4Me API key, sent as a bearer token to the V5 API and as the {@code api_key} query
+     *     parameter to the V4 schedule calendar ({@link #getScheduleCalendar(ScheduleCalendarRequest)})
      * @param disableRedirects {@code true} to add {@code redirect=0} to every request and not follow redirects
      */
     public SchedulesManager(String apiKey, boolean disableRedirects) {
@@ -128,9 +130,14 @@ public class SchedulesManager extends Manager {
      * @param scheduleUid the schedule ID
      * @param schedule the new values of the schedule
      * @return the updated schedule
+     * @throws IllegalArgumentException if {@code scheduleUid} is {@code null} or empty, or {@code schedule} is
+     *     {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public ScheduleList updateSchedule(String scheduleUid, Schedule schedule) throws APIException {
+        if (schedule == null) {
+            throw new IllegalArgumentException("The schedule is required");
+        }
         URIBuilder builder = v5Builder(SCHEDULES_EP, scheduleUid);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(schedule), ScheduleList.class);
     }
@@ -225,9 +232,14 @@ public class SchedulesManager extends Manager {
      * @param routeId the route ID
      * @param routeSchedule the new values
      * @return the updated route schedule
+     * @throws IllegalArgumentException if {@code routeId} is {@code null} or empty, or {@code routeSchedule} is
+     *     {@code null}; nothing is sent
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
     public RouteScheduleList updateRouteSchedule(String routeId, RouteSchedule routeSchedule) throws APIException {
+        if (routeSchedule == null) {
+            throw new IllegalArgumentException("The route schedule is required");
+        }
         URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP, routeId);
         return this.makeRequest(RequestMethod.PUT, builder, this.gson.toJson(routeSchedule), RouteScheduleList.class);
     }
@@ -249,13 +261,16 @@ public class SchedulesManager extends Manager {
      * Deletes the schedule items of a route: {@code DELETE
      * https://wh.route4me.com/modules/api/v5.0/recurring-routes/route-schedules/{routeId}/items}.
      *
+     * <p>The route schedules spec answers with the route schedules ({@code {"data": [...]}}), the C# SDK reads a
+     * status ({@code {"status": true}}); the answer reads both.
+     *
      * @param routeId the route ID
-     * @return whether they were deleted
+     * @return the answer: {@code status} or {@code data}, whichever the reply carries
      * @throws APIException if the request fails, the server answers with an error status or the answer cannot be parsed
      */
-    public StatusResponse deleteRouteScheduleItems(String routeId) throws APIException {
+    public DeleteRouteScheduleItemsResponse deleteRouteScheduleItems(String routeId) throws APIException {
         URIBuilder builder = v5Builder(ROUTE_SCHEDULES_EP, routeId, "items");
-        return this.makeRequest(RequestMethod.DELETE, builder, "", StatusResponse.class);
+        return this.makeRequest(RequestMethod.DELETE, builder, "", DeleteRouteScheduleItemsResponse.class);
     }
 
     /**

@@ -10,6 +10,7 @@ import java.util.Collections;
 import static com.route4me.sdk.testsupport.MockHttp.json;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -198,11 +199,24 @@ public class SchedulesManagerTest {
         http.respondToAll(200, STATUS_TRUE);
 
         StatusResponse deleted = manager.deleteRouteSchedule("ROUTE-A1");
-        manager.deleteRouteScheduleItems("ROUTE-A1");
+        DeleteRouteScheduleItemsResponse items = manager.deleteRouteScheduleItems("ROUTE-A1");
 
         http.request(0).assertEndpoint("DELETE", HOST, BASE + "/route-schedules/ROUTE-A1").assertNoBody();
-        http.request(1).assertEndpoint("DELETE", HOST, BASE + "/route-schedules/ROUTE-A1/items");
+        http.request(1).assertEndpoint("DELETE", HOST, BASE + "/route-schedules/ROUTE-A1/items").assertNoBody();
         assertTrue(deleted.getStatus());
+        assertTrue(items.getStatus());
+        assertNull(items.getData());
+    }
+
+    @Test
+    public void deleteRouteScheduleItemsReadsTheListTheSpecAnswers() throws Exception {
+        SchedulesManager manager = manager();
+        http.respond(200, ROUTE_SCHEDULE_LIST);
+
+        DeleteRouteScheduleItemsResponse items = manager.deleteRouteScheduleItems("ROUTE-A1");
+
+        assertNull(items.getStatus());
+        assertEquals("SCH-1", items.getData().get(0).getScheduleUid());
     }
 
     @Test
@@ -364,6 +378,8 @@ public class SchedulesManagerTest {
         http.expectThrows(IllegalArgumentException.class, () -> manager.getRouteScheduleCopies(null));
         http.expectThrows(IllegalArgumentException.class,
                 () -> manager.getRouteScheduleCopies(new GetRouteScheduleCopiesRequest()));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateSchedule("SCH-1", null));
+        http.expectThrows(IllegalArgumentException.class, () -> manager.updateRouteSchedule("ROUTE-A1", null));
         http.assertNoRequests();
     }
 
