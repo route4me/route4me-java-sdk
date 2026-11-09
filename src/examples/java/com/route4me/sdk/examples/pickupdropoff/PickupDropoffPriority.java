@@ -39,7 +39,7 @@ public class PickupDropoffPriority {
         parameters.setLeftTurn(LeftTurn.LEFTTURN_FORBID.getValue());
         parameters.setUTurn(UTurn.UTURN_DEPART_TO_RIGHT.getValue());
         parameters.setVehicleCapacity("4");
-        parameters.isUseMixedPickupDeliveryDemands(false);
+        parameters.setUseMixedPickupDeliveryDemands(false);
         parameters.setRouteName("Pickup Dropoff Example");
         parameters.setOptimize(Optimize.TIME.toString());
         parameters.setDistanceUnit(DistanceUnit.MI.toString());
