@@ -261,8 +261,8 @@ public class AddressBookManagerV5 extends Manager {
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
      * @throws IllegalArgumentException if {@code request} or its {@code filter} is {@code null}, or the filter has
-     *     neither a {@code selected_areas} entry nor a {@code bounding_box} with its four edges; nothing is sent, since
-     *     an update with an empty filter could change every contact
+     *     neither a {@code selected_areas} entry with a {@code type} and a {@code value} nor a {@code bounding_box}
+     *     with its four edges; nothing is sent, since an update with an empty filter could change every contact
      */
     public AsyncJob updateAddressBookContactByAreas(UpdateContactsByAreasRequest request) throws APIException {
         requireRequest(request);
@@ -325,8 +325,8 @@ public class AddressBookManagerV5 extends Manager {
      * @return the accepted job: its ID, status URL and reply body
      * @throws APIException if the request fails or the server answers with an error status
      * @throws IllegalArgumentException if {@code filter} is {@code null}, or has neither a {@code selected_areas} entry
-     *     nor a {@code bounding_box} with its four edges; nothing is sent, since a deletion with an empty filter could
-     *     delete every contact
+     *     with a {@code type} and a {@code value} nor a {@code bounding_box} with its four edges; nothing is sent,
+     *     since a deletion with an empty filter could delete every contact
      */
     public AsyncJob removeAddressBookContactsByAreas(AddressBookAreasFilter filter) throws APIException {
         requireArea(filter);
@@ -563,11 +563,15 @@ public class AddressBookManagerV5 extends Manager {
         }
     }
 
-    /** Tells whether a list of drawn areas has at least one area. */
+    /**
+     * Tells whether a list of drawn areas has at least one area with a type and a geometry. An area without them
+     * draws nothing: Gson would send it as {@code {}}, which selects no area.
+     */
     private static boolean hasArea(List<SelectedArea> areas) {
         if (areas != null) {
             for (SelectedArea area : areas) {
-                if (area != null) {
+                if (area != null && area.getType() != null && !area.getType().isEmpty() && area.getValue() != null
+                        && !area.getValue().isEmpty()) {
                     return true;
                 }
             }

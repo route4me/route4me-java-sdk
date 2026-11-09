@@ -429,18 +429,33 @@ public class AddressBookManagerV5Test {
         BoundingBox box = box();
         box.setRight(null);
         partialBox.setBoundingBox(box);
+        // Gson would send an area without a type or a geometry as {}, which draws nothing.
+        final AddressBookAreasFilter emptyArea = new AddressBookAreasFilter();
+        emptyArea.setSelectedAreas(Collections.singletonList(new SelectedArea()));
+        SelectedArea typeOnly = new SelectedArea();
+        typeOnly.setType("circle");
+        typeOnly.setValue(Collections.<String, Object>emptyMap());
+        SelectedArea valueOnly = new SelectedArea();
+        valueOnly.setType("");
+        valueOnly.setValue(Collections.<String, Object>singletonMap("distance", 500));
+        final AddressBookAreasFilter incompleteAreas = new AddressBookAreasFilter();
+        incompleteAreas.setSelectedAreas(Arrays.asList(typeOnly, valueOnly));
         final UpdateContactsByAreasRequest noFilter = new UpdateContactsByAreasRequest();
         final UpdateContactsByAreasRequest textOnlyUpdate = new UpdateContactsByAreasRequest();
         textOnlyUpdate.setFilter(textOnly);
+        final UpdateContactsByAreasRequest emptyAreaUpdate = new UpdateContactsByAreasRequest();
+        emptyAreaUpdate.setFilter(emptyArea);
 
         for (final AddressBookAreasFilter filter : Arrays.asList(null, new AddressBookAreasFilter(), textOnly, noAreas,
-                nullArea, partialBox)) {
+                nullArea, partialBox, emptyArea, incompleteAreas)) {
             http.expectThrows(IllegalArgumentException.class, () -> manager.removeAddressBookContactsByAreas(filter));
         }
         http.expectThrows(IllegalArgumentException.class, () -> manager.updateAddressBookContactByAreas(null));
         http.expectThrows(IllegalArgumentException.class, () -> manager.updateAddressBookContactByAreas(noFilter));
         http.expectThrows(IllegalArgumentException.class,
             () -> manager.updateAddressBookContactByAreas(textOnlyUpdate));
+        http.expectThrows(IllegalArgumentException.class,
+            () -> manager.updateAddressBookContactByAreas(emptyAreaUpdate));
         http.assertNoRequests();
     }
 
