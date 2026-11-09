@@ -12,16 +12,14 @@ import com.route4me.sdk.queryconverter.QueryConverter;
 import com.route4me.sdk.utils.LenientBooleanAdapter;
 import com.route4me.sdk.utils.LenientMapAdapterFactory;
 import com.route4me.sdk.utils.Sanitizer;
+import java.io.ByteArrayOutputStream;
 import java.io.Closeable;
 import java.io.IOException;
 import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.io.Reader;
 import java.lang.reflect.Type;
 import java.net.URISyntaxException;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
-import java.nio.charset.UnsupportedCharsetException;
 import java.util.ArrayList;
 import java.util.List;
 import org.apache.http.Header;
@@ -306,7 +304,8 @@ public abstract class Manager implements Closeable {
      * @param builder the request URL; it is not changed
      * @param body    the JSON text, sent as {@code application/json; charset=UTF-8}; an
      *                empty string sends no body
-     * @param clazz   the response type; {@code String.class} returns the body as text
+     * @param clazz   the response type; {@code String.class} returns the body as text and
+     *                {@code byte[].class} returns its bytes unchanged, such as a file download
      * @param <T>     the response type
      * @return the parsed response, or {@code null} when the response has no content
      * @throws APIException if the request fails, the server answers with an error status or
@@ -340,7 +339,8 @@ public abstract class Manager implements Closeable {
      * @param method  the HTTP method
      * @param builder the request URL; it is not changed
      * @param body    the request body, sent with its own {@code Content-Type}; {@code null} sends none
-     * @param clazz   the response type; {@code String.class} returns the body as text
+     * @param clazz   the response type; {@code String.class} returns the body as text and
+     *                {@code byte[].class} returns its bytes unchanged, such as a file download
      * @param <T>     the response type
      * @return the parsed response, or {@code null} when the response has no content
      * @throws APIException if the request fails, the server answers with an error status or
@@ -578,13 +578,16 @@ public abstract class Manager implements Closeable {
      */
     protected AsyncJob makeJobRequest(RequestMethod method, URIBuilder builder, HttpEntity body) throws APIException {
         RawResponse response = this.send(method, builder, body);
-        return AsyncJob.fromReply(response.status, response.headers, response.body);
+        return AsyncJob.fromReply(response.status, response.headers, response.text());
     }
 
     private <T> T makeRequest(RequestMethod method, URIBuilder builder, HttpEntity body, Class<T> clazz, Type type)
             throws APIException {
         RawResponse response = this.send(method, builder, body);
-        String respString = response.body;
+        if (clazz == byte[].class) {
+            return clazz.cast(response.bytes);
+        }
+        String respString = response.text();
         //deserialize json into an object
         try {
             if (clazz != null && clazz != String.class) {
@@ -658,12 +661,14 @@ public abstract class Manager implements Closeable {
         CloseableHttpClient client = this.httpClient();
         try (CloseableHttpResponse resp = client.execute(hrb)) {
             int status = resp.getStatusLine().getStatusCode();
-            String respString = readBody(resp.getEntity());
+            HttpEntity entity = resp.getEntity();
+            byte[] bytes = readBody(entity);
+            Charset charset = charsetOf(entity);
             if (status < 200 || status > 303) {
                 throw APIException.forErrorStatus(method.name(), safeUrl, status,
-                        respString.isEmpty() ? null : this.redactBody(respString));
+                        bytes.length == 0 ? null : this.redactBody(new String(bytes, charset)));
             }
-            return new RawResponse(safeUrl, status, resp.getAllHeaders(), respString);
+            return new RawResponse(safeUrl, status, resp.getAllHeaders(), bytes, charset);
         } catch (IOException ex) {
             throw APIException.forIOException(method.name(), safeUrl, Sanitizer.redactCause(ex, this.apiKey));
         } catch (IllegalStateException ex) {
@@ -683,14 +688,26 @@ public abstract class Manager implements Closeable {
         private final int status;
         /** The response headers. */
         private final Header[] headers;
-        /** The body; empty when the reply has none. */
-        private final String body;
+        /** The body as sent; empty when the reply has none. */
+        private final byte[] bytes;
+        /** The charset the reply declares, or UTF-8 when it declares none or an unknown one. */
+        private final Charset charset;
 
-        RawResponse(String safeUrl, int status, Header[] headers, String body) {
+        RawResponse(String safeUrl, int status, Header[] headers, byte[] bytes, Charset charset) {
             this.safeUrl = safeUrl;
             this.status = status;
             this.headers = headers;
-            this.body = body;
+            this.bytes = bytes;
+            this.charset = charset;
+        }
+
+        /**
+         * Decodes the body with the charset of the reply, line breaks included.
+         *
+         * @return the body as text; empty when the reply has none
+         */
+        String text() {
+            return new String(this.bytes, this.charset);
         }
     }
 
@@ -748,42 +765,51 @@ public abstract class Manager implements Closeable {
     }
 
     /**
-     * Reads a whole response body as text, line breaks included.
-     *
-     * <p>The body is decoded with the charset its {@code Content-Type} declares, and as
-     * UTF-8 when it declares none (never with the platform default charset).
+     * Reads a whole response body.
      *
      * @param entity the response entity, or {@code null} when the response has none (such
      *               as a {@code 204 No Content})
-     * @return the body, or an empty string when there is no entity or no content
+     * @return the body; empty when there is no entity or no content
      * @throws IOException if the body cannot be read
      */
-    private static String readBody(HttpEntity entity) throws IOException {
+    private static byte[] readBody(HttpEntity entity) throws IOException {
         if (entity == null) {
-            return "";
-        }
-        Charset charset = StandardCharsets.UTF_8;
-        try {
-            ContentType contentType = ContentType.get(entity);
-            if (contentType != null && contentType.getCharset() != null) {
-                charset = contentType.getCharset();
-            }
-        } catch (ParseException | UnsupportedCharsetException ex) {
-            // An unreadable or unknown charset: keep UTF-8.
+            return new byte[0];
         }
         try (InputStream in = entity.getContent()) {
             if (in == null) {
-                return "";
+                return new byte[0];
             }
-            Reader reader = new InputStreamReader(in, charset);
-            StringBuilder text = new StringBuilder();
-            char[] buffer = new char[8192];
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            byte[] buffer = new byte[8192];
             int read;
-            while ((read = reader.read(buffer)) != -1) {
-                text.append(buffer, 0, read);
+            while ((read = in.read(buffer)) != -1) {
+                out.write(buffer, 0, read);
             }
-            return text.toString();
+            return out.toByteArray();
         }
+    }
+
+    /**
+     * Finds the charset to decode a response body with: the one its {@code Content-Type}
+     * declares, and UTF-8 when it declares none (never the platform default charset).
+     *
+     * @param entity the response entity, or {@code null}
+     * @return the declared charset, or UTF-8 when there is none or it is unreadable or unknown
+     */
+    private static Charset charsetOf(HttpEntity entity) {
+        if (entity != null) {
+            try {
+                ContentType contentType = ContentType.get(entity);
+                if (contentType != null && contentType.getCharset() != null) {
+                    return contentType.getCharset();
+                }
+            } catch (ParseException | IllegalArgumentException ex) {
+                // An unreadable, illegal or unknown charset name: keep UTF-8. Both
+                // IllegalCharsetNameException and UnsupportedCharsetException are IllegalArgumentExceptions.
+            }
+        }
+        return StandardCharsets.UTF_8;
     }
 
     /**

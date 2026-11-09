@@ -42,6 +42,7 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 import static com.route4me.sdk.testsupport.MockHttp.json;
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotSame;
@@ -904,6 +905,26 @@ public class ManagerTest {
         assertEquals("Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
         assertEquals("an unknown charset falls back to UTF-8",
                 "Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+    }
+
+    @Test
+    public void illegalCharsetNameFallsBackToUtf8() throws Exception {
+        TestManager manager = manager();
+        http.respondWithBytes(200, "Caf\u00e9".getBytes(StandardCharsets.UTF_8), "text/plain; charset=bad name!");
+
+        assertEquals("Caf\u00e9", manager.makeRequest(RequestMethod.GET, builder(), "", String.class));
+    }
+
+    @Test
+    public void byteArrayResponseIsReturnedUnchanged() throws Exception {
+        TestManager manager = manager();
+        // The start of an .xls file: not valid UTF-8, so a text round trip would change it.
+        byte[] xls = {(byte) 0xD0, (byte) 0xCF, 0x11, (byte) 0xE0, (byte) 0xA1, (byte) 0xB1, 0x1A, (byte) 0xE1, 0x00};
+        http.respondWithBytes(200, xls, "application/vnd.ms-excel")
+                .respondWithoutBody(200);
+
+        assertArrayEquals(xls, manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
+        assertArrayEquals(new byte[0], manager.makeRequest(RequestMethod.GET, builder(), "", byte[].class));
     }
 
     // ------------------------------------------------------------------ background jobs
