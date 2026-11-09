@@ -1,4 +1,5 @@
 package com.route4me.sdk.services.addressbook;
+import com.google.gson.annotations.JsonAdapter;
 import com.google.gson.annotations.SerializedName;
 import lombok.Data;
 import java.util.List;
@@ -74,8 +75,11 @@ public class AddressBookContactV5 {
     @SerializedName("address_stop_type") private String addressStopType;
     /** The schedules of the contact, as JSON names and values ({@code schedule}). */
     @SerializedName("schedule") private List<Map<String, Object>> schedule;
-    /** The dates, as {@code YYYY-MM-DD}, when the schedules do not apply ({@code schedule_blacklist}). */
-    @SerializedName("schedule_blacklist") private List<String> scheduleBlacklist;
+    /**
+     * The dates, as {@code YYYY-MM-DD}, when the schedules do not apply ({@code schedule_blacklist}). A single date
+     * string, or dates nested in arrays, read as this list too.
+     */
+    @SerializedName("schedule_blacklist") @JsonAdapter(DateListAdapter.class) private List<String> scheduleBlacklist;
     /** The volume of the cargo ({@code address_cube}). */
     @SerializedName("address_cube") private Double addressCube;
     /** The number of pieces of the cargo ({@code address_pieces}). */

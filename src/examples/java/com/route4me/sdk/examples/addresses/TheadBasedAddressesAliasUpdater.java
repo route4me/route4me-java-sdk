@@ -38,13 +38,12 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.logging.log4j.LogManager;
 
 /**
  * Renames every address of a route in parallel: each task gives an address a random alias with
- * {@link RoutingManager#updateAddressAttribute}, after the route is read with {@link RoutingManager#getRoute}.
+ * {@link RoutingManager#updateAddressAttribute}, after the route is read with {@link RoutingManager#getRoute}. Set
+ * {@code ROUTE_ID} to a route of a test account: the example replaces the alias of each of its stops.
  */
 public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
 
@@ -68,35 +67,43 @@ public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
         this.address = address;
     }
 
-    private Address updateAddressFirstName() {
+    private Address updateAddressFirstName() throws APIException {
         UUID uuid = UUID.randomUUID();
         address.setAlias(uuid.toString().toUpperCase());
-        Address updatedAddress = null;
-        try {
-            updatedAddress = manager.updateAddressAttribute(routeID, address.getRouteDestinationId(), address);
-        } catch (APIException ex) {
-            LOGGER.error(ex);
-        }
-        return updatedAddress;
+        return manager.updateAddressAttribute(routeID, address.getRouteDestinationId(), address);
     }
 
+    /**
+     * Gives the address a random alias.
+     *
+     * @return the updated address
+     * @throws APIException if the update fails; {@link Future#get} reports it as the cause of an
+     *     {@link ExecutionException}
+     */
     @Override
-    public Address call() throws Exception {
-
-        Address updatedAddress = updateAddressFirstName();
-        return updatedAddress;
+    public Address call() throws APIException {
+        return updateAddressFirstName();
     }
 
     public static void main(String[] args) {
 
+        String routeID = System.getenv("ROUTE_ID");
+        if (routeID == null || routeID.isEmpty()) {
+            System.err.println("Set ROUTE_ID to the ID of a route of a test account; this example renames its stops.");
+            return;
+        }
         String apiKey = System.getenv("R4M_API_KEY");
         RoutingManager manager = new RoutingManager(apiKey);
 
         ExecutorService executor = Executors.newFixedThreadPool(10);
-        String routeID = "5ED2D6B7E7FCB926D6B164A530DA4224";
         List<Future<Address>> workers = new ArrayList<>();
         try {
             Route route = manager.getRoute(new RoutesRequest().setId(routeID));
+            if (route == null || route.getAddresses() == null) {
+                System.err.println("The route has no stops");
+                executor.shutdown();
+                return;
+            }
             for (Address address : route.getAddresses()) {
                 System.out.println("Current Alias: " + address.getAlias() + " Route Destination ID: "
                         + address.getRouteDestinationId());
@@ -107,20 +114,38 @@ public class TheadBasedAddressesAliasUpdater implements Callable<Address> {
             }
             executor.shutdown();
             System.out.println("\nUpdating Address in Parallel...\n");
-            while (!executor.isTerminated()) {
-                // Wait until every update has finished.
+            try {
+                if (!executor.awaitTermination(5, TimeUnit.MINUTES)) {
+                    System.err.println("The updates did not finish within 5 minutes; the ones not started are dropped,"
+                            + " and the ones already sent may still change their stops");
+                    executor.shutdownNow();
+                }
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                executor.shutdownNow();
+                return;
             }
             for (Future<Address> worker : workers) {
                 try {
                     Address updatedAddress = worker.get(60, TimeUnit.MILLISECONDS);
-                    System.out.println("Updated Alias: " + updatedAddress.getAlias() + " Route Destination ID: "
-                            + updatedAddress.getRouteDestinationId());
-                } catch (InterruptedException | ExecutionException | TimeoutException ex) {
-                    LOGGER.error("Thread Execution Exception. " + ex);
+                    if (updatedAddress != null) {
+                        System.out.println("Updated Alias: " + updatedAddress.getAlias() + " Route Destination ID: "
+                                + updatedAddress.getRouteDestinationId());
+                    }
+                } catch (InterruptedException ex) {
+                    Thread.currentThread().interrupt();
+                    return;
+                } catch (ExecutionException ex) {
+                    LOGGER.error("An update failed", ex.getCause());
+                } catch (TimeoutException ex) {
+                    worker.cancel(true);
+                    LOGGER.error("An update did not finish in time; it may already have been sent and could not be"
+                            + " cancelled, so it may still change its stop");
                 }
             }
         } catch (APIException ex) {
-            Logger.getLogger(TheadBasedAddressesAliasUpdater.class.getName()).log(Level.SEVERE, null, ex);
+            executor.shutdownNow();
+            LOGGER.error("Could not read the route", ex);
         }
 
     }

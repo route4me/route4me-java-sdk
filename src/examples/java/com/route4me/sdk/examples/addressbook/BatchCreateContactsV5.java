@@ -1,9 +1,9 @@
 package com.route4me.sdk.examples.addressbook;
 import com.route4me.sdk.exception.APIException;
+import com.route4me.sdk.responses.StatusResponse;
 import com.route4me.sdk.services.addressbook.AddressBookContactV5;
 import com.route4me.sdk.services.addressbook.AddressBookManagerV5;
 import com.route4me.sdk.services.addressbook.BatchCreateContactsRequest;
-import com.route4me.sdk.services.addressbook.StatusResponse;
 import java.util.ArrayList;
 import java.util.List;
 /** Creates several address book contacts at once with {@link AddressBookManagerV5#batchCreateContacts}. */

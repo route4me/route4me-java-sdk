@@ -20,7 +20,7 @@ public class LocationTerritoryResource {
 
     /** Member ID associated with the territory ({@code member_id}). */
     @SerializedName("member_id")
-    private Integer memberId;
+    private Long memberId;
 
     /** Number of locations within this territory ({@code locations_count}). */
     @SerializedName("locations_count")

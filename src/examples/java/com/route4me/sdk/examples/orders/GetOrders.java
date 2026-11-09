@@ -18,8 +18,12 @@ public class GetOrders {
             orderRequest.setOffset(0);
             orderRequest.setLimit(5);
             List<Order> orders = manager.getOrders(orderRequest);
+            if (orders == null) {
+                System.out.println("No orders");
+                return;
+            }
             for (Order o : orders) {
-                System.out.println(orders);
+                System.out.println(o);
                 System.out.println("");
             }
         } catch (APIException e) {

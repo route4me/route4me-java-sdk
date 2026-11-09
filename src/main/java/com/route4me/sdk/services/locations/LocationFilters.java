@@ -21,7 +21,7 @@ public class LocationFilters {
 
     /** Only these address book contact IDs ({@code address_id}). */
     @SerializedName("address_id")
-    private List<Integer> addressId;
+    private List<Long> addressId;
 
     /** Only locations of these customer IDs ({@code customer_id}). */
     @SerializedName("customer_id")

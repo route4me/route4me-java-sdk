@@ -44,6 +44,18 @@ public class RoutesRequest {
      */
     @QueryParameter("notes")
     private Boolean notes;
+    /**
+     * The path between the stops to return with each address: {@code Points} for the path points, {@code None} for
+     * none ({@code route_path_output}).
+     */
+    @QueryParameter("route_path_output")
+    private String routePathOutput;
+    /**
+     * With {@code route_path_output=Points}, {@code true} to return the path points compressed
+     * ({@code compress_path_points}).
+     */
+    @QueryParameter("compress_path_points")
+    private Boolean compressPathPoints;
     /** Search query ({@code query}). */
     @QueryParameter("query")
     private String query;
